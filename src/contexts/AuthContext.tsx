@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { User } from '@/types/admin';
-import { mockLogin } from '@/data/mockData';
+import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -26,53 +26,27 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('habify_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
+  const { profile, loading, isAuthenticated, signIn, signOut, hasRole } = useSupabaseAuth();
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
     try {
-      const loggedUser = await mockLogin(email, password);
-      if (loggedUser) {
-        setUser(loggedUser);
-        localStorage.setItem('habify_user', JSON.stringify(loggedUser));
-        setLoading(false);
-        return true;
-      }
-      setLoading(false);
-      return false;
+      const { error } = await signIn(email, password);
+      return !error;
     } catch (error) {
-      setLoading(false);
       return false;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('habify_user');
-  };
-
-  const hasRole = (roles: string | string[]): boolean => {
-    if (!user) return false;
-    const roleArray = Array.isArray(roles) ? roles : [roles];
-    return roleArray.includes(user.role);
+  const logout = async () => {
+    await signOut();
   };
 
   const value = {
-    user,
+    user: profile,
     login,
     logout,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     hasRole,
   };
 

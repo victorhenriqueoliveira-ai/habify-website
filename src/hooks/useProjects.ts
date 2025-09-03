@@ -1,0 +1,144 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Project } from '@/types/admin';
+
+export const useProjects = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          profiles!inner(name, email, company)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedProjects: Project[] = data?.map((project) => ({
+        id: project.id,
+        userId: project.user_id,
+        title: project.title,
+        description: project.description || '',
+        status: project.status,
+        landingPageUrl: project.landing_page_url,
+        photos: project.photos || [],
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+        completedAt: project.completed_at,
+        price: Number(project.price) || 0,
+        location: project.location || '',
+        propertyType: project.property_type || 'house',
+        bedrooms: project.bedrooms,
+        bathrooms: project.bathrooms,
+        area: Number(project.area) || 0,
+      })) || [];
+
+      setProjects(formattedProjects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createProject = async (projectData: Partial<Project> & { userId: string }) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          user_id: projectData.userId,
+          title: projectData.title,
+          description: projectData.description,
+          price: projectData.price,
+          location: projectData.location,
+          property_type: projectData.propertyType,
+          bedrooms: projectData.bedrooms,
+          bathrooms: projectData.bathrooms,
+          area: projectData.area,
+          photos: projectData.photos || [],
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchProjects();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error creating project:', error);
+      return { success: false, error };
+    }
+  };
+
+  const updateProject = async (id: string, updates: Partial<Project>) => {
+    try {
+      const updateData: any = {};
+      
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.landingPageUrl !== undefined) updateData.landing_page_url = updates.landingPageUrl;
+      if (updates.photos) updateData.photos = updates.photos;
+      if (updates.price !== undefined) updateData.price = updates.price;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.propertyType) updateData.property_type = updates.propertyType;
+      if (updates.bedrooms !== undefined) updateData.bedrooms = updates.bedrooms;
+      if (updates.bathrooms !== undefined) updateData.bathrooms = updates.bathrooms;
+      if (updates.area !== undefined) updateData.area = updates.area;
+      
+      if (updates.status === 'completed' && !updates.completedAt) {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from('projects')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchProjects();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error updating project:', error);
+      return { success: false, error };
+    }
+  };
+
+  const deleteProject = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchProjects();
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      return { success: false, error };
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  return {
+    projects,
+    loading,
+    fetchProjects,
+    createProject,
+    updateProject,
+    deleteProject,
+  };
+};

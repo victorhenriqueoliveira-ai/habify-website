@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { LoginPage } from "./pages/admin/LoginPage";
+import { LoginPage } from '@/pages/admin/LoginPage';
+import { AuthPage } from '@/pages/admin/AuthPage';
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { UsersPage } from "./pages/admin/UsersPage";
@@ -66,7 +67,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             
             {/* Admin Routes */}
-            <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/auth" element={<AuthPage />} />
             
             {/* Protected Admin Routes */}
             <Route path="/admin" element={

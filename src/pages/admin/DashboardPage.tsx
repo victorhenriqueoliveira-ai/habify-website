@@ -10,9 +10,12 @@ import {
   AlertCircle,
   TrendingUp,
   DollarSign,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockDashboardStats, mockProjects, mockUsers } from '@/data/mockData';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useProjects } from '@/hooks/useProjects';
+import { useUsers } from '@/hooks/useUsers';
 
 const StatCard = ({ 
   title, 
@@ -49,13 +52,46 @@ const StatCard = ({
 
 export const DashboardPage = () => {
   const { user, hasRole } = useAuth();
-  const stats = mockDashboardStats;
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const { projects, loading: projectsLoading } = useProjects();
+  const { users, loading: usersLoading } = useUsers();
   
-  // Filter data based on user role
-  const userProjects = mockProjects.filter(p => p.userId === user?.id);
-  const recentProjects = hasRole(['admin', 'dev']) 
-    ? mockProjects.slice(0, 5) 
-    : userProjects.slice(0, 5);
+  // Check if any data is still loading
+  const isLoading = statsLoading || projectsLoading || (hasRole(['admin', 'dev']) && usersLoading);
+  
+  // Filter data based on user role and user ID
+  const userProjects = hasRole(['admin', 'dev']) 
+    ? projects 
+    : projects.filter(p => p.userId === user?.id);
+  
+  const recentProjects = userProjects.slice(0, 5);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {hasRole(['admin', 'dev']) ? 'Dashboard Administrativo' : 'Meu Painel'}
+          </h1>
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="h-4 w-20 bg-muted rounded"></div>
+                  <div className="h-4 w-4 bg-muted rounded"></div>
+                </div>
+                <div className="h-8 w-16 bg-muted rounded mb-2"></div>
+                <div className="h-3 w-24 bg-muted rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -199,28 +235,28 @@ export const DashboardPage = () => {
                     <span>Concluídos</span>
                     <span>{stats.completedProjects}</span>
                   </div>
-                  <Progress value={(stats.completedProjects / stats.totalProjects) * 100} />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Em Andamento</span>
-                    <span>{stats.inProgressProjects}</span>
-                  </div>
-                  <Progress 
-                    value={(stats.inProgressProjects / stats.totalProjects) * 100} 
-                    className="bg-blue-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Pendentes</span>
-                    <span>{stats.pendingProjects}</span>
-                  </div>
-                  <Progress 
-                    value={(stats.pendingProjects / stats.totalProjects) * 100}
-                    className="bg-yellow-200" 
-                  />
-                </div>
+                   <Progress value={(stats.completedProjects / Math.max(stats.totalProjects, 1)) * 100} />
+                 </div>
+                 <div className="space-y-2">
+                   <div className="flex justify-between text-sm">
+                     <span>Em Andamento</span>
+                     <span>{stats.inProgressProjects}</span>
+                   </div>
+                   <Progress 
+                     value={(stats.inProgressProjects / Math.max(stats.totalProjects, 1)) * 100} 
+                     className="bg-blue-200"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <div className="flex justify-between text-sm">
+                     <span>Pendentes</span>
+                     <span>{stats.pendingProjects}</span>
+                   </div>
+                   <Progress 
+                     value={(stats.pendingProjects / Math.max(stats.totalProjects, 1)) * 100}
+                     className="bg-yellow-200" 
+                   />
+                 </div>
               </>
             ) : (
               <>

@@ -14,16 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          area: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          landing_page_url: string | null
+          location: string | null
+          photos: string[] | null
+          price: number | null
+          property_type: Database["public"]["Enums"]["property_type"] | null
+          status: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          landing_page_url?: string | null
+          location?: string | null
+          photos?: string[] | null
+          price?: number | null
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          landing_page_url?: string | null
+          location?: string | null
+          photos?: string[] | null
+          price?: number | null
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_admin_or_dev: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      notification_type: "info" | "success" | "warning" | "error"
+      project_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "approved"
+        | "rejected"
+      property_type: "house" | "apartment" | "land" | "commercial"
+      user_role: "user" | "admin" | "dev"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +290,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      notification_type: ["info", "success", "warning", "error"],
+      project_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "approved",
+        "rejected",
+      ],
+      property_type: ["house", "apartment", "land", "commercial"],
+      user_role: ["user", "admin", "dev"],
+    },
   },
 } as const

@@ -42,7 +42,7 @@ export const LoginPage = () => {
     } else {
       toast({
         title: 'Erro',
-        description: 'Email ou senha incorretos',
+        description: 'Email ou senha incorretos. Use uma das contas de teste abaixo.',
         variant: 'destructive',
       });
     }
@@ -93,16 +93,13 @@ export const LoginPage = () => {
           </form>
           
           <div className="mt-6 p-4 bg-muted rounded-lg">
-            <h3 className="font-semibold mb-2">Contas de Teste:</h3>
+            <h3 className="font-semibold mb-2">Para testar, registre-se ou use as contas de demonstração:</h3>
             <div className="space-y-2 text-sm">
               <div>
-                <strong>Corretor:</strong> carlos@email.com / 123456
+                <strong>Primeira vez?</strong> Crie sua conta usando qualquer email e senha
               </div>
               <div>
-                <strong>Admin:</strong> marina@habify.com / 123456
-              </div>
-              <div>
-                <strong>Dev:</strong> joao@habify.com / 123456
+                <strong>Conta Admin:</strong> Registre-se e depois contate o suporte para upgrade
               </div>
             </div>
           </div>
