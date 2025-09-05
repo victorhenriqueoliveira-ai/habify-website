@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string | null
+          target_type: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string | null
+          target_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -41,6 +79,42 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          type: Database["public"]["Enums"]["plan_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          type: Database["public"]["Enums"]["plan_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          type?: Database["public"]["Enums"]["plan_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -91,14 +165,17 @@ export type Database = {
           completed_at: string | null
           created_at: string
           description: string | null
+          features: Json | null
           id: string
           landing_page_url: string | null
           location: string | null
           photos: string[] | null
           price: number | null
+          project_type: Database["public"]["Enums"]["project_type"] | null
           property_type: Database["public"]["Enums"]["property_type"] | null
           status: Database["public"]["Enums"]["project_status"]
           title: string
+          transaction_id: string | null
           updated_at: string
           user_id: string
         }
@@ -109,14 +186,17 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           landing_page_url?: string | null
           location?: string | null
           photos?: string[] | null
           price?: number | null
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           property_type?: Database["public"]["Enums"]["property_type"] | null
           status?: Database["public"]["Enums"]["project_status"]
           title: string
+          transaction_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -127,18 +207,86 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           landing_page_url?: string | null
           location?: string | null
           photos?: string[] | null
           price?: number | null
+          project_type?: Database["public"]["Enums"]["project_type"] | null
           property_type?: Database["public"]["Enums"]["property_type"] | null
           status?: Database["public"]["Enums"]["project_status"]
           title?: string
+          transaction_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          abacatepay_id: string | null
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_data: Json | null
+          payment_method: string | null
+          plan_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          abacatepay_id?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_data?: Json | null
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          abacatepay_id?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_data?: Json | null
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
@@ -156,13 +304,19 @@ export type Database = {
     }
     Enums: {
       notification_type: "info" | "success" | "warning" | "error"
+      plan_type:
+        | "website_only"
+        | "website_maintenance_1m"
+        | "website_maintenance_6m"
       project_status:
         | "pending"
         | "in_progress"
         | "completed"
         | "approved"
         | "rejected"
+      project_type: "single_property" | "realtor_multiple"
       property_type: "house" | "apartment" | "land" | "commercial"
+      transaction_status: "pending" | "paid" | "failed" | "refunded"
       user_role: "user" | "admin" | "dev"
     }
     CompositeTypes: {
@@ -292,6 +446,11 @@ export const Constants = {
   public: {
     Enums: {
       notification_type: ["info", "success", "warning", "error"],
+      plan_type: [
+        "website_only",
+        "website_maintenance_1m",
+        "website_maintenance_6m",
+      ],
       project_status: [
         "pending",
         "in_progress",
@@ -299,7 +458,9 @@ export const Constants = {
         "approved",
         "rejected",
       ],
+      project_type: ["single_property", "realtor_multiple"],
       property_type: ["house", "apartment", "land", "commercial"],
+      transaction_status: ["pending", "paid", "failed", "refunded"],
       user_role: ["user", "admin", "dev"],
     },
   },
