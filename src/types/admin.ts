@@ -32,6 +32,9 @@ export interface Project {
   bedrooms?: number;
   bathrooms?: number;
   area: number;
+  projectType?: 'single_property' | 'realtor_multiple';
+  transactionId?: string;
+  features?: Record<string, any>;
 }
 
 export interface Notification {

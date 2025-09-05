@@ -6,12 +6,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCanceled from "./pages/PaymentCanceled";
 import { LoginPage } from '@/pages/admin/LoginPage';
 import { AuthPage } from '@/pages/admin/AuthPage';
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { UsersPage } from "./pages/admin/UsersPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
+import NewProjectPage from "./pages/admin/NewProjectPage";
 import { ProfilePage } from "./pages/admin/ProfilePage";
 import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
@@ -65,12 +68,13 @@ const App = () => (
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-canceled" element={<PaymentCanceled />} />
             
             {/* Admin Routes */}
         <Route path="/admin/login" element={<LoginPage />} />
         <Route path="/auth" element={<AuthPage />} />
             
-            {/* Protected Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminLayout />
@@ -102,6 +106,11 @@ const App = () => (
               <Route path="my-projects" element={
                 <RoleBasedRoute allowedRoles={['user']}>
                   <ProjectsPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="new-project" element={
+                <RoleBasedRoute allowedRoles={['user']}>
+                  <NewProjectPage />
                 </RoleBasedRoute>
               } />
               
