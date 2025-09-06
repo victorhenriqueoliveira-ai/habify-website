@@ -4,204 +4,119 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
   Settings, 
   Database, 
   Mail, 
+  Bell, 
   Shield, 
-  Webhook,
+  Key,
   Save,
-  RefreshCw,
   AlertTriangle,
-  Bell,
-  Globe,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export const SettingsPage = () => {
+  const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    // System Settings
-    systemName: 'HabiFy Admin',
-    systemVersion: '1.0.0',
-    maintenanceMode: false,
-    debugMode: false,
+    // API Settings
+    abacatePayApiKey: '••••••••••••••••',
+    supabaseUrl: 'https://jsttoajuszshrivmgnmc.supabase.co',
     
     // Email Settings
-    smtpServer: 'smtp.gmail.com',
-    smtpPort: '587',
-    smtpUser: 'noreply@habify.com',
-    smtpPassword: '',
     emailNotifications: true,
+    emailProvider: 'smtp',
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: '587',
     
-    // Database Settings
-    dbHost: 'localhost',
-    dbName: 'habify_production',
-    dbUser: 'admin',
-    dbBackupEnabled: true,
-    backupFrequency: 'daily',
+    // System Settings
+    maintenanceMode: false,
+    allowRegistrations: true,
+    autoApproveProjects: false,
+    maxUploadSize: '10',
     
     // Security Settings
-    sessionTimeout: '30',
-    maxLoginAttempts: '5',
-    twoFactorEnabled: false,
-    passwordMinLength: '8',
-    
-    // Notification Settings
-    pushNotifications: true,
-    emailAlerts: true,
-    smsNotifications: false,
-    
-    // Integration Settings
-    webhookUrl: '',
-    apiEnabled: true,
-    rateLimitEnabled: true,
+    enforceSSL: true,
+    sessionTimeout: '24',
+    passwordPolicy: true,
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      // In a real app, this would save to the database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: 'Configurações salvas',
+        description: 'As configurações foram atualizadas com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Ocorreu um erro ao salvar as configurações.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (field: string, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
-      [key]: value,
+      [field]: value,
     }));
-  };
-
-  const handleSave = (section: string) => {
-    toast({
-      title: 'Configurações salvas',
-      description: `As configurações de ${section} foram atualizadas com sucesso.`,
-    });
-  };
-
-  const handleSystemRestart = () => {
-    toast({
-      title: 'Reiniciando sistema',
-      description: 'O sistema será reiniciado em alguns segundos...',
-      variant: 'destructive',
-    });
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configurações do Sistema</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
         <p className="text-muted-foreground">
-          Gerencie configurações avançadas do sistema HabiFy
+          Configure as definições do sistema e integrações
         </p>
       </div>
 
-      {/* System Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Settings className="mr-2 h-5 w-5" />
-            Status do Sistema
-          </CardTitle>
-          <CardDescription>
-            Informações gerais e controles do sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="text-sm font-medium">Status</p>
-                <p className="text-xs text-muted-foreground">Sistema operacional</p>
-              </div>
-              <Badge variant="default">Online</Badge>
-            </div>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="text-sm font-medium">Versão</p>
-                <p className="text-xs text-muted-foreground">Versão atual</p>
-              </div>
-              <Badge variant="secondary">{settings.systemVersion}</Badge>
-            </div>
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="text-sm font-medium">Uptime</p>
-                <p className="text-xs text-muted-foreground">Tempo online</p>
-              </div>
-              <span className="text-sm font-medium">15d 4h 32m</span>
-            </div>
-          </div>
-          
-          <div className="mt-6 flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="maintenance"
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => handleSettingChange('maintenanceMode', checked)}
-              />
-              <Label htmlFor="maintenance">Modo de Manutenção</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="debug"
-                checked={settings.debugMode}
-                onCheckedChange={(checked) => handleSettingChange('debugMode', checked)}
-              />
-              <Label htmlFor="debug">Modo Debug</Label>
-            </div>
-          </div>
-
-          <div className="mt-6 flex space-x-2">
-            <Button variant="outline" onClick={handleSystemRestart}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Reiniciar Sistema
-            </Button>
-            <Button onClick={() => handleSave('sistema')}>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Database Settings */}
+        {/* API Integrations */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Database className="mr-2 h-5 w-5" />
-              Banco de Dados
+              <Key className="mr-2 h-5 w-5" />
+              Integrações API
             </CardTitle>
             <CardDescription>
-              Configurações do banco de dados e backups
+              Configure as chaves de API e integrações externas
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="dbHost">Host do Banco</Label>
-              <Input
-                id="dbHost"
-                value={settings.dbHost}
-                onChange={(e) => handleSettingChange('dbHost', e.target.value)}
-              />
+              <Label htmlFor="abacatepay">AbacatePay API Key</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="abacatepay"
+                  type="password"
+                  value={settings.abacatePayApiKey}
+                  onChange={(e) => handleChange('abacatePayApiKey', e.target.value)}
+                />
+                <Badge variant="default">Ativo</Badge>
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="dbName">Nome do Banco</Label>
+              <Label htmlFor="supabase">Supabase URL</Label>
               <Input
-                id="dbName"
-                value={settings.dbName}
-                onChange={(e) => handleSettingChange('dbName', e.target.value)}
+                id="supabase"
+                value={settings.supabaseUrl}
+                onChange={(e) => handleChange('supabaseUrl', e.target.value)}
+                readOnly
               />
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="backup"
-                checked={settings.dbBackupEnabled}
-                onCheckedChange={(checked) => handleSettingChange('dbBackupEnabled', checked)}
-              />
-              <Label htmlFor="backup">Backup Automático</Label>
-            </div>
-
-            <Button onClick={() => handleSave('banco de dados')} className="w-full">
-              Salvar Configurações do BD
-            </Button>
           </CardContent>
         </Card>
 
@@ -213,50 +128,106 @@ export const SettingsPage = () => {
               Configurações de Email
             </CardTitle>
             <CardDescription>
-              Configure o servidor SMTP para envio de emails
+              Configure o envio de emails e notificações
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="smtp">Servidor SMTP</Label>
-              <Input
-                id="smtp"
-                value={settings.smtpServer}
-                onChange={(e) => handleSettingChange('smtpServer', e.target.value)}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Notificações por Email</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enviar emails para eventos importantes
+                </p>
+              </div>
+              <Switch
+                checked={settings.emailNotifications}
+                onCheckedChange={(checked) => handleChange('emailNotifications', checked)}
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <Separator />
+            
+            <div className="grid gap-2 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="port">Porta</Label>
+                <Label htmlFor="smtp-host">SMTP Host</Label>
                 <Input
-                  id="port"
+                  id="smtp-host"
+                  value={settings.smtpHost}
+                  onChange={(e) => handleChange('smtpHost', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="smtp-port">SMTP Port</Label>
+                <Input
+                  id="smtp-port"
                   value={settings.smtpPort}
-                  onChange={(e) => handleSettingChange('smtpPort', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="user">Usuário</Label>
-                <Input
-                  id="user"
-                  value={settings.smtpUser}
-                  onChange={(e) => handleSettingChange('smtpUser', e.target.value)}
+                  onChange={(e) => handleChange('smtpPort', e.target.value)}
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-center space-x-2">
+        {/* System Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="mr-2 h-5 w-5" />
+              Configurações do Sistema
+            </CardTitle>
+            <CardDescription>
+              Configure o comportamento geral do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Modo Manutenção</Label>
+                <p className="text-sm text-muted-foreground">
+                  Desativar acesso público ao sistema
+                </p>
+              </div>
               <Switch
-                id="emailNotif"
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
+                checked={settings.maintenanceMode}
+                onCheckedChange={(checked) => handleChange('maintenanceMode', checked)}
               />
-              <Label htmlFor="emailNotif">Notificações por Email</Label>
             </div>
-
-            <Button onClick={() => handleSave('email')} className="w-full">
-              Salvar Configurações de Email
-            </Button>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Permitir Registros</Label>
+                <p className="text-sm text-muted-foreground">
+                  Novos usuários podem se registrar
+                </p>
+              </div>
+              <Switch
+                checked={settings.allowRegistrations}
+                onCheckedChange={(checked) => handleChange('allowRegistrations', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Auto-aprovar Projetos</Label>
+                <p className="text-sm text-muted-foregreen">
+                  Aprovar projetos automaticamente
+                </p>
+              </div>
+              <Switch
+                checked={settings.autoApproveProjects}
+                onCheckedChange={(checked) => handleChange('autoApproveProjects', checked)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="max-upload">Tamanho Máximo de Upload (MB)</Label>
+              <Input
+                id="max-upload"
+                type="number"
+                value={settings.maxUploadSize}
+                onChange={(e) => handleChange('maxUploadSize', e.target.value)}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -265,189 +236,120 @@ export const SettingsPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Shield className="mr-2 h-5 w-5" />
-              Segurança
+              Configurações de Segurança
             </CardTitle>
             <CardDescription>
-              Configurações de segurança e autenticação
+              Configure as políticas de segurança
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="session">Timeout Sessão (min)</Label>
-                <Input
-                  id="session"
-                  type="number"
-                  value={settings.sessionTimeout}
-                  onChange={(e) => handleSettingChange('sessionTimeout', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="attempts">Máx. Tentativas Login</Label>
-                <Input
-                  id="attempts"
-                  type="number"
-                  value={settings.maxLoginAttempts}
-                  onChange={(e) => handleSettingChange('maxLoginAttempts', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="2fa"
-                checked={settings.twoFactorEnabled}
-                onCheckedChange={(checked) => handleSettingChange('twoFactorEnabled', checked)}
-              />
-              <Label htmlFor="2fa">Autenticação de 2 Fatores</Label>
-            </div>
-
-            <Button onClick={() => handleSave('segurança')} className="w-full">
-              Salvar Configurações de Segurança
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="mr-2 h-5 w-5" />
-              Notificações
-            </CardTitle>
-            <CardDescription>
-              Configure os tipos de notificação do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Notificações em tempo real</p>
-                </div>
-                <Switch
-                  checked={settings.pushNotifications}
-                  onCheckedChange={(checked) => handleSettingChange('pushNotifications', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Email Alerts</Label>
-                  <p className="text-sm text-muted-foreground">Alertas por email</p>
-                </div>
-                <Switch
-                  checked={settings.emailAlerts}
-                  onCheckedChange={(checked) => handleSettingChange('emailAlerts', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>SMS Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Notificações por SMS</p>
-                </div>
-                <Switch
-                  checked={settings.smsNotifications}
-                  onCheckedChange={(checked) => handleSettingChange('smsNotifications', checked)}
-                />
-              </div>
-            </div>
-
-            <Button onClick={() => handleSave('notificações')} className="w-full">
-              Salvar Configurações
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Integrations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Webhook className="mr-2 h-5 w-5" />
-            Integrações e API
-          </CardTitle>
-          <CardDescription>
-            Configure integrações externas e acesso à API
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhook">Webhook URL</Label>
-            <Input
-              id="webhook"
-              placeholder="https://api.exemplo.com/webhook"
-              value={settings.webhookUrl}
-              onChange={(e) => handleSettingChange('webhookUrl', e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <div>
-                <Label>API Habilitada</Label>
-                <p className="text-sm text-muted-foreground">Permite acesso à API REST</p>
+              <div className="space-y-0.5">
+                <Label>Forçar SSL</Label>
+                <p className="text-sm text-muted-foreground">
+                  Redirecionar HTTP para HTTPS
+                </p>
               </div>
               <Switch
-                checked={settings.apiEnabled}
-                onCheckedChange={(checked) => handleSettingChange('apiEnabled', checked)}
+                checked={settings.enforceSSL}
+                onCheckedChange={(checked) => handleChange('enforceSSL', checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <div>
-                <Label>Rate Limiting</Label>
-                <p className="text-sm text-muted-foreground">Limita requisições por minuto</p>
+              <div className="space-y-0.5">
+                <Label>Política de Senhas</Label>
+                <p className="text-sm text-muted-foreground">
+                  Exigir senhas complexas
+                </p>
               </div>
               <Switch
-                checked={settings.rateLimitEnabled}
-                onCheckedChange={(checked) => handleSettingChange('rateLimitEnabled', checked)}
+                checked={settings.passwordPolicy}
+                onCheckedChange={(checked) => handleChange('passwordPolicy', checked)}
               />
             </div>
-          </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="session-timeout">Timeout de Sessão (horas)</Label>
+              <Input
+                id="session-timeout"
+                type="number"
+                value={settings.sessionTimeout}
+                onChange={(e) => handleChange('sessionTimeout', e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <Button onClick={() => handleSave('integrações')} className="w-full">
-            Salvar Configurações de Integrações
-          </Button>
+      {/* Database Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Database className="mr-2 h-5 w-5" />
+            Status do Banco de Dados
+          </CardTitle>
+          <CardDescription>
+            Informações sobre o banco de dados e estatísticas
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-green-600">Online</div>
+              <p className="text-sm text-muted-foreground">Status</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold">2.1GB</div>
+              <p className="text-sm text-muted-foreground">Tamanho</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold">45ms</div>
+              <p className="text-sm text-muted-foreground">Latência</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold">99.9%</div>
+              <p className="text-sm text-muted-foreground">Uptime</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Danger Zone */}
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="flex items-center text-destructive">
-            <AlertTriangle className="mr-2 h-5 w-5" />
-            Zona de Perigo
-          </CardTitle>
-          <CardDescription>
-            Ações irreversíveis que podem afetar todo o sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-center p-4 border border-destructive rounded-lg">
-            <div>
-              <p className="font-medium">Limpar Cache do Sistema</p>
-              <p className="text-sm text-muted-foreground">
-                Remove todos os dados em cache. O sistema pode ficar lento temporariamente.
-              </p>
-            </div>
-            <Button variant="destructive" size="sm">
-              Limpar Cache
-            </Button>
-          </div>
+      {/* Actions */}
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Recarregar
+        </Button>
+        <Button onClick={handleSave} disabled={loading}>
+          {loading ? (
+            <>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Configurações
+            </>
+          )}
+        </Button>
+      </div>
 
-          <div className="flex justify-between items-center p-4 border border-destructive rounded-lg">
+      {/* Warning */}
+      <Card className="border-yellow-200 bg-yellow-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div>
-              <p className="font-medium">Resetar Configurações</p>
-              <p className="text-sm text-muted-foreground">
-                Retorna todas as configurações aos valores padrão.
+              <p className="text-sm font-medium text-yellow-800">
+                Atenção: Configurações de Desenvolvedor
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                Alterações nesta página podem afetar o funcionamento do sistema. 
+                Certifique-se de que você entende as implicações antes de fazer mudanças.
               </p>
             </div>
-            <Button variant="destructive" size="sm">
-              Resetar Tudo
-            </Button>
           </div>
         </CardContent>
       </Card>

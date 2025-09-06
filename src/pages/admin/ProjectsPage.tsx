@@ -29,9 +29,10 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { mockProjects, mockUsers } from '@/data/mockData';
 import { Project, ProjectStatus } from '@/types/admin';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProjects } from '@/hooks/useProjects';
+import { useUsers } from '@/hooks/useUsers';
 import { toast } from '@/hooks/use-toast';
 
 const statusColors = {
@@ -59,14 +60,17 @@ const propertyTypeLabels = {
 
 export const ProjectsPage = () => {
   const { user, hasRole } = useAuth();
-  const [projects, setProjects] = useState<Project[]>(
-    hasRole(['admin', 'dev']) ? mockProjects : mockProjects.filter(p => p.userId === user?.id)
-  );
+  const { projects, loading, updateProject, deleteProject } = useProjects();
+  const { users } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
 
-  // Filter projects based on search and status
-  const filteredProjects = projects.filter((project) => {
+  // Filter projects based on user role and search/status
+  const userProjects = hasRole(['admin', 'dev']) 
+    ? projects 
+    : projects.filter(p => p.userId === user?.id);
+    
+  const filteredProjects = userProjects.filter((project) => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -74,37 +78,31 @@ export const ProjectsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (projectId: string, newStatus: ProjectStatus) => {
-    setProjects(projects.map(project => 
-      project.id === projectId 
-        ? { 
-            ...project, 
-            status: newStatus,
-            updatedAt: new Date().toISOString(),
-            ...(newStatus === 'completed' && { completedAt: new Date().toISOString() })
-          }
-        : project
-    ));
-    
+  const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
     const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    
+    await updateProject(projectId, { status: newStatus });
     toast({
       title: 'Status atualizado',
-      description: `${project?.title} - Status alterado para: ${statusLabels[newStatus]}`,
+      description: `${project.title} - Status alterado para: ${statusLabels[newStatus]}`,
     });
   };
 
-  const handleDeleteProject = (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
-    setProjects(projects.filter(p => p.id !== projectId));
+    if (!project) return;
+    
+    await deleteProject(projectId);
     toast({
       title: 'Projeto removido',
-      description: `${project?.title} foi removido do sistema`,
+      description: `${project.title} foi removido do sistema`,
       variant: 'destructive',
     });
   };
 
   const getUserName = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
+    const user = users.find(u => u.id === userId);
     return user?.name || 'Usuário não encontrado';
   };
 
@@ -122,7 +120,7 @@ export const ProjectsPage = () => {
               : 'Acompanhe o status dos seus projetos'}
           </p>
         </div>
-        <Button>
+        <Button onClick={() => window.location.href = '/admin/new-project'}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Projeto
         </Button>
@@ -135,7 +133,7 @@ export const ProjectsPage = () => {
             <CardTitle className="text-sm font-medium">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{projects.length}</div>
+            <div className="text-2xl font-bold">{userProjects.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -144,7 +142,7 @@ export const ProjectsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {projects.filter(p => p.status === 'pending').length}
+              {userProjects.filter(p => p.status === 'pending').length}
             </div>
           </CardContent>
         </Card>
@@ -154,7 +152,7 @@ export const ProjectsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {projects.filter(p => p.status === 'in_progress').length}
+              {userProjects.filter(p => p.status === 'in_progress').length}
             </div>
           </CardContent>
         </Card>
@@ -164,7 +162,7 @@ export const ProjectsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {projects.filter(p => p.status === 'completed').length}
+              {userProjects.filter(p => p.status === 'completed').length}
             </div>
           </CardContent>
         </Card>
@@ -230,135 +228,143 @@ export const ProjectsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Projeto</TableHead>
-                {hasRole(['admin', 'dev']) && <TableHead>Cliente</TableHead>}
-                <TableHead>Tipo/Localização</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Criado</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProjects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{project.title}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1">
-                        {project.description}
-                      </div>
-                      {project.landingPageUrl && (
-                        <a 
-                          href={project.landingPageUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline inline-flex items-center"
-                        >
-                          Ver Landing Page
-                          <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
+          {loading ? (
+            <div className="flex justify-center items-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Projeto</TableHead>
+                    {hasRole(['admin', 'dev']) && <TableHead>Cliente</TableHead>}
+                    <TableHead>Tipo/Localização</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Criado</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProjects.map((project) => (
+                    <TableRow key={project.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{project.title}</div>
+                          <div className="text-sm text-muted-foreground line-clamp-1">
+                            {project.description}
+                          </div>
+                          {project.landingPageUrl && (
+                            <a 
+                              href={project.landingPageUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline inline-flex items-center"
+                            >
+                              Ver Landing Page
+                              <ExternalLink className="ml-1 h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      </TableCell>
+                      {hasRole(['admin', 'dev']) && (
+                        <TableCell>
+                          <div className="font-medium">{getUserName(project.userId)}</div>
+                        </TableCell>
                       )}
-                    </div>
-                  </TableCell>
-                  {hasRole(['admin', 'dev']) && (
-                    <TableCell>
-                      <div className="font-medium">{getUserName(project.userId)}</div>
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{propertyTypeLabels[project.propertyType]}</div>
-                      <div className="text-sm text-muted-foreground">{project.location}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {project.area}m² • {project.bedrooms}q • {project.bathrooms}b
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">
-                      R$ {project.price.toLocaleString('pt-BR')}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusColors[project.status]}>
-                      {statusLabels[project.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {new Date(project.createdAt).toLocaleDateString('pt-BR')}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Visualizar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        {hasRole(['admin', 'dev']) && (
-                          <>
-                            {project.status === 'pending' && (
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{propertyTypeLabels[project.propertyType]}</div>
+                          <div className="text-sm text-muted-foreground">{project.location}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {project.area}m² • {project.bedrooms}q • {project.bathrooms}b
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          R$ {project.price.toLocaleString('pt-BR')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusColors[project.status]}>
+                          {statusLabels[project.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {new Date(project.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Visualizar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            {hasRole(['admin', 'dev']) && (
                               <>
-                                <DropdownMenuItem 
-                                  onClick={() => handleStatusChange(project.id, 'in_progress')}
-                                >
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  Aprovar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleStatusChange(project.id, 'rejected')}
-                                  className="text-red-600"
-                                >
-                                  <XCircle className="mr-2 h-4 w-4" />
-                                  Rejeitar
-                                </DropdownMenuItem>
+                                {project.status === 'pending' && (
+                                  <>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleStatusChange(project.id, 'in_progress')}
+                                    >
+                                      <CheckCircle className="mr-2 h-4 w-4" />
+                                      Aprovar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleStatusChange(project.id, 'rejected')}
+                                      className="text-red-600"
+                                    >
+                                      <XCircle className="mr-2 h-4 w-4" />
+                                      Rejeitar
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {project.status === 'in_progress' && (
+                                  <DropdownMenuItem 
+                                    onClick={() => handleStatusChange(project.id, 'completed')}
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Finalizar
+                                  </DropdownMenuItem>
+                                )}
                               </>
                             )}
-                            {project.status === 'in_progress' && (
-                              <DropdownMenuItem 
-                                onClick={() => handleStatusChange(project.id, 'completed')}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Finalizar
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Remover
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {filteredProjects.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                Nenhum projeto encontrado com os filtros aplicados.
-              </p>
-            </div>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteProject(project.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Remover
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {filteredProjects.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Nenhum projeto encontrado com os filtros aplicados.
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

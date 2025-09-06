@@ -19,7 +19,9 @@ import {
   Calendar,
   Filter,
 } from 'lucide-react';
-import { mockProjects, mockUsers, mockDashboardStats } from '@/data/mockData';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useProjects } from '@/hooks/useProjects';
+import { useUsers } from '@/hooks/useUsers';
 
 const StatCard = ({ 
   title, 
@@ -56,30 +58,42 @@ const StatCard = ({
 
 export const ReportsPage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const { projects, loading: projectsLoading } = useProjects();
+  const { users, loading: usersLoading } = useUsers();
   
-  const stats = mockDashboardStats;
+  const loading = statsLoading || projectsLoading || usersLoading;
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   // Calculate some additional metrics
-  const totalRevenue = mockProjects.reduce((sum, project) => 
+  const totalRevenue = projects.reduce((sum, project) => 
     project.status === 'completed' ? sum + project.price : sum, 0
   );
   
-  const averageProjectValue = totalRevenue / mockProjects.filter(p => p.status === 'completed').length;
+  const completedProjects = projects.filter(p => p.status === 'completed');
+  const averageProjectValue = completedProjects.length > 0 ? totalRevenue / completedProjects.length : 0;
   
-  const activeUsers = mockUsers.filter(u => u.isActive).length;
-  const conversionRate = (stats.completedProjects / stats.totalProjects) * 100;
+  const activeUsers = users.filter(u => u.isActive).length;
+  const conversionRate = projects.length > 0 ? (stats.completedProjects / stats.totalProjects) * 100 : 0;
 
   const projectsByStatus = [
     { status: 'Concluídos', count: stats.completedProjects, color: 'bg-green-500' },
     { status: 'Em Andamento', count: stats.inProgressProjects, color: 'bg-blue-500' },
     { status: 'Pendentes', count: stats.pendingProjects, color: 'bg-yellow-500' },
-    { status: 'Rejeitados', count: mockProjects.filter(p => p.status === 'rejected').length, color: 'bg-red-500' },
+    { status: 'Rejeitados', count: projects.filter(p => p.status === 'rejected').length, color: 'bg-red-500' },
   ];
 
   const usersByRole = [
-    { role: 'Corretores', count: mockUsers.filter(u => u.role === 'user').length, color: 'bg-primary' },
-    { role: 'Admins', count: mockUsers.filter(u => u.role === 'admin').length, color: 'bg-secondary' },
-    { role: 'Devs', count: mockUsers.filter(u => u.role === 'dev').length, color: 'bg-destructive' },
+    { role: 'Corretores', count: users.filter(u => u.role === 'user').length, color: 'bg-primary' },
+    { role: 'Admins', count: users.filter(u => u.role === 'admin').length, color: 'bg-secondary' },
+    { role: 'Devs', count: users.filter(u => u.role === 'dev').length, color: 'bg-destructive' },
   ];
 
   return (
@@ -156,19 +170,19 @@ export const ReportsPage = () => {
               {projectsByStatus.map((item) => (
                 <div key={item.status} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-4 h-4 rounded ${item.color}`} />
-                    <span className="text-sm font-medium">{item.status}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">{item.count}</span>
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${item.color}`}
-                        style={{ 
-                          width: `${(item.count / stats.totalProjects) * 100}%` 
-                        }}
-                      />
-                    </div>
+                     <div className={`w-4 h-4 rounded ${item.color}`} />
+                     <span className="text-sm font-medium">{item.status}</span>
+                   </div>
+                   <div className="flex items-center space-x-2">
+                     <span className="text-sm text-muted-foreground">{item.count}</span>
+                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                       <div 
+                         className={`h-full ${item.color}`}
+                         style={{ 
+                           width: `${stats.totalProjects > 0 ? (item.count / stats.totalProjects) * 100 : 0}%` 
+                         }}
+                       />
+                     </div>
                   </div>
                 </div>
               ))}
@@ -198,23 +212,23 @@ export const ReportsPage = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-muted-foreground">{item.count}</span>
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${item.color}`}
-                        style={{ 
-                          width: `${(item.count / mockUsers.length) * 100}%` 
-                        }}
-                      />
-                    </div>
+                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                       <div 
+                         className={`h-full ${item.color}`}
+                         style={{ 
+                           width: `${users.length > 0 ? (item.count / users.length) * 100 : 0}%` 
+                         }}
+                       />
+                     </div>
                   </div>
                 </div>
               ))}
             </div>
             <div className="mt-4 pt-4 border-t">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total de Usuários</span>
-                <span className="font-medium">{mockUsers.length}</span>
-              </div>
+               <div className="flex justify-between text-sm">
+                 <span className="text-muted-foreground">Total de Usuários</span>
+                 <span className="font-medium">{users.length}</span>
+               </div>
             </div>
           </CardContent>
         </Card>
@@ -263,8 +277,8 @@ export const ReportsPage = () => {
           <CardDescription>Últimas ações no sistema</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {mockProjects.slice(0, 5).map((project) => (
+           <div className="space-y-4">
+             {projects.slice(0, 5).map((project) => (
               <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-primary rounded-full" />

@@ -19,6 +19,7 @@ import { ProfilePage } from "./pages/admin/ProfilePage";
 import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
 import { LogsPage } from "./pages/admin/LogsPage";
+import { NewUserPage } from "./pages/admin/NewUserPage";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,11 @@ const App = () => (
               <Route path="new-project" element={
                 <RoleBasedRoute allowedRoles={['user']}>
                   <NewProjectPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="users/new" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <NewUserPage />
                 </RoleBasedRoute>
               } />
               
