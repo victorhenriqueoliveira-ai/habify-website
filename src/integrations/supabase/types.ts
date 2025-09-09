@@ -301,6 +301,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      link_user_transaction: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       notification_type: "info" | "success" | "warning" | "error"

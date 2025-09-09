@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Upload, Building, User, ArrowLeft, Plus } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type ProjectType = 'single_property' | 'realtor_multiple';
@@ -20,6 +21,7 @@ const NewProjectPage = () => {
   const { createProject } = useProjects();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   const [projectData, setProjectData] = useState({
     title: '',
@@ -82,20 +84,45 @@ const NewProjectPage = () => {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
     
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setProjectData(prev => ({
-          ...prev,
-          photos: [...prev.photos, result]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${Date.now()}-${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('project-photos')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-photos')
+          .getPublicUrl(filePath);
+
+        return publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      setProjectData(prev => ({
+        ...prev,
+        photos: [...prev.photos, ...uploadedUrls]
+      }));
+
+      toast.success(`${uploadedUrls.length} foto(s) enviada(s) com sucesso!`);
+    } catch (error) {
+      console.error('Error uploading photos:', error);
+      toast.error('Erro ao enviar fotos');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -300,15 +327,17 @@ const NewProjectPage = () => {
                       multiple
                       onChange={handlePhotoUpload}
                       className="hidden"
+                      disabled={uploading}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => document.getElementById('photos')?.click()}
                       className="w-full"
+                      disabled={uploading}
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Selecionar Fotos
+                      {uploading ? 'Enviando...' : 'Selecionar Fotos'}
                     </Button>
                   </div>
                 </div>

@@ -23,6 +23,8 @@ serve(async (req) => {
   }
 
   try {
+    const origin = req.headers.get('origin') || 'https://habify.com.br';
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -60,8 +62,12 @@ serve(async (req) => {
           phone: customerData.phone,
           cpf: customerData.cpf,
         },
-        returnUrl: `${req.headers.get('origin')}/payment-success`,
-        cancelUrl: `${req.headers.get('origin')}/payment-canceled`,
+        returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-success` 
+          : 'https://habify.com.br/payment-success',
+        cancelUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-canceled` 
+          : 'https://habify.com.br/payment-canceled',
         metadata: {
           planId: planId,
           planType: plan.type,

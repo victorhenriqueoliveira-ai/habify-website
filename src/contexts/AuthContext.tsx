@@ -1,6 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { User } from '@/types/admin';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
+import { useUserTransactionLink } from '@/hooks/useUserTransactionLink';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,9 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { profile, loading, isAuthenticated, signIn, signOut, hasRole } = useSupabaseAuth();
+  
+  // Auto-link transactions when user authenticates
+  useUserTransactionLink();
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
