@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TransactionLinker } from "@/components/TransactionLinker";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -65,6 +66,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
+        <TransactionLinker />
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useUserTransactionLink = () => {
+export const TransactionLinker = () => {
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -21,10 +21,12 @@ export const useUserTransactionLink = () => {
           console.log('Transaction successfully linked to user');
         }
       } catch (error) {
-        console.error('Error in useUserTransactionLink:', error);
+        console.error('Error in TransactionLinker:', error);
       }
     };
 
     linkTransaction();
   }, [isAuthenticated, user?.email]);
+
+  return null; // This component doesn't render anything
 };
