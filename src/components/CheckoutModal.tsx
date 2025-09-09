@@ -85,7 +85,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         toast.success('Redirecionando para pagamento...');
       }
     } catch (error) {
-      console.error('Payment error:', error);
       toast.error('Erro ao processar pagamento');
     }
   };

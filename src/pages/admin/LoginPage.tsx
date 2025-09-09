@@ -50,6 +50,15 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
+      {/* Back to Homepage Button */}
+      <Button
+        variant="outline"
+        className="absolute top-4 left-4"
+        onClick={() => navigate('/')}
+      >
+        ← Voltar ao Site
+      </Button>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

@@ -16,12 +16,10 @@ export const TransactionLinker = () => {
         });
 
         if (error) {
-          console.error('Error linking transaction:', error);
-        } else {
-          console.log('Transaction successfully linked to user');
+          // Silent error - no console logging in production
         }
       } catch (error) {
-        console.error('Error in TransactionLinker:', error);
+        // Silent error handling in production
       }
     };
 

@@ -23,10 +23,8 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/loop-header.lottie')
-      .then(response => response.json())
-      .then(data => setLottieData(data))
-      .catch(error => console.error("Error loading Lottie animation:", error));
+    // Skip Lottie loading - use fallback image instead
+    setLottieData(null);
   }, []);
 
   useEffect(() => {

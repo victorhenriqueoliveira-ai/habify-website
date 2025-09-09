@@ -77,7 +77,6 @@ const NewProjectPage = () => {
         toast.error('Erro ao criar projeto');
       }
     } catch (error) {
-      console.error('Error creating project:', error);
       toast.error('Erro interno do servidor');
     } finally {
       setLoading(false);
@@ -118,7 +117,6 @@ const NewProjectPage = () => {
 
       toast.success(`${uploadedUrls.length} foto(s) enviada(s) com sucesso!`);
     } catch (error) {
-      console.error('Error uploading photos:', error);
       toast.error('Erro ao enviar fotos');
     } finally {
       setUploading(false);
