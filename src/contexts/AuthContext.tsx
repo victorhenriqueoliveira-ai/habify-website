@@ -2,8 +2,12 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { User } from '@/types/admin';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
+interface AuthUser extends User {
+  userId?: string;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
@@ -26,7 +30,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { profile, loading, isAuthenticated, signIn, signOut, hasRole } = useSupabaseAuth();
+  const { profile, loading, isAuthenticated, signIn, signOut, hasRole, user } = useSupabaseAuth();
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -42,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const value = {
-    user: profile,
+    user: profile ? { ...profile, id: profile.id, userId: user?.id } : null,
     login,
     logout,
     loading,
