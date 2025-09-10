@@ -19,7 +19,7 @@ export const useUsers = () => {
       const formattedUsers: User[] = data?.map((profile: any) => ({
         id: profile.id,
         name: profile.name,
-        email: profile.name, // Usando o campo name como email temporariamente
+        email: profile.email || profile.name || '',
         phone: profile.phone || '',
         role: profile.role,
         company: profile.company,
