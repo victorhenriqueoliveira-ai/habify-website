@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Chat component for project communication
+
 interface ProjectChatProps {
   projectId: string;
   projectTitle: string;
