@@ -11,10 +11,7 @@ export const useUsers = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          auth_users:user_id (email, last_sign_in_at)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -22,13 +19,13 @@ export const useUsers = () => {
       const formattedUsers: User[] = data?.map((profile: any) => ({
         id: profile.id,
         name: profile.name,
-        email: profile.auth_users?.email || '',
+        email: profile.name, // Usando o campo name como email temporariamente
         phone: profile.phone || '',
         role: profile.role,
         company: profile.company,
         avatar: profile.avatar_url,
         createdAt: profile.created_at,
-        lastLogin: profile.auth_users?.last_sign_in_at,
+        lastLogin: null, // Não temos acesso aos dados de auth via API
         isActive: profile.is_active,
       })) || [];
 

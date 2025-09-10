@@ -11,10 +11,7 @@ export const useProjects = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('projects')
-        .select(`
-          *,
-          profiles!inner(name, email, company)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
