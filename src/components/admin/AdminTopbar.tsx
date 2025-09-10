@@ -12,16 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockNotifications } from '@/data/mockData';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminTopbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  const userNotifications = mockNotifications.filter(n => n.userId === user?.id);
-  const unreadCount = userNotifications.filter(n => !n.read).length;
+  const { notifications, unreadCount, markAsRead } = useNotifications(user?.userId || user?.id);
 
   const handleLogout = () => {
     logout();
@@ -84,9 +82,13 @@ export const AdminTopbar = () => {
             <div className="p-3 border-b">
               <h3 className="font-semibold">Notificações</h3>
             </div>
-            {userNotifications.length > 0 ? (
-              userNotifications.slice(0, 5).map((notification) => (
-                <DropdownMenuItem key={notification.id} className="p-3 cursor-pointer">
+            {notifications.length > 0 ? (
+              notifications.slice(0, 5).map((notification) => (
+                <DropdownMenuItem 
+                  key={notification.id} 
+                  className="p-3 cursor-pointer"
+                  onClick={() => !notification.read && markAsRead(notification.id)}
+                >
                   <div className="w-full">
                     <div className="flex items-start justify-between">
                       <h4 className="font-medium text-sm">{notification.title}</h4>

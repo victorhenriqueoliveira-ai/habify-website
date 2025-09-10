@@ -22,20 +22,18 @@ import {
   MoreHorizontal, 
   Plus, 
   Eye, 
-  Edit, 
-  Trash2,
   ExternalLink,
   Filter,
-  CheckCircle,
-  XCircle,
+  MessageSquare,
+  Calendar,
 } from 'lucide-react';
 import { Project, ProjectStatus } from '@/types/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
-import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
-import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const statusColors = {
   pending: 'secondary',
@@ -60,10 +58,9 @@ const propertyTypeLabels = {
   commercial: 'Comercial',
 };
 
-export const ProjectsPage = () => {
-  const { user, hasRole } = useAuth();
-  const { projects, loading, updateProject, deleteProject } = useProjects();
-  const { users } = useUsers();
+export const MyProjectsPage = () => {
+  const { user } = useAuth();
+  const { projects, loading } = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -71,10 +68,8 @@ export const ProjectsPage = () => {
   // Enable realtime updates
   useRealtimeProjects();
 
-  // Filter projects based on user role and search/status
-  const userProjects = hasRole(['admin', 'dev']) 
-    ? projects 
-    : projects.filter(p => p.userId === user?.id);
+  // Filter projects for current user only
+  const userProjects = projects.filter(p => p.userId === user?.id || p.userId === user?.userId);
     
   const filteredProjects = userProjects.filter((project) => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,46 +79,14 @@ export const ProjectsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
-    
-    await updateProject(projectId, { status: newStatus });
-    toast({
-      title: 'Status atualizado',
-      description: `${project.title} - Status alterado para: ${statusLabels[newStatus]}`,
-    });
-  };
-
-  const handleDeleteProject = async (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
-    
-    await deleteProject(projectId);
-    toast({
-      title: 'Projeto removido',
-      description: `${project.title} foi removido do sistema`,
-      variant: 'destructive',
-    });
-  };
-
-  const getUserName = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    return user?.name || 'Usuário não encontrado';
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {hasRole(['admin', 'dev']) ? 'Projetos' : 'Meus Projetos'}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Meus Projetos</h1>
           <p className="text-muted-foreground">
-            {hasRole(['admin', 'dev']) 
-              ? 'Gerencie todos os projetos do sistema'
-              : 'Acompanhe o status dos seus projetos'}
+            Acompanhe o status e gerencie seus projetos
           </p>
         </div>
         <Button onClick={() => window.location.href = '/admin/new-project'}>
@@ -168,7 +131,7 @@ export const ProjectsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {userProjects.filter(p => p.status === 'completed').length}
+              {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length}
             </div>
           </CardContent>
         </Card>
@@ -212,6 +175,9 @@ export const ProjectsPage = () => {
                 <DropdownMenuItem onClick={() => setSelectedStatus('completed')}>
                   Concluídos
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedStatus('approved')}>
+                  Aprovados
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedStatus('rejected')}>
                   Rejeitados
                 </DropdownMenuItem>
@@ -229,7 +195,7 @@ export const ProjectsPage = () => {
           </CardTitle>
           <CardDescription>
             {selectedStatus === 'all' 
-              ? 'Todos os projetos' 
+              ? 'Todos os seus projetos' 
               : `Filtrando por: ${statusLabels[selectedStatus]}`}
           </CardDescription>
         </CardHeader>
@@ -244,7 +210,6 @@ export const ProjectsPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Projeto</TableHead>
-                    {hasRole(['admin', 'dev']) && <TableHead>Cliente</TableHead>}
                     <TableHead>Tipo/Localização</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
@@ -274,23 +239,20 @@ export const ProjectsPage = () => {
                           )}
                         </div>
                       </TableCell>
-                      {hasRole(['admin', 'dev']) && (
-                        <TableCell>
-                          <div className="font-medium">{getUserName(project.userId)}</div>
-                        </TableCell>
-                      )}
                       <TableCell>
                         <div>
                           <div className="font-medium">{propertyTypeLabels[project.propertyType]}</div>
                           <div className="text-sm text-muted-foreground">{project.location}</div>
                           <div className="text-sm text-muted-foreground">
-                            {project.area}m² • {project.bedrooms}q • {project.bathrooms}b
+                            {project.area ? `${project.area}m²` : ''} 
+                            {project.bedrooms ? ` • ${project.bedrooms}q` : ''} 
+                            {project.bathrooms ? ` • ${project.bathrooms}b` : ''}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          R$ {project.price.toLocaleString('pt-BR')}
+                          {project.price > 0 ? `R$ ${project.price.toLocaleString('pt-BR')}` : '-'}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -300,7 +262,10 @@ export const ProjectsPage = () => {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {new Date(project.createdAt).toLocaleDateString('pt-BR')}
+                          <div className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {format(new Date(project.createdAt), 'dd/MM/yy', { locale: ptBR })}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -315,45 +280,9 @@ export const ProjectsPage = () => {
                               <Eye className="mr-2 h-4 w-4" />
                               Visualizar
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            {hasRole(['admin', 'dev']) && (
-                              <>
-                                {project.status === 'pending' && (
-                                  <>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleStatusChange(project.id, 'in_progress')}
-                                    >
-                                      <CheckCircle className="mr-2 h-4 w-4" />
-                                      Aprovar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleStatusChange(project.id, 'rejected')}
-                                      className="text-red-600"
-                                    >
-                                      <XCircle className="mr-2 h-4 w-4" />
-                                      Rejeitar
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                {project.status === 'in_progress' && (
-                                  <DropdownMenuItem 
-                                    onClick={() => handleStatusChange(project.id, 'completed')}
-                                  >
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Finalizar
-                                  </DropdownMenuItem>
-                                )}
-                              </>
-                            )}
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteProject(project.id)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Remover
+                            <DropdownMenuItem onClick={() => setSelectedProject(project)}>
+                              <MessageSquare className="mr-2 h-4 w-4" />
+                              Chat com Equipe
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -366,8 +295,20 @@ export const ProjectsPage = () => {
               {filteredProjects.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
-                    Nenhum projeto encontrado com os filtros aplicados.
+                    {userProjects.length === 0 
+                      ? 'Você ainda não criou nenhum projeto.'
+                      : 'Nenhum projeto encontrado com os filtros aplicados.'
+                    }
                   </p>
+                  {userProjects.length === 0 && (
+                    <Button 
+                      className="mt-4"
+                      onClick={() => window.location.href = '/admin/new-project'}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Criar Primeiro Projeto
+                    </Button>
+                  )}
                 </div>
               )}
             </>

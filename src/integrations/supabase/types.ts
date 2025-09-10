@@ -160,6 +160,54 @@ export type Database = {
         }
         Relationships: []
       }
+      project_messages: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          project_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          project_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          project_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           area: number | null
