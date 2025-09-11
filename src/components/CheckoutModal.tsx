@@ -112,6 +112,9 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
           <DialogTitle className="text-2xl font-bold text-center">
             Finalizar Compra
           </DialogTitle>
+          <p className="text-muted-foreground text-center">
+            Complete os dados abaixo para finalizar sua compra
+          </p>
         </DialogHeader>
 
         <div className="grid md:grid-cols-2 gap-6">

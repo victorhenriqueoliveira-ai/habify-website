@@ -56,6 +56,7 @@ serve(async (req) => {
       body: JSON.stringify({
         amount: Math.round(plan.price * 100), // Convert to cents
         description: plan.name,
+        frequency: 'once', // Required field for one-time payments
         customer: {
           name: customerData.name,
           email: customerData.email,
