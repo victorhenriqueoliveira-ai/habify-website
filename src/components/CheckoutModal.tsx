@@ -23,6 +23,8 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
     email: '',
     phone: '',
     cpf: '',
+    password: '',
+    confirmPassword: '',
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -53,6 +55,16 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
       return false;
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Senha deve ter pelo menos 6 caracteres');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Senhas não coincidem');
+      return false;
+    }
+
     return true;
   };
 
@@ -76,6 +88,8 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
           abacatePayId: response.abacatePayId,
           planId: plan.id,
           customerEmail: formData.email,
+          customerName: formData.name,
+          customerPassword: formData.password,
         }));
 
         // Open payment in new tab
@@ -201,6 +215,32 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
                     placeholder="000.000.000-00"
                     maxLength={14}
                   />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="password">Senha *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      placeholder="Repita a senha"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 

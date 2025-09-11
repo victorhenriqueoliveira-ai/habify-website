@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { usePayment } from './usePayment';
+import { useUserRegistration } from './useUserRegistration';
 import { toast } from 'sonner';
 
 export const usePostPaymentFlow = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { verifyPayment } = usePayment();
+  const { registerUser } = useUserRegistration();
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -25,13 +27,34 @@ export const usePostPaymentFlow = () => {
           localStorage.setItem('paymentVerified', 'true');
           localStorage.setItem('transactionData', JSON.stringify(result));
           
+          // Get stored user data from checkout
+          const transactionData = localStorage.getItem('habify_transaction');
+          if (transactionData) {
+            try {
+              const userData = JSON.parse(transactionData);
+              if (userData.customerEmail && userData.customerPassword && userData.customerName) {
+                // Auto-register user with checkout data
+                await registerUser(userData.customerEmail, userData.customerPassword, userData.customerName);
+                
+                // Clear stored data
+                localStorage.removeItem('habify_transaction');
+                
+                // Navigate to dashboard after successful registration
+                setTimeout(() => {
+                  navigate('/admin/dashboard');
+                }, 2000);
+              }
+            } catch (error) {
+              console.error('Error parsing transaction data:', error);
+            }
+          }
+          
           // Show success message and guide user to create account
-          toast.success('Pagamento confirmado! Agora crie sua conta para acessar o painel.');
+          toast.success('Pagamento confirmado! Sua conta foi criada automaticamente.');
           
           // Clear the abacatePayId from localStorage
           localStorage.removeItem('abacatePayId');
           
-          // Don't navigate automatically - let user see the success message
         } else {
           toast.error('Erro na verificação do pagamento');
           console.error('Payment verification failed:', result.error);
