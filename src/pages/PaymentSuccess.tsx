@@ -23,7 +23,7 @@ const PaymentSuccess = () => {
   }, []);
 
   const handleGoToDashboard = () => {
-    navigate('/admin/dashboard');
+    navigate('/admin/my-projects');
   };
 
   const handleGoHome = () => {

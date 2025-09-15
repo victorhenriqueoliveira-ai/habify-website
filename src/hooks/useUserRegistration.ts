@@ -13,7 +13,7 @@ export const useUserRegistration = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/admin/dashboard`,
+          emailRedirectTo: `${window.location.origin}/admin/my-projects`,
         },
       });
 

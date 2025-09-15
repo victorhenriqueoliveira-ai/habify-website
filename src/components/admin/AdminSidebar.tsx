@@ -26,20 +26,14 @@ import { cn } from '@/lib/utils';
 
 const menuItems = [
   {
-    title: 'Dashboard',
-    url: '/admin',
-    icon: LayoutDashboard,
-    roles: ['admin', 'dev'],
-  },
-  {
-    title: 'Meu Painel',
-    url: '/admin/dashboard',
-    icon: LayoutDashboard,
+    title: 'Meus Projetos',
+    url: '/admin/my-projects',
+    icon: Building2,
     roles: ['user'],
   },
   {
     title: 'Usuários',
-    url: '/admin/users',
+    url: '/admin',
     icon: Users,
     roles: ['admin', 'dev'],
   },
@@ -48,12 +42,6 @@ const menuItems = [
     url: '/admin/projects',
     icon: Building2,
     roles: ['admin', 'dev'],
-  },
-  {
-    title: 'Meus Projetos',
-    url: '/admin/my-projects',
-    icon: Building2,
-    roles: ['user'],
   },
   {
     title: 'Relatórios',

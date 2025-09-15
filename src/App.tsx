@@ -12,7 +12,7 @@ import PaymentCanceled from "./pages/PaymentCanceled";
 import { LoginPage } from '@/pages/admin/LoginPage';
 import { AuthPage } from '@/pages/admin/AuthPage';
 import { AdminLayout } from "./components/admin/AdminLayout";
-import { DashboardPage } from "./pages/admin/DashboardPage";
+
 import { UsersPage } from "./pages/admin/UsersPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
 import { MyProjectsPage } from "./pages/admin/MyProjectsPage";
@@ -88,12 +88,12 @@ const App = () => (
               {/* Dashboard Routes */}
               <Route index element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
-                  <DashboardPage />
+                  <UsersPage />
                 </RoleBasedRoute>
               } />
               <Route path="dashboard" element={
                 <RoleBasedRoute allowedRoles={['user']}>
-                  <DashboardPage />
+                  <Navigate to="/admin/my-projects" replace />
                 </RoleBasedRoute>
               } />
               

@@ -39,9 +39,9 @@ export const usePostPaymentFlow = () => {
                 // Clear stored data
                 localStorage.removeItem('habify_transaction');
                 
-                // Navigate to dashboard after successful registration
+                // Navigate to my projects after successful registration
                 setTimeout(() => {
-                  navigate('/admin/dashboard');
+                  navigate('/admin/my-projects');
                 }, 2000);
               }
             } catch (error) {
