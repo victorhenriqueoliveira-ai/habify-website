@@ -16,6 +16,7 @@ import { DashboardPage } from "./pages/admin/DashboardPage";
 import { UsersPage } from "./pages/admin/UsersPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
 import { MyProjectsPage } from "./pages/admin/MyProjectsPage";
+import NewProjectPurchasePage from "./pages/admin/NewProjectPurchasePage";
 import NewProjectPage from "./pages/admin/NewProjectPage";
 import { ProfilePage } from "./pages/admin/ProfilePage";
 import { ReportsPage } from "./pages/admin/ReportsPage";
@@ -115,6 +116,11 @@ const App = () => (
               <Route path="new-project" element={
                 <RoleBasedRoute allowedRoles={['user']}>
                   <NewProjectPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="new-project-purchase" element={
+                <RoleBasedRoute allowedRoles={['user']}>
+                  <NewProjectPurchasePage />
                 </RoleBasedRoute>
               } />
               <Route path="users/new" element={

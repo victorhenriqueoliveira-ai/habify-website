@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useMultipleProjects } from '@/hooks/useMultipleProjects';
 import { ProjectForm } from '@/components/ProjectForm';
+import { useProjectLimits } from '@/hooks/useProjectLimits';
 
 type ProjectType = 'single_property' | 'realtor_multiple';
 
@@ -18,10 +19,17 @@ const NewProjectPage = () => {
   const navigate = useNavigate();
   const { createProject } = useProjects();
   const { user } = useAuth();
+  const { canCreateProject } = useProjectLimits();
   const [loading, setLoading] = useState(false);
   const { projects, addProject, removeProject, updateProject, resetProjects } = useMultipleProjects();
   
   const [projectType, setProjectType] = useState<ProjectType>('single_property');
+
+  // Redirect if user can't create projects
+  if (!canCreateProject) {
+    navigate('/admin/new-project-purchase');
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

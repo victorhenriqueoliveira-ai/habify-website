@@ -34,6 +34,7 @@ import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useProjectLimits } from '@/hooks/useProjectLimits';
 
 const statusColors = {
   pending: 'secondary',
@@ -61,6 +62,7 @@ const propertyTypeLabels = {
 export const MyProjectsPage = () => {
   const { user } = useAuth();
   const { projects, loading } = useProjects();
+  const { canCreateProject, activeProjectsCount } = useProjectLimits();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -89,11 +91,45 @@ export const MyProjectsPage = () => {
             Acompanhe o status e gerencie seus projetos
           </p>
         </div>
-        <Button onClick={() => window.location.href = '/admin/new-project'}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Projeto
-        </Button>
+        {canCreateProject ? (
+          <Button onClick={() => window.location.href = '/admin/new-project'}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Projeto
+          </Button>
+        ) : (
+          <Button onClick={() => window.location.href = '/admin/new-project-purchase'}>
+            <Plus className="mr-2 h-4 w-4" />
+            Contratar Novo Projeto
+          </Button>
+        )}
       </div>
+
+      {/* Limit Alert */}
+      {!canCreateProject && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">!</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-amber-800">Limite de Projetos Atingido</h3>
+                  <p className="text-sm text-amber-700">
+                    Você tem {activeProjectsCount} projeto(s) ativo(s). Para criar um novo, contrate um plano adicional.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                onClick={() => window.location.href = '/admin/new-project-purchase'}
+              >
+                Contratar Novo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -107,7 +143,7 @@ export const MyProjectsPage = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <CardTitle className="text-sm font-medium">⏳ Pendentes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
@@ -117,7 +153,7 @@ export const MyProjectsPage = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
+            <CardTitle className="text-sm font-medium">🚧 Em Andamento</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
@@ -127,7 +163,7 @@ export const MyProjectsPage = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
+            <CardTitle className="text-sm font-medium">✅ Concluídos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -137,184 +173,187 @@ export const MyProjectsPage = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Buscar projetos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+      {/* Projects by Status Sections */}
+      <div className="space-y-8">
+        {/* Pending Projects */}
+        {userProjects.filter(p => p.status === 'pending').length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                ⏳ Projetos Pendentes ({userProjects.filter(p => p.status === 'pending').length})
+              </CardTitle>
+              <CardDescription>
+                Projetos aguardando aprovação e início dos trabalhos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {userProjects.filter(p => p.status === 'pending').map((project) => (
+                  <Card key={project.id} className="border-yellow-200">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <h3 className="font-medium">{project.title}</h3>
+                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        <div className="text-sm">
+                          {project.price > 0 && (
+                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
+                          )}
+                          <p className="text-muted-foreground">
+                            {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
+                          </p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => setSelectedProject(project)}
+                          className="w-full"
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="min-w-[140px]">
-                  <Filter className="mr-2 h-4 w-4" />
-                  {selectedStatus === 'all' ? 'Todos' : statusLabels[selectedStatus]}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSelectedStatus('all')}>
-                  Todos os status
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedStatus('pending')}>
-                  Pendentes
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedStatus('in_progress')}>
-                  Em Andamento
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedStatus('completed')}>
-                  Concluídos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedStatus('approved')}>
-                  Aprovados
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedStatus('rejected')}>
-                  Rejeitados
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Projects Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Lista de Projetos ({filteredProjects.length})
-          </CardTitle>
-          <CardDescription>
-            {selectedStatus === 'all' 
-              ? 'Todos os seus projetos' 
-              : `Filtrando por: ${statusLabels[selectedStatus]}`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Projeto</TableHead>
-                    <TableHead>Tipo/Localização</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Criado</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProjects.map((project) => (
-                    <TableRow key={project.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{project.title}</div>
-                          <div className="text-sm text-muted-foreground line-clamp-1">
-                            {project.description}
-                          </div>
+        {/* In Progress Projects */}
+        {userProjects.filter(p => p.status === 'in_progress').length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                🚧 Projetos Em Andamento ({userProjects.filter(p => p.status === 'in_progress').length})
+              </CardTitle>
+              <CardDescription>
+                Projetos sendo desenvolvidos pela nossa equipe
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {userProjects.filter(p => p.status === 'in_progress').map((project) => (
+                  <Card key={project.id} className="border-blue-200">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <h3 className="font-medium">{project.title}</h3>
+                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        <div className="text-sm">
+                          {project.price > 0 && (
+                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
+                          )}
+                          <p className="text-muted-foreground">
+                            {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => setSelectedProject(project)}
+                            className="flex-1"
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => setSelectedProject(project)}
+                            className="flex-1"
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chat
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Completed Projects */}
+        {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                ✅ Projetos Concluídos ({userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length})
+              </CardTitle>
+              <CardDescription>
+                Projetos finalizados e entregues
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').map((project) => (
+                  <Card key={project.id} className="border-green-200">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <h3 className="font-medium">{project.title}</h3>
+                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        <div className="text-sm">
+                          {project.price > 0 && (
+                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
+                          )}
+                          <p className="text-muted-foreground">
+                            Concluído em {format(new Date(project.completedAt || project.updatedAt), 'dd/MM/yyyy', { locale: ptBR })}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => setSelectedProject(project)}
+                            className="flex-1"
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </Button>
                           {project.landingPageUrl && (
-                            <a 
-                              href={project.landingPageUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-sm text-primary hover:underline inline-flex items-center"
+                            <Button 
+                              size="sm" 
+                              onClick={() => window.open(project.landingPageUrl, '_blank')}
+                              className="flex-1"
                             >
-                              Ver Landing Page
-                              <ExternalLink className="ml-1 h-3 w-3" />
-                            </a>
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              Ver Site
+                            </Button>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{propertyTypeLabels[project.propertyType]}</div>
-                          <div className="text-sm text-muted-foreground">{project.location}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {project.area ? `${project.area}m²` : ''} 
-                            {project.bedrooms ? ` • ${project.bedrooms}q` : ''} 
-                            {project.bathrooms ? ` • ${project.bathrooms}b` : ''}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {project.price > 0 ? `R$ ${project.price.toLocaleString('pt-BR')}` : '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusColors[project.status]}>
-                          {statusLabels[project.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="flex items-center">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(project.createdAt), 'dd/MM/yy', { locale: ptBR })}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedProject(project)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              Visualizar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSelectedProject(project)}>
-                              <MessageSquare className="mr-2 h-4 w-4" />
-                              Chat com Equipe
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              
-              {filteredProjects.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {userProjects.length === 0 
-                      ? 'Você ainda não criou nenhum projeto.'
-                      : 'Nenhum projeto encontrado com os filtros aplicados.'
-                    }
-                  </p>
-                  {userProjects.length === 0 && (
-                    <Button 
-                      className="mt-4"
-                      onClick={() => window.location.href = '/admin/new-project'}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeiro Projeto
-                    </Button>
-                  )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {userProjects.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-8 h-8 text-muted-foreground" />
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                <h3 className="text-lg font-medium mb-2">Nenhum projeto ainda</h3>
+                <p className="text-muted-foreground mb-6">
+                  Comece criando seu primeiro projeto para ter sua landing page personalizada.
+                </p>
+                <Button onClick={() => window.location.href = '/admin/new-project'}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Primeiro Projeto
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
 
       {/* Project Details Modal */}
       <ProjectDetailsModal
