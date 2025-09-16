@@ -26,102 +26,13 @@ import {
   Info, 
   AlertTriangle,
   CheckCircle,
-  Filter,
-  Calendar,
+  RefreshCw,
 } from 'lucide-react';
+import { useSystemLogs } from '@/hooks/useSystemLogs';
+import { useAuditLogger } from '@/hooks/useAuditLogger';
+import { toast } from '@/hooks/use-toast';
 
 type LogLevel = 'info' | 'warning' | 'error' | 'success';
-
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: LogLevel;
-  category: string;
-  message: string;
-  user?: string;
-  ip?: string;
-  details?: string;
-}
-
-const mockLogs: LogEntry[] = [
-  {
-    id: '1',
-    timestamp: '2024-08-28T14:30:15Z',
-    level: 'info',
-    category: 'Authentication',
-    message: 'Usuário logado com sucesso',
-    user: 'marina@habify.com',
-    ip: '192.168.1.100',
-    details: 'Login realizado via dashboard admin'
-  },
-  {
-    id: '2',
-    timestamp: '2024-08-28T14:25:42Z',
-    level: 'warning',
-    category: 'Database',
-    message: 'Conexão com banco lenta',
-    ip: '10.0.0.5',
-    details: 'Query demorou 5.2s para executar - SELECT * FROM projects'
-  },
-  {
-    id: '3',
-    timestamp: '2024-08-28T14:20:33Z',
-    level: 'error',
-    category: 'API',
-    message: 'Falha ao enviar email de notificação',
-    user: 'carlos@email.com',
-    ip: '192.168.1.105',
-    details: 'SMTP timeout - Unable to connect to smtp.gmail.com:587'
-  },
-  {
-    id: '4',
-    timestamp: '2024-08-28T14:15:18Z',
-    level: 'success',
-    category: 'Project',
-    message: 'Projeto concluído com sucesso',
-    user: 'roberto@email.com',
-    ip: '192.168.1.102',
-    details: 'Projeto "Casa Moderna no Brooklin" finalizado e publicado'
-  },
-  {
-    id: '5',
-    timestamp: '2024-08-28T14:10:55Z',
-    level: 'info',
-    category: 'System',
-    message: 'Backup automático executado',
-    details: 'Backup completo do banco de dados realizado - 2.3GB'
-  },
-  {
-    id: '6',
-    timestamp: '2024-08-28T14:05:21Z',
-    level: 'warning',
-    category: 'Security',
-    message: 'Tentativa de login falhada',
-    user: 'unknown@test.com',
-    ip: '45.123.45.67',
-    details: 'Múltiplas tentativas de login com credenciais inválidas'
-  },
-  {
-    id: '7',
-    timestamp: '2024-08-28T14:00:12Z',
-    level: 'error',
-    category: 'File Upload',
-    message: 'Erro no upload de arquivo',
-    user: 'ana@email.com',
-    ip: '192.168.1.108',
-    details: 'Arquivo muito grande: 15MB - Limite: 10MB'
-  },
-  {
-    id: '8',
-    timestamp: '2024-08-28T13:55:33Z',
-    level: 'info',
-    category: 'User',
-    message: 'Novo usuário cadastrado',
-    user: 'admin@habify.com',
-    ip: '192.168.1.100',
-    details: 'Usuário "João Silva" criado com perfil "user"'
-  },
-];
 
 const logLevelConfig = {
   info: {
@@ -147,12 +58,13 @@ const logLevelConfig = {
 } as const;
 
 export const LogsPage = () => {
-  const [logs, setLogs] = useState<LogEntry[]>(mockLogs);
+  const { logs, loading, fetchLogs } = useSystemLogs();
+  const { logSystemAction } = useAuditLogger();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<LogLevel | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const categories = Array.from(new Set(mockLogs.map(log => log.category)));
+  const categories = Array.from(new Set(logs.map(log => log.category)));
 
   // Filter logs
   const filteredLogs = logs.filter((log) => {
@@ -176,22 +88,66 @@ export const LogsPage = () => {
     success: logs.filter(l => l.level === 'success').length,
   };
 
-  const handleExportLogs = () => {
-    const csvContent = logs.map(log => 
-      `${log.timestamp},${log.level},${log.category},"${log.message}",${log.user || ''},${log.ip || ''}`
-    ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `habify-logs-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+  const handleExportLogs = async () => {
+    try {
+      const csvContent = [
+        'Timestamp,Level,Category,Message,User,IP,Details',
+        ...logs.map(log => 
+          `${log.timestamp},${log.level},${log.category},"${log.message.replace(/"/g, '""')}",${log.user || ''},${log.ip || ''},"${(log.details || '').replace(/"/g, '""')}"`
+        )
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habify-logs-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      
+      // Log the export action
+      await logSystemAction('EXPORT_DATA', { type: 'system_logs', count: logs.length });
+      
+      toast({
+        title: "Logs exportados",
+        description: `${logs.length} logs exportados com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao exportar",
+        description: "Falha ao exportar os logs do sistema.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRefreshLogs = async () => {
+    try {
+      await fetchLogs();
+      await logSystemAction('VIEW_LOGS', { action: 'refresh' });
+      toast({
+        title: "Logs atualizados",
+        description: "Os logs foram atualizados com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Falha ao atualizar os logs do sistema.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('pt-BR');
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -203,10 +159,16 @@ export const LogsPage = () => {
             Monitore atividades e eventos do sistema em tempo real
           </p>
         </div>
-        <Button onClick={handleExportLogs} variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Exportar Logs
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleRefreshLogs} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Atualizar
+          </Button>
+          <Button onClick={handleExportLogs} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Logs
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
