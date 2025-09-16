@@ -3,19 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   User, 
   Mail, 
   Phone, 
   Building, 
+  Camera, 
+  Shield, 
+  Save, 
   Calendar,
-  Shield,
-  Save,
-  Camera,
+  Activity,
+  CheckCircle,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUsers } from '@/hooks/useUsers';
 import { toast } from '@/hooks/use-toast';
 
 const roleLabels = {
@@ -32,6 +37,7 @@ const roleColors = {
 
 export const ProfilePage = () => {
   const { user } = useAuth();
+  const { updateUser, loading } = useUsers();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -42,13 +48,27 @@ export const ProfilePage = () => {
 
   if (!user) return null;
 
-  const handleSave = () => {
-    // In a real app, this would update the user data
-    toast({
-      title: 'Perfil atualizado',
-      description: 'Suas informações foram salvas com sucesso.',
-    });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      await updateUser(user.id, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+      });
+      
+      toast({
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram salvas com sucesso.',
+      });
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar as alterações.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -115,11 +135,12 @@ export const ProfilePage = () => {
             <Button
               variant={isEditing ? "default" : "outline"}
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              disabled={loading}
             >
               {isEditing ? (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  Salvar
+                  {loading ? 'Salvando...' : 'Salvar'}
                 </>
               ) : (
                 'Editar'
@@ -187,9 +208,9 @@ export const ProfilePage = () => {
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
+                <Button onClick={handleSave} disabled={loading}>
                   <Save className="mr-2 h-4 w-4" />
-                  Salvar Alterações
+                  {loading ? 'Salvando...' : 'Salvar Alterações'}
                 </Button>
               </div>
             )}

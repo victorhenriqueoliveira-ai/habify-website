@@ -16,7 +16,7 @@ export const LoginPage = () => {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/my-projects" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +38,8 @@ export const LoginPage = () => {
         title: 'Sucesso!',
         description: 'Login realizado com sucesso',
       });
-      navigate('/admin');
+      // Redirect to my-projects for users, admin panel for admins/devs
+      navigate('/admin/my-projects');
     } else {
       toast({
         title: 'Erro',

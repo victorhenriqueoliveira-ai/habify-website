@@ -56,7 +56,8 @@ const RoleBasedRoute = ({
   const { hasRole } = useAuth();
   
   if (!hasRole(allowedRoles)) {
-    return <Navigate to="/admin" replace />;
+    // Redirect regular users to my-projects, others to admin panel
+    return <Navigate to="/admin/my-projects" replace />;
   }
   
   return <>{children}</>;
