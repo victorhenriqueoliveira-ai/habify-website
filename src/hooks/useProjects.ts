@@ -107,9 +107,17 @@ export const useProjects = () => {
         .update(updateData)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.error('No project found with ID:', id);
+        throw new Error('Projeto não encontrado ou sem permissão para atualizar');
+      }
       
       // Log the update action
       await logProjectAction('UPDATE_PROJECT', id, {
