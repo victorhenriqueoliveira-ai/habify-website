@@ -112,11 +112,46 @@ export const useAuth = () => {
       password,
     });
 
+    // Log successful login
+    if (data.user && !error) {
+      setTimeout(async () => {
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: data.user?.id || null,
+            action: 'LOGIN',
+            target_type: 'auth',
+            details: { email, timestamp: new Date().toISOString() }
+          });
+        } catch (logError) {
+          console.error('Failed to log login:', logError);
+        }
+      }, 100);
+    }
+
     return { user: data.user, error };
   };
 
   const signOut = async () => {
+    const userId = authState.user?.id;
+    
     const { error } = await supabase.auth.signOut();
+    
+    // Log logout
+    if (userId) {
+      setTimeout(async () => {
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: userId,
+            action: 'LOGOUT',
+            target_type: 'auth',
+            details: { timestamp: new Date().toISOString() }
+          });
+        } catch (logError) {
+          console.error('Failed to log logout:', logError);
+        }
+      }, 100);
+    }
+
     return { error };
   };
 

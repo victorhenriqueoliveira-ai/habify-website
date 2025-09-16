@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@/types/admin';
+import { useAuditLogger } from './useAuditLogger';
 
 export const useUsers = () => {
+  const { logUserAction } = useAuditLogger();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +59,12 @@ export const useUsers = () => {
 
       if (error) throw error;
       
+      // Log the update action
+      await logUserAction('UPDATE_USER', id, { 
+        fields: Object.keys(updateData),
+        timestamp: new Date().toISOString()
+      });
+      
       await fetchUsers();
       return { success: true, data };
     } catch (error) {
@@ -80,6 +88,12 @@ export const useUsers = () => {
       const { error } = await supabase.auth.admin.deleteUser(profile.user_id);
 
       if (error) throw error;
+      
+      // Log the delete action
+      await logUserAction('DELETE_USER', id, { 
+        user_id: profile.user_id,
+        timestamp: new Date().toISOString()
+      });
       
       await fetchUsers();
       return { success: true };
@@ -120,6 +134,14 @@ export const useUsers = () => {
           })
           .eq('user_id', data.user.id);
       }
+      
+      // Log the create action
+      await logUserAction('CREATE_USER', data.user!.id, { 
+        email: userData.email,
+        name: userData.name,
+        role: userData.role || 'user',
+        timestamp: new Date().toISOString()
+      });
       
       await fetchUsers();
       return { success: true, data };

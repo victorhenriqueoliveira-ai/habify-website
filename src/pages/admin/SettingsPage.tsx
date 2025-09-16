@@ -18,43 +18,58 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
+import { useAuditLogger } from '@/hooks/useAuditLogger';
 
 export const SettingsPage = () => {
+  const { 
+    settings, 
+    loading: settingsLoading, 
+    updateSetting, 
+    getEmailSettings, 
+    getSystemSettings, 
+    getSecuritySettings 
+  } = useSystemSettings();
+  const { logSystemAction } = useAuditLogger();
   const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState({
+  const [localSettings, setLocalSettings] = useState({
     // API Settings
     abacatePayApiKey: '••••••••••••••••',
     supabaseUrl: 'https://jsttoajuszshrivmgnmc.supabase.co',
-    
-    // Email Settings
-    emailNotifications: true,
-    emailProvider: 'smtp',
-    smtpHost: 'smtp.gmail.com',
-    smtpPort: '587',
-    
-    // System Settings
-    maintenanceMode: false,
-    allowRegistrations: true,
-    autoApproveProjects: false,
-    maxUploadSize: '10',
-    
-    // Security Settings
-    enforceSSL: true,
-    sessionTimeout: '24',
-    passwordPolicy: true,
   });
+
+  const emailSettings = getEmailSettings();
+  const systemSettings = getSystemSettings();
+  const securitySettings = getSecuritySettings();
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      // In a real app, this would save to the database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updates = [
+        updateSetting('email_notifications', { enabled: emailSettings.notifications.enabled }),
+        updateSetting('email_provider', emailSettings.provider),
+        updateSetting('maintenance_mode', { enabled: systemSettings.maintenanceMode.enabled }),
+        updateSetting('allow_registrations', { enabled: systemSettings.allowRegistrations.enabled }),
+        updateSetting('auto_approve_projects', { enabled: systemSettings.autoApproveProjects.enabled }),
+        updateSetting('max_upload_size', { size_mb: systemSettings.maxUploadSize.size_mb }),
+        updateSetting('enforce_ssl', { enabled: securitySettings.enforceSSL.enabled }),
+        updateSetting('password_policy', securitySettings.passwordPolicy),
+        updateSetting('session_timeout', { hours: securitySettings.sessionTimeout.hours }),
+      ];
+
+      await Promise.all(updates);
       
+      await logSystemAction('CHANGE_SETTINGS', {
+        categories: ['email', 'system', 'security'],
+        timestamp: new Date().toISOString()
+      });
+
       toast({
         title: 'Configurações salvas',
         description: 'As configurações foram atualizadas com sucesso.',
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: 'Erro ao salvar',
         description: 'Ocorreu um erro ao salvar as configurações.',
@@ -65,12 +80,73 @@ export const SettingsPage = () => {
     }
   };
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleSettingChange = async (category: string, field: string, value: string | boolean) => {
+    try {
+      let settingKey = '';
+      let settingValue: any = {};
+
+      switch (category) {
+        case 'email':
+          if (field === 'emailNotifications') {
+            settingKey = 'email_notifications';
+            settingValue = { enabled: value };
+          } else if (field === 'smtpHost') {
+            settingKey = 'email_provider';
+            settingValue = { ...emailSettings.provider, host: value };
+          } else if (field === 'smtpPort') {
+            settingKey = 'email_provider';
+            settingValue = { ...emailSettings.provider, port: value };
+          }
+          break;
+        case 'system':
+          if (field === 'maintenanceMode') {
+            settingKey = 'maintenance_mode';
+            settingValue = { enabled: value };
+          } else if (field === 'allowRegistrations') {
+            settingKey = 'allow_registrations';
+            settingValue = { enabled: value };
+          } else if (field === 'autoApproveProjects') {
+            settingKey = 'auto_approve_projects';
+            settingValue = { enabled: value };
+          } else if (field === 'maxUploadSize') {
+            settingKey = 'max_upload_size';
+            settingValue = { size_mb: parseInt(value as string) || 10 };
+          }
+          break;
+        case 'security':
+          if (field === 'enforceSSL') {
+            settingKey = 'enforce_ssl';
+            settingValue = { enabled: value };
+          } else if (field === 'passwordPolicy') {
+            settingKey = 'password_policy';
+            settingValue = { enabled: value, min_length: 8 };
+          } else if (field === 'sessionTimeout') {
+            settingKey = 'session_timeout';
+            settingValue = { hours: parseInt(value as string) || 24 };
+          }
+          break;
+      }
+
+      if (settingKey) {
+        await updateSetting(settingKey, settingValue);
+      }
+    } catch (error) {
+      console.error('Error updating setting:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao atualizar configuração.',
+        variant: 'destructive',
+      });
+    }
   };
+
+  if (settingsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -101,8 +177,8 @@ export const SettingsPage = () => {
                 <Input
                   id="abacatepay"
                   type="password"
-                  value={settings.abacatePayApiKey}
-                  onChange={(e) => handleChange('abacatePayApiKey', e.target.value)}
+                  value={localSettings.abacatePayApiKey}
+                  onChange={(e) => setLocalSettings(prev => ({...prev, abacatePayApiKey: e.target.value}))}
                 />
                 <Badge variant="default">Ativo</Badge>
               </div>
@@ -112,8 +188,8 @@ export const SettingsPage = () => {
               <Label htmlFor="supabase">Supabase URL</Label>
               <Input
                 id="supabase"
-                value={settings.supabaseUrl}
-                onChange={(e) => handleChange('supabaseUrl', e.target.value)}
+                value={localSettings.supabaseUrl}
+                onChange={(e) => setLocalSettings(prev => ({...prev, supabaseUrl: e.target.value}))}
                 readOnly
               />
             </div>
@@ -140,8 +216,8 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <Switch
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleChange('emailNotifications', checked)}
+                checked={emailSettings.notifications?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('email', 'emailNotifications', checked)}
               />
             </div>
             
@@ -152,16 +228,16 @@ export const SettingsPage = () => {
                 <Label htmlFor="smtp-host">SMTP Host</Label>
                 <Input
                   id="smtp-host"
-                  value={settings.smtpHost}
-                  onChange={(e) => handleChange('smtpHost', e.target.value)}
+                  value={emailSettings.provider?.host || ''}
+                  onChange={(e) => handleSettingChange('email', 'smtpHost', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="smtp-port">SMTP Port</Label>
                 <Input
                   id="smtp-port"
-                  value={settings.smtpPort}
-                  onChange={(e) => handleChange('smtpPort', e.target.value)}
+                  value={emailSettings.provider?.port?.toString() || ''}
+                  onChange={(e) => handleSettingChange('email', 'smtpPort', e.target.value)}
                 />
               </div>
             </div>
@@ -188,8 +264,8 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <Switch
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => handleChange('maintenanceMode', checked)}
+                checked={systemSettings.maintenanceMode?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('system', 'maintenanceMode', checked)}
               />
             </div>
             
@@ -201,21 +277,21 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <Switch
-                checked={settings.allowRegistrations}
-                onCheckedChange={(checked) => handleChange('allowRegistrations', checked)}
+                checked={systemSettings.allowRegistrations?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('system', 'allowRegistrations', checked)}
               />
             </div>
             
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Auto-aprovar Projetos</Label>
-                <p className="text-sm text-muted-foregreen">
+                <p className="text-sm text-muted-foreground">
                   Aprovar projetos automaticamente
                 </p>
               </div>
               <Switch
-                checked={settings.autoApproveProjects}
-                onCheckedChange={(checked) => handleChange('autoApproveProjects', checked)}
+                checked={systemSettings.autoApproveProjects?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('system', 'autoApproveProjects', checked)}
               />
             </div>
             
@@ -224,8 +300,8 @@ export const SettingsPage = () => {
               <Input
                 id="max-upload"
                 type="number"
-                value={settings.maxUploadSize}
-                onChange={(e) => handleChange('maxUploadSize', e.target.value)}
+                value={systemSettings.maxUploadSize?.size_mb?.toString() || '10'}
+                onChange={(e) => handleSettingChange('system', 'maxUploadSize', e.target.value)}
               />
             </div>
           </CardContent>
@@ -251,8 +327,8 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <Switch
-                checked={settings.enforceSSL}
-                onCheckedChange={(checked) => handleChange('enforceSSL', checked)}
+                checked={securitySettings.enforceSSL?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('security', 'enforceSSL', checked)}
               />
             </div>
             
@@ -264,8 +340,8 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <Switch
-                checked={settings.passwordPolicy}
-                onCheckedChange={(checked) => handleChange('passwordPolicy', checked)}
+                checked={securitySettings.passwordPolicy?.enabled || false}
+                onCheckedChange={(checked) => handleSettingChange('security', 'passwordPolicy', checked)}
               />
             </div>
             
@@ -274,8 +350,8 @@ export const SettingsPage = () => {
               <Input
                 id="session-timeout"
                 type="number"
-                value={settings.sessionTimeout}
-                onChange={(e) => handleChange('sessionTimeout', e.target.value)}
+                value={securitySettings.sessionTimeout?.hours?.toString() || '24'}
+                onChange={(e) => handleSettingChange('security', 'sessionTimeout', e.target.value)}
               />
             </div>
           </CardContent>

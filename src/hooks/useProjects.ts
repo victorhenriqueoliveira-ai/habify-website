@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Project } from '@/types/admin';
+import { useAuditLogger } from './useAuditLogger';
 
 export const useProjects = () => {
+  const { logProjectAction } = useAuditLogger();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,6 +66,14 @@ export const useProjects = () => {
 
       if (error) throw error;
       
+      // Log the create action
+      await logProjectAction('CREATE_PROJECT', data.id, {
+        title: projectData.title,
+        location: projectData.location,
+        price: projectData.price,
+        timestamp: new Date().toISOString()
+      });
+      
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
@@ -101,6 +111,13 @@ export const useProjects = () => {
 
       if (error) throw error;
       
+      // Log the update action
+      await logProjectAction('UPDATE_PROJECT', id, {
+        fields: Object.keys(updateData),
+        status: updates.status,
+        timestamp: new Date().toISOString()
+      });
+      
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
@@ -117,6 +134,11 @@ export const useProjects = () => {
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Log the delete action
+      await logProjectAction('DELETE_PROJECT', id, {
+        timestamp: new Date().toISOString()
+      });
       
       await fetchProjects();
       return { success: true };
