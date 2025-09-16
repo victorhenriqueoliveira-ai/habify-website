@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
+import { useUserStats } from '@/hooks/useUserStats';
 import { toast } from '@/hooks/use-toast';
 
 const roleLabels = {
@@ -38,6 +39,7 @@ const roleColors = {
 export const ProfilePage = () => {
   const { user } = useAuth();
   const { updateUser, loading } = useUsers();
+  const { stats: userStats, loading: statsLoading } = useUserStats();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -233,7 +235,7 @@ export const ProfilePage = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-primary">
-                {user.role === 'user' ? 2 : user.role === 'admin' ? 156 : 342}
+                {statsLoading ? '...' : userStats.totalProjects}
               </div>
               <p className="text-sm text-muted-foreground">
                 {user.role === 'user' ? 'Projetos Criados' : 'Projetos Gerenciados'}
@@ -241,7 +243,7 @@ export const ProfilePage = () => {
             </div>
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                {user.role === 'user' ? 1 : user.role === 'admin' ? 88 : 278}
+                {statsLoading ? '...' : userStats.completedProjects}
               </div>
               <p className="text-sm text-muted-foreground">
                 {user.role === 'user' ? 'Projetos Concluídos' : 'Projetos Finalizados'}
@@ -249,7 +251,7 @@ export const ProfilePage = () => {
             </div>
             <div className="text-center p-4 border rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
-                {user.role === 'user' ? '98%' : user.role === 'admin' ? '95%' : '99%'}
+                {statsLoading ? '...' : `${userStats.successRate}%`}
               </div>
               <p className="text-sm text-muted-foreground">
                 Taxa de Sucesso

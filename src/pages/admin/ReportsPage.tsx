@@ -129,29 +129,29 @@ export const ReportsPage = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Receita Total"
-          value={`R$ ${(totalRevenue / 1000000).toFixed(1)}M`}
-          trend={18.5}
+          value={totalRevenue > 0 ? `R$ ${(totalRevenue / 1000000).toFixed(1)}M` : 'R$ 0,00'}
+          trend={stats.monthlyGrowth}
           icon={DollarSign}
           description="últimos 30 dias"
         />
         <StatCard
           title="Projetos Ativos"
           value={stats.inProgressProjects}
-          trend={12}
+          trend={stats.totalProjects > 0 ? ((stats.inProgressProjects / stats.totalProjects) * 100) - 50 : 0}
           icon={Building2}
           description="em desenvolvimento"
         />
         <StatCard
           title="Taxa de Conversão"
           value={`${conversionRate.toFixed(1)}%`}
-          trend={8.2}
+          trend={conversionRate - 50}
           icon={TrendingUp}
           description="projetos concluídos"
         />
         <StatCard
           title="Usuários Ativos"
           value={activeUsers}
-          trend={-2.1}
+          trend={users.length > 0 ? ((activeUsers / users.length) * 100) - 50 : 0}
           icon={Users}
           description="no último mês"
         />

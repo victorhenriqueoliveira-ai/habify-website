@@ -83,7 +83,7 @@ const NewProjectPage = () => {
       if (successCount === validProjects.length) {
         const selectedUser = users.find(u => u.userId === targetUserId);
         toast.success(`${successCount} projeto(s) criado(s) para ${selectedUser?.name || 'cliente'} com sucesso!`);
-        navigate('/admin/projects');
+        navigate(isDevOrAdmin ? '/admin/projects' : '/admin/my-projects');
       } else {
         toast.error(`Apenas ${successCount} de ${validProjects.length} projetos foram criados`);
       }
@@ -101,7 +101,7 @@ const NewProjectPage = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate('/admin/my-projects')}
+            onClick={() => navigate(isDevOrAdmin ? '/admin/projects' : '/admin/my-projects')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar

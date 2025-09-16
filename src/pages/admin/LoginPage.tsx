@@ -11,11 +11,14 @@ import { toast } from '@/hooks/use-toast';
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loading, isAuthenticated } = useAuth();
+  const { login, loading, isAuthenticated, hasRole } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
   if (isAuthenticated) {
+    if (hasRole(['dev'])) {
+      return <Navigate to="/admin/users" replace />;
+    }
     return <Navigate to="/admin/my-projects" replace />;
   }
 
@@ -38,8 +41,12 @@ export const LoginPage = () => {
         title: 'Sucesso!',
         description: 'Login realizado com sucesso',
       });
-      // Redirect to my-projects for users, admin panel for admins/devs
-      navigate('/admin/my-projects');
+      // Redirect based on user role
+      if (hasRole(['dev'])) {
+        navigate('/admin/users');
+      } else {
+        navigate('/admin/my-projects');
+      }
     } else {
       toast({
         title: 'Erro',
