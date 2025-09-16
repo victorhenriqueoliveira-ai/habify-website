@@ -108,8 +108,8 @@ export const ProjectsPage = () => {
   };
 
   const getUserName = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    return user?.name || 'Usuário não encontrado';
+    const user = users.find(u => u.userId === userId);
+    return user?.name || 'Cliente não encontrado';
   };
 
   return (

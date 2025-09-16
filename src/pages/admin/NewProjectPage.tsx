@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Building, User } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUsers } from '@/hooks/useUsers';
 import { toast } from 'sonner';
 import { useMultipleProjects } from '@/hooks/useMultipleProjects';
 import { ProjectForm } from '@/components/ProjectForm';
@@ -18,15 +20,20 @@ type ProjectType = 'single_property' | 'realtor_multiple';
 const NewProjectPage = () => {
   const navigate = useNavigate();
   const { createProject } = useProjects();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const { users } = useUsers();
   const { canCreateProject } = useProjectLimits();
   const [loading, setLoading] = useState(false);
   const { projects, addProject, removeProject, updateProject, resetProjects } = useMultipleProjects();
   
   const [projectType, setProjectType] = useState<ProjectType>('single_property');
+  const [selectedUserId, setSelectedUserId] = useState<string>(user?.userId || user?.id || '');
 
-  // Redirect if user can't create projects
-  if (!canCreateProject) {
+  // For devs/admins, always allow project creation
+  const isDevOrAdmin = hasRole(['admin', 'dev']);
+  
+  // Redirect if regular user can't create projects
+  if (!isDevOrAdmin && !canCreateProject) {
     navigate('/admin/new-project-purchase');
     return null;
   }
@@ -34,8 +41,11 @@ const NewProjectPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.userId) {
-      toast.error('Você precisa estar logado para criar um projeto');
+    // For devs/admins, use selected user; for regular users, use their own ID
+    const targetUserId = isDevOrAdmin ? selectedUserId : (user?.userId || user?.id);
+    
+    if (!targetUserId) {
+      toast.error('Você precisa selecionar um cliente para criar o projeto');
       return;
     }
 
@@ -52,7 +62,7 @@ const NewProjectPage = () => {
     try {
       const promises = validProjects.map(async (projectData) => {
         return await createProject({
-          userId: user.userId || user.id,
+          userId: targetUserId,
           title: projectData.title.trim(),
           description: projectData.description.trim(),
           projectType: projectType,
@@ -71,8 +81,9 @@ const NewProjectPage = () => {
       const successCount = results.filter(result => result.success).length;
       
       if (successCount === validProjects.length) {
-        toast.success(`${successCount} projeto(s) criado(s) com sucesso!`);
-        navigate('/admin/my-projects');
+        const selectedUser = users.find(u => u.userId === targetUserId);
+        toast.success(`${successCount} projeto(s) criado(s) para ${selectedUser?.name || 'cliente'} com sucesso!`);
+        navigate('/admin/projects');
       } else {
         toast.error(`Apenas ${successCount} de ${validProjects.length} projetos foram criados`);
       }
@@ -102,6 +113,34 @@ const NewProjectPage = () => {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Client Selection for Dev/Admin */}
+            {isDevOrAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Selecionar Cliente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="client">Cliente do projeto</Label>
+                    <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users
+                          .filter(user => user.role === 'user')
+                          .map((client) => (
+                            <SelectItem key={client.userId} value={client.userId}>
+                              {client.name} ({client.email})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Project Type Selection */}
             <Card>
               <CardHeader>
@@ -182,12 +221,15 @@ const NewProjectPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/admin/my-projects')}
+                onClick={() => navigate(isDevOrAdmin ? '/admin/projects' : '/admin/my-projects')}
                 disabled={loading}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button 
+                type="submit" 
+                disabled={loading || (isDevOrAdmin && !selectedUserId)}
+              >
                 {loading ? 'Criando...' : `Criar ${projects.length > 1 ? 'Projetos' : 'Projeto'}`}
               </Button>
             </div>

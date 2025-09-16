@@ -52,7 +52,7 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
 
   if (!project) return null;
 
-  const projectOwner = users.find(u => u.id === project.userId);
+  const projectOwner = users.find(u => u.userId === project.userId);
 
   const handleStatusChange = async (newStatus: ProjectStatus) => {
     setUpdatingStatus(true);

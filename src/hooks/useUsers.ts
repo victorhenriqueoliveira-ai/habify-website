@@ -20,6 +20,7 @@ export const useUsers = () => {
 
       const formattedUsers: User[] = data?.map((profile: any) => ({
         id: profile.id,
+        userId: profile.user_id,
         name: profile.name,
         email: profile.email || profile.name || '',
         phone: profile.phone || '',

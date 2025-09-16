@@ -3,6 +3,7 @@ import { User, Project, Notification, DashboardStats } from '@/types/admin';
 export const mockUsers: User[] = [
   {
     id: '1',
+    userId: 'auth-user-1',
     name: 'Carlos Mendes',
     email: 'carlos@email.com',
     phone: '(11) 99999-9999',
@@ -15,6 +16,7 @@ export const mockUsers: User[] = [
   },
   {
     id: '2',
+    userId: 'auth-user-2',
     name: 'Marina Santos',
     email: 'marina@habify.com',
     phone: '(11) 88888-8888',
@@ -27,6 +29,7 @@ export const mockUsers: User[] = [
   },
   {
     id: '3',
+    userId: 'auth-user-3',
     name: 'Roberto Silva',
     email: 'roberto@email.com',
     phone: '(11) 77777-7777',
@@ -39,6 +42,7 @@ export const mockUsers: User[] = [
   },
   {
     id: '4',
+    userId: 'auth-user-4',
     name: 'Ana Paula',
     email: 'ana@email.com',
     phone: '(11) 66666-6666',
@@ -51,6 +55,7 @@ export const mockUsers: User[] = [
   },
   {
     id: '5',
+    userId: 'auth-user-5',
     name: 'João Dev',
     email: 'joao@habify.com',
     phone: '(11) 55555-5555',

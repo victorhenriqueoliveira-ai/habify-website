@@ -4,6 +4,7 @@ export type ProjectStatus = 'pending' | 'in_progress' | 'completed' | 'approved'
 
 export interface User {
   id: string;
+  userId: string; // auth.users.id
   name: string;
   email: string;
   phone: string;

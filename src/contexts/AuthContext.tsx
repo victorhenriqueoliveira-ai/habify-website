@@ -3,7 +3,7 @@ import { User } from '@/types/admin';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
 
 interface AuthUser extends User {
-  userId?: string;
+  userId: string;
 }
 
 interface AuthContextType {

@@ -44,6 +44,7 @@ export const useAuth = () => {
               if (!error && profile) {
                 const adminUser: AdminUser = {
                   id: profile.id,
+                  userId: profile.user_id,
                   name: profile.name,
                   email: session.user.email || '',
                   phone: profile.phone || '',
