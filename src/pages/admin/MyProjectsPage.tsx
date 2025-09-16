@@ -30,6 +30,7 @@ import {
 import { Project, ProjectStatus } from '@/types/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
+import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
 import { format } from 'date-fns';
@@ -60,8 +61,9 @@ const propertyTypeLabels = {
 };
 
 export const MyProjectsPage = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { projects, loading } = useProjects();
+  const { users } = useUsers();
   const { canCreateProject, activeProjectsCount } = useProjectLimits();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
@@ -70,8 +72,10 @@ export const MyProjectsPage = () => {
   // Enable realtime updates
   useRealtimeProjects();
 
-  // Filter projects for current user only
-  const userProjects = projects.filter(p => p.userId === user?.id || p.userId === user?.userId);
+  // Filter projects - dev/admin see all projects, users see only their own
+  const userProjects = hasRole(['admin', 'dev']) 
+    ? projects 
+    : projects.filter(p => p.userId === user?.id || p.userId === user?.userId);
     
   const filteredProjects = userProjects.filter((project) => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,14 +85,23 @@ export const MyProjectsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const getUserName = (userId: string) => {
+    const user = users.find(u => u.userId === userId);
+    return user?.name || 'Cliente não encontrado';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Meus Projetos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'}
+          </h1>
           <p className="text-muted-foreground">
-            Acompanhe o status e gerencie seus projetos
+            {hasRole(['admin', 'dev']) 
+              ? 'Gerencie todos os projetos do sistema'
+              : 'Acompanhe o status e gerencie seus projetos'}
           </p>
         </div>
         {canCreateProject ? (
@@ -193,7 +206,12 @@ export const MyProjectsPage = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-2">
                         <h3 className="font-medium">{project.title}</h3>
-                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        {hasRole(['admin', 'dev']) && (
+                          <p className="text-sm text-muted-foreground">
+                            Cliente: {getUserName(project.userId)}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
                         <div className="text-sm">
                           {project.price > 0 && (
                             <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
@@ -238,7 +256,12 @@ export const MyProjectsPage = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-2">
                         <h3 className="font-medium">{project.title}</h3>
-                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        {hasRole(['admin', 'dev']) && (
+                          <p className="text-sm text-muted-foreground">
+                            Cliente: {getUserName(project.userId)}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
                         <div className="text-sm">
                           {project.price > 0 && (
                             <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
@@ -293,7 +316,12 @@ export const MyProjectsPage = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-2">
                         <h3 className="font-medium">{project.title}</h3>
-                        <p className="text-sm text-muted-foreground">{project.location}</p>
+                        {hasRole(['admin', 'dev']) && (
+                          <p className="text-sm text-muted-foreground">
+                            Cliente: {getUserName(project.userId)}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
                         <div className="text-sm">
                           {project.price > 0 && (
                             <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
