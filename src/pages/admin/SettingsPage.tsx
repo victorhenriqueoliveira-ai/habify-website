@@ -20,6 +20,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { useAuditLogger } from '@/hooks/useAuditLogger';
+import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 
 export const SettingsPage = () => {
   const { 
@@ -31,6 +32,7 @@ export const SettingsPage = () => {
     getSecuritySettings 
   } = useSystemSettings();
   const { logSystemAction } = useAuditLogger();
+  const { stats: dbStats, loading: dbLoading } = useDatabaseStats();
   const [loading, setLoading] = useState(false);
   const [localSettings, setLocalSettings] = useState({
     // API Settings
@@ -372,22 +374,36 @@ export const SettingsPage = () => {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">Online</div>
+              <div className={`text-2xl font-bold ${dbStats?.status === 'online' ? 'text-green-600' : 'text-red-600'}`}>
+                {dbStats?.status || 'Offline'}
+              </div>
               <p className="text-sm text-muted-foreground">Status</p>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">2.1GB</div>
+              <div className="text-2xl font-bold">{dbStats?.size || 'N/A'}</div>
               <p className="text-sm text-muted-foreground">Tamanho</p>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">45ms</div>
+              <div className="text-2xl font-bold">{dbStats?.latency || 0}ms</div>
               <p className="text-sm text-muted-foreground">Latência</p>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold">99.9%</div>
+              <div className="text-2xl font-bold">{dbStats?.uptime || '0%'}</div>
               <p className="text-sm text-muted-foreground">Uptime</p>
             </div>
           </div>
+          {dbStats?.lastBackup && (
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Último Backup</span>
+                <span className="font-medium">{dbStats.lastBackup}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-muted-foreground">Conexões Ativas</span>
+                <span className="font-medium">{dbStats.connections || 0}</span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

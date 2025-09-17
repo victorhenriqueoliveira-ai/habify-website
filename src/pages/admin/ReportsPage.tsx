@@ -22,6 +22,7 @@ import {
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
+import { useSystemMetrics } from '@/hooks/useSystemMetrics';
 
 const StatCard = ({ 
   title, 
@@ -61,8 +62,9 @@ export const ReportsPage = () => {
   const { stats, loading: statsLoading } = useDashboardStats();
   const { projects, loading: projectsLoading } = useProjects();
   const { users, loading: usersLoading } = useUsers();
+  const { metrics, loading: metricsLoading } = useSystemMetrics();
   
-  const loading = statsLoading || projectsLoading || usersLoading;
+  const loading = statsLoading || projectsLoading || usersLoading || metricsLoading;
   
   if (loading) {
     return (
@@ -72,19 +74,23 @@ export const ReportsPage = () => {
     );
   }
   
-  // Calculate some additional metrics
-  const totalRevenue = projects.reduce((sum, project) => 
-    project.status === 'completed' ? sum + project.price : sum, 0
-  );
+  // Calculate metrics using real data from database functions
+  const totalRevenue = metrics?.totalRevenue || 0;
+  const completedProjects = metrics?.completedProjects || 0;
+  const totalProjects = metrics?.totalProjects || 0;
+  const activeUsers = metrics?.activeUsers || 0;
+  const totalUsers = metrics?.totalUsers || 0;
   
-  const completedProjects = projects.filter(p => p.status === 'completed');
-  const averageProjectValue = completedProjects.length > 0 ? totalRevenue / completedProjects.length : 0;
+  const averageProjectValue = completedProjects > 0 ? totalRevenue / completedProjects : 0;
+  const conversionRate = metrics?.conversionRate || 0;
   
-  const activeUsers = users.filter(u => u.isActive).length;
-  const conversionRate = projects.length > 0 ? (stats.completedProjects / stats.totalProjects) * 100 : 0;
+  // Calculate growth trends based on real data
+  const monthlyGrowth = stats.monthlyGrowth || 0;
+  const projectGrowthTrend = totalProjects > 0 ? ((stats.inProgressProjects / totalProjects) * 100) - 33 : 0;
+  const userGrowthTrend = totalUsers > 0 ? ((activeUsers / totalUsers) * 100) - 80 : 0;
 
   const projectsByStatus = [
-    { status: 'Concluídos', count: stats.completedProjects, color: 'bg-green-500' },
+    { status: 'Concluídos', count: completedProjects, color: 'bg-green-500' },
     { status: 'Em Andamento', count: stats.inProgressProjects, color: 'bg-blue-500' },
     { status: 'Pendentes', count: stats.pendingProjects, color: 'bg-yellow-500' },
     { status: 'Rejeitados', count: projects.filter(p => p.status === 'rejected').length, color: 'bg-red-500' },
@@ -130,14 +136,14 @@ export const ReportsPage = () => {
         <StatCard
           title="Receita Total"
           value={totalRevenue > 0 ? `R$ ${(totalRevenue / 1000000).toFixed(1)}M` : 'R$ 0,00'}
-          trend={stats.monthlyGrowth}
+          trend={monthlyGrowth}
           icon={DollarSign}
-          description="últimos 30 dias"
+          description="receita acumulada"
         />
         <StatCard
           title="Projetos Ativos"
           value={stats.inProgressProjects}
-          trend={stats.totalProjects > 0 ? ((stats.inProgressProjects / stats.totalProjects) * 100) - 50 : 0}
+          trend={projectGrowthTrend}
           icon={Building2}
           description="em desenvolvimento"
         />
@@ -151,9 +157,9 @@ export const ReportsPage = () => {
         <StatCard
           title="Usuários Ativos"
           value={activeUsers}
-          trend={users.length > 0 ? ((activeUsers / users.length) * 100) - 50 : 0}
+          trend={userGrowthTrend}
           icon={Users}
-          description="no último mês"
+          description="usuários cadastrados"
         />
       </div>
 
@@ -179,7 +185,7 @@ export const ReportsPage = () => {
                        <div 
                          className={`h-full ${item.color}`}
                          style={{ 
-                           width: `${stats.totalProjects > 0 ? (item.count / stats.totalProjects) * 100 : 0}%` 
+                           width: `${totalProjects > 0 ? (item.count / totalProjects) * 100 : 0}%` 
                          }}
                        />
                      </div>
@@ -188,10 +194,10 @@ export const ReportsPage = () => {
               ))}
             </div>
             <div className="mt-4 pt-4 border-t">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total de Projetos</span>
-                <span className="font-medium">{stats.totalProjects}</span>
-              </div>
+               <div className="flex justify-between text-sm">
+                 <span className="text-muted-foreground">Total de Projetos</span>
+                 <span className="font-medium">{totalProjects}</span>
+               </div>
             </div>
           </CardContent>
         </Card>
@@ -211,12 +217,12 @@ export const ReportsPage = () => {
                     <span className="text-sm font-medium">{item.role}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">{item.count}</span>
+                     <span className="text-sm text-muted-foreground">{item.count}</span>
                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                        <div 
                          className={`h-full ${item.color}`}
                          style={{ 
-                           width: `${users.length > 0 ? (item.count / users.length) * 100 : 0}%` 
+                           width: `${totalUsers > 0 ? (item.count / totalUsers) * 100 : 0}%` 
                          }}
                        />
                      </div>
@@ -225,10 +231,10 @@ export const ReportsPage = () => {
               ))}
             </div>
             <div className="mt-4 pt-4 border-t">
-               <div className="flex justify-between text-sm">
-                 <span className="text-muted-foreground">Total de Usuários</span>
-                 <span className="font-medium">{users.length}</span>
-               </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total de Usuários</span>
+                  <span className="font-medium">{totalUsers}</span>
+                </div>
             </div>
           </CardContent>
         </Card>

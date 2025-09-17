@@ -378,6 +378,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      get_database_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_system_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       is_admin_or_dev: {
         Args: Record<PropertyKey, never>
         Returns: boolean
