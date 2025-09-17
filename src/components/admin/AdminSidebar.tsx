@@ -9,6 +9,7 @@ import {
   FileText,
   BarChart3,
   Shield,
+  CreditCard,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +42,12 @@ const menuItems = [
     title: 'Projetos',
     url: '/admin/projects',
     icon: Building2,
+    roles: ['admin', 'dev'],
+  },
+  {
+    title: 'Pagamentos',
+    url: '/admin/payments',
+    icon: CreditCard,
     roles: ['admin', 'dev'],
   },
   {

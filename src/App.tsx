@@ -15,6 +15,7 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 
 import { UsersPage } from "./pages/admin/UsersPage";
 import { ProjectsPage } from "./pages/admin/ProjectsPage";
+import { PaymentsPage } from "./pages/admin/PaymentsPage";
 import { MyProjectsPage } from "./pages/admin/MyProjectsPage";
 import NewProjectPurchasePage from "./pages/admin/NewProjectPurchasePage";
 import NewProjectPage from "./pages/admin/NewProjectPage";
@@ -107,6 +108,11 @@ const App = () => (
               <Route path="projects" element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
                   <ProjectsPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="payments" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <PaymentsPage />
                 </RoleBasedRoute>
               } />
               <Route path="my-projects" element={
