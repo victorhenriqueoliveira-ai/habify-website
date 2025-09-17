@@ -121,7 +121,7 @@ export const useProjectMessages = (projectId?: string) => {
           filter: `project_id=eq.${projectId}`
         },
         (payload) => {
-          console.log('New message received:', payload);
+          // New message received - trigger UI update
           fetchMessages(); // Refetch to get sender name
         }
       )

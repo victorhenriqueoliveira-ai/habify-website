@@ -361,13 +361,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transactions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "public_plans"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -378,36 +371,7 @@ export type Database = {
       }
     }
     Views: {
-      public_plans: {
-        Row: {
-          created_at: string | null
-          display_name: string | null
-          features: Json | null
-          id: string | null
-          is_active: boolean | null
-          name: string | null
-          price: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          display_name?: never
-          features?: never
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          price?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          display_name?: never
-          features?: never
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          price?: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_current_user_role: {

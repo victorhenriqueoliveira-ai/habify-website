@@ -17,7 +17,7 @@ export const useRealtimeProjects = () => {
           table: 'projects'
         },
         (payload) => {
-          console.log('Projects table changed:', payload);
+          // Projects table updated - refresh data
           // Refetch projects when any change occurs
           fetchProjects();
         }
@@ -35,7 +35,7 @@ export const useRealtimeProjects = () => {
           table: 'notifications'
         },
         (payload) => {
-          console.log('New notification:', payload);
+          // New notification received
           // Handle notification updates if needed
         }
       )

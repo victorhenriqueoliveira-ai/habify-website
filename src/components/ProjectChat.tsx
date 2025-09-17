@@ -191,7 +191,7 @@ export const ProjectChat = ({ projectId, projectTitle }: ProjectChatProps) => {
               className="hidden"
               accept="image/*,.pdf,.doc,.docx"
               onChange={() => {
-                // TODO: Implement file upload
+                // TODO: Implement file upload handler
                 toast.info('Upload de arquivos em desenvolvimento');
               }}
             />
