@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,7 @@ export const LoginPage = () => {
       if (hasRole(['dev'])) {
         navigate('/admin/users');
       } else {
-        navigate('/admin/my-projects');
+        navigate('/admin');
       }
     } else {
       toast({
@@ -58,15 +58,7 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
-      {/* Back to Homepage Button */}
-      <Button
-        variant="outline"
-        className="absolute top-4 left-4"
-        onClick={() => navigate('/')}
-      >
-        ← Voltar ao Site
-      </Button>
-      
+      {/* Back to Homepage Button */}      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -108,17 +100,10 @@ export const LoginPage = () => {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-          
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <h3 className="font-semibold mb-2">Para testar, registre-se ou use as contas de demonstração:</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <strong>Primeira vez?</strong> Crie sua conta usando qualquer email e senha
-              </div>
-              <div>
-                <strong>Conta Admin:</strong> Registre-se e depois contate o suporte para upgrade
-              </div>
-            </div>
+          <div className="flex flex-col items-center mt-4">
+            <Link to="/" className="text-primary hover:text-primary-700 mb-8">
+              ← Voltar para a página inicial
+            </Link>
           </div>
         </CardContent>
       </Card>
