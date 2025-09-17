@@ -25,6 +25,8 @@ serve(async (req) => {
   try {
     const origin = req.headers.get('origin') || 'https://habify.com.br';
     
+    console.log('Payment request received from origin:', origin);
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -35,6 +37,13 @@ serve(async (req) => {
 
     console.log('Creating payment for plan:', planId, 'customer:', customerData.email);
 
+    // Check if AbacatePay API key is available
+    const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
+    if (!abacatePayApiKey) {
+      console.error('ABACATEPAY_API_KEY is not configured');
+      throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
+    }
+
     // Get plan details
     const { data: plan, error: planError } = await supabaseClient
       .from('plans')
@@ -42,15 +51,20 @@ serve(async (req) => {
       .eq('id', planId)
       .single();
 
+    console.log('Plan query result:', { plan, planError });
+
     if (planError || !plan) {
-      throw new Error('Plan not found');
+      console.error('Plan not found:', planError);
+      throw new Error('Plano não encontrado. Tente novamente.');
     }
+
+    console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
 
     // Create AbacatePay payment
     const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('ABACATEPAY_API_KEY')}`,
+        'Authorization': `Bearer ${abacatePayApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -76,14 +90,28 @@ serve(async (req) => {
       }),
     });
 
+    console.log('AbacatePay response status:', abacatePayResponse.status);
+
     if (!abacatePayResponse.ok) {
       const errorText = await abacatePayResponse.text();
-      console.error('AbacatePay error:', errorText);
-      throw new Error('Failed to create payment with AbacatePay');
+      console.error('AbacatePay error response:', errorText);
+      throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
     }
 
     const abacatePayData = await abacatePayResponse.json();
-    console.log('AbacatePay response:', abacatePayData);
+    console.log('AbacatePay response data:', abacatePayData);
+
+    // Validate response data
+    if (!abacatePayData.id) {
+      console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
+      throw new Error('Resposta inválida do sistema de pagamento.');
+    }
+
+    const paymentUrl = abacatePayData.checkout_url || abacatePayData.url;
+    if (!paymentUrl) {
+      console.error('No payment URL in response:', abacatePayData);
+      throw new Error('URL de pagamento não foi gerada.');
+    }
 
     // Create transaction record in Supabase
     const supabaseService = createClient(
@@ -109,15 +137,15 @@ serve(async (req) => {
 
     if (transactionError) {
       console.error('Transaction creation error:', transactionError);
-      throw new Error('Failed to create transaction record');
+      throw new Error('Falha ao registrar transação.');
     }
 
-    console.log('Transaction created:', transaction.id);
+    console.log('Transaction created successfully:', transaction.id);
 
     return new Response(
       JSON.stringify({
         success: true,
-        paymentUrl: abacatePayData.checkout_url || abacatePayData.url,
+        paymentUrl: paymentUrl,
         transactionId: transaction.id,
         abacatePayId: abacatePayData.id,
       }),

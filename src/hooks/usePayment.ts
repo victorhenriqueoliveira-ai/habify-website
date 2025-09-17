@@ -23,6 +23,8 @@ export const usePayment = () => {
   const createPayment = async (planId: string, customerData: CustomerData): Promise<PaymentResponse> => {
     try {
       setLoading(true);
+      
+      console.log('Creating payment with planId:', planId, 'and customer:', customerData);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
@@ -31,24 +33,40 @@ export const usePayment = () => {
         },
       });
 
+      console.log('Payment creation response:', { data, error });
+
       if (error) {
         console.error('Payment creation error:', error);
-        toast.error('Erro ao processar pagamento');
+        toast.error(`Erro ao processar pagamento: ${error.message}`);
         return { success: false, error: error.message };
       }
 
+      if (!data) {
+        console.error('No data received from payment creation');
+        toast.error('Nenhuma resposta recebida do servidor');
+        return { success: false, error: 'Nenhuma resposta do servidor' };
+      }
+
       if (!data.success) {
+        console.error('Payment creation failed:', data);
         toast.error(data.error || 'Erro ao criar pagamento');
         return { success: false, error: data.error };
+      }
+
+      if (!data.paymentUrl) {
+        console.error('No payment URL received:', data);
+        toast.error('URL de pagamento não foi gerada');
+        return { success: false, error: 'URL de pagamento não foi gerada' };
       }
 
       toast.success('Redirecionando para pagamento...');
       return data;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
-      toast.error('Erro interno do servidor');
-      return { success: false, error: 'Erro interno do servidor' };
+      const errorMessage = error?.message || 'Erro interno do servidor';
+      toast.error(`Erro: ${errorMessage}`);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
