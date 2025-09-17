@@ -115,7 +115,7 @@ const App = () => (
                 </RoleBasedRoute>
               } />
               <Route path="new-project" element={
-                <RoleBasedRoute allowedRoles={['user']}>
+                <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
                   <NewProjectPage />
                 </RoleBasedRoute>
               } />
