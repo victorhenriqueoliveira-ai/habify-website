@@ -60,9 +60,46 @@ serve(async (req) => {
 
     console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
 
-    const payload = {
+    // First create a customer
+    const customerPayload = {
+      name: customerData.name,
+      cellphone: customerData.phone,
+      email: customerData.email,
+      taxId: customerData.cpf,
+    };
+
+    console.log('Creating customer with payload:', JSON.stringify(customerPayload, null, 2));
+
+    const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${abacatePayApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(customerPayload),
+    });
+
+    console.log('Customer response status:', customerResponse.status);
+
+    if (!customerResponse.ok) {
+      const customerErrorText = await customerResponse.text();
+      console.error('Customer creation error:', customerErrorText);
+      throw new Error('Falha ao criar cliente no sistema de pagamento.');
+    }
+
+    const customerData = await customerResponse.json();
+    console.log('Customer created:', customerData);
+
+    const customerId = customerData.data?.id;
+    if (!customerId) {
+      console.error('No customer ID received:', customerData);
+      throw new Error('ID do cliente não foi gerado.');
+    }
+
+    // Now create the billing with the customer ID
+    const billingPayload = {
       frequency: 'ONE_TIME',
-      methods: ['PIX', 'CREDIT_CARD', 'BANK_SLIP'],
+      methods: ['PIX'],
       products: [{
         externalId: planId,
         name: plan.name,
@@ -70,12 +107,7 @@ serve(async (req) => {
         quantity: 1,
         price: Math.round(plan.price * 100), // Convert to cents
       }],
-      customer: {
-        name: customerData.name,
-        email: customerData.email,
-        cellphone: customerData.phone,
-        taxId: customerData.cpf,
-      },
+      customerId: customerId,
       returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
         ? `${origin}/payment-success` 
         : 'https://habify.com.br/payment-success',
@@ -85,7 +117,7 @@ serve(async (req) => {
       externalId: `habify-${planId}-${Date.now()}`,
     };
 
-    console.log('AbacatePay payload:', JSON.stringify(payload, null, 2));
+    console.log('AbacatePay billing payload:', JSON.stringify(billingPayload, null, 2));
 
     // Create AbacatePay payment
     const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
@@ -94,7 +126,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${abacatePayApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(billingPayload),
     });
 
     console.log('AbacatePay response status:', abacatePayResponse.status);
