@@ -20,7 +20,11 @@ interface PaymentRequest {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -88,12 +92,12 @@ serve(async (req) => {
       throw new Error('Falha ao criar cliente no sistema de pagamento.');
     }
 
-    const customerData = await customerResponse.json();
-    console.log('Customer created:', customerData);
+    const customerResponseData = await customerResponse.json();
+    console.log('Customer created:', customerResponseData);
 
-    const customerId = customerData.data?.id;
+    const customerId = customerResponseData.data?.id;
     if (!customerId) {
-      console.error('No customer ID received:', customerData);
+      console.error('No customer ID received:', customerResponseData);
       throw new Error('ID do cliente não foi gerado.');
     }
 
@@ -167,7 +171,7 @@ serve(async (req) => {
       .from('transactions')
       .insert({
         plan_id: planId,
-        abacatepay_id: abacatePayData.id,
+        abacatepay_id: responseData.id,
         amount: plan.price,
         status: 'pending',
         payment_data: {
@@ -190,7 +194,7 @@ serve(async (req) => {
         success: true,
         paymentUrl: paymentUrl,
         transactionId: transaction.id,
-        abacatePayId: abacatePayData.id,
+        abacatePayId: responseData.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
