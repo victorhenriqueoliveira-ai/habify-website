@@ -68,10 +68,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        frequency: 'once', // Required field for one-time payments
-        methods: ['pix', 'credit_card', 'bank_slip'], // Required payment methods
+        frequency: 'ONE_TIME',
+        methods: ['PIX', 'CREDIT_CARD', 'BANK_SLIP'],
         products: [{
-          external_id: planId,
+          externalId: planId,
           name: plan.name,
           description: plan.description || plan.name,
           quantity: 1,
@@ -80,19 +80,16 @@ serve(async (req) => {
         customer: {
           name: customerData.name,
           email: customerData.email,
-          phone: customerData.phone,
-          cpf: customerData.cpf,
+          cellphone: customerData.phone,
+          taxId: customerData.cpf,
         },
         returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
           ? `${origin}/payment-success` 
           : 'https://habify.com.br/payment-success',
-        cancelUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-          ? `${origin}/payment-canceled` 
-          : 'https://habify.com.br/payment-canceled',
-        metadata: {
-          planId: planId,
-          planType: plan.type,
-        }
+        completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-success` 
+          : 'https://habify.com.br/payment-success',
+        externalId: `habify-${planId}-${Date.now()}`,
       }),
     });
 
