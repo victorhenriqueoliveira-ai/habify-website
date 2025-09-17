@@ -76,7 +76,7 @@ const Navbar = () => {
           <a href="#features" className="nav-link">About</a>
           <a href="#details" className="nav-link">Contact</a>
           <a 
-            href="/admin/login" 
+            href="/login" 
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
           >
             Login
@@ -132,7 +132,7 @@ const Navbar = () => {
             Contact
           </a>
           <a 
-            href="/admin/login" 
+            href="/login" 
             className="bg-primary text-white py-3 px-6 w-full text-center rounded-lg hover:bg-primary/90 transition-colors text-xl font-medium"
             onClick={() => {
               setIsMenuOpen(false);

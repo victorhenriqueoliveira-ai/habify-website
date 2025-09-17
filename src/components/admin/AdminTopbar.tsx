@@ -23,7 +23,7 @@ export const AdminTopbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   const toggleTheme = () => {

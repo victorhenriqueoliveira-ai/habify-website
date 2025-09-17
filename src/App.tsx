@@ -40,7 +40,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
@@ -79,7 +79,7 @@ const App = () => (
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             
             {/* Admin Routes */}
-        <Route path="/admin/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/auth" element={<AuthPage />} />
             
             <Route path="/admin" element={

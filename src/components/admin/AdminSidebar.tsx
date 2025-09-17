@@ -104,7 +104,7 @@ export const AdminSidebar = () => {
             {!isCollapsed && (
               <div>
                 <h1 className="font-bold text-lg">HabiFy</h1>
-                <p className="text-xs text-muted-foreground">Admin Panel</p>
+                <p className="text-xs text-muted-foreground">Painel</p>
               </div>
             )}
           </div>
