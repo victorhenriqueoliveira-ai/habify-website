@@ -60,6 +60,33 @@ serve(async (req) => {
 
     console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
 
+    const payload = {
+      frequency: 'ONE_TIME',
+      methods: ['PIX', 'CREDIT_CARD', 'BANK_SLIP'],
+      products: [{
+        externalId: planId,
+        name: plan.name,
+        description: plan.description || plan.name,
+        quantity: 1,
+        price: Math.round(plan.price * 100), // Convert to cents
+      }],
+      customer: {
+        name: customerData.name,
+        email: customerData.email,
+        cellphone: customerData.phone,
+        taxId: customerData.cpf,
+      },
+      returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+        ? `${origin}/payment-success` 
+        : 'https://habify.com.br/payment-success',
+      completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+        ? `${origin}/payment-success` 
+        : 'https://habify.com.br/payment-success',
+      externalId: `habify-${planId}-${Date.now()}`,
+    };
+
+    console.log('AbacatePay payload:', JSON.stringify(payload, null, 2));
+
     // Create AbacatePay payment
     const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
       method: 'POST',
@@ -67,30 +94,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${abacatePayApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        frequency: 'ONE_TIME',
-        methods: ['PIX', 'CREDIT_CARD', 'BANK_SLIP'],
-        products: [{
-          externalId: planId,
-          name: plan.name,
-          description: plan.description || plan.name,
-          quantity: 1,
-          price: Math.round(plan.price * 100), // Convert to cents
-        }],
-        customer: {
-          name: customerData.name,
-          email: customerData.email,
-          cellphone: customerData.phone,
-          taxId: customerData.cpf,
-        },
-        returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-          ? `${origin}/payment-success` 
-          : 'https://habify.com.br/payment-success',
-        completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-          ? `${origin}/payment-success` 
-          : 'https://habify.com.br/payment-success',
-        externalId: `habify-${planId}-${Date.now()}`,
-      }),
+      body: JSON.stringify(payload),
     });
 
     console.log('AbacatePay response status:', abacatePayResponse.status);
@@ -104,13 +108,16 @@ serve(async (req) => {
     const abacatePayData = await abacatePayResponse.json();
     console.log('AbacatePay response data:', abacatePayData);
 
+    // Handle AbacatePay API response format
+    const responseData = abacatePayData.data || abacatePayData;
+    
     // Validate response data
-    if (!abacatePayData.id) {
+    if (!responseData || !responseData.id) {
       console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
       throw new Error('Resposta inválida do sistema de pagamento.');
     }
 
-    const paymentUrl = abacatePayData.checkout_url || abacatePayData.url;
+    const paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
     if (!paymentUrl) {
       console.error('No payment URL in response:', abacatePayData);
       throw new Error('URL de pagamento não foi gerada.');
