@@ -35,6 +35,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
+import { EditProjectModal } from '@/components/EditProjectModal';
 import { toast } from '@/hooks/use-toast';
 
 const statusColors = {
@@ -67,6 +68,7 @@ export const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   
   // Enable realtime updates
   useRealtimeProjects();
@@ -315,7 +317,7 @@ export const ProjectsPage = () => {
                               <Eye className="mr-2 h-4 w-4" />
                               Visualizar
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setEditingProject(project)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
@@ -380,6 +382,13 @@ export const ProjectsPage = () => {
         project={selectedProject}
         open={!!selectedProject}
         onClose={() => setSelectedProject(null)}
+      />
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        project={editingProject}
+        open={!!editingProject}
+        onClose={() => setEditingProject(null)}
       />
     </div>
   );
