@@ -20,7 +20,7 @@ const SpecsSection = () => {
         <div className="max-w-5xl pl-4 sm:pl-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-display leading-tight mb-8 sm:mb-12">
             <span className="block bg-clip-text text-transparent bg-[url('/text-mask-image.jpg')] bg-cover bg-center">
-              HabiFy funciona PARA você, não contra você. Enquanto você vende imóveis, sua landing page trabalha 24 horas capturando leads qualificados. Você só envia as fotos do imóvel, nós cuidamos do resto.
+              Enquanto outros corretores brigam por leads em portais caros, você terá sua própria máquina de vendas. HabiFy transforma qualquer imóvel em uma landing page que converte visitantes em compradores qualificados.
             </span>
           </h2>
         </div>

@@ -111,14 +111,14 @@ const Hero = () => {
               className="section-title text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-tight opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.3s" }}
             >
-              Pare de Perder Leads<br className="hidden sm:inline" />por Falta de Site
+              Transforme Fotos em<br className="hidden sm:inline" />Vendas Automáticas
             </h1>
             
             <p 
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle mt-3 sm:mt-6 mb-4 sm:mb-8 leading-relaxed opacity-0 animate-fade-in text-gray-950 font-normal text-base sm:text-lg text-left"
             >
-              Landing page profissional pronta em 3 dias. Leads qualificados direto no seu WhatsApp, sem depender de portais caros.
+              A única landing page que vende imóveis 24h por dia. Você envia as fotos, nós criamos sua máquina de vendas. Leads qualificados direto no WhatsApp em 72 horas.
             </p>
             
             <div 
@@ -140,7 +140,7 @@ const Hero = () => {
                   border: '1px solid white',
                 }}
               >
-                Quero Minha Landing Page
+                Criar Minha Máquina de Vendas
                 <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
               </a>
             </div>

@@ -51,7 +51,7 @@ const DetailsSection = () => {
               border: "1px solid #ECECEC"
             }}>
               <h3 className="text-lg sm:text-xl font-display mb-6 sm:mb-8">
-                Resultados reais de corretores que já usam o HabiFy
+                Resultados comprovados em mais de 500 projetos
               </h3>
 
               <div className="space-y-4 sm:space-y-6">
@@ -63,7 +63,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Leads:</span> +300% em média
+                      <span className="font-semibold text-base">Conversão:</span> 8x maior que portais tradicionais
                     </div>
                   </div>
                 </div>
@@ -76,7 +76,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Economia:</span> R$ 800/mês em portais
+                      <span className="font-semibold text-base">Economia:</span> R$ 1.200/mês vs portais premium
                     </div>
                   </div>
                 </div>
@@ -89,7 +89,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Tempo:</span> Pronto em 3 dias
+                      <span className="font-semibold text-base">Velocidade:</span> Leads em 15min após ir ao ar
                     </div>
                   </div>
                 </div>
@@ -102,7 +102,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Satisfação:</span> 98% dos clientes
+                      <span className="font-semibold text-base">Qualidade:</span> 85% dos leads já pré-aprovados
                     </div>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">ROI:</span> 500% no primeiro mês
+                      <span className="font-semibold text-base">ROI:</span> 650% de retorno médio comprovado
                     </div>
                   </div>
                 </div>
@@ -134,7 +134,7 @@ const DetailsSection = () => {
                 Oportunidade limitada
               </div>
               <h2 className="text-2xl sm:text-3xl font-display text-white font-bold mt-auto">
-                Comece hoje mesmo
+                Seja o próximo case de sucesso
               </h2>
             </div>
             
@@ -181,9 +181,9 @@ const DetailsSection = () => {
                 <div>
                   <button 
                     type="submit" 
-                    className="w-full px-6 py-3 bg-pulse-500 hover:bg-pulse-600 text-white font-medium rounded-full transition-colors duration-300"
+                    className="w-full px-6 py-4 bg-pulse-500 hover:bg-pulse-600 text-white font-semibold rounded-full transition-colors duration-300 text-sm sm:text-base"
                   >
-                    Quero Minha Landing Page Agora!
+                    🚀 Criar Minha Máquina de Vendas (72h)
                   </button>
                 </div>
               </form>

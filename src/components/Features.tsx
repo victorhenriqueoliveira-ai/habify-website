@@ -96,43 +96,43 @@ const Features = () => {
           </div>
         </div>
         
-        <h2 className="text-5xl font-display font-bold mb-12 text-left">Como o HabiFy vai transformar seus resultados</h2>
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold mb-8 sm:mb-12 text-left">Por que HabiFy é a escolha certa para seu negócio</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>}
-            title="Leads Qualificados 24/7"
-            description="Sua landing page trabalha enquanto você dorme, capturando leads interessados direto no seu WhatsApp."
+            title="Leads Pré-Qualificados"
+            description="Sistema inteligente que filtra visitantes curiosos de compradores reais, enviando apenas leads com real interesse e poder de compra."
             index={0}
           />
           <FeatureCard
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>}
-            title="Mais Credibilidade"
-            description="Tenha seu próprio site profissional e se destaque da concorrência que depende só de portais."
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+            title="ROI Comprovado"
+            description="Em média, corretores recuperam o investimento com apenas 1 venda. O restante é lucro puro, sem dependência de portais caros."
             index={1}
           />
           <FeatureCard
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
-            title="Economia Real"
-            description="Pare de pagar fortunas em portais. Sua landing page custa menos que uma semana de anúncio premium."
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline><polyline points="7.5 19.79 7.5 14.6 3 12"></polyline></svg>}
+            title="Entrega Relâmpago"
+            description="72 horas do envio das fotos até sua landing page estar online e gerando leads. Sem burocracias, sem delays."
             index={2}
           />
           <FeatureCard
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline><polyline points="7.5 19.79 7.5 14.6 3 12"></polyline></svg>}
-            title="Pronto em 3 Dias"
-            description="Você envia as fotos, nós entregamos sua landing page completa e funcionando em 72 horas."
+            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>}
+            title="Autoridade Digital"
+            description="Tenha sua marca própria na internet. Clientes te encontram diretamente, sem concorrer com centenas de outros corretores."
             index={3}
           />
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 8l-3-3m-3.5 3.5L19 4"/></svg>}
-            title="Organização Total"
-            description="Todos os leads organizados e qualificados chegam direto no seu WhatsApp com os dados completos."
+            title="Automação Completa"
+            description="Sistema automatizado de follow-up, remarketing e nurturing de leads. Sua máquina de vendas funciona 24/7."
             index={4}
           />
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M16 6H3v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-2"></path><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path></svg>}
-            title="Zero Complicação"
-            description="Não precisa saber de tecnologia. Você manda as fotos, nós fazemos tudo. Simples assim."
+            title="Processo Simplificado"
+            description="Você só precisa enviar fotos e dados básicos. Nós cuidamos de design, copywriting, otimização e integração."
             index={5}
           />
         </div>
