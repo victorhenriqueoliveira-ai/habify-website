@@ -111,14 +111,14 @@ const Hero = () => {
               className="section-title text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-tight opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.3s" }}
             >
-              Transforme Fotos em<br className="hidden sm:inline" />Vendas Automáticas
+              Venda mais imóveis com um site pronto em até 3 dias!
             </h1>
             
             <p 
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle mt-3 sm:mt-6 mb-4 sm:mb-8 leading-relaxed opacity-0 animate-fade-in text-gray-950 font-normal text-base sm:text-lg text-left"
             >
-              A única landing page que vende imóveis 24h por dia. Você envia as fotos, nós criamos sua máquina de vendas. Leads qualificados direto no WhatsApp em 72 horas.
+              Não perca clientes por não estar online — crie sua presença digital agora.. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp em 72 horas.
             </p>
             
             <div 
@@ -162,12 +162,12 @@ const Hero = () => {
               <div className="relative transition-all duration-500 ease-out overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl">
                 <img 
                   ref={imageRef} 
-                  src="/lovable-uploads/5663820f-6c97-4492-9210-9eaa1a8dc415.png" 
+                  src="/Foto1.png" 
                   alt="Landing Page Profissional para Corretores" 
                   className="w-full h-auto object-cover transition-transform duration-500 ease-out" 
                   style={{ transformStyle: 'preserve-3d' }} 
                 />
-                <div className="absolute inset-0" style={{ backgroundImage: 'url("/hero-image.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', mixBlendMode: 'overlay', opacity: 0.5 }}></div>
+                {/* <div className="absolute inset-0" style={{ backgroundImage: 'url("/hero-image.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', mixBlendMode: 'overlay', opacity: 0.5 }}></div> */}
               </div>
               </>
             )}

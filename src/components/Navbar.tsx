@@ -52,12 +52,14 @@ const Navbar = () => {
             e.preventDefault();
             scrollToTop();
           }}
-          aria-label="Pulse Robot"
+          aria-label="HabiFy Logo and Home Link"
         >
           <img 
-            src="/logo.svg" 
-            alt="Pulse Robot Logo" 
-            className="h-7 sm:h-8" 
+            src="/logotipo_habify.png" 
+            alt="Logotipo HabiFy" 
+            className="h-8 sm:h-10 md:h-12 w-auto max-h-12 object-contain select-none"
+            style={{ maxWidth: '160px' }}
+            draggable={false}
           />
         </a>
 
