@@ -18,6 +18,8 @@ interface PaymentRequest {
 }
 
 serve(async (req) => {
+  console.log('Edge function started. Method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
