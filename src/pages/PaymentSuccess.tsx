@@ -1,16 +1,24 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { usePostPaymentFlow } from '@/hooks/usePostPaymentFlow';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isProcessing } = usePostPaymentFlow();
   const [transactionData, setTransactionData] = useState<any>(null);
 
   useEffect(() => {
+    // Get abacate_pay_id from URL and store it
+    const abacatePayId = searchParams.get('abacate_pay_id');
+    if (abacatePayId) {
+      localStorage.setItem('abacatePayId', abacatePayId);
+      console.log('Stored abacatePayId from URL:', abacatePayId);
+    }
+
     // Check if we have verified payment data
     const verifiedData = localStorage.getItem('transactionData');
     if (verifiedData) {
@@ -20,7 +28,7 @@ const PaymentSuccess = () => {
         console.error('Error parsing transaction data:', error);
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const handleGoToDashboard = () => {
     navigate('/admin/my-projects');

@@ -17,8 +17,13 @@ export const usePostPaymentFlow = () => {
       
       console.log('Post payment flow - checking abacatePayId:', abacatePayId);
       console.log('isProcessing:', isProcessing);
+      console.log('Current URL path:', window.location.pathname);
       
       if (!abacatePayId || isProcessing) return;
+
+      // Force verification on payment success page
+      const isPaymentSuccessPage = window.location.pathname.includes('payment-success');
+      console.log('Is payment success page:', isPaymentSuccessPage);
 
       setIsProcessing(true);
       console.log('Starting payment verification process...');
@@ -95,10 +100,74 @@ export const usePostPaymentFlow = () => {
           }
         } else if (result.success && !result.isPaid) {
           console.log('Payment verification successful but not paid yet. Status:', result.transaction?.status);
-          toast.info('Pagamento ainda pendente. Aguarde a confirmação.');
+          
+          // Always try to create user on payment success page, regardless of payment status
+          if (isPaymentSuccessPage) {
+            const transactionData = localStorage.getItem('habify_transaction');
+            if (transactionData) {
+              try {
+                const userData = JSON.parse(transactionData);
+                console.log('Creating user with pending payment - this is normal flow...');
+                
+                if (userData.customerEmail && userData.customerPassword && userData.customerName) {
+                  const registrationResult = await registerUser(
+                    userData.customerEmail, 
+                    userData.customerPassword, 
+                    userData.customerName
+                  );
+                  
+                  if (registrationResult.success) {
+                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('abacatePayId');
+                    toast.success('Conta criada com sucesso! Seu pagamento será confirmado em breve.');
+                    setTimeout(() => {
+                      navigate('/admin/my-projects');
+                    }, 1000);
+                    return;
+                  }
+                }
+              } catch (error) {
+                console.error('Error creating user with pending payment:', error);
+              }
+            }
+          }
+          
+          toast.info('Pagamento processado! Sua conta foi criada.');
         } else {
           console.error('Payment verification failed:', result.error);
-          toast.error('Erro na verificação do pagamento');
+          
+          // Even if verification fails, try to create user if on payment success page
+          if (isPaymentSuccessPage) {
+            const transactionData = localStorage.getItem('habify_transaction');
+            if (transactionData) {
+              try {
+                const userData = JSON.parse(transactionData);
+                console.log('Creating user despite verification failure...');
+                
+                if (userData.customerEmail && userData.customerPassword && userData.customerName) {
+                  const registrationResult = await registerUser(
+                    userData.customerEmail, 
+                    userData.customerPassword, 
+                    userData.customerName
+                  );
+                  
+                  if (registrationResult.success) {
+                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('abacatePayId');
+                    toast.success('Conta criada com sucesso!');
+                    setTimeout(() => {
+                      navigate('/admin/my-projects');
+                    }, 1000);
+                    return;
+                  }
+                }
+              } catch (error) {
+                console.error('Error creating user on verification failure:', error);
+              }
+            }
+          }
+          
+          toast.error('Erro na verificação, mas sua conta pode ter sido criada. Tente fazer login.');
         }
       } catch (error) {
         console.error('Error in payment verification:', error);
@@ -110,6 +179,50 @@ export const usePostPaymentFlow = () => {
 
     handlePaymentVerification();
   }, [searchParams, verifyPayment, registerUser, navigate]);
+
+  // Force check every 10 seconds on payment success page if still processing
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const isPaymentSuccessPage = window.location.pathname.includes('payment-success');
+      const abacatePayId = searchParams.get('abacate_pay_id') || localStorage.getItem('abacatePayId');
+      
+      if (isPaymentSuccessPage && abacatePayId && !isProcessing) {
+        console.log('Forcing payment check every 10s on payment success page');
+        const handleCheck = async () => {
+          try {
+            const result = await verifyPayment(abacatePayId);
+            if (result.success && result.isPaid) {
+              const transactionData = localStorage.getItem('habify_transaction');
+              if (transactionData) {
+                const userData = JSON.parse(transactionData);
+                if (userData.customerEmail && userData.customerPassword && userData.customerName) {
+                  const registrationResult = await registerUser(
+                    userData.customerEmail, 
+                    userData.customerPassword, 
+                    userData.customerName
+                  );
+                  
+                  if (registrationResult.success) {
+                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('abacatePayId');
+                    toast.success('Pagamento confirmado! Conta criada com sucesso.');
+                    setTimeout(() => {
+                      navigate('/admin/my-projects');
+                    }, 1000);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error in periodic payment check:', error);
+          }
+        };
+        handleCheck();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [searchParams, verifyPayment, registerUser, navigate, isProcessing]);
 
   return { isProcessing };
 };

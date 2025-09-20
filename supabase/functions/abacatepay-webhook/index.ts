@@ -13,21 +13,30 @@ serve(async (req) => {
   }
 
   try {
+    console.log('AbacatePay webhook called - Method:', req.method);
+    console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
+    
     const webhookData = await req.json();
     console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
 
-    // Extract bill ID and status from webhook
-    const billId = webhookData.data?.id || webhookData.id;
-    const paymentStatus = webhookData.data?.status || webhookData.status;
+    // Extract bill ID and status from webhook - try multiple formats
+    let billId = webhookData.data?.id || webhookData.id || webhookData.bill?.id;
+    const paymentStatus = webhookData.data?.status || webhookData.status || webhookData.bill?.status;
     
     console.log('Processing webhook for bill:', billId, 'status:', paymentStatus);
 
     if (!billId) {
-      console.error('No bill ID found in webhook data');
-      return new Response(
-        JSON.stringify({ error: 'No bill ID found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      console.error('No bill ID found in webhook data. Full webhook:', JSON.stringify(webhookData, null, 2));
+      // Try alternative paths for bill ID
+      const altBillId = webhookData.billing?.id || webhookData.external_id || webhookData.externalId;
+      if (!altBillId) {
+        return new Response(
+          JSON.stringify({ error: 'No bill ID found in webhook' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      console.log('Found alternative bill ID:', altBillId);
+      billId = altBillId;
     }
 
     // Create Supabase client
