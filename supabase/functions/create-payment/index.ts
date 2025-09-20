@@ -104,6 +104,10 @@ serve(async (req) => {
     }
 
     // Now create the billing with the customer ID
+    const webhookUrl = origin.includes('localhost') || origin.includes('lovable.dev') 
+      ? `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`
+      : 'https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook';
+      
     const billingPayload = {
       frequency: 'ONE_TIME',
       methods: ['PIX'],
@@ -121,10 +125,11 @@ serve(async (req) => {
       completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
         ? `${origin}/payment-success` 
         : 'https://habify.com.br/payment-success',
+      webhookUrl: webhookUrl,
       externalId: `habify-${planId}-${Date.now()}`,
     };
-
-    console.log('AbacatePay billing payload:', JSON.stringify(billingPayload, null, 2));
+    
+    console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));
 
     // Create AbacatePay payment
     const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {

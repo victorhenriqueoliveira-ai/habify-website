@@ -27,7 +27,9 @@ export const usePostPaymentFlow = () => {
         const result = await verifyPayment(abacatePayId);
         console.log('Payment verification result:', result);
         
-        if (result.success) {
+        if (result.success && result.isPaid) {
+          console.log('Payment confirmed as paid! Transaction:', result.transaction);
+          
           // Store successful payment info for later user creation flow
           localStorage.setItem('paymentVerified', 'true');
           localStorage.setItem('transactionData', JSON.stringify(result));
@@ -46,7 +48,7 @@ export const usePostPaymentFlow = () => {
               });
               
               if (userData.customerEmail && userData.customerPassword && userData.customerName) {
-                console.log('Attempting to register user...');
+                console.log('Attempting to register user with payment confirmed...');
                 // Auto-register user with checkout data
                 const registrationResult = await registerUser(
                   userData.customerEmail, 
@@ -59,6 +61,9 @@ export const usePostPaymentFlow = () => {
                 if (registrationResult.success) {
                   // Clear stored data
                   localStorage.removeItem('habify_transaction');
+                  localStorage.removeItem('abacatePayId');
+                  localStorage.removeItem('paymentVerified');
+                  localStorage.removeItem('transactionData');
                   
                   // Show success message
                   toast.success('Pagamento confirmado! Sua conta foi criada automaticamente.');
@@ -88,10 +93,9 @@ export const usePostPaymentFlow = () => {
             console.error('No transaction data found in localStorage');
             toast.success('Pagamento confirmado! Faça login para acessar seu painel.');
           }
-          
-          // Clear the abacatePayId from localStorage
-          localStorage.removeItem('abacatePayId');
-          
+        } else if (result.success && !result.isPaid) {
+          console.log('Payment verification successful but not paid yet. Status:', result.transaction?.status);
+          toast.info('Pagamento ainda pendente. Aguarde a confirmação.');
         } else {
           console.error('Payment verification failed:', result.error);
           toast.error('Erro na verificação do pagamento');

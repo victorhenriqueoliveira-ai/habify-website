@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.verify-payment]
 verify_jwt = false
+
+[functions.abacatepay-webhook]
+verify_jwt = false
