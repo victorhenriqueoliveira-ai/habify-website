@@ -14,6 +14,7 @@ interface PaymentRequest {
     email: string;
     phone?: string;
     cpf?: string;
+    password: string;
   };
 }
 
@@ -67,7 +68,37 @@ serve(async (req) => {
 
     console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
 
-    // First create a customer
+    // Create Supabase service client for database operations
+    const supabaseService = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    // First create inactive profile (not in Supabase Auth yet)
+    console.log('Creating inactive profile for:', customerData.email);
+    
+    const { data: profile, error: profileError } = await supabaseService
+      .from('profiles')
+      .insert({
+        name: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone || null,
+        role: 'user',
+        is_active: false // Will be activated when payment is confirmed
+      })
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error('Failed to create profile:', profileError);
+      throw new Error('Erro ao criar perfil do usuário');
+    }
+
+    console.log('Profile created:', profile.id);
+    const profileId = profile.id;
+
+    // Now create a customer in AbacatePay
     const customerPayload = {
       name: customerData.name,
       cellphone: customerData.phone,
@@ -167,92 +198,19 @@ serve(async (req) => {
       throw new Error('URL de pagamento não foi gerada.');
     }
 
-    // Create inactive user in Supabase Auth first
-    const supabaseService = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    );
-
-    console.log('Creating inactive user for email:', customerData.email);
-    
-    // Generate temporary password for the user
-    const tempPassword = crypto.randomUUID();
-    
-    let userId = null;
-    
-    try {
-      // Try to create user or check if exists
-      const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-        email: customerData.email,
-        password: tempPassword,
-        email_confirm: false, // User is not confirmed yet
-        user_metadata: {
-          name: customerData.name,
-          phone: customerData.phone || null,
-          created_via_payment: true,
-          payment_pending: true
-        }
-      });
-
-      if (authError) {
-        console.log('User creation failed, checking if user exists:', authError.message);
-        
-        // If user already exists, try to get existing user
-        if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
-          const { data: existingUsers } = await supabaseService.auth.admin.listUsers();
-          const existingUser = existingUsers.users?.find(u => u.email === customerData.email);
-          
-          if (existingUser) {
-            console.log('Found existing user:', existingUser.id);
-            userId = existingUser.id;
-          }
-        }
-        
-        if (!userId) {
-          console.error('Failed to create or find user:', authError);
-          throw new Error('Erro ao processar dados do usuário');
-        }
-      } else if (authData.user) {
-        console.log('User created successfully:', authData.user.id);
-        userId = authData.user.id;
-        
-        // Create inactive profile
-        const { error: profileError } = await supabaseService
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            name: customerData.name,
-            email: customerData.email,
-            phone: customerData.phone || null,
-            role: 'user',
-            is_active: false // User starts inactive
-          });
-
-        if (profileError) {
-          console.error('Profile creation error (non-critical):', profileError);
-        } else {
-          console.log('Inactive profile created successfully');
-        }
-      }
-    } catch (error) {
-      console.error('Error in user creation process:', error);
-      // Continue without user_id if creation fails completely
-    }
-
-    // Create transaction record in Supabase with user_id
-    const { data: transaction, error: transactionError } = await supabaseService
-      .from('transactions')
+    // Create order record with profile reference
+    const { data: order, error: orderError } = await supabaseService
+      .from('orders')
       .insert({
+        user_id: profileId, // Reference to profile, not auth.users yet
         plan_id: planId,
         abacatepay_id: responseData.id,
         amount: plan.price,
         status: 'pending',
-        user_id: userId, // Link transaction to user from the start
         payment_data: {
           customerData: {
             ...customerData,
-            tempPassword: tempPassword // Store temp password for activation
+            password: customerData.password // Store password for later auth creation
           },
           abacatePayData,
         }
@@ -260,18 +218,18 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (transactionError) {
-      console.error('Transaction creation error:', transactionError);
-      throw new Error('Falha ao registrar transação.');
+    if (orderError) {
+      console.error('Order creation error:', orderError);
+      throw new Error('Falha ao registrar pedido.');
     }
 
-    console.log('Transaction created successfully:', transaction.id);
+    console.log('Order created successfully:', order.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         paymentUrl: paymentUrl,
-        transactionId: transaction.id,
+        orderId: order.id,
         abacatePayId: responseData.id,
       }),
       {

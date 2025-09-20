@@ -47,12 +47,12 @@ serve(async (req) => {
     
     console.log('Mapped status for database:', { isPaid, status });
 
-    console.log('Updating transaction with abacatePayId:', abacatePayId);
+    console.log('Updating order with abacatePayId:', abacatePayId);
     
-    const { data: transaction, error: updateError } = await supabaseService
-      .from('transactions')
+    const { data: order, error: updateError } = await supabaseService
+      .from('orders')
       .update({
-        status,
+        status: isPaid ? 'paid' : status,
         paid_at: isPaid ? new Date().toISOString() : null,
         payment_method: paymentData.payment_method || paymentData.data?.payment_method || null,
         payment_data: {
@@ -64,26 +64,26 @@ serve(async (req) => {
       .select('*')
       .single();
       
-    console.log('Transaction update result:', { transaction, updateError });
+    console.log('Order update result:', { order, updateError });
 
     if (updateError) {
-      console.error('Transaction update error:', updateError);
-      throw new Error('Failed to update transaction');
+      console.error('Order update error:', updateError);
+      throw new Error('Failed to update order');
     }
 
     // If payment is confirmed
-    if (isPaid && transaction) {
+    if (isPaid && order) {
       console.log('Payment confirmed successfully:', {
-        transactionId: transaction.id,
-        userId: transaction.user_id,
-        status: transaction.status
+        orderId: order.id,
+        userId: order.user_id,
+        status: order.status
       });
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        transaction,
+        order,
         paymentData,
         isPaid,
       }),

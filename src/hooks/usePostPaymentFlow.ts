@@ -33,19 +33,15 @@ export const usePostPaymentFlow = () => {
         console.log('Payment verification result:', result);
         
         if (result.success && result.isPaid) {
-          console.log('Payment confirmed as paid! Transaction:', result.transaction);
-          
-          // Store successful payment info for later user creation flow
-          localStorage.setItem('paymentVerified', 'true');
-          localStorage.setItem('transactionData', JSON.stringify(result));
+          console.log('Payment confirmed as paid! Order:', result.order);
           
           // Get stored user data from checkout
-          const transactionData = localStorage.getItem('habify_transaction');
-          console.log('Retrieved transaction data from localStorage:', transactionData);
+          const orderData = localStorage.getItem('habify_order');
+          console.log('Retrieved order data from localStorage:', orderData);
           
-          if (transactionData) {
+          if (orderData) {
             try {
-              const userData = JSON.parse(transactionData);
+              const userData = JSON.parse(orderData);
               console.log('Parsed user data:', { 
                 email: userData.customerEmail, 
                 name: userData.customerName,
@@ -55,62 +51,46 @@ export const usePostPaymentFlow = () => {
               if (userData.customerEmail && userData.customerPassword && userData.customerName) {
                 console.log('User should now be activated - attempting login...');
                 
-                // User was created during payment creation and should now be active
                 const registrationResult = await registerUser(
                   userData.customerEmail, 
                   userData.customerPassword, 
                   userData.customerName
                 );
                 
-                console.log('User login/activation result:', registrationResult);
+                console.log('User login result:', registrationResult);
                 
                 if (registrationResult.success) {
                   // Clear stored data
-                  localStorage.removeItem('habify_transaction');
+                  localStorage.removeItem('habify_order');
                   localStorage.removeItem('abacatePayId');
                   localStorage.removeItem('paymentVerified');
-                  localStorage.removeItem('transactionData');
+                  localStorage.removeItem('orderData');
                   
-                  // Show success message
                   toast.success('Pagamento confirmado! Login realizado com sucesso.');
-                  
-                  // Navigate to my projects after successful registration
-                  console.log('Navigating to my projects in 1 second...');
                   setTimeout(() => {
                     navigate('/admin/my-projects');
                   }, 1000);
                 } else {
-                  console.error('User activation failed:', registrationResult.error);
+                  console.error('User login failed:', registrationResult.error);
                   toast.success('Pagamento confirmado! Sua conta está sendo ativada...');
                   setTimeout(() => {
                     navigate('/admin/my-projects');
                   }, 2000);
                 }
-              } else {
-                console.error('Missing user data:', {
-                  hasEmail: !!userData.customerEmail,
-                  hasPassword: !!userData.customerPassword,
-                  hasName: !!userData.customerName
-                });
-                toast.success('Pagamento confirmado! Entre em contato conosco para ativação.');
               }
             } catch (error) {
-              console.error('Error parsing transaction data:', error);
+              console.error('Error parsing order data:', error);
               toast.success('Pagamento confirmado! Entre em contato conosco.');
             }
-          } else {
-            console.error('No transaction data found in localStorage');
-            toast.success('Pagamento confirmado! Faça login para acessar seu painel.');
           }
         } else if (result.success && !result.isPaid) {
-          console.log('Payment verification successful but not paid yet. Status:', result.transaction?.status);
+          console.log('Payment verification successful but not paid yet. Status:', result.order?.status);
           
-          // Always try to activate user on payment success page, checking if they exist
           if (isPaymentSuccessPage) {
-            const transactionData = localStorage.getItem('habify_transaction');
-            if (transactionData) {
+            const orderData = localStorage.getItem('habify_order');
+            if (orderData) {
               try {
-                const userData = JSON.parse(transactionData);
+                const userData = JSON.parse(orderData);
                 console.log('Attempting to activate user with pending payment...');
                 
                 if (userData.customerEmail && userData.customerPassword && userData.customerName) {
@@ -121,7 +101,7 @@ export const usePostPaymentFlow = () => {
                   );
                   
                   if (registrationResult.success) {
-                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('habify_order');
                     localStorage.removeItem('abacatePayId');
                     toast.success('Conta ativada! Aguardando confirmação final do pagamento.');
                     setTimeout(() => {
@@ -140,12 +120,11 @@ export const usePostPaymentFlow = () => {
         } else {
           console.error('Payment verification failed:', result.error);
           
-          // Even if verification fails, try to activate user if on payment success page
           if (isPaymentSuccessPage) {
-            const transactionData = localStorage.getItem('habify_transaction');
-            if (transactionData) {
+            const orderData = localStorage.getItem('habify_order');
+            if (orderData) {
               try {
-                const userData = JSON.parse(transactionData);
+                const userData = JSON.parse(orderData);
                 console.log('Attempting to activate user despite verification failure...');
                 
                 if (userData.customerEmail && userData.customerPassword && userData.customerName) {
@@ -156,7 +135,7 @@ export const usePostPaymentFlow = () => {
                   );
                   
                   if (registrationResult.success) {
-                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('habify_order');
                     localStorage.removeItem('abacatePayId');
                     toast.success('Conta ativada com sucesso!');
                     setTimeout(() => {
@@ -199,9 +178,9 @@ export const usePostPaymentFlow = () => {
           try {
             const result = await verifyPayment(abacatePayId);
             if (result.success && result.isPaid) {
-              const transactionData = localStorage.getItem('habify_transaction');
-              if (transactionData) {
-                const userData = JSON.parse(transactionData);
+              const orderData = localStorage.getItem('habify_order');
+              if (orderData) {
+                const userData = JSON.parse(orderData);
                 if (userData.customerEmail && userData.customerPassword && userData.customerName) {
                   const registrationResult = await registerUser(
                     userData.customerEmail, 
@@ -210,7 +189,7 @@ export const usePostPaymentFlow = () => {
                   );
                   
                   if (registrationResult.success) {
-                    localStorage.removeItem('habify_transaction');
+                    localStorage.removeItem('habify_order');
                     localStorage.removeItem('abacatePayId');
                     toast.success('Pagamento confirmado! Conta criada com sucesso.');
                     setTimeout(() => {

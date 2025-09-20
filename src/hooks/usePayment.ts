@@ -7,12 +7,13 @@ interface CustomerData {
   email: string;
   phone?: string;
   cpf?: string;
+  password: string;
 }
 
 interface PaymentResponse {
   success: boolean;
   paymentUrl?: string;
-  transactionId?: string;
+  orderId?: string;
   abacatePayId?: string;
   error?: string;
 }
@@ -81,6 +82,27 @@ export const usePayment = () => {
       if (error) {
         console.error('Payment verification error:', error);
         return { success: false, error: error.message };
+      }
+
+      // Check if payment was confirmed and order exists
+      if (data?.success && data?.order) {
+        // Check order status from our database
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('abacatepay_id', abacatePayId)
+          .single();
+
+        if (orderError) {
+          console.error('Order fetch error:', orderError);
+          return { success: false, error: 'Erro ao buscar pedido' };
+        }
+
+        return {
+          success: true,
+          isPaid: orderData.status === 'paid',
+          order: orderData
+        };
       }
 
       return data;

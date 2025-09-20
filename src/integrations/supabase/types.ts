@@ -82,6 +82,56 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          abacatepay_id: string | null
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_data: Json | null
+          payment_method: string | null
+          plan_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abacatepay_id?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_data?: Json | null
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abacatepay_id?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_data?: Json | null
+          payment_method?: string | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           created_at: string
@@ -120,6 +170,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auth_user_id: string | null
           avatar_url: string | null
           company: string | null
           created_at: string
@@ -133,6 +184,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auth_user_id?: string | null
           avatar_url?: string | null
           company?: string | null
           created_at?: string
@@ -146,6 +198,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auth_user_id?: string | null
           avatar_url?: string | null
           company?: string | null
           created_at?: string

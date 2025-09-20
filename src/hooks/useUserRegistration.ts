@@ -6,166 +6,42 @@ export const useUserRegistration = () => {
   const [loading, setLoading] = useState(false);
 
   const registerUser = async (email: string, password: string, name: string) => {
-    setLoading(true);
-    console.log('Starting user registration/activation for:', email);
-    
     try {
-      // First check if user already exists from payment flow
-      const transactionData = localStorage.getItem('habify_transaction');
-      let useStoredPassword = false;
+      console.log('Attempting to sign in user:', email);
       
-      if (transactionData) {
-        try {
-          const userData = JSON.parse(transactionData);
-          if (userData.customerEmail === email && userData.customerPassword) {
-            // Use the password from checkout instead of the parameter
-            password = userData.customerPassword;
-            useStoredPassword = true;
-            console.log('Using stored password from checkout');
-          }
-        } catch (error) {
-          console.error('Error parsing stored transaction data:', error);
-        }
-      }
-      
-      // Try to sign in first (user might already exist from payment)
-      console.log('Attempting to sign in existing user...');
+      // First try to sign in (user might have been created during payment)
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (!signInError && signInData.user) {
-        console.log('User signed in successfully (was created during payment)');
-        toast.success('Login realizado com sucesso!');
+        console.log('User signed in successfully:', signInData.user.id);
         
-        // Link transactions
-        try {
-          const { error: linkError } = await supabase.rpc('link_user_transaction', {
-            user_email: email
-          });
-          
-          if (linkError) {
-            console.error('Error linking transactions:', linkError);
-          } else {
-            console.log('Transactions linked successfully');
-          }
-        } catch (linkError) {
-          console.error('Error calling link_user_transaction:', linkError);
-        }
-        
-        return { success: true, user: signInData.user };
-      }
+        // Check if profile is active
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('auth_user_id', signInData.user.id)
+          .single();
 
-      // If sign in failed, try to create new user
-      console.log('Sign in failed, attempting to create new user...');
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/admin/my-projects`,
-          data: {
-            name: name
-          }
-        },
-      });
-
-      console.log('Auth signup response:', { authData, authError });
-
-      if (authError) {
-        if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
-          console.log('User already exists, attempting sign in...');
-          // User already exists, try to sign in
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          console.log('Sign in response:', { signInData, signInError });
-          
-          if (signInError) {
-            console.error('Sign in error:', signInError);
-            // Don't throw error, just inform success as the account exists
-            toast.success('Usuário já existe! Redirecionando para o painel...');
-            
-            // Try to sign in with a different approach or just navigate
-            return { success: true, user: null, message: 'User already exists' };
-          }
-          
-          toast.success('Login realizado com sucesso!');
-          
-          // Link any pending transactions to this user after login
-          console.log('Linking transactions to logged in user...');
-          try {
-            const { error: linkError } = await supabase.rpc('link_user_transaction', {
-              user_email: email
-            });
-            
-            if (linkError) {
-              console.error('Error linking transactions:', linkError);
-            } else {
-              console.log('Transactions linked successfully');
-            }
-          } catch (linkError) {
-            console.error('Error calling link_user_transaction:', linkError);
-          }
-          
+        if (!profileError && profile?.is_active) {
           return { success: true, user: signInData.user };
         }
-        
-        // For other auth errors, try to continue anyway
-        console.error('Auth error, but continuing:', authError);
-        toast.success('Processando... Redirecionando para o painel.');
-        return { success: true, user: null, message: 'Auth error but processed' };
       }
 
-      console.log('User created successfully:', authData.user?.id);
+      console.log('Sign in failed or user inactive, checking if user needs activation:', signInError?.message);
 
-      // Create profile
-      if (authData.user) {
-        console.log('Creating user profile...');
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            name,
-            email,
-            role: 'user',
-          });
+      // If sign in failed, user might not exist in auth yet - this is normal in our flow
+      // User will be created via webhook when payment is confirmed
+      return { 
+        success: false, 
+        error: 'Usuário ainda não foi ativado. Aguarde a confirmação do pagamento.' 
+      };
 
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // Don't fail registration if profile creation fails, but log it
-        } else {
-          console.log('Profile created successfully');
-        }
-
-        // Link any pending transactions to this user
-        console.log('Linking transactions to user...');
-        try {
-          const { error: linkError } = await supabase.rpc('link_user_transaction', {
-            user_email: email
-          });
-          
-          if (linkError) {
-            console.error('Error linking transactions:', linkError);
-          } else {
-            console.log('Transactions linked successfully');
-          }
-        } catch (linkError) {
-          console.error('Error calling link_user_transaction:', linkError);
-        }
-      }
-
-      toast.success('Conta criada com sucesso!');
-      return { success: true, user: authData.user };
     } catch (error: any) {
       console.error('Registration error:', error);
-      const errorMessage = error.message || 'Erro ao criar conta';
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+      return { success: false, error: error.message };
     }
   };
 

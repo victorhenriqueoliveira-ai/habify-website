@@ -79,12 +79,19 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         email: formData.email.trim(),
         phone: formData.phone.replace(/\D/g, ''),
         cpf: formData.cpf.replace(/\D/g, ''),
+        password: formData.password,
       });
 
       if (response.success && response.paymentUrl) {
-        // Store transaction data for later use
-        const transactionData = {
-          transactionId: response.transactionId,
+        // Store order data for post-payment verification
+        localStorage.setItem('habify_order', JSON.stringify({
+          customerEmail: formData.email,
+          customerName: formData.name,
+          customerPassword: formData.password
+        }));
+        
+        const orderData = {
+          orderId: response.orderId,
           abacatePayId: response.abacatePayId,
           planId: plan.id,
           customerEmail: formData.email,
@@ -92,14 +99,14 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
           customerPassword: formData.password,
         };
         
-        localStorage.setItem('habify_transaction', JSON.stringify(transactionData));
-        console.log('Transaction data stored in localStorage:', {
-          transactionId: transactionData.transactionId,
-          abacatePayId: transactionData.abacatePayId,
-          planId: transactionData.planId,
-          customerEmail: transactionData.customerEmail,
-          customerName: transactionData.customerName,
-          hasPassword: !!transactionData.customerPassword
+        localStorage.setItem('abacatePayId', response.abacatePayId);
+        console.log('Order data stored in localStorage:', {
+          orderId: orderData.orderId,
+          abacatePayId: orderData.abacatePayId,
+          planId: orderData.planId,
+          customerEmail: orderData.customerEmail,
+          customerName: orderData.customerName,
+          hasPassword: !!orderData.customerPassword
         });
 
         // Open payment in new tab
