@@ -39,7 +39,7 @@ serve(async (req) => {
     );
 
     // AbacatePay returns status in different formats, check both
-    const paymentStatus = paymentData.status || paymentData.data?.status;
+    const paymentStatus = paymentData.data?.status || paymentData.status;
     console.log('Payment status from AbacatePay:', paymentStatus);
     
     const isPaid = paymentStatus === 'PAID' || paymentStatus === 'APPROVED' || paymentStatus === 'paid' || paymentStatus === 'approved';
@@ -54,7 +54,7 @@ serve(async (req) => {
       .update({
         status: isPaid ? 'paid' : status,
         paid_at: isPaid ? new Date().toISOString() : null,
-        payment_method: paymentData.payment_method || paymentData.data?.payment_method || null,
+        payment_method: paymentData.data?.payment?.method || paymentData.payment_method || paymentData.data?.payment_method || null,
         payment_data: {
           ...paymentData,
           updated_at: new Date().toISOString()

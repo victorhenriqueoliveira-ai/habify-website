@@ -37,15 +37,15 @@ serve(async (req) => {
     console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
 
     // Extract bill ID and status from webhook - try multiple formats
-    let billId = webhookData.data?.id || webhookData.id || webhookData.bill?.id;
-    const paymentStatus = webhookData.data?.status || webhookData.status || webhookData.bill?.status;
+    let billId = webhookData.data?.billing?.id || webhookData.data?.id || webhookData.id || webhookData.bill?.id;
+    const paymentStatus = webhookData.data?.billing?.status || webhookData.data?.status || webhookData.status || webhookData.bill?.status;
     
     console.log('Processing webhook for bill:', billId, 'status:', paymentStatus);
 
     if (!billId) {
       console.error('No bill ID found in webhook data. Full webhook:', JSON.stringify(webhookData, null, 2));
       // Try alternative paths for bill ID
-      const altBillId = webhookData.billing?.id || webhookData.external_id || webhookData.externalId;
+      const altBillId = webhookData.data?.billing?.id || webhookData.billing?.id || webhookData.external_id || webhookData.externalId;
       if (!altBillId) {
         return new Response(
           JSON.stringify({ error: 'No bill ID found in webhook' }),
@@ -75,7 +75,7 @@ serve(async (req) => {
       .update({
         status: isPaid ? 'paid' : status,
         paid_at: isPaid ? new Date().toISOString() : null,
-        payment_method: webhookData.data?.payment_method || webhookData.payment_method || null,
+        payment_method: webhookData.data?.payment?.method || webhookData.data?.payment_method || webhookData.payment_method || null,
         payment_data: {
           ...webhookData,
           webhook_data: webhookData,
