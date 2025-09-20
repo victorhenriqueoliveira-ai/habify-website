@@ -85,7 +85,8 @@ serve(async (req) => {
         email: customerData.email,
         phone: customerData.phone || null,
         role: 'user',
-        is_active: false // Will be activated when payment is confirmed
+        is_active: false, // Will be activated when payment is confirmed
+        user_id: null // Will be set when auth user is created
       })
       .select()
       .single();
