@@ -83,20 +83,30 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
 
       if (response.success && response.paymentUrl) {
         // Store transaction data for later use
-        localStorage.setItem('habify_transaction', JSON.stringify({
+        const transactionData = {
           transactionId: response.transactionId,
           abacatePayId: response.abacatePayId,
           planId: plan.id,
           customerEmail: formData.email,
           customerName: formData.name,
           customerPassword: formData.password,
-        }));
+        };
+        
+        localStorage.setItem('habify_transaction', JSON.stringify(transactionData));
+        console.log('Transaction data stored in localStorage:', {
+          transactionId: transactionData.transactionId,
+          abacatePayId: transactionData.abacatePayId,
+          planId: transactionData.planId,
+          customerEmail: transactionData.customerEmail,
+          customerName: transactionData.customerName,
+          hasPassword: !!transactionData.customerPassword
+        });
 
         // Open payment in new tab
         window.open(response.paymentUrl, '_blank');
         
         onClose();
-        toast.success('Redirecionando para pagamento...');
+        toast.success('Redirecionando para pagamento. Após pagar, sua conta será criada automaticamente!');
       }
     } catch (error) {
       toast.error('Erro ao processar pagamento');
