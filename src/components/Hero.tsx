@@ -126,22 +126,16 @@ const Hero = () => {
               style={{ animationDelay: "0.7s" }}
             >
               <a 
-                href="#get-access" 
-                className="flex items-center justify-center group w-full sm:w-auto text-center" 
+                href="#get-access"
+                className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border border-[#FE5C02] bg-[#fff] text-[#FE5C02] px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#FE5C02] hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FE5C02] focus:ring-offset-2"
                 style={{
-                  backgroundColor: '#FE5C02',
-                  borderRadius: '1440px',
                   boxSizing: 'border-box',
-                  color: '#FFFFFF',
                   cursor: 'pointer',
-                  fontSize: '14px',
                   lineHeight: '20px',
-                  padding: '16px 24px', // Slightly reduced padding for mobile
-                  border: '1px solid white',
                 }}
               >
-                Criar Minha Máquina de Vendas
-                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                Criar meu site
+                <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>
           </div>
