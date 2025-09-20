@@ -17,74 +17,103 @@ serve(async (req) => {
     
     console.log('Verifying payment:', abacatePayId);
 
-    // Verify payment with AbacatePay
-    const abacatePayResponse = await fetch(`https://api.abacatepay.com/v1/billing/${abacatePayId}`, {
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('ABACATEPAY_API_KEY')}`,
-      },
-    });
-
-    if (!abacatePayResponse.ok) {
-      throw new Error('Failed to verify payment with AbacatePay');
-    }
-
-    const paymentData = await abacatePayResponse.json();
-    console.log('Payment verification result:', JSON.stringify(paymentData, null, 2));
-
-    // Update transaction in Supabase
+    // Create Supabase service client
     const supabaseService = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
 
-    // AbacatePay returns status in different formats, check both
-    const paymentStatus = paymentData.data?.status || paymentData.status;
-    console.log('Payment status from AbacatePay:', paymentStatus);
+    console.log('Checking order status in database for abacatePayId:', abacatePayId);
     
-    const isPaid = paymentStatus === 'PAID' || paymentStatus === 'APPROVED' || paymentStatus === 'paid' || paymentStatus === 'approved';
-    const status = isPaid ? 'completed' : paymentStatus === 'FAILED' || paymentStatus === 'failed' ? 'failed' : 'pending';
-    
-    console.log('Mapped status for database:', { isPaid, status });
-
-    console.log('Updating order with abacatePayId:', abacatePayId);
-    
-    const { data: order, error: updateError } = await supabaseService
+    // Check order status directly from database (webhook should have already updated it)
+    const { data: order, error: orderError } = await supabaseService
       .from('orders')
-      .update({
-        status: isPaid ? 'paid' : status,
-        paid_at: isPaid ? new Date().toISOString() : null,
-        payment_method: paymentData.data?.payment?.method || paymentData.payment_method || paymentData.data?.payment_method || null,
-        payment_data: {
-          ...paymentData,
-          updated_at: new Date().toISOString()
-        }
-      })
-      .eq('abacatepay_id', abacatePayId)
       .select('*')
+      .eq('abacatepay_id', abacatePayId)
       .single();
       
-    console.log('Order update result:', { order, updateError });
+    console.log('Order query result:', { order, orderError });
 
-    if (updateError) {
-      console.error('Order update error:', updateError);
-      throw new Error('Failed to update order');
+    if (orderError) {
+      console.error('Order fetch error:', orderError);
+      throw new Error('Order not found');
     }
 
-    // If payment is confirmed
+    const isPaid = order.status === 'paid';
+    console.log('Order status check:', { isPaid, status: order.status });
+
+    // If payment is already confirmed via webhook, create auth user if not exists
     if (isPaid && order) {
-      console.log('Payment confirmed successfully:', {
-        orderId: order.id,
-        userId: order.user_id,
-        status: order.status
-      });
+      console.log('Payment confirmed, checking auth user for order:', order.id);
+      
+      // Get profile data
+      const { data: profile, error: profileError } = await supabaseService
+        .from('profiles')
+        .select('*')
+        .eq('id', order.user_id)
+        .single();
+
+      if (profileError) {
+        console.error('Failed to get profile:', profileError);
+      } else {
+        const customerData = order.payment_data?.customerData;
+        
+        if (customerData?.email && customerData?.password && !profile.auth_user_id) {
+          try {
+            console.log('Creating auth user for email:', customerData.email);
+            
+            // Create user in Supabase Auth
+            const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
+              email: customerData.email,
+              password: customerData.password,
+              email_confirm: true, // User is confirmed after payment
+              user_metadata: {
+                name: customerData.name,
+                phone: customerData.phone || null,
+                payment_confirmed: true,
+                activated_via_verify: true,
+                activated_at: new Date().toISOString()
+              }
+            });
+
+            if (authError) {
+              console.error('Failed to create auth user:', authError);
+            } else {
+              console.log('Auth user created successfully:', authData.user?.id);
+              
+              // Update profile with auth_user_id and activate it
+              const { error: profileUpdateError } = await supabaseService
+                .from('profiles')
+                .update({ 
+                  auth_user_id: authData.user.id,
+                  user_id: authData.user.id, // Now link to auth.users
+                  is_active: true,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', order.user_id);
+
+              if (profileUpdateError) {
+                console.error('Failed to activate profile:', profileUpdateError);
+              } else {
+                console.log('Profile activated and linked to auth user successfully');
+              }
+            }
+          } catch (error) {
+            console.error('Error creating auth user:', error);
+          }
+        } else if (profile.auth_user_id) {
+          console.log('Auth user already exists for profile:', profile.auth_user_id);
+        } else {
+          console.error('Missing customerData in order:', { customerData: !!customerData, email: !!customerData?.email, password: !!customerData?.password });
+        }
+      }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         order,
-        paymentData,
         isPaid,
       }),
       {

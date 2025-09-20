@@ -69,6 +69,13 @@ serve(async (req) => {
     
     console.log('Updating transaction status:', { billId, isPaid, status });
 
+    // Get current order to preserve original customerData
+    const { data: currentOrder } = await supabaseService
+      .from('orders')
+      .select('payment_data')
+      .eq('abacatepay_id', billId)
+      .single();
+
     // Update order in database
     const { data: order, error: updateError } = await supabaseService
       .from('orders')
@@ -77,7 +84,7 @@ serve(async (req) => {
         paid_at: isPaid ? new Date().toISOString() : null,
         payment_method: webhookData.data?.payment?.method || webhookData.data?.payment_method || webhookData.payment_method || null,
         payment_data: {
-          ...webhookData,
+          ...currentOrder?.payment_data, // Preserve original customerData
           webhook_data: webhookData,
           updated_via_webhook: true,
           updated_at: new Date().toISOString()
