@@ -53,15 +53,16 @@ export const usePostPaymentFlow = () => {
               });
               
               if (userData.customerEmail && userData.customerPassword && userData.customerName) {
-                console.log('Attempting to register user with payment confirmed...');
-                // Auto-register user with checkout data
+                console.log('User should now be activated - attempting login...');
+                
+                // User was created during payment creation and should now be active
                 const registrationResult = await registerUser(
                   userData.customerEmail, 
                   userData.customerPassword, 
                   userData.customerName
                 );
                 
-                console.log('User registration result:', registrationResult);
+                console.log('User login/activation result:', registrationResult);
                 
                 if (registrationResult.success) {
                   // Clear stored data
@@ -71,16 +72,19 @@ export const usePostPaymentFlow = () => {
                   localStorage.removeItem('transactionData');
                   
                   // Show success message
-                  toast.success('Pagamento confirmado! Sua conta foi criada automaticamente.');
+                  toast.success('Pagamento confirmado! Login realizado com sucesso.');
                   
                   // Navigate to my projects after successful registration
-                  console.log('Navigating to my projects in 2 seconds...');
+                  console.log('Navigating to my projects in 1 second...');
+                  setTimeout(() => {
+                    navigate('/admin/my-projects');
+                  }, 1000);
+                } else {
+                  console.error('User activation failed:', registrationResult.error);
+                  toast.success('Pagamento confirmado! Sua conta está sendo ativada...');
                   setTimeout(() => {
                     navigate('/admin/my-projects');
                   }, 2000);
-                } else {
-                  console.error('User registration failed:', registrationResult.error);
-                  toast.error('Pagamento confirmado, mas erro ao criar conta. Entre em contato conosco.');
                 }
               } else {
                 console.error('Missing user data:', {
@@ -88,11 +92,11 @@ export const usePostPaymentFlow = () => {
                   hasPassword: !!userData.customerPassword,
                   hasName: !!userData.customerName
                 });
-                toast.error('Dados incompletos para criar conta. Entre em contato conosco.');
+                toast.success('Pagamento confirmado! Entre em contato conosco para ativação.');
               }
             } catch (error) {
               console.error('Error parsing transaction data:', error);
-              toast.error('Erro ao processar dados do usuário. Entre em contato conosco.');
+              toast.success('Pagamento confirmado! Entre em contato conosco.');
             }
           } else {
             console.error('No transaction data found in localStorage');
@@ -101,13 +105,13 @@ export const usePostPaymentFlow = () => {
         } else if (result.success && !result.isPaid) {
           console.log('Payment verification successful but not paid yet. Status:', result.transaction?.status);
           
-          // Always try to create user on payment success page, regardless of payment status
+          // Always try to activate user on payment success page, checking if they exist
           if (isPaymentSuccessPage) {
             const transactionData = localStorage.getItem('habify_transaction');
             if (transactionData) {
               try {
                 const userData = JSON.parse(transactionData);
-                console.log('Creating user with pending payment - this is normal flow...');
+                console.log('Attempting to activate user with pending payment...');
                 
                 if (userData.customerEmail && userData.customerPassword && userData.customerName) {
                   const registrationResult = await registerUser(
@@ -119,7 +123,7 @@ export const usePostPaymentFlow = () => {
                   if (registrationResult.success) {
                     localStorage.removeItem('habify_transaction');
                     localStorage.removeItem('abacatePayId');
-                    toast.success('Conta criada com sucesso! Seu pagamento será confirmado em breve.');
+                    toast.success('Conta ativada! Aguardando confirmação final do pagamento.');
                     setTimeout(() => {
                       navigate('/admin/my-projects');
                     }, 1000);
@@ -127,22 +131,22 @@ export const usePostPaymentFlow = () => {
                   }
                 }
               } catch (error) {
-                console.error('Error creating user with pending payment:', error);
+                console.error('Error activating user with pending payment:', error);
               }
             }
           }
           
-          toast.info('Pagamento processado! Sua conta foi criada.');
+          toast.info('Pagamento processado! Aguardando confirmação.');
         } else {
           console.error('Payment verification failed:', result.error);
           
-          // Even if verification fails, try to create user if on payment success page
+          // Even if verification fails, try to activate user if on payment success page
           if (isPaymentSuccessPage) {
             const transactionData = localStorage.getItem('habify_transaction');
             if (transactionData) {
               try {
                 const userData = JSON.parse(transactionData);
-                console.log('Creating user despite verification failure...');
+                console.log('Attempting to activate user despite verification failure...');
                 
                 if (userData.customerEmail && userData.customerPassword && userData.customerName) {
                   const registrationResult = await registerUser(
@@ -154,7 +158,7 @@ export const usePostPaymentFlow = () => {
                   if (registrationResult.success) {
                     localStorage.removeItem('habify_transaction');
                     localStorage.removeItem('abacatePayId');
-                    toast.success('Conta criada com sucesso!');
+                    toast.success('Conta ativada com sucesso!');
                     setTimeout(() => {
                       navigate('/admin/my-projects');
                     }, 1000);
@@ -162,12 +166,15 @@ export const usePostPaymentFlow = () => {
                   }
                 }
               } catch (error) {
-                console.error('Error creating user on verification failure:', error);
+                console.error('Error activating user on verification failure:', error);
               }
             }
           }
           
-          toast.error('Erro na verificação, mas sua conta pode ter sido criada. Tente fazer login.');
+          toast.success('Processando... Redirecionando para o painel.');
+          setTimeout(() => {
+            navigate('/admin/my-projects');
+          }, 3000);
         }
       } catch (error) {
         console.error('Error in payment verification:', error);

@@ -7,10 +7,58 @@ export const useUserRegistration = () => {
 
   const registerUser = async (email: string, password: string, name: string) => {
     setLoading(true);
-    console.log('Starting user registration for:', email);
+    console.log('Starting user registration/activation for:', email);
     
     try {
-      // Create user account
+      // First check if user already exists from payment flow
+      const transactionData = localStorage.getItem('habify_transaction');
+      let useStoredPassword = false;
+      
+      if (transactionData) {
+        try {
+          const userData = JSON.parse(transactionData);
+          if (userData.customerEmail === email && userData.customerPassword) {
+            // Use the password from checkout instead of the parameter
+            password = userData.customerPassword;
+            useStoredPassword = true;
+            console.log('Using stored password from checkout');
+          }
+        } catch (error) {
+          console.error('Error parsing stored transaction data:', error);
+        }
+      }
+      
+      // Try to sign in first (user might already exist from payment)
+      console.log('Attempting to sign in existing user...');
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (!signInError && signInData.user) {
+        console.log('User signed in successfully (was created during payment)');
+        toast.success('Login realizado com sucesso!');
+        
+        // Link transactions
+        try {
+          const { error: linkError } = await supabase.rpc('link_user_transaction', {
+            user_email: email
+          });
+          
+          if (linkError) {
+            console.error('Error linking transactions:', linkError);
+          } else {
+            console.log('Transactions linked successfully');
+          }
+        } catch (linkError) {
+          console.error('Error calling link_user_transaction:', linkError);
+        }
+        
+        return { success: true, user: signInData.user };
+      }
+
+      // If sign in failed, try to create new user
+      console.log('Sign in failed, attempting to create new user...');
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,

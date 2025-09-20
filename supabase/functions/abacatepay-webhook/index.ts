@@ -79,63 +79,49 @@ serve(async (req) => {
 
     console.log('Transaction updated successfully via webhook:', transaction);
 
-    // If payment is completed and we have customer data, try to create user automatically
-    if (isPaid && transaction && !transaction.user_id) {
-      console.log('Payment completed, attempting automatic user creation...');
+    // If payment is completed and user exists, activate the user
+    if (isPaid && transaction && transaction.user_id) {
+      console.log('Payment completed, activating user:', transaction.user_id);
       
       const customerData = transaction.payment_data?.customerData;
-      if (customerData?.email && customerData?.name) {
-        console.log('Creating user from webhook for:', customerData.email);
-        
-        // Generate a temporary password (user will need to reset it)
-        const tempPassword = crypto.randomUUID();
-        
+      if (customerData?.email) {
         try {
-          // Create user in auth
-          const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-            email: customerData.email,
-            password: tempPassword,
-            email_confirm: true, // Skip email confirmation since payment is confirmed
-            user_metadata: {
-              name: customerData.name,
-              created_via_webhook: true
+          // Activate user by confirming email and updating metadata
+          const { data: userData, error: updateError } = await supabaseService.auth.admin.updateUserById(
+            transaction.user_id,
+            {
+              email_confirm: true,
+              user_metadata: {
+                ...customerData,
+                payment_confirmed: true,
+                activated_via_webhook: true,
+                activated_at: new Date().toISOString()
+              }
             }
-          });
+          );
 
-          if (authError) {
-            console.error('Failed to create user via webhook:', authError);
-          } else if (authData.user) {
-            console.log('User created via webhook:', authData.user.id);
+          if (updateError) {
+            console.error('Failed to activate user via webhook:', updateError);
+          } else {
+            console.log('User activated successfully via webhook:', userData.user?.id);
             
-            // Create profile
-            const { error: profileError } = await supabaseService
+            // Activate profile
+            const { error: profileUpdateError } = await supabaseService
               .from('profiles')
-              .insert({
-                user_id: authData.user.id,
-                name: customerData.name,
-                email: customerData.email,
-                phone: customerData.phone || null,
-                role: 'user',
-              });
+              .update({ 
+                is_active: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', transaction.user_id);
 
-            if (profileError) {
-              console.error('Failed to create profile via webhook:', profileError);
-            }
-
-            // Link transaction to user
-            const { error: linkError } = await supabaseService
-              .from('transactions')
-              .update({ user_id: authData.user.id })
-              .eq('id', transaction.id);
-
-            if (linkError) {
-              console.error('Failed to link transaction to user:', linkError);
+            if (profileUpdateError) {
+              console.error('Failed to activate profile via webhook:', profileUpdateError);
             } else {
-              console.log('Transaction linked to user via webhook');
+              console.log('Profile activated successfully via webhook');
             }
           }
         } catch (error) {
-          console.error('Error creating user via webhook:', error);
+          console.error('Error activating user via webhook:', error);
         }
       }
     }
