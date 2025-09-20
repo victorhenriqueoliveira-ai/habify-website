@@ -98,11 +98,11 @@ export const PaymentsPage = () => {
   // Calculate statistics
   const stats = {
     total: transactions.length,
-    completed: transactions.filter(t => t.status === 'completed').length,
+    completed: transactions.filter(t => t.status === 'paid').length,
     pending: transactions.filter(t => t.status === 'pending').length,
     failed: transactions.filter(t => t.status === 'failed').length,
     totalRevenue: transactions
-      .filter(t => t.status === 'completed')
+      .filter(t => t.status === 'paid')
       .reduce((sum, t) => sum + t.amount, 0),
     avgTicket: transactions.length > 0 
       ? transactions.reduce((sum, t) => sum + t.amount, 0) / transactions.length 

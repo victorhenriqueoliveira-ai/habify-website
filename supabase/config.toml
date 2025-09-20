@@ -15,3 +15,9 @@ verify_jwt = false
 
 [functions.abacatepay-webhook]
 verify_jwt = false
+
+[functions.get-auth-logs]
+verify_jwt = false
+
+[functions.get-db-logs]
+verify_jwt = false

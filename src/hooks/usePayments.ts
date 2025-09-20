@@ -6,7 +6,7 @@ interface Transaction {
   userId: string;
   planId: string;
   amount: number;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  status: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod?: string;
   abacatePayId?: string;
   paymentData?: any;
@@ -68,7 +68,7 @@ export const usePayments = () => {
 
   const getTotalRevenue = () => {
     return transactions
-      .filter(t => t.status === 'completed')
+      .filter(t => t.status === 'paid')
       .reduce((sum, t) => sum + t.amount, 0);
   };
 
@@ -78,7 +78,7 @@ export const usePayments = () => {
     
     return transactions
       .filter(t => 
-        t.status === 'completed' && 
+        t.status === 'paid' && 
         new Date(t.createdAt) >= startDate
       )
       .reduce((sum, t) => sum + t.amount, 0);
@@ -86,6 +86,18 @@ export const usePayments = () => {
 
   useEffect(() => {
     fetchTransactions();
+    
+    // Subscribe to transaction changes for real-time updates
+    const subscription = supabase
+      .channel('payments-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        fetchTransactions();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return {
