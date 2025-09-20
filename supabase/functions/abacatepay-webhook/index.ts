@@ -16,6 +16,23 @@ serve(async (req) => {
     console.log('AbacatePay webhook called - Method:', req.method);
     console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
     
+    // Validate webhook secret
+    const url = new URL(req.url);
+    const webhookSecret = url.searchParams.get('webhookSecret');
+    const expectedSecret = 'VictorOliveira@123';
+    
+    console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing');
+    
+    if (!webhookSecret || webhookSecret !== expectedSecret) {
+      console.error('Invalid webhook secret');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    
+    console.log('Webhook secret validated successfully');
+    
     const webhookData = await req.json();
     console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
 
