@@ -100,14 +100,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         };
         
         localStorage.setItem('abacatePayId', response.abacatePayId);
-        console.log('Order data stored in localStorage:', {
-          orderId: orderData.orderId,
-          abacatePayId: orderData.abacatePayId,
-          planId: orderData.planId,
-          customerEmail: orderData.customerEmail,
-          customerName: orderData.customerName,
-          hasPassword: !!orderData.customerPassword
-        });
+        localStorage.setItem('habify_order', JSON.stringify(orderData));
 
         // Open payment in new tab
         window.open(response.paymentUrl, '_blank');

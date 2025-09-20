@@ -35,7 +35,6 @@ export const useSystemMetrics = () => {
         conversionRate: metricsData?.conversion_rate || 0
       });
     } catch (err: any) {
-      console.error('Error fetching system metrics:', err);
       setError(err.message);
       // Fallback to zeros if function fails
       setMetrics({

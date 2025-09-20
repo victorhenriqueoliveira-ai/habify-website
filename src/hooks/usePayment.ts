@@ -25,8 +25,6 @@ export const usePayment = () => {
     try {
       setLoading(true);
       
-      console.log('Creating payment with planId:', planId, 'and customer:', customerData);
-
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
           planId,
@@ -34,28 +32,22 @@ export const usePayment = () => {
         },
       });
 
-      console.log('Payment creation response:', { data, error });
-
       if (error) {
-        console.error('Payment creation error:', error);
         toast.error(`Erro ao processar pagamento: ${error.message}`);
         return { success: false, error: error.message };
       }
 
       if (!data) {
-        console.error('No data received from payment creation');
         toast.error('Nenhuma resposta recebida do servidor');
         return { success: false, error: 'Nenhuma resposta do servidor' };
       }
 
       if (!data.success) {
-        console.error('Payment creation failed:', data);
         toast.error(data.error || 'Erro ao criar pagamento');
         return { success: false, error: data.error };
       }
 
       if (!data.paymentUrl) {
-        console.error('No payment URL received:', data);
         toast.error('URL de pagamento não foi gerada');
         return { success: false, error: 'URL de pagamento não foi gerada' };
       }
@@ -64,7 +56,6 @@ export const usePayment = () => {
       return data;
 
     } catch (error: any) {
-      console.error('Payment error:', error);
       const errorMessage = error?.message || 'Erro interno do servidor';
       toast.error(`Erro: ${errorMessage}`);
       return { success: false, error: errorMessage };
@@ -80,7 +71,6 @@ export const usePayment = () => {
       });
 
       if (error) {
-        console.error('Payment verification error:', error);
         return { success: false, error: error.message };
       }
 
@@ -94,7 +84,6 @@ export const usePayment = () => {
           .single();
 
         if (orderError) {
-          console.error('Order fetch error:', orderError);
           return { success: false, error: 'Erro ao buscar pedido' };
         }
 
@@ -107,7 +96,6 @@ export const usePayment = () => {
 
       return data;
     } catch (error) {
-      console.error('Payment verification error:', error);
       return { success: false, error: 'Erro ao verificar pagamento' };
     }
   };

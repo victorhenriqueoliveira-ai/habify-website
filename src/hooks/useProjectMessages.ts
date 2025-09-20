@@ -55,7 +55,7 @@ export const useProjectMessages = (projectId?: string) => {
 
       setMessages(formattedMessages);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      // Silent error handling 
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,6 @@ export const useProjectMessages = (projectId?: string) => {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Error sending message:', error);
       return { success: false, error };
     }
   };
@@ -100,7 +99,7 @@ export const useProjectMessages = (projectId?: string) => {
         )
       );
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      // Silent error handling
     }
   };
 

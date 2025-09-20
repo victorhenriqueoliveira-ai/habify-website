@@ -96,7 +96,6 @@ export const ProjectForm = ({
 
       toast.success(`${uploadedUrls.length} foto(s) enviada(s) e otimizada(s) com sucesso!`);
     } catch (error) {
-      console.error('Upload error:', error);
       toast.error('Erro ao enviar fotos');
     } finally {
       setUploading(false);

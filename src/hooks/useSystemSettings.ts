@@ -40,7 +40,7 @@ export const useSystemSettings = () => {
         setSettings(settingsMap);
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,6 @@ export const useSystemSettings = () => {
 
       return { success: true };
     } catch (error) {
-      console.error('Error updating setting:', error);
       return { success: false, error };
     }
   };

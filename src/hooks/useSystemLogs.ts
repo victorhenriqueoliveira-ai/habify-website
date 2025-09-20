@@ -84,7 +84,6 @@ export const useSystemLogs = () => {
 
       setLogs(systemLogs);
     } catch (error) {
-      console.error('Error fetching logs:', error);
       // Fallback to audit logs only
       const { data: auditLogs } = await supabase
         .from('audit_logs')

@@ -34,7 +34,7 @@ export const useNotifications = (userId?: string) => {
 
       setNotifications(formattedNotifications);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,6 @@ export const useNotifications = (userId?: string) => {
       await fetchNotifications();
       return { success: true };
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       return { success: false, error };
     }
   };
@@ -69,7 +68,6 @@ export const useNotifications = (userId?: string) => {
       await fetchNotifications();
       return { success: true };
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
       return { success: false, error };
     }
   };
@@ -97,7 +95,6 @@ export const useNotifications = (userId?: string) => {
       await fetchNotifications();
       return { success: true, data };
     } catch (error) {
-      console.error('Error creating notification:', error);
       return { success: false, error };
     }
   };

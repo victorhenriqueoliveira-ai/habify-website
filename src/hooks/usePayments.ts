@@ -48,7 +48,6 @@ export const usePayments = () => {
 
       setTransactions(formattedTransactions);
     } catch (err: any) {
-      console.error('Error fetching transactions:', err);
       setError(err.message);
     } finally {
       setLoading(false);

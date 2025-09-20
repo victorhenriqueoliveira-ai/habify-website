@@ -38,7 +38,6 @@ export const useDatabaseStats = () => {
         latency
       });
     } catch (err: any) {
-      console.error('Error fetching database stats:', err);
       setError(err.message);
       // Fallback to default values if function fails
       setStats({

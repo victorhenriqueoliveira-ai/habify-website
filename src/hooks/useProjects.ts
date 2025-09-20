@@ -39,7 +39,7 @@ export const useProjects = () => {
 
       setProjects(formattedProjects);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,6 @@ export const useProjects = () => {
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
-      console.error('Error creating project:', error);
       return { success: false, error };
     }
   };
@@ -110,12 +109,10 @@ export const useProjects = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Supabase update error:', error);
         throw error;
       }
 
       if (!data) {
-        console.error('No project found with ID:', id);
         throw new Error('Projeto não encontrado ou sem permissão para atualizar');
       }
       
@@ -129,7 +126,6 @@ export const useProjects = () => {
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
-      console.error('Error updating project:', error);
       return { success: false, error };
     }
   };
@@ -151,7 +147,6 @@ export const useProjects = () => {
       await fetchProjects();
       return { success: true };
     } catch (error) {
-      console.error('Error deleting project:', error);
       return { success: false, error };
     }
   };

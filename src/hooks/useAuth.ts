@@ -62,10 +62,9 @@ export const useAuth = () => {
                   loading: false,
                 }));
               }
-            } catch (error) {
-              console.error('Error fetching profile:', error);
-              setAuthState(prev => ({ ...prev, loading: false }));
-            }
+              } catch (error) {
+                setAuthState(prev => ({ ...prev, loading: false }));
+              }
           }, 0);
         } else {
           setAuthState(prev => ({
@@ -124,7 +123,7 @@ export const useAuth = () => {
             details: { email, timestamp: new Date().toISOString() }
           });
         } catch (logError) {
-          console.error('Failed to log login:', logError);
+          // Silent error handling
         }
       }, 100);
     }
@@ -148,7 +147,7 @@ export const useAuth = () => {
             details: { timestamp: new Date().toISOString() }
           });
         } catch (logError) {
-          console.error('Failed to log logout:', logError);
+          // Silent error handling
         }
       }, 100);
     }

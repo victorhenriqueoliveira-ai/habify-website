@@ -41,7 +41,6 @@ export const usePlans = () => {
 
       setPlans(formattedPlans);
     } catch (error) {
-      console.error('Erro ao carregar planos:', error);
       setError('Erro ao carregar planos');
     } finally {
       setLoading(false);

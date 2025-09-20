@@ -33,7 +33,7 @@ export const useAuditLogger = () => {
         details: data.details || {}
       });
     } catch (error) {
-      console.error('Failed to log audit action:', error);
+      // Silent error handling
     }
   }, [user?.id]);
 

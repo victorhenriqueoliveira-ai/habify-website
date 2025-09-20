@@ -71,7 +71,7 @@ export const useDashboardStats = () => {
 
       setStats(dashboardStats);
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      // Silent error handling
     } finally {
       setLoading(false);
     }
