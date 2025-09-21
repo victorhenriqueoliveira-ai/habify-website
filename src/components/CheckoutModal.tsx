@@ -102,8 +102,8 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         localStorage.setItem('abacatePayId', response.abacatePayId);
         localStorage.setItem('habify_order', JSON.stringify(orderData));
 
-        // Open payment in new tab
-        window.open(response.paymentUrl, '_blank');
+        // Redirect to payment (works better on mobile)
+        window.location.href = response.paymentUrl;
         
         onClose();
         toast.success('Redirecionando para pagamento. Após pagar, sua conta será criada automaticamente!');

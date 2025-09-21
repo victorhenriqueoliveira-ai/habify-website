@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Transaction {
+interface Order {
   id: string;
   userId: string;
-  planId: string;
+  planId?: string;
   amount: number;
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod?: string;
@@ -16,37 +16,54 @@ interface Transaction {
 }
 
 export const usePayments = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTransactions = async () => {
+  const fetchOrders = async (dateFilter?: { start: string; end: string }, statusFilter?: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
+      let query = supabase
+        .from('orders')
+        .select(`
+          *,
+          profiles!inner(name, email)
+        `)
         .order('created_at', { ascending: false });
+
+      // Apply date filter
+      if (dateFilter) {
+        query = query
+          .gte('created_at', dateFilter.start)
+          .lte('created_at', dateFilter.end);
+      }
+
+      // Apply status filter
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      const formattedTransactions: Transaction[] = data?.map((transaction: any) => ({
-        id: transaction.id,
-        userId: transaction.user_id,
-        planId: transaction.plan_id,
-        amount: parseFloat(transaction.amount) || 0,
-        status: transaction.status,
-        paymentMethod: transaction.payment_method,
-        abacatePayId: transaction.abacatepay_id,
-        paymentData: transaction.payment_data,
-        paidAt: transaction.paid_at,
-        createdAt: transaction.created_at,
-        updatedAt: transaction.updated_at,
+      const formattedOrders: Order[] = data?.map((order: any) => ({
+        id: order.id,
+        userId: order.user_id,
+        planId: order.plan_id,
+        amount: parseFloat(order.amount) || 0,
+        status: order.status,
+        paymentMethod: order.payment_method,
+        abacatePayId: order.abacatepay_id,
+        paymentData: order.payment_data,
+        paidAt: order.paid_at,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
       })) || [];
 
-      setTransactions(formattedTransactions);
+      setOrders(formattedOrders);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,20 +71,20 @@ export const usePayments = () => {
     }
   };
 
-  const getTransactionById = (id: string) => {
-    return transactions.find(t => t.id === id);
+  const getOrderById = (id: string) => {
+    return orders.find(t => t.id === id);
   };
 
-  const getTransactionsByUser = (userId: string) => {
-    return transactions.filter(t => t.userId === userId);
+  const getOrdersByUser = (userId: string) => {
+    return orders.filter(t => t.userId === userId);
   };
 
-  const getTransactionsByStatus = (status: Transaction['status']) => {
-    return transactions.filter(t => t.status === status);
+  const getOrdersByStatus = (status: Order['status']) => {
+    return orders.filter(t => t.status === status);
   };
 
   const getTotalRevenue = () => {
-    return transactions
+    return orders
       .filter(t => t.status === 'paid')
       .reduce((sum, t) => sum + t.amount, 0);
   };
@@ -76,7 +93,7 @@ export const usePayments = () => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     
-    return transactions
+    return orders
       .filter(t => 
         t.status === 'paid' && 
         new Date(t.createdAt) >= startDate
@@ -85,13 +102,13 @@ export const usePayments = () => {
   };
 
   useEffect(() => {
-    fetchTransactions();
+    fetchOrders();
     
-    // Subscribe to transaction changes for real-time updates
+    // Subscribe to order changes for real-time updates
     const subscription = supabase
       .channel('payments-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
-        fetchTransactions();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders();
       })
       .subscribe();
 
@@ -101,13 +118,13 @@ export const usePayments = () => {
   }, []);
 
   return {
-    transactions,
+    orders,
     loading,
     error,
-    fetchTransactions,
-    getTransactionById,
-    getTransactionsByUser,
-    getTransactionsByStatus,
+    fetchOrders,
+    getOrderById,
+    getOrdersByUser,
+    getOrdersByStatus,
     getTotalRevenue,
     getRevenueByPeriod,
   };

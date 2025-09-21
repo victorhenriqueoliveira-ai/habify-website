@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Users, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface PropertyData {
@@ -18,6 +19,7 @@ interface PropertyData {
   bedrooms: string;
   bathrooms: string;
   area: string;
+  photos: string[];
 }
 
 const CreateCorretorPage = () => {
@@ -35,8 +37,9 @@ const CreateCorretorPage = () => {
   
   // Properties state (up to 5)
   const [properties, setProperties] = useState<PropertyData[]>([
-    { id: '1', title: '', location: '', price: '', bedrooms: '', bathrooms: '', area: '' }
+    { id: '1', title: '', location: '', price: '', bedrooms: '', bathrooms: '', area: '', photos: [] }
   ]);
+  const [uploading, setUploading] = useState(false);
 
   const addProperty = () => {
     if (properties.length < 5) {
@@ -47,7 +50,8 @@ const CreateCorretorPage = () => {
         price: '',
         bedrooms: '',
         bathrooms: '',
-        area: ''
+        area: '',
+        photos: []
       };
       setProperties([...properties, newProperty]);
     }
@@ -59,7 +63,7 @@ const CreateCorretorPage = () => {
     }
   };
 
-  const updateProperty = (id: string, field: keyof PropertyData, value: string) => {
+  const updateProperty = (id: string, field: keyof PropertyData, value: string | string[]) => {
     setProperties(properties.map(p => 
       p.id === id ? { ...p, [field]: value } : p
     ));
@@ -80,6 +84,87 @@ const CreateCorretorPage = () => {
 
   const handlePropertyPriceChange = (id: string, value: string) => {
     updateProperty(id, 'price', formatCurrency(value));
+  };
+
+  const handlePhotoUpload = async (propertyId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return;
+
+    // Validations
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxFiles = 5;
+    
+    // Check file limit
+    if (property.photos.length + files.length > maxFiles) {
+      toast.error(`Máximo de ${maxFiles} fotos por imóvel`);
+      return;
+    }
+
+    // Validate each file
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check type
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Arquivo "${file.name}" não é um formato válido. Use JPG, PNG ou WEBP.`);
+        continue;
+      }
+      
+      // Check size
+      if (file.size > maxFileSize) {
+        toast.error(`Arquivo "${file.name}" é muito grande. Máximo 5MB por arquivo.`);
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setUploading(true);
+    
+    try {
+      const uploadPromises = validFiles.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${Date.now()}-${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('project-photos')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-photos')
+          .getPublicUrl(filePath);
+
+        return publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      updateProperty(propertyId, 'photos', [...property.photos, ...uploadedUrls]);
+
+      toast.success(`${uploadedUrls.length} foto(s) enviada(s) com sucesso!`);
+    } catch (error) {
+      toast.error('Erro ao enviar fotos');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (propertyId: string, photoIndex: number) => {
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return;
+    
+    const newPhotos = property.photos.filter((_, i) => i !== photoIndex);
+    updateProperty(propertyId, 'photos', newPhotos);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -321,6 +406,59 @@ const CreateCorretorPage = () => {
                       placeholder="85"
                     />
                   </div>
+                </div>
+
+                {/* Photos Upload for this property */}
+                <div className="space-y-2">
+                  <Label>Fotos do Imóvel</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Máximo 5 fotos por imóvel • JPG, PNG ou WEBP • Até 5MB cada
+                  </p>
+                  <div className="mt-2">
+                    <input
+                      id={`photos-${property.id}`}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      multiple
+                      onChange={(e) => handlePhotoUpload(property.id, e)}
+                      className="hidden"
+                      disabled={uploading || property.photos.length >= 5}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById(`photos-${property.id}`)?.click()}
+                      className="w-full"
+                      disabled={uploading || property.photos.length >= 5}
+                      size="sm"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Enviando...' : `Adicionar Fotos (${property.photos.length}/5)`}
+                    </Button>
+                  </div>
+
+                  {property.photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {property.photos.map((photo, photoIndex) => (
+                        <div key={photoIndex} className="relative">
+                          <img
+                            src={photo}
+                            alt={`Foto ${photoIndex + 1}`}
+                            className="w-full h-16 object-cover rounded"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removePhoto(property.id, photoIndex)}
+                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

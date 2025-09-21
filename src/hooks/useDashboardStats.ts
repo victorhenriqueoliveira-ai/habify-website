@@ -43,21 +43,21 @@ export const useDashboardStats = () => {
       const totalUsers = userStats?.length || 0;
       const activeUsers = userStats?.filter(u => u.is_active).length || 0;
 
-      // Fetch transaction data for accurate revenue calculation
-      const { data: transactionStats, error: transactionError } = await supabase
-        .from('transactions')
+      // Fetch order data for accurate revenue calculation
+      const { data: orderStats, error: orderError } = await supabase
+        .from('orders')
         .select('amount, status, paid_at');
 
-      // Calculate total revenue from all completed transactions
-      const totalRevenue = transactionStats
+      // Calculate total revenue from all paid orders
+      const totalRevenue = orderStats
         ?.filter(t => t.status === 'paid')
         .reduce((total, t) => total + (Number(t.amount) || 0), 0) || 0;
 
-      // Calculate monthly revenue from completed transactions this month
+      // Calculate monthly revenue from paid orders this month
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       
-      const monthlyRevenue = transactionStats
+      const monthlyRevenue = orderStats
         ?.filter(t => {
           if (t.status !== 'paid' || !t.paid_at) return false;
           const paidDate = new Date(t.paid_at);
@@ -90,10 +90,10 @@ export const useDashboardStats = () => {
   useEffect(() => {
     fetchStats();
     
-    // Subscribe to transaction changes for real-time updates
+    // Subscribe to order changes for real-time updates
     const subscription = supabase
       .channel('dashboard-stats')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         fetchStats();
       })
       .subscribe();

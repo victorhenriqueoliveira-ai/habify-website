@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, Upload, X } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const CreateEmpreendimentoPage = () => {
@@ -26,6 +27,8 @@ const CreateEmpreendimentoPage = () => {
   const [bedrooms, setBedrooms] = useState('');
   const [bathrooms, setBathrooms] = useState('');
   const [area, setArea] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +56,7 @@ const CreateEmpreendimentoPage = () => {
         bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
         bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
         area: area ? parseFloat(area.replace(',', '.')) : undefined,
+        photos: photos,
         status: 'pending',
         projectType: 'single_property'
       });
@@ -85,6 +89,80 @@ const CreateEmpreendimentoPage = () => {
 
   const handlePriceChange = (value: string) => {
     setPrice(formatCurrency(value));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validations
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const maxFiles = 10;
+    
+    // Check file limit
+    if (photos.length + files.length > maxFiles) {
+      toast.error(`Máximo de ${maxFiles} fotos por projeto`);
+      return;
+    }
+
+    // Validate each file
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check type
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Arquivo "${file.name}" não é um formato válido. Use JPG, PNG ou WEBP.`);
+        continue;
+      }
+      
+      // Check size
+      if (file.size > maxFileSize) {
+        toast.error(`Arquivo "${file.name}" é muito grande. Máximo 5MB por arquivo.`);
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setUploading(true);
+    
+    try {
+      const uploadPromises = validFiles.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${Date.now()}-${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('project-photos')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-photos')
+          .getPublicUrl(filePath);
+
+        return publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      setPhotos([...photos, ...uploadedUrls]);
+
+      toast.success(`${uploadedUrls.length} foto(s) enviada(s) com sucesso!`);
+    } catch (error) {
+      toast.error('Erro ao enviar fotos');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (photoIndex: number) => {
+    setPhotos(photos.filter((_, i) => i !== photoIndex));
   };
 
   return (
@@ -231,6 +309,60 @@ const CreateEmpreendimentoPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Photos Upload */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="photos">Fotos do Empreendimento</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Máximo 10 fotos • JPG, PNG ou WEBP • Até 5MB cada
+                  </p>
+                  <div className="mt-2">
+                    <input
+                      id="photos"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      disabled={uploading || photos.length >= 10}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('photos')?.click()}
+                      className="w-full"
+                      disabled={uploading || photos.length >= 10}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Enviando...' : `Selecionar Fotos (${photos.length}/10)`}
+                    </Button>
+                  </div>
+                </div>
+
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {photos.map((photo, photoIndex) => (
+                      <div key={photoIndex} className="relative">
+                        <img
+                          src={photo}
+                          alt={`Foto ${photoIndex + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removePhoto(photoIndex)}
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Submit Button */}
