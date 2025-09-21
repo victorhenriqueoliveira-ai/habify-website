@@ -135,7 +135,7 @@ export const ReportsPage = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Receita Total"
-          value={totalRevenue > 0 ? `R$ ${(totalRevenue / 1000000).toFixed(1)}M` : 'R$ 0,00'}
+          value={totalRevenue > 0 ? `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
           trend={monthlyGrowth}
           icon={DollarSign}
           description="receita acumulada"
@@ -250,7 +250,7 @@ export const ReportsPage = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center p-6 border rounded-lg">
               <div className="text-3xl font-bold text-primary">
-                R$ {(totalRevenue / 1000000).toFixed(2)}M
+                R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Receita Total Gerada
@@ -258,7 +258,7 @@ export const ReportsPage = () => {
             </div>
             <div className="text-center p-6 border rounded-lg">
               <div className="text-3xl font-bold text-green-600">
-                R$ {(averageProjectValue / 1000).toFixed(0)}k
+                R$ {averageProjectValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Ticket Médio por Projeto
@@ -266,7 +266,7 @@ export const ReportsPage = () => {
             </div>
             <div className="text-center p-6 border rounded-lg">
               <div className="text-3xl font-bold text-blue-600">
-                R$ {(stats.monthlyRevenue / 1000).toFixed(0)}k
+                R$ {stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Receita Mensal Atual

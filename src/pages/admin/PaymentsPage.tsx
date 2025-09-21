@@ -92,7 +92,7 @@ export const PaymentsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {(totalRevenue / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -159,7 +159,7 @@ export const PaymentsPage = () => {
                       {new Date(order.createdAt).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="p-2 font-semibold">
-                      R$ {(order.amount / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {order.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="p-2">
                       <Badge className={getStatusColor(order.status)}>
@@ -207,7 +207,7 @@ export const PaymentsPage = () => {
                 <strong>Data:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString('pt-BR')}
               </div>
               <div>
-                <strong>Valor:</strong> R$ {(selectedOrder.amount / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <strong>Valor:</strong> R$ {selectedOrder.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <div>
                 <strong>Status:</strong> {getStatusText(selectedOrder.status)}
