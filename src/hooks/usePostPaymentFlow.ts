@@ -127,7 +127,7 @@ export const usePostPaymentFlow = () => {
             }
           }
           
-          toast.success('Processando... Redirecionando para o painel.');
+          // toast.success('Processando... Redirecionando para o painel.');
           setTimeout(() => {
             navigate('/admin/my-projects');
           }, 3000);

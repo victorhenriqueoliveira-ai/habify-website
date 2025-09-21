@@ -72,7 +72,6 @@ const Index = () => {
         <PricingSection />
         <Testimonials />
         <Newsletter />
-        <MadeByHumans />
       </main>
       <Footer />
     </div>

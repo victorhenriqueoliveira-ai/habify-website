@@ -52,7 +52,7 @@ export const usePayment = () => {
         return { success: false, error: 'URL de pagamento não foi gerada' };
       }
 
-      toast.success('Redirecionando para pagamento...');
+      // toast.success('Redirecionando para pagamento...');
       return data;
 
     } catch (error: any) {

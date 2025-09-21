@@ -106,7 +106,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         window.location.href = response.paymentUrl;
         
         onClose();
-        toast.success('Redirecionando para pagamento. Após pagar, sua conta será criada automaticamente!');
+        // toast.success('Redirecionando para pagamento. Após pagar, sua conta será criada automaticamente!');
       }
     } catch (error) {
       toast.error('Erro ao processar pagamento');

@@ -34,13 +34,13 @@ const Footer = () => {
               <span className="text-white font-medium"> HabiFy transforma qualquer imóvel em uma landing page que converte.</span>
             </p>
             <div className="flex space-x-4">
-              <Button variant="outline" size="icon" className="border-slate-600 hover:border-primary hover:bg-primary/10 text-slate-300 hover:text-white">
+              <Button size="icon" >
                 <Instagram className="h-5 w-5" />
               </Button>
-              <Button variant="outline" size="icon" className="border-slate-600 hover:border-primary hover:bg-primary/10 text-slate-300 hover:text-white">
+              <Button size="icon">
                 <Linkedin className="h-5 w-5" />
               </Button>
-              <Button variant="outline" size="icon" className="border-slate-600 hover:border-primary hover:bg-primary/10 text-slate-300 hover:text-white">
+              <Button size="icon">
                 <Youtube className="h-5 w-5" />
               </Button>
             </div>
@@ -96,13 +96,8 @@ const Footer = () => {
         <div className="pt-8 border-t border-slate-700">
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-slate-300">
-              <span>© 2024 HabiFy. Todos os direitos reservados.</span>
+              <span>© 2025 HabiFy. Todos os direitos reservados.</span>
               <span className="hidden sm:inline text-slate-500">•</span>
-              <span>Desenvolvido com ❤️ no Brasil</span>
-            </div>
-            <div className="flex items-center space-x-6 text-sm">
-              <a href="#" className="text-slate-300 hover:text-white transition-colors">Política de Privacidade</a>
-              <a href="#" className="text-slate-300 hover:text-white transition-colors">Termos de Uso</a>
             </div>
           </div>
         </div>
