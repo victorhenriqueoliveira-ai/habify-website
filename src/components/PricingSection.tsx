@@ -87,7 +87,7 @@ const PricingSection = () => {
 
   return (
     <>
-      <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/30">
+      <section id="plans" className="py-20 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -163,7 +163,7 @@ const PricingSection = () => {
               Todos os planos incluem garantia de 30 dias
             </p>
             <p className="text-sm text-muted-foreground">
-              Pagamento 100% seguro via AbacatePay • Aceita PIX, Cartão e Boleto
+              Pagamento 100% seguro via AbacatePay • Aceita PIX e Cartão
             </p>
           </div>
         </div>
