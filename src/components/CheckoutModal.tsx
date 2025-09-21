@@ -282,7 +282,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
             </form>
 
             <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>• Aceita PIX, Cartão de Crédito e Boleto</p>
+              <p>• Aceita PIX e Cartão de Crédito</p>
               <p>• Garantia de 30 dias</p>
               <p>• Suporte direto via WhatsApp</p>
             </div>

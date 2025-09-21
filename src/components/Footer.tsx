@@ -34,14 +34,8 @@ const Footer = () => {
               <span className="text-white font-medium"> HabiFy transforma qualquer imóvel em uma landing page que converte.</span>
             </p>
             <div className="flex space-x-4">
-              <Button size="icon" >
+              <Button onClick={() => {window.open('https://www.instagram.com/habify.br/', '_blank')}} size="icon" >
                 <Instagram className="h-5 w-5" />
-              </Button>
-              <Button size="icon">
-                <Linkedin className="h-5 w-5" />
-              </Button>
-              <Button size="icon">
-                <Youtube className="h-5 w-5" />
               </Button>
             </div>
           </div>

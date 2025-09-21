@@ -126,7 +126,7 @@ const Hero = () => {
               style={{ animationDelay: "0.7s" }}
             >
               <a 
-                href="#get-access"
+                href="#plans"
                 className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border border-[#FE5C02] bg-[#fff] text-[#FE5C02] px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#FE5C02] hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FE5C02] focus:ring-offset-2"
                 style={{
                   boxSizing: 'border-box',
