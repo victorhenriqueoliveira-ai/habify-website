@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -122,77 +123,30 @@ const DetailsSection = () => {
               </div>
             </div>
           </div>
-
-          {/* Right Card - Formulário */}
-          <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-elegant">
-            <div className="relative h-48 sm:h-64 p-6 sm:p-8 flex flex-col items-start" style={{
-              backgroundImage: "url('/background-section1.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center"
-            }}>
-              <div className="inline-block px-4 sm:px-6 py-2 border border-white text-white rounded-full text-xs mb-4">
-                Oportunidade limitada
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-display text-white font-bold mt-auto">
-                Seja o próximo case de sucesso
-              </h2>
-            </div>
-            
-            <div className="bg-white p-4 sm:p-8" style={{
-              backgroundColor: "#FFFFFF",
-              border: "1px solid #ECECEC"
-            }}>
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                <div>
-                  <input 
-                    type="text" 
-                    name="fullName" 
-                    value={formData.fullName} 
-                    onChange={handleChange} 
-                    placeholder="Seu nome completo" 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pulse-500 focus:border-transparent" 
-                    required 
-                  />
-                </div>
-                
-                <div>
-                  <input 
-                    type="email" 
-                    name="email" 
-                    value={formData.email} 
-                    onChange={handleChange} 
-                    placeholder="Seu melhor WhatsApp" 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pulse-500 focus:border-transparent" 
-                    required 
-                  />
-                </div>
-                
-                <div>
-                  <input 
-                    type="text" 
-                    name="company" 
-                    value={formData.company} 
-                    onChange={handleChange} 
-                    placeholder="Imobiliária (opcional)" 
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pulse-500 focus:border-transparent" 
-                  />
-                </div>
-                
-                <div>
-                  <button 
-                    type="submit" 
-                    className="w-full px-6 py-4 bg-pulse-500 hover:bg-pulse-600 text-white font-semibold rounded-full transition-colors duration-300 text-sm sm:text-base"
-                  >
-                    🚀 Criar Minha Máquina de Vendas (72h)
-                  </button>
-                </div>
-              </form>
-              
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                🔒 Seus dados estão seguros. Entraremos em contato em até 2 horas.
-              </p>
-            </div>
+          <div className="max-w-5xl pl-4 sm:pl-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-display leading-tight mb-8 sm:mb-12">
+              <span className="block bg-clip-text text-transparent bg-[url('/text-mask-image.jpg')] bg-cover bg-center">
+                Enquanto outros corretores brigam por leads em portais caros, você terá sua própria máquina de vendas. HabiFy transforma qualquer imóvel em uma landing page que converte visitantes em compradores qualificados.
+              </span>
+            </h2>
           </div>
+        </div>
+        <div 
+          className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in items-center justify-center mt-12 mb-20" 
+          style={{ animationDelay: "0.7s" }}
+        >
+          <a 
+            href="#plans"
+            className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border border-[#FE5C02] bg-[#fff] text-[#FE5C02] px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#FE5C02] hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FE5C02] focus:ring-offset-2"
+            style={{
+              boxSizing: 'border-box',
+              cursor: 'pointer',
+              lineHeight: '20px',
+            }}
+          >
+              Criar meu site
+            <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+          </a>
         </div>
       </div>
     </section>

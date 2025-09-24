@@ -41,7 +41,7 @@ const Navbar = () => {
         "fixed top-0 left-0 right-0 z-50 py-2 sm:py-3 md:py-4 transition-all duration-300",
         isScrolled 
           ? "bg-white/80 backdrop-blur-md shadow-sm" 
-          : "bg-transparent"
+          : "bg-white md:bg-transparent"
       )}
     >
       <div className="container flex items-center justify-between px-4 sm:px-6 lg:px-8">
