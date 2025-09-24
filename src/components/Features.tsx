@@ -98,17 +98,11 @@ const Features = () => {
         
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold mb-8 sm:mb-12 text-left">Por que HabiFy é a escolha certa para seu negócio</h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-          <FeatureCard
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>}
-            title="Leads Pré-Qualificados"
-            description="Sistema inteligente que filtra visitantes curiosos de compradores reais, enviando apenas leads com real interesse e poder de compra."
-            index={0}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-stretch">
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
             title="ROI Comprovado"
-            description="Em média, corretores recuperam o investimento com apenas 1 venda. O restante é lucro puro, sem dependência de portais caros."
+            description="100%  dos corretores recuperam o investimento com apenas 1 venda. O restante é lucro puro, sem dependência de portais caros."
             index={1}
           />
           <FeatureCard
@@ -120,13 +114,14 @@ const Features = () => {
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>}
             title="Autoridade Digital"
-            description="Tenha sua marca própria na internet. Clientes te encontram diretamente, sem concorrer com centenas de outros corretores."
+            description="Tenha sua marca própria na internet. Clientes te encontram diretamente, sem precisar depender de plantões e roletas."
             index={3}
           />
+          <div className="col-span-full flex justify-center gap-6">
           <FeatureCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 8l-3-3m-3.5 3.5L19 4"/></svg>}
-            title="Automação Completa"
-            description="Sistema automatizado de follow-up, remarketing e nurturing de leads. Sua máquina de vendas funciona 24/7."
+            title="Integrações"
+            description="Link direto ao seu WhatsApp e cadastro direto para o seu e-mail. Sua máquina de vendas funciona 24/7."
             index={4}
           />
           <FeatureCard
@@ -135,6 +130,7 @@ const Features = () => {
             description="Você só precisa enviar fotos e dados básicos. Nós cuidamos de design, copywriting, otimização e integração."
             index={5}
           />
+          </div>
         </div>
       </div>
     </section>

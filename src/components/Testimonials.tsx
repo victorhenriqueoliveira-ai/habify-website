@@ -10,7 +10,7 @@ interface TestimonialProps {
 }
 
 const testimonials: TestimonialProps[] = [{
-  content: "Depois do HabiFy, meus leads triplicaram! Agora tenho minha própria máquina de vendas trabalhando 24h. Em 2 meses já recuperei o investimento.",
+  content: "Depois da HabiFy, meus leads triplicaram! Agora tenho minha própria máquina de vendas trabalhando 24h. Em 1 mês já recuperei o investimento.",
   author: "Carlos Mendes",
   role: "Corretor Autônomo, São Paulo",
   gradient: "from-blue-700 via-indigo-800 to-purple-900",
@@ -28,7 +28,7 @@ const testimonials: TestimonialProps[] = [{
   gradient: "from-purple-800 via-pink-700 to-red-500",
   backgroundImage: "/background-section3.png"
 }, {
-  content: "Simples demais! Mandei as fotos pelo WhatsApp e em 3 dias estava online. Agora não preciso mais brigar por leads nos portais caros.",
+  content: "Simples demais! Mandei as fotos pelo sistema e em 3 dias estava online. Agora não preciso mais brigar por leads nos portais caros.",
   author: "Ana Paula",
   role: "Imobiliária Pequena, Curitiba",
   gradient: "from-orange-600 via-red-500 to-purple-600",
@@ -43,9 +43,7 @@ const TestimonialCard = ({
 }: TestimonialProps) => {
   return <div className="bg-cover bg-center rounded-lg p-8 h-full flex flex-col justify-between text-white transform transition-transform duration-300 hover:-translate-y-2 relative overflow-hidden" style={{
     backgroundImage: `url('${backgroundImage}')`
-  }}>
-      <div className="absolute top-0 right-0 w-24 h-24 bg-white z-10"></div>
-      
+  }}>      
       <div className="relative z-0">
         <p className="text-xl mb-8 font-medium leading-relaxed pr-20">{`"${content}"`}</p>
         <div>

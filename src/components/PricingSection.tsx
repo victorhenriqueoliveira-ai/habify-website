@@ -31,10 +31,10 @@ const PricingSection = () => {
 
   const getPlanBadge = (type: Plan['type']) => {
     switch (type) {
-      case 'website_maintenance_6m':
-        return <Badge variant="secondary">Mais Popular</Badge>;
       case 'website_maintenance_1m':
-        return <Badge variant="outline">Recomendado</Badge>;
+        return <Badge variant="secondary">Recomendado</Badge>;
+      case 'website_maintenance_6m':
+        return <Badge variant="outline">Mais Popular</Badge>;
       default:
         return null;
     }
@@ -100,51 +100,52 @@ const PricingSection = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {plans.map((plan) => {
-              const isPopular = plan.type === 'website_maintenance_6m';
+              const isPopular = plan.type === 'website_maintenance_1m';
               const monthlyMaintenanceNote = plan.type === 'website_maintenance_6m' ? 
                 'Manutenção sai por apenas R$ 166,16/mês' : null;
 
               return (
-                <Card 
-                  key={plan.id} 
-                  className={`relative transition-all duration-300 hover:shadow-lg hover:scale-105 ${
-                    isPopular ? 'border-primary shadow-primary/20 shadow-lg' : ''
-                  }`}
-                >
-                  {getPlanBadge(plan.type) && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      {getPlanBadge(plan.type)}
-                    </div>
-                  )}
+              <Card 
+                key={plan.id} 
+                className={`relative flex flex-col justify-between h-full transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                  isPopular ? 'border-primary shadow-primary/20 shadow-lg' : ''
+                }`}
+              >
+                {getPlanBadge(plan.type) && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    {getPlanBadge(plan.type)}
+                  </div>
+                )}
 
-                  <CardHeader className="text-center pb-4">
-                    <div className="flex items-center justify-center mb-2">
-                      {getPlanIcon(plan.type)}
-                    </div>
-                    <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                    <div className="text-3xl font-bold text-primary">
-                      R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                    </div>
-                    {monthlyMaintenanceNote && (
-                      <p className="text-sm text-muted-foreground font-medium">
-                        {monthlyMaintenanceNote}
-                      </p>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {plan.description}
+                <CardHeader className="text-center pb-4">
+                  <div className="flex items-center justify-center mb-2">
+                    {getPlanIcon(plan.type)}
+                  </div>
+                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
+                  <div className="text-3xl font-bold text-primary">
+                    R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                  </div>
+                  {monthlyMaintenanceNote && (
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {monthlyMaintenanceNote}
                     </p>
-                  </CardHeader>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+                </CardHeader>
 
-                  <CardContent>
-                    <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+              <CardContent className="flex flex-col flex-grow justify-between">
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
+                  <div className="mt-auto">
                     <Button 
                       onClick={() => handleSelectPlan(plan)}
                       className="w-full"
@@ -152,8 +153,9 @@ const PricingSection = () => {
                     >
                       Escolher Plano
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
               );
             })}
           </div>

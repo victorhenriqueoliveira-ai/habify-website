@@ -44,9 +44,9 @@ const Footer = () => {
           <div className="space-y-6">
             <h4 className="text-xl font-semibold">Links Rápidos</h4>
             <ul className="space-y-3">
-              <li><a href="#specifications" className="text-slate-300 hover:text-white transition-colors">Como Funciona</a></li>
-              <li><a href="#features" className="text-slate-300 hover:text-white transition-colors">Recursos</a></li>
-              <li><a href="#pricing" className="text-slate-300 hover:text-white transition-colors">Planos</a></li>
+              <li><a href="#hero" className="text-slate-300 hover:text-white transition-colors">Home</a></li>
+              <li><a href="#features" className="text-slate-300 hover:text-white transition-colors">About</a></li>
+              <li><a href="#plans" className="text-slate-300 hover:text-white transition-colors">Planos</a></li>
               <li><a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Depoimentos</a></li>
             </ul>
           </div>
@@ -69,7 +69,7 @@ const Footer = () => {
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">(11) 9999-9999</p>
+                  <p className="text-white font-medium">(11) 96176-9504</p>
                   <p className="text-slate-300 text-sm">WhatsApp Business</p>
                 </div>
               </div>
