@@ -48,6 +48,12 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   const { hasRole } = useAuth();
   const { updateProject } = useProjects();
   const { users } = useUsers();
+  
+  if (!project) return null;
+
+  // Check if this is a realtor project with multiple properties
+  const isRealtorProject = project.projectType === 'realtor_multiple';
+  const corretorData = isRealtorProject ? project.features?.corretorData : null;
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   if (!project) return null;
@@ -137,60 +143,180 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                 </Card>
               )}
 
-              {/* Property Details */}
+              {/* Property/Corretor Details */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Home className="w-5 h-5 mr-2" />
-                    Propriedade
+                    {isRealtorProject ? 'Corretor' : 'Propriedade'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
-                      {project.location}
+                  {isRealtorProject ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm">
+                        <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                        {project.location}
+                      </div>
+                      {corretorData && (
+                        <>
+                          <div className="font-medium text-lg">{corretorData.name}</div>
+                          {corretorData.creci && (
+                            <div className="text-sm text-muted-foreground">CRECI: {corretorData.creci}</div>
+                          )}
+                          {corretorData.phone && (
+                            <div className="text-sm text-muted-foreground">Telefone: {corretorData.phone}</div>
+                          )}
+                          {corretorData.email && (
+                            <div className="text-sm text-muted-foreground">Email: {corretorData.email}</div>
+                          )}
+                          {corretorData.bio && (
+                            <div className="text-sm text-muted-foreground mt-2 p-3 bg-muted rounded-lg">
+                              {corretorData.bio}
+                            </div>
+                          )}
+                          <div className="mt-4 p-3 bg-primary/5 rounded-lg">
+                            <div className="font-medium text-primary">
+                              📋 {corretorData.properties?.length || 0} Imóveis no Portfólio
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    
-                    <div className="flex items-center text-sm">
-                      <Home className="w-4 h-4 mr-2 text-muted-foreground" />
-                      {propertyTypeLabels[project.propertyType]}
-                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm">
+                        <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                        {project.location}
+                      </div>
+                      
+                      <div className="flex items-center text-sm">
+                        <Home className="w-4 h-4 mr-2 text-muted-foreground" />
+                        {propertyTypeLabels[project.propertyType]}
+                      </div>
 
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      {project.bedrooms && (
-                        <div className="text-center">
-                          <div className="flex items-center justify-center">
-                            <Bed className="w-4 h-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">{project.bedrooms}</span>
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {project.bedrooms && (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center">
+                              <Bed className="w-4 h-4 mr-1 text-muted-foreground" />
+                              <span className="font-medium">{project.bedrooms}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Quartos</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">Quartos</p>
-                        </div>
-                      )}
-                      
-                      {project.bathrooms && (
-                        <div className="text-center">
-                          <div className="flex items-center justify-center">
-                            <Bath className="w-4 h-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">{project.bathrooms}</span>
+                        )}
+                        
+                        {project.bathrooms && (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center">
+                              <Bath className="w-4 h-4 mr-1 text-muted-foreground" />
+                              <span className="font-medium">{project.bathrooms}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Banheiros</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">Banheiros</p>
-                        </div>
-                      )}
-                      
-                      {project.area && (
-                        <div className="text-center">
-                          <div className="flex items-center justify-center">
-                            <Square className="w-4 h-4 mr-1 text-muted-foreground" />
-                            <span className="font-medium">{project.area}</span>
+                        )}
+                        
+                        {project.area && (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center">
+                              <Square className="w-4 h-4 mr-1 text-muted-foreground" />
+                              <span className="font-medium">{project.area}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">m²</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">m²</p>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Realtor Properties Section */}
+              {isRealtorProject && corretorData?.properties && corretorData.properties.length > 0 && (
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Imóveis do Portfólio</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      {corretorData.properties.map((property: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-medium text-lg">{property.title || `Imóvel ${index + 1}`}</h4>
+                            <Badge variant="outline">#{index + 1}</Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              {property.location && (
+                                <div className="flex items-center text-sm">
+                                  <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                                  {property.location}
+                                </div>
+                              )}
+                              {property.price && (
+                                <div className="text-sm font-medium text-green-600">
+                                  {property.price}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-4">
+                              {property.bedrooms && (
+                                <div className="text-center">
+                                  <div className="flex items-center justify-center">
+                                    <Bed className="w-4 h-4 mr-1 text-muted-foreground" />
+                                    <span className="font-medium">{property.bedrooms}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">Quartos</p>
+                                </div>
+                              )}
+                              
+                              {property.bathrooms && (
+                                <div className="text-center">
+                                  <div className="flex items-center justify-center">
+                                    <Bath className="w-4 h-4 mr-1 text-muted-foreground" />
+                                    <span className="font-medium">{property.bathrooms}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">Banheiros</p>
+                                </div>
+                              )}
+                              
+                              {property.area && (
+                                <div className="text-center">
+                                  <div className="flex items-center justify-center">
+                                    <Square className="w-4 h-4 mr-1 text-muted-foreground" />
+                                    <span className="font-medium">{property.area}</span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">m²</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {property.photos && property.photos.length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto">
+                              {property.photos.slice(0, 4).map((photo: string, photoIndex: number) => (
+                                <img
+                                  key={photoIndex}
+                                  src={photo}
+                                  alt={`Foto ${photoIndex + 1} do ${property.title || 'imóvel'}`}
+                                  className="w-16 h-16 object-cover rounded flex-shrink-0"
+                                />
+                              ))}
+                              {property.photos.length > 4 && (
+                                <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                                  +{property.photos.length - 4}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Project Info */}
               <Card className="md:col-span-2">

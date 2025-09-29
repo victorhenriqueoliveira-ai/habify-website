@@ -35,6 +35,8 @@ export const useProjects = () => {
         bedrooms: project.bedrooms,
         bathrooms: project.bathrooms,
         area: Number(project.area) || 0,
+        projectType: project.project_type || 'single_property',
+        features: project.features as Record<string, any> || {},
       })) || [];
 
       setProjects(formattedProjects);
@@ -53,13 +55,16 @@ export const useProjects = () => {
           user_id: projectData.userId,
           title: projectData.title,
           description: projectData.description,
-          price: projectData.price,
+          price: projectData.price || 0,
           location: projectData.location,
           property_type: projectData.propertyType,
           bedrooms: projectData.bedrooms,
           bathrooms: projectData.bathrooms,
           area: projectData.area,
           photos: projectData.photos || [],
+          project_type: projectData.projectType || 'single_property',
+          features: projectData.features || {},
+          status: projectData.status || 'pending',
         })
         .select()
         .single();
@@ -96,6 +101,8 @@ export const useProjects = () => {
       if (updates.bedrooms !== undefined) updateData.bedrooms = updates.bedrooms;
       if (updates.bathrooms !== undefined) updateData.bathrooms = updates.bathrooms;
       if (updates.area !== undefined) updateData.area = updates.area;
+      if (updates.projectType) updateData.project_type = updates.projectType;
+      if (updates.features !== undefined) updateData.features = updates.features;
       
       if (updates.status === 'completed' && !updates.completedAt) {
         updateData.completed_at = new Date().toISOString();
