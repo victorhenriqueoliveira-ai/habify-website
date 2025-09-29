@@ -53,16 +53,6 @@ export const AdminTopbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* Theme Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="relative"
-        >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </Button>
-
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
