@@ -48,15 +48,19 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   const { hasRole } = useAuth();
   const { updateProject } = useProjects();
   const { users } = useUsers();
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   
-  if (!project) return null;
+  console.log('ProjectDetailsModal - project:', project);
+  console.log('ProjectDetailsModal - open:', open);
+  
+  if (!project) {
+    console.log('ProjectDetailsModal - No project provided, returning null');
+    return null;
+  }
 
   // Check if this is a realtor project with multiple properties
   const isRealtorProject = project.projectType === 'realtor_multiple';
   const corretorData = isRealtorProject ? project.features?.corretorData : null;
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-
-  if (!project) return null;
 
   const projectOwner = users.find(u => u.userId === project.userId);
 
@@ -78,7 +82,10 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(open) => {
+      console.log('Dialog onOpenChange:', open);
+      !open && onClose();
+    }}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">

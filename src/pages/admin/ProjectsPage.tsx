@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ const propertyTypeLabels = {
 };
 
 export const ProjectsPage = () => {
+  const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { projects, loading, updateProject, deleteProject } = useProjects();
   const { users } = useUsers();
@@ -128,7 +130,7 @@ export const ProjectsPage = () => {
               : 'Acompanhe o status dos seus projetos'}
           </p>
         </div>
-        <Button onClick={() => window.location.href = '/admin/new-project'}>
+        <Button onClick={() => navigate('/admin/new-project')}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Projeto
         </Button>
@@ -313,7 +315,10 @@ export const ProjectsPage = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedProject(project)}>
+                            <DropdownMenuItem onClick={() => {
+                              console.log('Clicked Visualizar project:', project);
+                              setSelectedProject(project);
+                            }}>
                               <Eye className="mr-2 h-4 w-4" />
                               Visualizar
                             </DropdownMenuItem>
@@ -381,7 +386,10 @@ export const ProjectsPage = () => {
       <ProjectDetailsModal
         project={selectedProject}
         open={!!selectedProject}
-        onClose={() => setSelectedProject(null)}
+        onClose={() => {
+          console.log('Closing modal from ProjectsPage');
+          setSelectedProject(null);
+        }}
       />
 
       {/* Edit Project Modal */}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,7 @@ const propertyTypeLabels = {
 };
 
 export const MyProjectsPage = () => {
+  const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const { projects, loading } = useProjects();
   const { users } = useUsers();
@@ -105,12 +107,12 @@ export const MyProjectsPage = () => {
           </p>
         </div>
         {canCreateProject ? (
-          <Button onClick={() => window.location.href = '/admin/new-project'}>
+          <Button onClick={() => navigate('/admin/new-project')}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Projeto
           </Button>
         ) : (
-          <Button onClick={() => window.location.href = '/admin/new-project-purchase'}>
+          <Button onClick={() => navigate('/admin/new-project-purchase')}>
             <Plus className="mr-2 h-4 w-4" />
             Contratar Novo Projeto
           </Button>
@@ -135,7 +137,7 @@ export const MyProjectsPage = () => {
               </div>
               <Button 
                 size="sm" 
-                onClick={() => window.location.href = '/admin/new-project-purchase'}
+                onClick={() => navigate('/admin/new-project-purchase')}
               >
                 Contratar Novo
               </Button>
@@ -220,12 +222,15 @@ export const MyProjectsPage = () => {
                             {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => setSelectedProject(project)}
-                          className="w-full"
-                        >
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => {
+              console.log('Clicked Visualizar project:', project);
+              setSelectedProject(project);
+            }}
+            className="w-full"
+          >
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalhes
                         </Button>
@@ -372,7 +377,7 @@ export const MyProjectsPage = () => {
                 <p className="text-muted-foreground mb-6">
                   Comece criando seu primeiro projeto para ter sua landing page personalizada.
                 </p>
-                <Button onClick={() => window.location.href = '/admin/new-project'}>
+                <Button onClick={() => navigate('/admin/new-project')}>
                   <Plus className="mr-2 h-4 w-4" />
                   Criar Primeiro Projeto
                 </Button>
@@ -387,7 +392,10 @@ export const MyProjectsPage = () => {
       <ProjectDetailsModal
         project={selectedProject}
         open={!!selectedProject}
-        onClose={() => setSelectedProject(null)}
+        onClose={() => {
+          console.log('Closing modal');
+          setSelectedProject(null);
+        }}
       />
     </div>
   );
