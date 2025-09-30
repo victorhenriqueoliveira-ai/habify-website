@@ -8,12 +8,12 @@ import { Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { ProjectData } from '@/hooks/useMultipleProjects';
+import { PropertyData } from '@/hooks/useMultipleProjects';
 
 interface ProjectFormProps {
-  project: ProjectData;
+  project: PropertyData;
   index: number;
-  onUpdate: (field: keyof ProjectData, value: any) => void;
+  onUpdate: (field: keyof PropertyData, value: any) => void;
   onRemove?: () => void;
   showRemove?: boolean;
   isLastProject?: boolean;
@@ -324,7 +324,7 @@ export const ProjectForm = ({
               {project.photos.map((photo, photoIndex) => (
                 <div key={photoIndex} className="relative">
                   <img
-                    src={photo}
+                    src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
                     alt={`Foto ${photoIndex + 1}`}
                     className="w-full h-24 object-cover rounded-lg"
                   />

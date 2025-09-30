@@ -6,16 +6,19 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { LayoutColorStep } from '@/components/wizard/LayoutColorStep';
 import { LogoStep } from '@/components/wizard/LogoStep';
+import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { WizardData, LayoutType, ColorPalette } from '@/types/wizard';
+import type { PropertyData } from '@/hooks/useMultipleProjects';
 
 const steps = [
   { id: 1, title: 'Layout e Cores', description: 'Escolha o visual do seu site' },
   { id: 2, title: 'Logotipo', description: 'Upload ou criação de logo' },
-  { id: 3, title: 'Dados do Projeto', description: 'Informações completas' },
+  { id: 3, title: 'Imóveis', description: 'Portfólio de imóveis' },
+  { id: 4, title: 'Dados do Projeto', description: 'Informações completas' },
 ];
 
 const ProjectWizardPage = () => {
@@ -29,6 +32,25 @@ const ProjectWizardPage = () => {
   const [wizardData, setWizardData] = useState<Partial<WizardData>>({
     hasLogo: false,
   });
+  
+  const [portfolioProperties, setPortfolioProperties] = useState<PropertyData[]>([{
+    title: '',
+    location: '',
+    price: '',
+    propertyType: 'apartment',
+    purpose: 'sale',
+    bedrooms: '',
+    bathrooms: '',
+    area: '',
+    parkingSpaces: '',
+    constructionYear: '',
+    floorNumber: '',
+    condominiumFee: '',
+    iptu: '',
+    description: '',
+    amenities: [],
+    photos: [],
+  }]);
 
   const updateWizardData = (field: keyof WizardData, value: any) => {
     setWizardData((prev) => ({ ...prev, [field]: value }));
@@ -64,6 +86,38 @@ const ProjectWizardPage = () => {
     }
 
     if (currentStep === 3) {
+      // Validate portfolio properties
+      if (portfolioProperties.length === 0) {
+        toast.error('Adicione pelo menos um imóvel');
+        return false;
+      }
+
+      for (let i = 0; i < portfolioProperties.length; i++) {
+        const prop = portfolioProperties[i];
+        if (!prop.title?.trim()) {
+          toast.error(`Imóvel ${i + 1}: Título é obrigatório`);
+          return false;
+        }
+        if (!prop.location?.trim()) {
+          toast.error(`Imóvel ${i + 1}: Localização é obrigatória`);
+          return false;
+        }
+        if (!prop.price || parseFloat(prop.price) <= 0) {
+          toast.error(`Imóvel ${i + 1}: Preço inválido`);
+          return false;
+        }
+        if (!prop.area || parseFloat(prop.area) <= 0) {
+          toast.error(`Imóvel ${i + 1}: Área inválida`);
+          return false;
+        }
+        if (prop.photos.length === 0) {
+          toast.error(`Imóvel ${i + 1}: Adicione pelo menos 1 foto`);
+          return false;
+        }
+      }
+    }
+
+    if (currentStep === 4) {
       // Required fields validation
       if (!wizardData.profileType) newErrors.profileType = 'Campo obrigatório';
       if (!wizardData.ownerName?.trim()) newErrors.ownerName = 'Campo obrigatório';
@@ -100,7 +154,7 @@ const ProjectWizardPage = () => {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (currentStep < 3) {
+      if (currentStep < 4) {
         setCurrentStep(currentStep + 1);
       } else {
         handleSubmit();
@@ -166,7 +220,7 @@ const ProjectWizardPage = () => {
     }
   };
 
-  const progress = (currentStep / 3) * 100;
+  const progress = (currentStep / 4) * 100;
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,7 +247,7 @@ const ProjectWizardPage = () => {
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex justify-between text-sm font-medium">
-                <span>Passo {currentStep} de 3</span>
+                <span>Passo {currentStep} de 4</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -254,6 +308,15 @@ const ProjectWizardPage = () => {
           )}
 
           {currentStep === 3 && (
+            <PortfolioPropertiesStep
+              projectType={wizardData.profileType || 'corretor'}
+              properties={portfolioProperties}
+              onPropertiesChange={setPortfolioProperties}
+              errors={errors}
+            />
+          )}
+
+          {currentStep === 4 && (
             <ProjectDataForm
               data={wizardData}
               onChange={updateWizardData}
@@ -281,7 +344,7 @@ const ProjectWizardPage = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Criando...
                   </>
-                ) : currentStep === 3 ? (
+                ) : currentStep === 4 ? (
                   <>
                     <Check className="mr-2 h-4 w-4" />
                     Finalizar

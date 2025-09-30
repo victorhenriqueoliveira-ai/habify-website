@@ -1,78 +1,106 @@
 import { useState } from 'react';
 
-export interface ProjectData {
+export interface PropertyData {
   title: string;
-  description: string;
-  price: string;
   location: string;
-  propertyType: 'house' | 'apartment' | 'land' | 'commercial';
+  price: string;
+  propertyType: 'apartment' | 'house' | 'commercial' | 'land' | 'warehouse' | 'penthouse';
+  purpose: 'sale' | 'rent';
   bedrooms: string;
   bathrooms: string;
   area: string;
-  photos: string[];
+  parkingSpaces: string;
+  constructionYear: string;
+  floorNumber: string;
+  condominiumFee: string;
+  iptu: string;
+  description: string;
+  amenities: string[];
+  photos: File[];
   id?: string;
 }
 
 export const useMultipleProjects = () => {
-  const [projects, setProjects] = useState<ProjectData[]>([{
+  const [properties, setProperties] = useState<PropertyData[]>([{
     title: '',
-    description: '',
-    price: '',
     location: '',
-    propertyType: 'house',
+    price: '',
+    propertyType: 'apartment',
+    purpose: 'sale',
     bedrooms: '',
     bathrooms: '',
     area: '',
+    parkingSpaces: '',
+    constructionYear: '',
+    floorNumber: '',
+    condominiumFee: '',
+    iptu: '',
+    description: '',
+    amenities: [],
     photos: [],
   }]);
 
-  const addProject = () => {
-    if (projects.length < 5) {
-      setProjects([...projects, {
+  const addProperty = (maxProperties: number = 5) => {
+    if (properties.length < maxProperties) {
+      setProperties([...properties, {
         title: '',
-        description: '',
-        price: '',
         location: '',
-        propertyType: 'house',
+        price: '',
+        propertyType: 'apartment',
+        purpose: 'sale',
         bedrooms: '',
         bathrooms: '',
         area: '',
+        parkingSpaces: '',
+        constructionYear: '',
+        floorNumber: '',
+        condominiumFee: '',
+        iptu: '',
+        description: '',
+        amenities: [],
         photos: [],
       }]);
     }
   };
 
-  const removeProject = (index: number) => {
-    if (projects.length > 1) {
-      setProjects(projects.filter((_, i) => i !== index));
+  const removeProperty = (index: number) => {
+    if (properties.length > 1) {
+      setProperties(properties.filter((_, i) => i !== index));
     }
   };
 
-  const updateProject = (index: number, field: keyof ProjectData, value: any) => {
-    setProjects(projects.map((project, i) => 
-      i === index ? { ...project, [field]: value } : project
+  const updateProperty = (index: number, field: keyof PropertyData, value: any) => {
+    setProperties(properties.map((property, i) => 
+      i === index ? { ...property, [field]: value } : property
     ));
   };
 
-  const resetProjects = () => {
-    setProjects([{
+  const resetProperties = () => {
+    setProperties([{
       title: '',
-      description: '',
-      price: '',
       location: '',
-      propertyType: 'house',
+      price: '',
+      propertyType: 'apartment',
+      purpose: 'sale',
       bedrooms: '',
       bathrooms: '',
       area: '',
+      parkingSpaces: '',
+      constructionYear: '',
+      floorNumber: '',
+      condominiumFee: '',
+      iptu: '',
+      description: '',
+      amenities: [],
       photos: [],
     }]);
   };
 
   return {
-    projects,
-    addProject,
-    removeProject,
-    updateProject,
-    resetProjects,
+    properties,
+    addProperty,
+    removeProperty,
+    updateProperty,
+    resetProperties,
   };
 };

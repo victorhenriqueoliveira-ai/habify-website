@@ -175,6 +175,83 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_properties: {
+        Row: {
+          amenities: string[] | null
+          area: number
+          bathrooms: number | null
+          bedrooms: number | null
+          condominium_fee: number | null
+          construction_year: number | null
+          created_at: string
+          description: string | null
+          floor_number: number | null
+          id: string
+          iptu: number | null
+          location: string
+          parking_spaces: number | null
+          photos: string[]
+          price: number
+          project_id: string
+          property_type: string
+          purpose: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          area: number
+          bathrooms?: number | null
+          bedrooms?: number | null
+          condominium_fee?: number | null
+          construction_year?: number | null
+          created_at?: string
+          description?: string | null
+          floor_number?: number | null
+          id?: string
+          iptu?: number | null
+          location: string
+          parking_spaces?: number | null
+          photos?: string[]
+          price: number
+          project_id: string
+          property_type: string
+          purpose: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[] | null
+          area?: number
+          bathrooms?: number | null
+          bedrooms?: number | null
+          condominium_fee?: number | null
+          construction_year?: number | null
+          created_at?: string
+          description?: string | null
+          floor_number?: number | null
+          id?: string
+          iptu?: number | null
+          location?: string
+          parking_spaces?: number | null
+          photos?: string[]
+          price?: number
+          project_id?: string
+          property_type?: string
+          purpose?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_properties_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           auth_user_id: string | null

@@ -161,19 +161,80 @@ export const LayoutColorStep = ({
 
       {/* Preview */}
       {selectedLayout && selectedColor && (
-        <Card className="bg-muted/50">
+        <Card className="bg-gradient-to-br from-muted/50 to-muted border-2">
           <CardContent className="p-6">
-            <Label className="text-lg font-semibold mb-3 block">Preview da Combinação</Label>
-            <div className="bg-background rounded-lg p-6 border-2">
-              <div className="space-y-4">
-                <div className="h-12 bg-primary rounded" />
+            <Label className="text-lg font-semibold mb-4 block">Preview da Combinação</Label>
+            <div className="bg-background rounded-xl overflow-hidden shadow-lg border-2 border-border">
+              {/* Mockup Header */}
+              <div className="bg-primary p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary-foreground/20 animate-pulse" />
+                  <div className="space-y-1">
+                    <div className="h-3 w-24 bg-primary-foreground/30 rounded animate-pulse" />
+                    <div className="h-2 w-16 bg-primary-foreground/20 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse" />
+                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse delay-75" />
+                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse delay-150" />
+                </div>
+              </div>
+
+              {/* Mockup Hero Section */}
+              <div className="bg-secondary/30 p-6">
+                <div className="max-w-2xl mx-auto text-center space-y-4">
+                  <div className="h-8 w-3/4 mx-auto bg-foreground/10 rounded animate-pulse" />
+                  <div className="h-4 w-full bg-foreground/10 rounded animate-pulse delay-75" />
+                  <div className="h-4 w-2/3 mx-auto bg-foreground/10 rounded animate-pulse delay-150" />
+                  <div className="flex justify-center gap-3 mt-6">
+                    <div className="h-10 w-32 bg-accent rounded-lg animate-pulse" />
+                    <div className="h-10 w-32 bg-accent/30 rounded-lg animate-pulse delay-75" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Mockup Content Grid */}
+              <div className="p-6 bg-background">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="h-24 bg-secondary rounded" />
-                  <div className="h-24 bg-muted rounded" />
-                  <div className="h-24 bg-accent rounded" />
+                  <div className="space-y-2">
+                    <div className="h-32 bg-secondary rounded-lg animate-pulse" />
+                    <div className="h-3 w-full bg-secondary rounded animate-pulse delay-75" />
+                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse delay-150" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-32 bg-secondary rounded-lg animate-pulse delay-75" />
+                    <div className="h-3 w-full bg-secondary rounded animate-pulse delay-150" />
+                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-32 bg-secondary rounded-lg animate-pulse delay-150" />
+                    <div className="h-3 w-full bg-secondary rounded animate-pulse" />
+                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse delay-75" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Mockup Footer */}
+              <div className="bg-accent/10 p-4 border-t">
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-4">
+                    <div className="h-2 w-16 bg-accent rounded animate-pulse" />
+                    <div className="h-2 w-16 bg-accent rounded animate-pulse delay-75" />
+                    <div className="h-2 w-16 bg-accent rounded animate-pulse delay-150" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse" />
+                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse delay-75" />
+                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse delay-150" />
+                  </div>
                 </div>
               </div>
             </div>
+
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Visualização automática da combinação selecionada
+            </p>
           </CardContent>
         </Card>
       )}
