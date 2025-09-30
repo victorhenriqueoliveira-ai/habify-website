@@ -22,6 +22,7 @@ import NewProjectPage from "./pages/admin/NewProjectPage";
 import ProjectTypeSelectionPage from "./pages/admin/ProjectTypeSelectionPage";
 import CreateEmpreendimentoPage from "./pages/admin/CreateEmpreendimentoPage";
 import CreateCorretorPage from "./pages/admin/CreateCorretorPage";
+import ProjectWizardPage from "./pages/admin/ProjectWizardPage";
 import { ProfilePage } from "./pages/admin/ProfilePage";
 import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
@@ -136,6 +137,11 @@ const App = () => (
               <Route path="create-corretor" element={
                 <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
                   <CreateCorretorPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="project-wizard" element={
+                <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
+                  <ProjectWizardPage />
                 </RoleBasedRoute>
               } />
               <Route path="manage-projects" element={

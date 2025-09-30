@@ -20,13 +20,11 @@ const ProjectTypeSelectionPage = () => {
   }
 
   const handleEmpreendimentoChoice = () => {
-    // Navigate to empreendimento creation flow
-    navigate('/admin/create-empreendimento');
+    navigate('/admin/project-wizard');
   };
 
   const handleCorretorChoice = () => {
-    // Navigate to corretor creation flow  
-    navigate('/admin/create-corretor');
+    navigate('/admin/project-wizard');
   };
 
   return (

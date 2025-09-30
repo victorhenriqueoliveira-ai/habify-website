@@ -273,13 +273,16 @@ export type Database = {
           area: number | null
           bathrooms: number | null
           bedrooms: number | null
+          color_palette: string | null
           completed_at: string | null
           created_at: string
           description: string | null
           features: Json | null
           id: string
           landing_page_url: string | null
+          layout_choice: string | null
           location: string | null
+          logo_url: string | null
           photos: string[] | null
           price: number | null
           project_type: Database["public"]["Enums"]["project_type"] | null
@@ -289,18 +292,22 @@ export type Database = {
           transaction_id: string | null
           updated_at: string
           user_id: string
+          wizard_data: Json | null
         }
         Insert: {
           area?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          color_palette?: string | null
           completed_at?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
           id?: string
           landing_page_url?: string | null
+          layout_choice?: string | null
           location?: string | null
+          logo_url?: string | null
           photos?: string[] | null
           price?: number | null
           project_type?: Database["public"]["Enums"]["project_type"] | null
@@ -310,18 +317,22 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           user_id: string
+          wizard_data?: Json | null
         }
         Update: {
           area?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          color_palette?: string | null
           completed_at?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
           id?: string
           landing_page_url?: string | null
+          layout_choice?: string | null
           location?: string | null
+          logo_url?: string | null
           photos?: string[] | null
           price?: number | null
           project_type?: Database["public"]["Enums"]["project_type"] | null
@@ -331,6 +342,7 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
+          wizard_data?: Json | null
         }
         Relationships: [
           {

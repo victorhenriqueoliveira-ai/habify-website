@@ -37,6 +37,10 @@ export const useProjects = () => {
         area: Number(project.area) || 0,
         projectType: project.project_type || 'single_property',
         features: project.features as Record<string, any> || {},
+        layoutChoice: project.layout_choice,
+        colorPalette: project.color_palette,
+        logoUrl: project.logo_url,
+        wizardData: project.wizard_data as Record<string, any> || {},
       })) || [];
 
       setProjects(formattedProjects);
@@ -60,15 +64,19 @@ export const useProjects = () => {
           title: projectData.title,
           description: projectData.description,
           price: projectData.price || 0,
-          location: projectData.location,
-          property_type: projectData.propertyType,
+          location: projectData.location || '',
+          property_type: projectData.propertyType || 'house',
           bedrooms: projectData.bedrooms,
           bathrooms: projectData.bathrooms,
-          area: projectData.area,
+          area: projectData.area || 0,
           photos: photos,
           project_type: projectData.projectType || 'single_property',
           features: projectData.features || {},
           status: projectData.status || 'pending',
+          layout_choice: projectData.layoutChoice,
+          color_palette: projectData.colorPalette,
+          logo_url: projectData.logoUrl,
+          wizard_data: projectData.wizardData || {},
         })
         .select()
         .single();

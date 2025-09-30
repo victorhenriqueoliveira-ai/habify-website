@@ -36,6 +36,11 @@ export interface Project {
   projectType?: 'single_property' | 'realtor_multiple';
   transactionId?: string;
   features?: Record<string, any>;
+  // Wizard fields
+  layoutChoice?: string;
+  colorPalette?: string;
+  logoUrl?: string;
+  wizardData?: Record<string, any>;
 }
 
 export interface Notification {
