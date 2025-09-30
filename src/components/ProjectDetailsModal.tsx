@@ -617,22 +617,43 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {wizardData.profileType && (
+                        <div className="md:col-span-2">
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Tipo de Perfil</h4>
+                          <Badge variant="outline">
+                            {wizardData.profileType === 'corretor' ? 'Corretor' : 'Imobiliária'}
+                          </Badge>
+                        </div>
+                      )}
                       {wizardData.ownerName && (
                         <div>
                           <h4 className="font-medium text-sm text-muted-foreground mb-1">Responsável</h4>
-                          <p>{wizardData.ownerName}</p>
+                          <p className="font-medium">{wizardData.ownerName}</p>
                         </div>
                       )}
                       {wizardData.companyName && (
                         <div>
                           <h4 className="font-medium text-sm text-muted-foreground mb-1">Nome da Empresa</h4>
-                          <p>{wizardData.companyName}</p>
+                          <p className="font-medium">{wizardData.companyName}</p>
                         </div>
                       )}
                       {wizardData.creciNumber && (
                         <div>
                           <h4 className="font-medium text-sm text-muted-foreground mb-1">CRECI</h4>
-                          <p>{wizardData.creciNumber} ({wizardData.creciType === 'individual' ? 'Individual' : 'Jurídico'})</p>
+                          <p className="font-medium">
+                            {wizardData.creciNumber}
+                            <Badge variant="secondary" className="ml-2">
+                              {wizardData.creciType === 'individual' ? 'Individual' : 'Jurídico'}
+                            </Badge>
+                          </p>
+                        </div>
+                      )}
+                      {wizardData.hasLogo !== undefined && (
+                        <div className="md:col-span-2">
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Logotipo</h4>
+                          <Badge variant={wizardData.hasLogo ? 'default' : 'secondary'}>
+                            {wizardData.hasLogo ? 'Possui logotipo próprio' : 'Logotipo será criado'}
+                          </Badge>
                         </div>
                       )}
                     </div>
@@ -644,27 +665,38 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <MapPinned className="w-5 h-5 mr-2" />
-                      Endereço
+                      Endereço Comercial
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {wizardData.addressCep && (
-                        <p className="text-sm"><span className="font-medium">CEP:</span> {wizardData.addressCep}</p>
+                        <div className="flex items-start">
+                          <span className="font-medium text-sm text-muted-foreground min-w-[100px]">CEP:</span>
+                          <span className="font-medium">{wizardData.addressCep}</span>
+                        </div>
                       )}
-                      {wizardData.addressStreet && wizardData.addressNumber && (
-                        <p className="text-sm">
-                          <span className="font-medium">Rua:</span> {wizardData.addressStreet}, {wizardData.addressNumber}
-                          {wizardData.addressComplement && ` - ${wizardData.addressComplement}`}
-                        </p>
+                      {wizardData.addressStreet && (
+                        <div className="flex items-start">
+                          <span className="font-medium text-sm text-muted-foreground min-w-[100px]">Logradouro:</span>
+                          <span className="font-medium">
+                            {wizardData.addressStreet}
+                            {wizardData.addressNumber && `, ${wizardData.addressNumber}`}
+                            {wizardData.addressComplement && ` - ${wizardData.addressComplement}`}
+                          </span>
+                        </div>
                       )}
                       {wizardData.addressNeighborhood && (
-                        <p className="text-sm"><span className="font-medium">Bairro:</span> {wizardData.addressNeighborhood}</p>
+                        <div className="flex items-start">
+                          <span className="font-medium text-sm text-muted-foreground min-w-[100px]">Bairro:</span>
+                          <span className="font-medium">{wizardData.addressNeighborhood}</span>
+                        </div>
                       )}
                       {wizardData.addressCity && wizardData.addressState && (
-                        <p className="text-sm">
-                          <span className="font-medium">Cidade/Estado:</span> {wizardData.addressCity} - {wizardData.addressState}
-                        </p>
+                        <div className="flex items-start">
+                          <span className="font-medium text-sm text-muted-foreground min-w-[100px]">Cidade/UF:</span>
+                          <span className="font-medium">{wizardData.addressCity} - {wizardData.addressState}</span>
+                        </div>
                       )}
                     </div>
                   </CardContent>
@@ -675,27 +707,36 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Phone className="w-5 h-5 mr-2" />
-                      Contatos
+                      Informações de Contato
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {wizardData.contactMobile && (
-                        <div className="flex items-center text-sm">
-                          <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">Celular:</span> {wizardData.contactMobile}
+                        <div className="flex items-start">
+                          <Phone className="w-4 h-4 mr-3 mt-0.5 text-muted-foreground flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-muted-foreground">Celular</p>
+                            <p className="font-medium">{wizardData.contactMobile}</p>
+                          </div>
                         </div>
                       )}
                       {wizardData.contactPhone && (
-                        <div className="flex items-center text-sm">
-                          <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">Telefone:</span> {wizardData.contactPhone}
+                        <div className="flex items-start">
+                          <Phone className="w-4 h-4 mr-3 mt-0.5 text-muted-foreground flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-muted-foreground">Telefone Fixo</p>
+                            <p className="font-medium">{wizardData.contactPhone}</p>
+                          </div>
                         </div>
                       )}
                       {wizardData.contactEmail && (
-                        <div className="flex items-center text-sm">
-                          <Mail className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium mr-2">E-mail:</span> {wizardData.contactEmail}
+                        <div className="flex items-start">
+                          <Mail className="w-4 h-4 mr-3 mt-0.5 text-muted-foreground flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-muted-foreground">E-mail</p>
+                            <p className="font-medium break-all">{wizardData.contactEmail}</p>
+                          </div>
                         </div>
                       )}
                     </div>

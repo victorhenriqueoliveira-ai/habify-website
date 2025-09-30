@@ -10,6 +10,7 @@ import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioProperties
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { WizardData, LayoutType, ColorPalette, PaletteData } from '@/types/wizard';
 import type { PropertyData } from '@/hooks/useMultipleProjects';
@@ -223,11 +224,45 @@ const ProjectWizardPage = () => {
           contactMobile: wizardData.contactMobile,
           contactEmail: wizardData.contactEmail,
           palette: paletteData,
-          properties: portfolioProperties,
+          hasLogo: wizardData.hasLogo,
         },
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
+        const projectId = result.data.id;
+        
+        // Save portfolio properties to database
+        if (portfolioProperties.length > 0) {
+          const propertiesToInsert = portfolioProperties.map(prop => ({
+            project_id: projectId,
+            title: prop.title,
+            location: prop.location,
+            price: parseFloat(prop.price),
+            property_type: prop.propertyType,
+            purpose: prop.purpose,
+            bedrooms: prop.bedrooms ? parseInt(prop.bedrooms) : null,
+            bathrooms: prop.bathrooms ? parseInt(prop.bathrooms) : null,
+            area: parseFloat(prop.area),
+            parking_spaces: prop.parkingSpaces ? parseInt(prop.parkingSpaces) : null,
+            construction_year: prop.constructionYear ? parseInt(prop.constructionYear) : null,
+            floor_number: prop.floorNumber ? parseInt(prop.floorNumber) : null,
+            condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee) : null,
+            iptu: prop.iptu ? parseFloat(prop.iptu) : null,
+            description: prop.description || null,
+            amenities: prop.amenities || [],
+            photos: prop.photos.map(photo => typeof photo === 'string' ? photo : URL.createObjectURL(photo)),
+          }));
+
+          const { error: propertiesError } = await supabase
+            .from('portfolio_properties')
+            .insert(propertiesToInsert);
+
+          if (propertiesError) {
+            console.error('Error saving portfolio properties:', propertiesError);
+            toast.error('Projeto criado, mas houve erro ao salvar os imóveis');
+          }
+        }
+
         toast.success('Projeto criado com sucesso!');
         navigate('/admin/my-projects');
       } else {
