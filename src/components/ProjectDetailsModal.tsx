@@ -776,14 +776,40 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Fotos do Projeto ({Array.isArray(project.photos) ? project.photos.length : 0})
+                  Fotos do Projeto
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {(() => {
-                  console.log('Rendering photos tab - project.photos:', project.photos);
+                  // Collect all photos from project and portfolio properties
+                  const projectPhotos = Array.isArray(project.photos) 
+                    ? project.photos.filter(photo => photo && typeof photo === 'string' && photo.trim() !== '')
+                    : [];
                   
-                  if (!project.photos || !Array.isArray(project.photos) || project.photos.length === 0) {
+                  const portfolioPhotos: Array<{ photo: string; propertyTitle: string; propertyIndex: number }> = [];
+                  portfolioProperties.forEach((property, index) => {
+                    if (property.photos && Array.isArray(property.photos)) {
+                      property.photos.forEach(photo => {
+                        if (photo && typeof photo === 'string' && photo.trim() !== '') {
+                          portfolioPhotos.push({
+                            photo,
+                            propertyTitle: property.title,
+                            propertyIndex: index + 1
+                          });
+                        }
+                      });
+                    }
+                  });
+
+                  const totalPhotos = projectPhotos.length + portfolioPhotos.length;
+
+                  console.log('Photos collected:', { 
+                    projectPhotos: projectPhotos.length, 
+                    portfolioPhotos: portfolioPhotos.length,
+                    total: totalPhotos 
+                  });
+                  
+                  if (totalPhotos === 0) {
                     return (
                       <div className="text-center py-8 text-muted-foreground space-y-2">
                         <p>Nenhuma foto enviada ainda</p>
@@ -792,38 +818,61 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                     );
                   }
 
-                  const validPhotos = project.photos.filter(photo => photo && typeof photo === 'string' && photo.trim() !== '');
-                  console.log('Valid photos filtered:', validPhotos.length, 'of', project.photos.length);
-
-                  if (validPhotos.length === 0) {
-                    return (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>Nenhuma foto válida encontrada</p>
-                      </div>
-                    );
-                  }
-
                   return (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {validPhotos.map((photo, index) => (
-                        <div key={`${photo}-${index}`} className="aspect-square overflow-hidden rounded-lg border bg-muted hover:shadow-lg transition-shadow">
-                          <img
-                            src={photo}
-                            alt={`Foto ${index + 1} do projeto ${project.title}`}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                            onClick={() => window.open(photo, '_blank')}
-                            onError={(e) => {
-                              console.error('Error loading photo:', photo);
-                              const target = e.target as HTMLImageElement;
-                              target.onerror = null;
-                              target.src = '/placeholder.svg';
-                            }}
-                            onLoad={() => {
-                              console.log('Photo loaded successfully:', photo);
-                            }}
-                          />
+                    <div className="space-y-6">
+                      {/* Project Photos */}
+                      {projectPhotos.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">Fotos do Imóvel Principal ({projectPhotos.length})</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {projectPhotos.map((photo, index) => (
+                              <div key={`project-${photo}-${index}`} className="aspect-square overflow-hidden rounded-lg border bg-muted hover:shadow-lg transition-shadow">
+                                <img
+                                  src={photo}
+                                  alt={`Foto ${index + 1} do projeto ${project.title}`}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                  onClick={() => window.open(photo, '_blank')}
+                                  onError={(e) => {
+                                    console.error('Error loading photo:', photo);
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = '/placeholder.svg';
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
+                      )}
+
+                      {/* Portfolio Properties Photos */}
+                      {portfolioPhotos.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">Fotos dos Imóveis do Portfólio ({portfolioPhotos.length})</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {portfolioPhotos.map((item, index) => (
+                              <div key={`portfolio-${item.photo}-${index}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted hover:shadow-lg transition-shadow group">
+                                <img
+                                  src={item.photo}
+                                  alt={`Foto do imóvel ${item.propertyTitle}`}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                  onClick={() => window.open(item.photo, '_blank')}
+                                  onError={(e) => {
+                                    console.error('Error loading photo:', item.photo);
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = '/placeholder.svg';
+                                  }}
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <p className="truncate">{item.propertyTitle}</p>
+                                  <p className="text-muted">Imóvel #{item.propertyIndex}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
