@@ -11,6 +11,7 @@ import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
 import type { WizardData, LayoutType, ColorPalette, PaletteData } from '@/types/wizard';
 import type { PropertyData } from '@/hooks/useMultipleProjects';
@@ -176,6 +177,8 @@ const ProjectWizardPage = () => {
     }
 
     setLoading(true);
+    
+    const loadingToast = toast.loading('Criando projeto e fazendo upload das imagens...');
 
     try {
       const userId = user.userId || user.id;
@@ -198,6 +201,15 @@ const ProjectWizardPage = () => {
           accent: selectedPalette.accent,
         }
       } : undefined;
+
+      console.log('Creating project with data:', {
+        layoutChoice: wizardData.layoutChoice,
+        colorPalette: wizardData.colorPalette,
+        logoUrl: wizardData.logoUrl,
+        hasLogo: wizardData.hasLogo,
+        paletteData,
+        propertiesCount: portfolioProperties.length,
+      });
       
       const result = await createProject({
         userId,
@@ -230,47 +242,77 @@ const ProjectWizardPage = () => {
 
       if (result.success && result.data) {
         const projectId = result.data.id;
+        console.log('Project created successfully with ID:', projectId);
         
         // Save portfolio properties to database
         if (portfolioProperties.length > 0) {
-          const propertiesToInsert = portfolioProperties.map(prop => ({
-            project_id: projectId,
-            title: prop.title,
-            location: prop.location,
-            price: parseFloat(prop.price),
-            property_type: prop.propertyType,
-            purpose: prop.purpose,
-            bedrooms: prop.bedrooms ? parseInt(prop.bedrooms) : null,
-            bathrooms: prop.bathrooms ? parseInt(prop.bathrooms) : null,
-            area: parseFloat(prop.area),
-            parking_spaces: prop.parkingSpaces ? parseInt(prop.parkingSpaces) : null,
-            construction_year: prop.constructionYear ? parseInt(prop.constructionYear) : null,
-            floor_number: prop.floorNumber ? parseInt(prop.floorNumber) : null,
-            condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee) : null,
-            iptu: prop.iptu ? parseFloat(prop.iptu) : null,
-            description: prop.description || null,
-            amenities: prop.amenities || [],
-            photos: prop.photos.map(photo => typeof photo === 'string' ? photo : URL.createObjectURL(photo)),
-          }));
+          toast.loading(`Fazendo upload das fotos de ${portfolioProperties.length} imóveis...`, { id: loadingToast });
+          
+          // Upload photos for each property
+          const propertiesWithUrls = await Promise.all(
+            portfolioProperties.map(async (prop) => {
+              const photoUrls: string[] = [];
+              
+              // Upload photos if they are File objects
+              for (const photo of prop.photos) {
+                if (photo instanceof File) {
+                  console.log(`Uploading photo for property: ${prop.title}`);
+                  const fileUrls = await uploadMultipleFiles([photo], 'project-photos', `properties/${projectId}`);
+                  if (fileUrls.length > 0) {
+                    photoUrls.push(...fileUrls);
+                  }
+                } else if (typeof photo === 'string') {
+                  // Keep existing string URLs
+                  photoUrls.push(photo);
+                }
+              }
+              
+              console.log(`Uploaded ${photoUrls.length} photos for property: ${prop.title}`);
+              
+              return {
+                project_id: projectId,
+                title: prop.title,
+                location: prop.location,
+                price: parseFloat(prop.price),
+                property_type: prop.propertyType,
+                purpose: prop.purpose,
+                bedrooms: prop.bedrooms ? parseInt(prop.bedrooms) : null,
+                bathrooms: prop.bathrooms ? parseInt(prop.bathrooms) : null,
+                area: parseFloat(prop.area),
+                parking_spaces: prop.parkingSpaces ? parseInt(prop.parkingSpaces) : null,
+                construction_year: prop.constructionYear ? parseInt(prop.constructionYear) : null,
+                floor_number: prop.floorNumber ? parseInt(prop.floorNumber) : null,
+                condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee) : null,
+                iptu: prop.iptu ? parseFloat(prop.iptu) : null,
+                description: prop.description || null,
+                amenities: prop.amenities || [],
+                photos: photoUrls,
+              };
+            })
+          );
 
+          console.log('Inserting properties into database:', propertiesWithUrls.length);
           const { error: propertiesError } = await supabase
             .from('portfolio_properties')
-            .insert(propertiesToInsert);
+            .insert(propertiesWithUrls);
 
           if (propertiesError) {
             console.error('Error saving portfolio properties:', propertiesError);
-            toast.error('Projeto criado, mas houve erro ao salvar os imóveis');
+            toast.error('Projeto criado, mas houve erro ao salvar os imóveis', { id: loadingToast });
+          } else {
+            console.log('Properties saved successfully');
           }
         }
 
-        toast.success('Projeto criado com sucesso!');
+        toast.success('Projeto criado com sucesso!', { id: loadingToast });
         navigate('/admin/my-projects');
       } else {
-        toast.error('Erro ao criar projeto');
+        console.error('Failed to create project:', result.error);
+        toast.error('Erro ao criar projeto', { id: loadingToast });
       }
     } catch (error) {
       console.error('Error creating project:', error);
-      toast.error('Erro ao criar projeto');
+      toast.error('Erro ao criar projeto', { id: loadingToast });
     } finally {
       setLoading(false);
     }

@@ -271,28 +271,46 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-2">
-                                {property.bedrooms && (
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  {property.bedrooms && (
+                                    <div className="flex items-center text-sm">
+                                      <Bed className="w-4 h-4 mr-1" />
+                                      {property.bedrooms} quartos
+                                    </div>
+                                  )}
+                                  {property.bathrooms && (
+                                    <div className="flex items-center text-sm">
+                                      <Bath className="w-4 h-4 mr-1" />
+                                      {property.bathrooms} banheiros
+                                    </div>
+                                  )}
                                   <div className="flex items-center text-sm">
-                                    <Bed className="w-4 h-4 mr-1" />
-                                    {property.bedrooms} quartos
+                                    <Square className="w-4 h-4 mr-1" />
+                                    {property.area} m²
                                   </div>
-                                )}
-                                {property.bathrooms && (
-                                  <div className="flex items-center text-sm">
-                                    <Bath className="w-4 h-4 mr-1" />
-                                    {property.bathrooms} banheiros
-                                  </div>
-                                )}
-                                <div className="flex items-center text-sm">
-                                  <Square className="w-4 h-4 mr-1" />
-                                  {property.area} m²
+                                  {property.parkingSpaces && (
+                                    <div className="text-sm">
+                                      🚗 {property.parkingSpaces} vagas
+                                    </div>
+                                  )}
                                 </div>
-                                {property.parkingSpaces && (
-                                  <div className="text-sm">
-                                    🚗 {property.parkingSpaces} vagas
-                                  </div>
-                                )}
+                                
+                                {/* Additional Info */}
+                                <div className="pt-2 space-y-1 text-sm text-muted-foreground">
+                                  {property.constructionYear && (
+                                    <div>📅 Ano: {property.constructionYear}</div>
+                                  )}
+                                  {property.floorNumber && (
+                                    <div>🏢 Andar: {property.floorNumber}</div>
+                                  )}
+                                  {property.condominiumFee && (
+                                    <div>🏘️ Condomínio: R$ {property.condominiumFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                                  )}
+                                  {property.iptu && (
+                                    <div>📄 IPTU: R$ {property.iptu.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
