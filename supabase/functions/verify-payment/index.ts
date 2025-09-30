@@ -13,9 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { abacatePayId } = await req.json();
+    const { paymentId, abacatePayId } = await req.json();
     
-    console.log('Verifying payment:', abacatePayId);
+    // Support both new paymentId and legacy abacatePayId
+    const id = paymentId || abacatePayId;
+    
+    console.log('Verifying payment:', id);
 
     // Create Supabase service client
     const supabaseService = createClient(
@@ -24,21 +27,25 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    console.log('Checking order status in database for abacatePayId:', abacatePayId);
+    console.log('Checking order status in database for paymentId:', id);
     
     // Check order status directly from database (webhook should have already updated it)
-    const { data: order, error: orderError } = await supabaseService
+    // Try to find by abacatepay_id or by payment_data.paymentId for Mercado Pago
+    const { data: orders, error: orderError } = await supabaseService
       .from('orders')
       .select('*')
-      .eq('abacatepay_id', abacatePayId)
-      .single();
+      .or(`abacatepay_id.eq.${id},payment_data->paymentId.eq.${id}`)
+      .order('created_at', { ascending: false })
+      .limit(1);
       
-    console.log('Order query result:', { order, orderError });
+    console.log('Order query result:', { orders, orderError });
 
-    if (orderError) {
+    if (orderError || !orders || orders.length === 0) {
       console.error('Order fetch error:', orderError);
       throw new Error('Order not found');
     }
+
+    const order = orders[0];
 
     const isPaid = order.status === 'paid';
     console.log('Order status check:', { isPaid, status: order.status });

@@ -8,7 +8,8 @@ interface Order {
   amount: number;
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod?: string;
-  abacatePayId?: string;
+  paymentId?: string;
+  gateway?: string;
   paymentData?: any;
   paidAt?: string;
   createdAt: string;
@@ -56,7 +57,8 @@ export const usePayments = () => {
         amount: parseFloat(order.amount) || 0,
         status: order.status,
         paymentMethod: order.payment_method,
-        abacatePayId: order.abacatepay_id,
+        paymentId: order.abacatepay_id,
+        gateway: order.gateway,
         paymentData: order.payment_data,
         paidAt: order.paid_at,
         createdAt: order.created_at,

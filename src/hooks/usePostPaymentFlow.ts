@@ -13,9 +13,9 @@ export const usePostPaymentFlow = () => {
 
   useEffect(() => {
     const handlePaymentVerification = async () => {
-      const abacatePayId = searchParams.get('abacate_pay_id') || localStorage.getItem('abacatePayId');
+      const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id') || localStorage.getItem('paymentId');
       
-      if (!abacatePayId || isProcessing) return;
+      if (!paymentId || isProcessing) return;
 
       // Force verification on payment success page
       const isPaymentSuccessPage = window.location.pathname.includes('payment-success');
@@ -23,7 +23,7 @@ export const usePostPaymentFlow = () => {
       setIsProcessing(true);
 
       try {
-        const result = await verifyPayment(abacatePayId);
+        const result = await verifyPayment(paymentId);
         
         if (result.success && result.isPaid) {
           
@@ -45,7 +45,8 @@ export const usePostPaymentFlow = () => {
                 if (registrationResult.success) {
                   // Clear stored data
                   localStorage.removeItem('habify_order');
-                  localStorage.removeItem('abacatePayId');
+                  localStorage.removeItem('paymentId');
+                  localStorage.removeItem('abacatePayId'); // Legacy support
                   localStorage.removeItem('paymentVerified');
                   localStorage.removeItem('orderData');
                   
@@ -81,7 +82,8 @@ export const usePostPaymentFlow = () => {
                   
                   if (registrationResult.success) {
                     localStorage.removeItem('habify_order');
-                    localStorage.removeItem('abacatePayId');
+                    localStorage.removeItem('paymentId');
+                    localStorage.removeItem('abacatePayId'); // Legacy support
                     toast.success('Conta ativada! Aguardando confirmação final do pagamento.');
                     setTimeout(() => {
                       navigate('/admin/my-projects');
@@ -113,7 +115,8 @@ export const usePostPaymentFlow = () => {
                   
                   if (registrationResult.success) {
                     localStorage.removeItem('habify_order');
-                    localStorage.removeItem('abacatePayId');
+                    localStorage.removeItem('paymentId');
+                    localStorage.removeItem('abacatePayId'); // Legacy support
                     toast.success('Conta ativada com sucesso!');
                     setTimeout(() => {
                       navigate('/admin/my-projects');
@@ -146,12 +149,12 @@ export const usePostPaymentFlow = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       const isPaymentSuccessPage = window.location.pathname.includes('payment-success');
-      const abacatePayId = searchParams.get('abacate_pay_id') || localStorage.getItem('abacatePayId');
+      const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id') || localStorage.getItem('paymentId');
       
-      if (isPaymentSuccessPage && abacatePayId && !isProcessing) {
+      if (isPaymentSuccessPage && paymentId && !isProcessing) {
         const handleCheck = async () => {
           try {
-            const result = await verifyPayment(abacatePayId);
+            const result = await verifyPayment(paymentId);
             if (result.success && result.isPaid) {
               const orderData = localStorage.getItem('habify_order');
               if (orderData) {
@@ -165,7 +168,8 @@ export const usePostPaymentFlow = () => {
                   
                   if (registrationResult.success) {
                     localStorage.removeItem('habify_order');
-                    localStorage.removeItem('abacatePayId');
+                    localStorage.removeItem('paymentId');
+                    localStorage.removeItem('abacatePayId'); // Legacy support
                     toast.success('Pagamento confirmado! Conta criada com sucesso.');
                     setTimeout(() => {
                       navigate('/admin/my-projects');

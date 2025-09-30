@@ -87,6 +87,7 @@ export type Database = {
           abacatepay_id: string | null
           amount: number
           created_at: string
+          gateway: string | null
           id: string
           paid_at: string | null
           payment_data: Json | null
@@ -100,6 +101,7 @@ export type Database = {
           abacatepay_id?: string | null
           amount: number
           created_at?: string
+          gateway?: string | null
           id?: string
           paid_at?: string | null
           payment_data?: Json | null
@@ -113,6 +115,7 @@ export type Database = {
           abacatepay_id?: string | null
           amount?: number
           created_at?: string
+          gateway?: string | null
           id?: string
           paid_at?: string | null
           payment_data?: Json | null

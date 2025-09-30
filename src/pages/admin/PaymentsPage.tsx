@@ -41,7 +41,7 @@ export const PaymentsPage = () => {
       order.createdAt,
       order.amount,
       order.status,
-      order.abacatePayId || '',
+      order.paymentId || order.gateway || '',
     ].join(',')).join('\n');
     
     const blob = new Blob([`ID,Data,Valor,Status,AbacatePay ID\n${csvContent}`], { type: 'text/csv' });
@@ -167,7 +167,12 @@ export const PaymentsPage = () => {
                       </Badge>
                     </td>
                     <td className="p-2 font-mono text-xs">
-                      {order.abacatePayId || 'N/A'}
+                      {order.paymentId || 'N/A'}
+                      {order.gateway && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({order.gateway})
+                        </span>
+                      )}
                     </td>
                     <td className="p-2">
                       <Button
@@ -212,9 +217,14 @@ export const PaymentsPage = () => {
               <div>
                 <strong>Status:</strong> {getStatusText(selectedOrder.status)}
               </div>
-              {selectedOrder.abacatePayId && (
+              {selectedOrder.paymentId && (
                 <div>
-                  <strong>AbacatePay ID:</strong> {selectedOrder.abacatePayId}
+                  <strong>Payment ID:</strong> {selectedOrder.paymentId}
+                </div>
+              )}
+              {selectedOrder.gateway && (
+                <div>
+                  <strong>Gateway:</strong> {selectedOrder.gateway}
                 </div>
               )}
               <Button onClick={() => setSelectedOrder(null)} className="w-full">

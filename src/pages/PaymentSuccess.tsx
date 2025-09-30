@@ -12,11 +12,11 @@ const PaymentSuccess = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
 
   useEffect(() => {
-    // Get abacate_pay_id from URL and store it
-    const abacatePayId = searchParams.get('abacate_pay_id');
-    if (abacatePayId) {
-      localStorage.setItem('abacatePayId', abacatePayId);
-      console.log('Stored abacatePayId from URL:', abacatePayId);
+    // Get payment_id from URL and store it (supports both AbacatePay and Mercado Pago)
+    const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
+    if (paymentId) {
+      localStorage.setItem('paymentId', paymentId);
+      console.log('Stored paymentId from URL:', paymentId);
     }
 
     // Check if we have verified payment data

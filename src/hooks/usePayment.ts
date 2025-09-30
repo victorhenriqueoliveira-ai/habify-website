@@ -8,7 +8,7 @@ interface CustomerData {
   phone?: string;
   cpf?: string;
   password: string;
-  paymentMethod?: 'PIX' | 'CARD';
+  paymentMethod?: 'PIX' | 'CARD' | 'BOLETO';
   installments?: number;
   isLoggedInPurchase?: boolean;
   userId?: string;
@@ -18,7 +18,8 @@ interface PaymentResponse {
   success: boolean;
   paymentUrl?: string;
   orderId?: string;
-  abacatePayId?: string;
+  paymentId?: string;
+  gateway?: 'ABACATEPAY' | 'MERCADOPAGO';
   error?: string;
 }
 
@@ -68,10 +69,10 @@ export const usePayment = () => {
     }
   };
 
-  const verifyPayment = async (abacatePayId: string) => {
+  const verifyPayment = async (paymentId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('verify-payment', {
-        body: { abacatePayId },
+        body: { paymentId },
       });
 
       if (error) {
@@ -84,7 +85,7 @@ export const usePayment = () => {
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
           .select('*')
-          .eq('abacatepay_id', abacatePayId)
+          .eq('abacatepay_id', paymentId)
           .single();
 
         if (orderError) {

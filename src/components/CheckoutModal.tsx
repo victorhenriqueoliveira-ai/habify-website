@@ -24,7 +24,7 @@ interface CheckoutModalProps {
 export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = false }: CheckoutModalProps) => {
   const { createPayment, loading } = usePayment();
   const { user } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD' | 'BOLETO'>('PIX');
   const [installments, setInstallments] = useState('1');
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -107,14 +107,15 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
         
         const orderData = {
           orderId: response.orderId,
-          abacatePayId: response.abacatePayId,
+          paymentId: response.paymentId,
+          gateway: response.gateway,
           planId: plan.id,
           customerEmail: formData.email,
           customerName: formData.name,
           customerPassword: formData.password,
         };
         
-        localStorage.setItem('abacatePayId', response.abacatePayId);
+        localStorage.setItem('paymentId', response.paymentId || '');
         localStorage.setItem('habify_order', JSON.stringify(orderData));
 
         // Redirect to payment (works better on mobile)
@@ -202,19 +203,35 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <span>Método de Pagamento</span>
                 </h3>
 
-                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD')}>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD' | 'BOLETO')}>
                   <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                     <RadioGroupItem value="PIX" id="pix" />
                     <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
                       <QrCode className="h-4 w-4 mr-2" />
-                      PIX (Pagamento Instantâneo)
+                      <div>
+                        <div>PIX</div>
+                        <div className="text-xs text-muted-foreground">Pagamento instantâneo via AbacatePay</div>
+                      </div>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                     <RadioGroupItem value="CARD" id="card" />
                     <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Cartão de Crédito (até 12x)
+                      <div>
+                        <div>Cartão de Crédito</div>
+                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Mercado Pago</div>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="BOLETO" id="boleto" />
+                    <Label htmlFor="boleto" className="flex items-center cursor-pointer flex-1">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      <div>
+                        <div>Boleto Bancário</div>
+                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Mercado Pago</div>
+                      </div>
                     </Label>
                   </div>
                 </RadioGroup>

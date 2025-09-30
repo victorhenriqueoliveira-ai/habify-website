@@ -15,7 +15,7 @@ interface PaymentRequest {
     phone?: string;
     cpf?: string;
     password: string;
-    paymentMethod?: 'PIX' | 'CARD';
+    paymentMethod?: 'PIX' | 'CARD' | 'BOLETO';
     installments?: number;
     isLoggedInPurchase?: boolean;
     userId?: string;
@@ -47,13 +47,27 @@ serve(async (req) => {
     // Parse request body
     const { planId, customerData }: PaymentRequest = await req.json();
 
-    console.log('Creating payment for plan:', planId, 'customer:', customerData.email);
+    console.log('Creating payment for plan:', planId, 'customer:', customerData.email, 'method:', customerData.paymentMethod);
 
-    // Check if AbacatePay API key is available
-    const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
-    if (!abacatePayApiKey) {
-      console.error('ABACATEPAY_API_KEY is not configured');
-      throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
+    // Determine gateway based on payment method
+    const useAbacatePay = customerData.paymentMethod === 'PIX';
+    const useMercadoPago = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
+
+    // Check if required API keys are available
+    if (useAbacatePay) {
+      const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
+      if (!abacatePayApiKey) {
+        console.error('ABACATEPAY_API_KEY is not configured');
+        throw new Error('Configuração de pagamento PIX não encontrada. Entre em contato com o suporte.');
+      }
+    }
+
+    if (useMercadoPago) {
+      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
+      if (!mercadoPagoToken) {
+        console.error('MERCADOPAGO_ACCESS_TOKEN is not configured');
+        throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
+      }
     }
 
     // Get plan details
@@ -119,135 +133,218 @@ serve(async (req) => {
         throw new Error('Erro ao criar perfil do usuário');
       }
 
-      console.log('Profile created:', profile.id);
+    console.log('Profile created:', profile.id);
       profileId = profile.id;
     }
 
-    // Now create a customer in AbacatePay
-    const customerPayload = {
-      name: customerData.name,
-      cellphone: customerData.phone,
-      email: customerData.email,
-      taxId: customerData.cpf,
-    };
+    // Process payment based on gateway
+    let paymentUrl: string;
+    let paymentId: string;
+    let gateway: 'ABACATEPAY' | 'MERCADOPAGO';
 
-    console.log('Creating customer with payload:', JSON.stringify(customerPayload, null, 2));
+    if (useAbacatePay) {
+      // AbacatePay flow for PIX
+      gateway = 'ABACATEPAY';
+      const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY')!;
 
-    const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${abacatePayApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(customerPayload),
-    });
+      // Create customer in AbacatePay
+      const customerPayload = {
+        name: customerData.name,
+        cellphone: customerData.phone,
+        email: customerData.email,
+        taxId: customerData.cpf,
+      };
 
-    console.log('Customer response status:', customerResponse.status);
+      console.log('Creating customer with payload:', JSON.stringify(customerPayload, null, 2));
 
-    if (!customerResponse.ok) {
-      const customerErrorText = await customerResponse.text();
-      console.error('Customer creation error:', customerErrorText);
-      throw new Error('Falha ao criar cliente no sistema de pagamento.');
+      const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(customerPayload),
+      });
+
+      console.log('Customer response status:', customerResponse.status);
+
+      if (!customerResponse.ok) {
+        const customerErrorText = await customerResponse.text();
+        console.error('Customer creation error:', customerErrorText);
+        throw new Error('Falha ao criar cliente no sistema de pagamento.');
+      }
+
+      const customerResponseData = await customerResponse.json();
+      console.log('Customer created:', customerResponseData);
+
+      const customerId = customerResponseData.data?.id;
+      if (!customerId) {
+        console.error('No customer ID received:', customerResponseData);
+        throw new Error('ID do cliente não foi gerado.');
+      }
+
+      // Create billing with AbacatePay
+      const webhookUrl = `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`;
+      
+      const billingPayload: any = {
+        frequency: 'ONE_TIME',
+        methods: ['PIX'],
+        products: [{
+          externalId: planId,
+          name: plan.name,
+          description: plan.description || plan.name,
+          quantity: 1,
+          price: Math.round(plan.price * 100),
+        }],
+        customerId: customerId,
+        returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-success` 
+          : 'https://habify.com.br/payment-success',
+        completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-success` 
+          : 'https://habify.com.br/payment-success',
+        webhookUrl: webhookUrl,
+        externalId: `habify-${planId}-${Date.now()}`,
+        allowCoupons: true,
+      };
+      
+      console.log('AbacatePay billing payload:', JSON.stringify(billingPayload, null, 2));
+
+      const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(billingPayload),
+      });
+
+      console.log('AbacatePay response status:', abacatePayResponse.status);
+
+      if (!abacatePayResponse.ok) {
+        const errorText = await abacatePayResponse.text();
+        console.error('AbacatePay error response:', errorText);
+        throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
+      }
+
+      const abacatePayData = await abacatePayResponse.json();
+      console.log('AbacatePay response data:', abacatePayData);
+
+      const responseData = abacatePayData.data || abacatePayData;
+      
+      if (!responseData || !responseData.id) {
+        console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
+        throw new Error('Resposta inválida do sistema de pagamento.');
+      }
+
+      paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
+      paymentId = responseData.id;
+
+      if (!paymentUrl) {
+        console.error('No payment URL in response:', abacatePayData);
+        throw new Error('URL de pagamento não foi gerada.');
+      }
+    } else {
+      // Mercado Pago flow for CARD and BOLETO
+      gateway = 'MERCADOPAGO';
+      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')!;
+
+      const preferencePayload = {
+        items: [{
+          id: planId,
+          title: plan.name,
+          description: plan.description || plan.name,
+          quantity: 1,
+          unit_price: Number(plan.price),
+          currency_id: 'BRL'
+        }],
+        payer: {
+          name: customerData.name,
+          email: customerData.email,
+          phone: {
+            area_code: customerData.phone?.substring(0, 2) || '',
+            number: customerData.phone?.substring(2) || ''
+          },
+          identification: {
+            type: 'CPF',
+            number: customerData.cpf || ''
+          }
+        },
+        back_urls: {
+          success: origin.includes('localhost') || origin.includes('lovable.dev') 
+            ? `${origin}/payment-success` 
+            : 'https://habify.com.br/payment-success',
+          failure: origin.includes('localhost') || origin.includes('lovable.dev') 
+            ? `${origin}/payment-canceled` 
+            : 'https://habify.com.br/payment-canceled',
+          pending: origin.includes('localhost') || origin.includes('lovable.dev') 
+            ? `${origin}/payment-success` 
+            : 'https://habify.com.br/payment-success'
+        },
+        auto_return: 'approved',
+        notification_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/mercadopago-webhook`,
+        external_reference: `habify-${planId}-${Date.now()}`,
+        payment_methods: {
+          excluded_payment_types: customerData.paymentMethod === 'CARD' 
+            ? [{ id: 'ticket' }] 
+            : [{ id: 'credit_card' }, { id: 'debit_card' }],
+          installments: customerData.paymentMethod === 'CARD' ? (customerData.installments || 12) : 1
+        }
+      };
+
+      console.log('Mercado Pago preference payload:', JSON.stringify(preferencePayload, null, 2));
+
+      const mercadoPagoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${mercadoPagoToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferencePayload),
+      });
+
+      console.log('Mercado Pago response status:', mercadoPagoResponse.status);
+
+      if (!mercadoPagoResponse.ok) {
+        const errorText = await mercadoPagoResponse.text();
+        console.error('Mercado Pago error response:', errorText);
+        throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
+      }
+
+      const mercadoPagoData = await mercadoPagoResponse.json();
+      console.log('Mercado Pago response data:', mercadoPagoData);
+
+      if (!mercadoPagoData || !mercadoPagoData.id) {
+        console.error('Invalid Mercado Pago response - missing ID:', mercadoPagoData);
+        throw new Error('Resposta inválida do sistema de pagamento.');
+      }
+
+      paymentUrl = mercadoPagoData.init_point;
+      paymentId = mercadoPagoData.id;
+
+      if (!paymentUrl) {
+        console.error('No payment URL in response:', mercadoPagoData);
+        throw new Error('URL de pagamento não foi gerada.');
+      }
     }
 
-    const customerResponseData = await customerResponse.json();
-    console.log('Customer created:', customerResponseData);
-
-    const customerId = customerResponseData.data?.id;
-    if (!customerId) {
-      console.error('No customer ID received:', customerResponseData);
-      throw new Error('ID do cliente não foi gerado.');
-    }
-
-    // Now create the billing with the customer ID
-    const webhookUrl = origin.includes('localhost') || origin.includes('lovable.dev') 
-      ? `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`
-      : 'https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook';
-    
-    // Determine payment methods based on user selection
-    const paymentMethods = customerData.paymentMethod === 'CARD' ? ['CARD'] : ['PIX'];
-    
-    const billingPayload: any = {
-      frequency: 'ONE_TIME',
-      methods: paymentMethods,
-      products: [{
-        externalId: planId,
-        name: plan.name,
-        description: plan.description || plan.name,
-        quantity: 1,
-        price: Math.round(plan.price * 100),
-      }],
-      customerId: customerId,
-      returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-        ? `${origin}/payment-success` 
-        : 'https://habify.com.br/payment-success',
-      completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-        ? `${origin}/payment-success` 
-        : 'https://habify.com.br/payment-success',
-      webhookUrl: webhookUrl,
-      externalId: `habify-${planId}-${Date.now()}`,
-      allowCoupons: true, // Enable coupon field in AbacatePay checkout
-    };
-
-    // Add installments if CARD method
-    if (customerData.paymentMethod === 'CARD' && customerData.installments) {
-      billingPayload.installments = customerData.installments;
-    }
-    
-    console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));
-
-    // Create AbacatePay payment
-    const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${abacatePayApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(billingPayload),
-    });
-
-    console.log('AbacatePay response status:', abacatePayResponse.status);
-
-    if (!abacatePayResponse.ok) {
-      const errorText = await abacatePayResponse.text();
-      console.error('AbacatePay error response:', errorText);
-      throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
-    }
-
-    const abacatePayData = await abacatePayResponse.json();
-    console.log('AbacatePay response data:', abacatePayData);
-
-    // Handle AbacatePay API response format
-    const responseData = abacatePayData.data || abacatePayData;
-    
-    // Validate response data
-    if (!responseData || !responseData.id) {
-      console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
-      throw new Error('Resposta inválida do sistema de pagamento.');
-    }
-
-    const paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
-    if (!paymentUrl) {
-      console.error('No payment URL in response:', abacatePayData);
-      throw new Error('URL de pagamento não foi gerada.');
-    }
-
-    // Create order record with profile reference
+    // Create order record with profile reference and gateway info
     const { data: order, error: orderError } = await supabaseService
       .from('orders')
       .insert({
-        user_id: profileId, // Reference to profile, not auth.users yet
+        user_id: profileId,
         plan_id: planId,
-        abacatepay_id: responseData.id,
+        abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
         amount: plan.price,
         status: 'pending',
         payment_method: customerData.paymentMethod || 'PIX',
+        gateway: gateway,
         payment_data: {
           customerData: {
             ...customerData,
-            password: customerData.isLoggedInPurchase ? undefined : customerData.password // Store password only for new users
+            password: customerData.isLoggedInPurchase ? undefined : customerData.password
           },
-          abacatePayData,
+          paymentId: paymentId,
           installments: customerData.installments,
           isLoggedInPurchase: customerData.isLoggedInPurchase,
         }
@@ -267,7 +364,8 @@ serve(async (req) => {
         success: true,
         paymentUrl: paymentUrl,
         orderId: order.id,
-        abacatePayId: responseData.id,
+        paymentId: paymentId,
+        gateway: gateway,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
