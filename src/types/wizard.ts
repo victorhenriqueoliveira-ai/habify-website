@@ -41,7 +41,16 @@ export interface LayoutOption {
 export interface ColorOption {
   id: ColorPalette;
   name: string;
-  primary: string;
-  secondary: string;
-  accent: string;
+  primary: string; // hex color
+  secondary: string; // hex color
+  accent: string; // hex color
+}
+
+export interface PaletteData {
+  id: ColorPalette;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
 }

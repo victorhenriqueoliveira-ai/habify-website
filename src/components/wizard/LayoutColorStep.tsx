@@ -42,37 +42,37 @@ const colorOptions: ColorOption[] = [
   {
     id: 'blue',
     name: 'Azul Profissional',
-    primary: 'bg-blue-500',
-    secondary: 'bg-blue-100',
-    accent: 'bg-blue-700',
+    primary: '#0B82FF',
+    secondary: '#D8EEFF',
+    accent: '#0056D6',
   },
   {
     id: 'orange',
     name: 'Laranja Energia',
-    primary: 'bg-orange-500',
-    secondary: 'bg-orange-100',
-    accent: 'bg-orange-700',
+    primary: '#FF6B35',
+    secondary: '#FFE5DC',
+    accent: '#CC4417',
   },
   {
     id: 'green',
     name: 'Verde Confiança',
-    primary: 'bg-green-500',
-    secondary: 'bg-green-100',
-    accent: 'bg-green-700',
+    primary: '#10B981',
+    secondary: '#D1FAE5',
+    accent: '#047857',
   },
   {
     id: 'purple',
     name: 'Roxo Sofisticado',
-    primary: 'bg-purple-500',
-    secondary: 'bg-purple-100',
-    accent: 'bg-purple-700',
+    primary: '#8B5CF6',
+    secondary: '#EDE9FE',
+    accent: '#6D28D9',
   },
   {
     id: 'neutral',
     name: 'Neutro Elegante',
-    primary: 'bg-gray-700',
-    secondary: 'bg-gray-100',
-    accent: 'bg-gray-900',
+    primary: '#4B5563',
+    secondary: '#F3F4F6',
+    accent: '#1F2937',
   },
 ];
 
@@ -82,6 +82,16 @@ export const LayoutColorStep = ({
   onLayoutChange,
   onColorChange,
 }: LayoutColorStepProps) => {
+  // Get the selected color palette object
+  const selectedPalette = colorOptions.find(c => c.id === selectedColor);
+  
+  // CSS variables for the preview
+  const previewStyle = selectedPalette ? {
+    '--preview-primary': selectedPalette.primary,
+    '--preview-secondary': selectedPalette.secondary,
+    '--preview-accent': selectedPalette.accent,
+  } as React.CSSProperties : {};
+
   return (
     <div className="space-y-8">
       {/* Layout Selection */}
@@ -142,9 +152,18 @@ export const LayoutColorStep = ({
               <CardContent className="p-4">
                 <div className="relative mb-3">
                   <div className="flex gap-2 h-20">
-                    <div className={`flex-1 rounded ${color.primary}`} />
-                    <div className={`flex-1 rounded ${color.secondary}`} />
-                    <div className={`flex-1 rounded ${color.accent}`} />
+                    <div 
+                      className="flex-1 rounded" 
+                      style={{ backgroundColor: color.primary }}
+                    />
+                    <div 
+                      className="flex-1 rounded" 
+                      style={{ backgroundColor: color.secondary }}
+                    />
+                    <div 
+                      className="flex-1 rounded" 
+                      style={{ backgroundColor: color.accent }}
+                    />
                   </div>
                   {selectedColor === color.id && (
                     <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1">
@@ -160,36 +179,76 @@ export const LayoutColorStep = ({
       </div>
 
       {/* Preview */}
-      {selectedLayout && selectedColor && (
+      {selectedLayout && selectedColor && selectedPalette && (
         <Card className="bg-gradient-to-br from-muted/50 to-muted border-2">
           <CardContent className="p-6">
             <Label className="text-lg font-semibold mb-4 block">Preview da Combinação</Label>
-            <div className="bg-background rounded-xl overflow-hidden shadow-lg border-2 border-border">
+            <div 
+              className="bg-background rounded-xl overflow-hidden shadow-lg border-2 border-border"
+              style={previewStyle}
+            >
               {/* Mockup Header */}
-              <div className="bg-primary p-4 flex items-center justify-between">
+              <div 
+                className="p-4 flex items-center justify-between transition-colors duration-300"
+                style={{ backgroundColor: 'var(--preview-accent)' }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary-foreground/20 animate-pulse" />
+                  <div 
+                    className="w-10 h-10 rounded-full animate-pulse"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                  />
                   <div className="space-y-1">
-                    <div className="h-3 w-24 bg-primary-foreground/30 rounded animate-pulse" />
-                    <div className="h-2 w-16 bg-primary-foreground/20 rounded animate-pulse" />
+                    <div 
+                      className="h-3 w-24 rounded animate-pulse"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}
+                    />
+                    <div 
+                      className="h-2 w-16 rounded animate-pulse"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                    />
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse" />
-                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse delay-75" />
-                  <div className="w-8 h-8 rounded bg-primary-foreground/20 animate-pulse delay-150" />
+                  {[0, 75, 150].map((delay) => (
+                    <div 
+                      key={delay}
+                      className="w-8 h-8 rounded animate-pulse"
+                      style={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        animationDelay: `${delay}ms`
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
 
               {/* Mockup Hero Section */}
-              <div className="bg-secondary/30 p-6">
+              <div 
+                className="p-6 transition-colors duration-300"
+                style={{ backgroundColor: 'var(--preview-secondary)' }}
+              >
                 <div className="max-w-2xl mx-auto text-center space-y-4">
-                  <div className="h-8 w-3/4 mx-auto bg-foreground/10 rounded animate-pulse" />
-                  <div className="h-4 w-full bg-foreground/10 rounded animate-pulse delay-75" />
-                  <div className="h-4 w-2/3 mx-auto bg-foreground/10 rounded animate-pulse delay-150" />
+                  <div 
+                    className="h-8 w-3/4 mx-auto rounded animate-pulse"
+                    style={{ backgroundColor: 'var(--preview-primary)', opacity: 0.3 }}
+                  />
+                  <div 
+                    className="h-4 w-full rounded animate-pulse"
+                    style={{ backgroundColor: 'var(--preview-primary)', opacity: 0.2, animationDelay: '75ms' }}
+                  />
+                  <div 
+                    className="h-4 w-2/3 mx-auto rounded animate-pulse"
+                    style={{ backgroundColor: 'var(--preview-primary)', opacity: 0.2, animationDelay: '150ms' }}
+                  />
                   <div className="flex justify-center gap-3 mt-6">
-                    <div className="h-10 w-32 bg-accent rounded-lg animate-pulse" />
-                    <div className="h-10 w-32 bg-accent/30 rounded-lg animate-pulse delay-75" />
+                    <div 
+                      className="h-10 w-32 rounded-lg animate-pulse transition-colors duration-300"
+                      style={{ backgroundColor: 'var(--preview-accent)' }}
+                    />
+                    <div 
+                      className="h-10 w-32 rounded-lg animate-pulse"
+                      style={{ backgroundColor: 'var(--preview-accent)', opacity: 0.3, animationDelay: '75ms' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -197,44 +256,100 @@ export const LayoutColorStep = ({
               {/* Mockup Content Grid */}
               <div className="p-6 bg-background">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <div className="h-32 bg-secondary rounded-lg animate-pulse" />
-                    <div className="h-3 w-full bg-secondary rounded animate-pulse delay-75" />
-                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse delay-150" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-32 bg-secondary rounded-lg animate-pulse delay-75" />
-                    <div className="h-3 w-full bg-secondary rounded animate-pulse delay-150" />
-                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-32 bg-secondary rounded-lg animate-pulse delay-150" />
-                    <div className="h-3 w-full bg-secondary rounded animate-pulse" />
-                    <div className="h-2 w-3/4 bg-muted rounded animate-pulse delay-75" />
-                  </div>
+                  {[0, 75, 150].map((delay) => (
+                    <div key={delay} className="space-y-2">
+                      <div 
+                        className="h-32 rounded-lg animate-pulse transition-colors duration-300"
+                        style={{ 
+                          backgroundColor: 'var(--preview-secondary)',
+                          animationDelay: `${delay}ms`
+                        }}
+                      />
+                      <div 
+                        className="h-3 w-full rounded animate-pulse"
+                        style={{ 
+                          backgroundColor: 'var(--preview-secondary)',
+                          animationDelay: `${delay + 75}ms`
+                        }}
+                      />
+                      <div 
+                        className="h-2 w-3/4 rounded animate-pulse"
+                        style={{ 
+                          backgroundColor: 'var(--preview-primary)', 
+                          opacity: 0.2,
+                          animationDelay: `${delay + 150}ms`
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Mockup Footer */}
-              <div className="bg-accent/10 p-4 border-t">
+              <div 
+                className="p-4 border-t transition-colors duration-300"
+                style={{ backgroundColor: 'var(--preview-accent)', opacity: 0.1 }}
+              >
                 <div className="flex justify-between items-center">
                   <div className="flex gap-4">
-                    <div className="h-2 w-16 bg-accent rounded animate-pulse" />
-                    <div className="h-2 w-16 bg-accent rounded animate-pulse delay-75" />
-                    <div className="h-2 w-16 bg-accent rounded animate-pulse delay-150" />
+                    {[0, 75, 150].map((delay) => (
+                      <div 
+                        key={delay}
+                        className="h-2 w-16 rounded animate-pulse"
+                        style={{ 
+                          backgroundColor: 'var(--preview-accent)',
+                          animationDelay: `${delay}ms`
+                        }}
+                      />
+                    ))}
                   </div>
                   <div className="flex gap-2">
-                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse" />
-                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse delay-75" />
-                    <div className="w-6 h-6 rounded-full bg-accent/30 animate-pulse delay-150" />
+                    {[0, 75, 150].map((delay) => (
+                      <div 
+                        key={delay}
+                        className="w-6 h-6 rounded-full animate-pulse"
+                        style={{ 
+                          backgroundColor: 'var(--preview-accent)', 
+                          opacity: 0.3,
+                          animationDelay: `${delay}ms`
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Visualização automática da combinação selecionada
-            </p>
+            <div className="mt-4 text-center space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Visualização em tempo real da combinação selecionada
+              </p>
+              {selectedPalette && (
+                <div className="flex items-center justify-center gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full border"
+                      style={{ backgroundColor: selectedPalette.primary }}
+                    />
+                    <span className="text-muted-foreground">Principal</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full border"
+                      style={{ backgroundColor: selectedPalette.secondary }}
+                    />
+                    <span className="text-muted-foreground">Secundária</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full border"
+                      style={{ backgroundColor: selectedPalette.accent }}
+                    />
+                    <span className="text-muted-foreground">Destaque</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

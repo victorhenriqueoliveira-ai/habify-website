@@ -11,7 +11,7 @@ import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import type { WizardData, LayoutType, ColorPalette } from '@/types/wizard';
+import type { WizardData, LayoutType, ColorPalette, PaletteData } from '@/types/wizard';
 import type { PropertyData } from '@/hooks/useMultipleProjects';
 
 const steps = [
@@ -179,6 +179,25 @@ const ProjectWizardPage = () => {
     try {
       const userId = user.userId || user.id;
       
+      // Build palette data structure
+      const colorOptions = [
+        { id: 'blue', primary: '#0B82FF', secondary: '#D8EEFF', accent: '#0056D6' },
+        { id: 'orange', primary: '#FF6B35', secondary: '#FFE5DC', accent: '#CC4417' },
+        { id: 'green', primary: '#10B981', secondary: '#D1FAE5', accent: '#047857' },
+        { id: 'purple', primary: '#8B5CF6', secondary: '#EDE9FE', accent: '#6D28D9' },
+        { id: 'neutral', primary: '#4B5563', secondary: '#F3F4F6', accent: '#1F2937' },
+      ];
+      
+      const selectedPalette = colorOptions.find(c => c.id === wizardData.colorPalette);
+      const paletteData: PaletteData | undefined = selectedPalette ? {
+        id: selectedPalette.id as ColorPalette,
+        colors: {
+          primary: selectedPalette.primary,
+          secondary: selectedPalette.secondary,
+          accent: selectedPalette.accent,
+        }
+      } : undefined;
+      
       const result = await createProject({
         userId,
         title: wizardData.companyName || 'Novo Projeto',
@@ -203,6 +222,8 @@ const ProjectWizardPage = () => {
           contactPhone: wizardData.contactPhone,
           contactMobile: wizardData.contactMobile,
           contactEmail: wizardData.contactEmail,
+          palette: paletteData,
+          properties: portfolioProperties,
         },
       });
 
