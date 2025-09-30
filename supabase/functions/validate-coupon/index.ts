@@ -28,10 +28,12 @@ serve(async (req) => {
 
     console.log('Validating coupon:', couponId);
 
-    // Validate coupon with AbacatePay
-    const response = await fetch(`https://api.abacatepay.com/v1/coupon/${couponId}`, {
+    // Validate coupon with AbacatePay using the correct endpoint
+    const response = await fetch(`https://api.abacatepay.com/v1/coupons/${couponId}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${abacatePayApiKey}`,
+        'Content-Type': 'application/json',
       },
     });
 
