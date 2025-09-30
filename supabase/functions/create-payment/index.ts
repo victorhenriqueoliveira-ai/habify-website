@@ -20,6 +20,7 @@ interface PaymentRequest {
     isLoggedInPurchase?: boolean;
     userId?: string;
   };
+  couponId?: string;
 }
 
 serve(async (req) => {
@@ -45,7 +46,7 @@ serve(async (req) => {
     );
 
     // Parse request body
-    const { planId, customerData }: PaymentRequest = await req.json();
+    const { planId, customerData, couponId }: PaymentRequest = await req.json();
 
     console.log('Creating payment for plan:', planId, 'customer:', customerData.email);
 
@@ -165,7 +166,7 @@ serve(async (req) => {
       : 'https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook';
     
     // Determine payment methods based on user selection
-    const paymentMethods = customerData.paymentMethod === 'CARD' ? ['CREDIT_CARD'] : ['PIX'];
+    const paymentMethods = customerData.paymentMethod === 'CARD' ? ['CARD'] : ['PIX'];
     
     const billingPayload: any = {
       frequency: 'ONE_TIME',
@@ -191,6 +192,11 @@ serve(async (req) => {
     // Add installments if CARD method
     if (customerData.paymentMethod === 'CARD' && customerData.installments) {
       billingPayload.installments = customerData.installments;
+    }
+
+    // Add coupon if provided
+    if (couponId) {
+      billingPayload.coupon = { id: couponId };
     }
     
     console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));

@@ -25,7 +25,7 @@ interface PaymentResponse {
 export const usePayment = () => {
   const [loading, setLoading] = useState(false);
 
-  const createPayment = async (planId: string, customerData: CustomerData): Promise<PaymentResponse> => {
+  const createPayment = async (planId: string, customerData: CustomerData, couponId?: string): Promise<PaymentResponse> => {
     try {
       setLoading(true);
       
@@ -33,6 +33,7 @@ export const usePayment = () => {
         body: {
           planId,
           customerData,
+          couponId,
         },
       });
 

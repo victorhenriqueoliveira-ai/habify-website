@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.get-db-logs]
 verify_jwt = false
+
+[functions.validate-coupon]
+verify_jwt = false
