@@ -8,6 +8,10 @@ interface CustomerData {
   phone?: string;
   cpf?: string;
   password: string;
+  paymentMethod?: 'PIX' | 'CARD';
+  installments?: number;
+  isLoggedInPurchase?: boolean;
+  userId?: string;
 }
 
 interface PaymentResponse {

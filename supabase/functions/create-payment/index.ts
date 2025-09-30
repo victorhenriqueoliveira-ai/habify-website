@@ -15,6 +15,10 @@ interface PaymentRequest {
     phone?: string;
     cpf?: string;
     password: string;
+    paymentMethod?: 'PIX' | 'CARD';
+    installments?: number;
+    isLoggedInPurchase?: boolean;
+    userId?: string;
   };
 }
 
@@ -75,29 +79,49 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // First create inactive profile (not in Supabase Auth yet)
-    console.log('Creating inactive profile for:', customerData.email);
-    
-    const { data: profile, error: profileError } = await supabaseService
-      .from('profiles')
-      .insert({
-        name: customerData.name,
-        email: customerData.email,
-        phone: customerData.phone || null,
-        role: 'user',
-        is_active: false, // Will be activated when payment is confirmed
-        user_id: null // Will be set when auth user is created
-      })
-      .select()
-      .single();
+    let profileId: string;
 
-    if (profileError) {
-      console.error('Failed to create profile:', profileError);
-      throw new Error('Erro ao criar perfil do usuário');
+    // Se for compra de usuário logado, usa o perfil existente
+    if (customerData.isLoggedInPurchase && customerData.userId) {
+      console.log('Using existing profile for logged in user:', customerData.userId);
+      
+      const { data: existingProfile, error: profileFetchError } = await supabaseService
+        .from('profiles')
+        .select('id')
+        .eq('user_id', customerData.userId)
+        .single();
+
+      if (profileFetchError || !existingProfile) {
+        console.error('Failed to find existing profile:', profileFetchError);
+        throw new Error('Perfil de usuário não encontrado');
+      }
+
+      profileId = existingProfile.id;
+    } else {
+      // Create inactive profile (not in Supabase Auth yet)
+      console.log('Creating inactive profile for:', customerData.email);
+      
+      const { data: profile, error: profileError } = await supabaseService
+        .from('profiles')
+        .insert({
+          name: customerData.name,
+          email: customerData.email,
+          phone: customerData.phone || null,
+          role: 'user',
+          is_active: false, // Will be activated when payment is confirmed
+          user_id: null // Will be set when auth user is created
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Failed to create profile:', profileError);
+        throw new Error('Erro ao criar perfil do usuário');
+      }
+
+      console.log('Profile created:', profile.id);
+      profileId = profile.id;
     }
-
-    console.log('Profile created:', profile.id);
-    const profileId = profile.id;
 
     // Now create a customer in AbacatePay
     const customerPayload = {
@@ -139,10 +163,13 @@ serve(async (req) => {
     const webhookUrl = origin.includes('localhost') || origin.includes('lovable.dev') 
       ? `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`
       : 'https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook';
-      
-    const billingPayload = {
+    
+    // Determine payment methods based on user selection
+    const paymentMethods = customerData.paymentMethod === 'CARD' ? ['CREDIT_CARD'] : ['PIX'];
+    
+    const billingPayload: any = {
       frequency: 'ONE_TIME',
-      methods: ['PIX'],
+      methods: paymentMethods,
       products: [{
         externalId: planId,
         name: plan.name,
@@ -160,6 +187,11 @@ serve(async (req) => {
       webhookUrl: webhookUrl,
       externalId: `habify-${planId}-${Date.now()}`,
     };
+
+    // Add installments if CARD method
+    if (customerData.paymentMethod === 'CARD' && customerData.installments) {
+      billingPayload.installments = customerData.installments;
+    }
     
     console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));
 
@@ -208,12 +240,15 @@ serve(async (req) => {
         abacatepay_id: responseData.id,
         amount: plan.price,
         status: 'pending',
+        payment_method: customerData.paymentMethod || 'PIX',
         payment_data: {
           customerData: {
             ...customerData,
-            password: customerData.password // Store password for later auth creation
+            password: customerData.isLoggedInPurchase ? undefined : customerData.password // Store password only for new users
           },
           abacatePayData,
+          installments: customerData.installments,
+          isLoggedInPurchase: customerData.isLoggedInPurchase,
         }
       })
       .select()

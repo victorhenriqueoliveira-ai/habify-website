@@ -159,6 +159,7 @@ const NewProjectPurchasePage = () => {
             setSelectedPlan(null);
           }}
           plan={plans.find(p => p.id === selectedPlan) || null}
+          isLoggedInPurchase={true}
         />
       )}
     </div>

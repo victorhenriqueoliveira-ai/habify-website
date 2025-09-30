@@ -383,22 +383,28 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
           <TabsContent value="photos" className="flex-1 overflow-auto">
             <Card>
               <CardHeader>
-                <CardTitle>Fotos do Projeto ({project.photos.length})</CardTitle>
+                <CardTitle>
+                  Fotos do Projeto ({Array.isArray(project.photos) ? project.photos.length : 0})
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {project.photos.length === 0 ? (
+                {!project.photos || !Array.isArray(project.photos) || project.photos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>Nenhuma foto enviada ainda</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {project.photos.map((photo, index) => (
-                      <div key={index} className="aspect-square overflow-hidden rounded-lg border">
+                    {project.photos.filter(photo => photo && typeof photo === 'string').map((photo, index) => (
+                      <div key={index} className="aspect-square overflow-hidden rounded-lg border bg-muted">
                         <img
                           src={photo}
                           alt={`Foto ${index + 1} do projeto`}
                           className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                           onClick={() => window.open(photo, '_blank')}
+                          onError={(e) => {
+                            console.error('Erro ao carregar foto:', photo);
+                            (e.target as HTMLImageElement).src = '/placeholder.svg';
+                          }}
                         />
                       </div>
                     ))}

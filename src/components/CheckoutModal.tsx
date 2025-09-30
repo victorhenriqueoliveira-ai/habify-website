@@ -5,8 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, CreditCard, Shield, CheckCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, CreditCard, Shield, CheckCircle, QrCode } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Plan } from '@/hooks/usePlans';
 
@@ -14,14 +17,18 @@ interface CheckoutModalProps {
   plan: Plan | null;
   isOpen: boolean;
   onClose: () => void;
+  isLoggedInPurchase?: boolean; // Novo prop para indicar compra de usuário logado
 }
 
-export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => {
+export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = false }: CheckoutModalProps) => {
   const { createPayment, loading } = usePayment();
+  const { user } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
+  const [installments, setInstallments] = useState('1');
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     cpf: '',
     password: '',
     confirmPassword: '',
@@ -55,14 +62,17 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
       return false;
     }
 
-    if (!formData.password || formData.password.length < 6) {
-      toast.error('Senha deve ter pelo menos 6 caracteres');
-      return false;
-    }
+    // Se for compra de usuário logado, não precisa validar senha
+    if (!isLoggedInPurchase) {
+      if (!formData.password || formData.password.length < 6) {
+        toast.error('Senha deve ter pelo menos 6 caracteres');
+        return false;
+      }
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Senhas não coincidem');
-      return false;
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Senhas não coincidem');
+        return false;
+      }
     }
 
     return true;
@@ -80,6 +90,10 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
         phone: formData.phone.replace(/\D/g, ''),
         cpf: formData.cpf.replace(/\D/g, ''),
         password: formData.password,
+        paymentMethod,
+        installments: paymentMethod === 'CARD' ? parseInt(installments) : undefined,
+        isLoggedInPurchase,
+        userId: isLoggedInPurchase ? user?.id : undefined,
       });
 
       if (response.success && response.paymentUrl) {
@@ -176,6 +190,55 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
           {/* Checkout Form */}
           <div className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Payment Method Selection */}
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center space-x-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Método de Pagamento</span>
+                </h3>
+
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD')}>
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="PIX" id="pix" />
+                    <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
+                      <QrCode className="h-4 w-4 mr-2" />
+                      PIX (Pagamento Instantâneo)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="CARD" id="card" />
+                    <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Cartão de Crédito (até 12x)
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {paymentMethod === 'CARD' && (
+                  <div>
+                    <Label htmlFor="installments">Parcelamento</Label>
+                    <Select value={installments} onValueChange={setInstallments}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => {
+                          const installmentValue = plan ? plan.price / num : 0;
+                          return (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num}x de R$ {installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              {num === 1 ? ' (sem juros)' : ''}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
               <div className="space-y-4">
                 <h3 className="font-semibold flex items-center space-x-2">
                   <CreditCard className="h-4 w-4" />
@@ -191,6 +254,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Seu nome completo"
                     required
+                    disabled={isLoggedInPurchase}
                   />
                 </div>
 
@@ -203,6 +267,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="seu@email.com"
                     required
+                    disabled={isLoggedInPurchase}
                   />
                 </div>
 
@@ -230,31 +295,33 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="password">Senha *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange('password', e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      required
-                    />
-                  </div>
+                {!isLoggedInPurchase && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="password">Senha *</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      placeholder="Repita a senha"
-                      required
-                    />
+                    <div>
+                      <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                        placeholder="Repita a senha"
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <Separator />
@@ -282,7 +349,8 @@ export const CheckoutModal = ({ plan, isOpen, onClose }: CheckoutModalProps) => 
             </form>
 
             <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>• Aceita PIX e Cartão de Crédito</p>
+              <p>• PIX (instantâneo) ou Cartão de Crédito (até 12x)</p>
+              <p>• Pagamento 100% seguro</p>
               <p>• Garantia de 30 dias</p>
               <p>• Suporte direto via WhatsApp</p>
             </div>
