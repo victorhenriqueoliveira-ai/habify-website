@@ -71,7 +71,60 @@ serve(async (req) => {
       throw new Error('Plano não encontrado. Tente novamente.');
     }
 
-    console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
+    // Validate and apply coupon discount if provided
+    let finalPrice = plan.price;
+    let appliedCoupon = null;
+
+    if (couponId) {
+      console.log('Validating coupon:', couponId);
+      
+      const couponResponse = await fetch('https://api.abacatepay.com/v1/coupon/list', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (couponResponse.ok) {
+        const couponsData = await couponResponse.json();
+        const coupon = couponsData.data?.find((c: any) => 
+          c.id.toUpperCase() === couponId.toUpperCase()
+        );
+
+        if (coupon && coupon.status === 'ACTIVE') {
+          if (coupon.maxRedeems === -1 || coupon.redeems < coupon.maxRedeems) {
+            appliedCoupon = {
+              id: coupon.id,
+              discountKind: coupon.discountKind,
+              discount: coupon.discount
+            };
+
+            // Calculate discounted price
+            if (coupon.discountKind === 'PERCENTAGE') {
+              finalPrice = plan.price * (1 - coupon.discount / 100);
+            } else if (coupon.discountKind === 'FIXED') {
+              finalPrice = Math.max(0, plan.price - coupon.discount);
+            }
+
+            console.log('Coupon applied:', {
+              originalPrice: plan.price,
+              finalPrice,
+              discount: coupon.discount,
+              discountKind: coupon.discountKind
+            });
+          } else {
+            console.log('Coupon has no remaining uses');
+          }
+        } else {
+          console.log('Coupon not found or inactive');
+        }
+      } else {
+        console.log('Failed to validate coupon, proceeding without discount');
+      }
+    }
+
+    console.log('Creating payment with AbacatePay for plan:', plan.name, 'original price:', plan.price, 'final price:', finalPrice);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -174,9 +227,11 @@ serve(async (req) => {
       products: [{
         externalId: planId,
         name: plan.name,
-        description: plan.description || plan.name,
+        description: appliedCoupon 
+          ? `${plan.description || plan.name} (Cupom ${appliedCoupon.id} aplicado)`
+          : plan.description || plan.name,
         quantity: 1,
-        price: Math.round(plan.price * 100), // Convert to cents
+        price: Math.round(finalPrice * 100), // Use final price with discount
       }],
       customerId: customerId,
       returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
@@ -192,13 +247,6 @@ serve(async (req) => {
     // Add installments if CARD method
     if (customerData.paymentMethod === 'CARD' && customerData.installments) {
       billingPayload.installments = customerData.installments;
-    }
-
-    // Add coupon if provided
-    if (couponId) {
-      billingPayload.allowCoupons = true;
-      billingPayload.coupons = [couponId.trim().toUpperCase()];
-      console.log('Coupon added to billing:', couponId);
     }
     
     console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));
@@ -233,18 +281,10 @@ serve(async (req) => {
       throw new Error('Resposta inválida do sistema de pagamento.');
     }
 
-    let paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
+    const paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
     if (!paymentUrl) {
       console.error('No payment URL in response:', abacatePayData);
       throw new Error('URL de pagamento não foi gerada.');
-    }
-
-    // Add coupon as query parameter to pre-fill it in the checkout
-    if (couponId) {
-      const url = new URL(paymentUrl);
-      url.searchParams.set('coupon', couponId.trim().toUpperCase());
-      paymentUrl = url.toString();
-      console.log('Coupon added to checkout URL:', paymentUrl);
     }
 
     // Create order record with profile reference
@@ -254,7 +294,7 @@ serve(async (req) => {
         user_id: profileId, // Reference to profile, not auth.users yet
         plan_id: planId,
         abacatepay_id: responseData.id,
-        amount: plan.price,
+        amount: finalPrice, // Store final price with discount
         status: 'pending',
         payment_method: customerData.paymentMethod || 'PIX',
         payment_data: {
@@ -265,6 +305,8 @@ serve(async (req) => {
           abacatePayData,
           installments: customerData.installments,
           isLoggedInPurchase: customerData.isLoggedInPurchase,
+          originalPrice: plan.price,
+          appliedCoupon: appliedCoupon, // Store coupon info
         }
       })
       .select()

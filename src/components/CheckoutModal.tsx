@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, CreditCard, Shield, CheckCircle, QrCode } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Plan } from '@/hooks/usePlans';
 
@@ -87,11 +88,27 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
       return;
     }
 
-    // Na AbacatePay, cupons são aplicados diretamente na página de checkout
-    // Apenas salvamos o código para enviar no payload
-    const upperCoupon = couponCode.trim().toUpperCase();
-    setCouponData({ id: upperCoupon });
-    toast.success(`✓ Cupom ${upperCoupon} será aplicado no checkout da AbacatePay`);
+    setValidatingCoupon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-coupon', {
+        body: { couponId: couponCode.trim() }
+      });
+
+      if (error || !data?.success) {
+        toast.error(data?.error || 'Erro ao validar cupom');
+        setCouponData(null);
+        return;
+      }
+
+      setCouponData(data.coupon);
+      toast.success(`✓ Cupom aplicado: ${data.coupon.discountKind === 'PERCENTAGE' ? `${data.coupon.discount}% de desconto` : `R$ ${data.coupon.discount.toFixed(2)} de desconto`}`);
+    } catch (error) {
+      console.error('Error validating coupon:', error);
+      toast.error('Erro ao validar cupom');
+      setCouponData(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
   };
 
   const removeCoupon = () => {
@@ -194,10 +211,35 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
 
               <Separator />
 
+              {couponData && (
+                <>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Desconto ({couponData.id}):</span>
+                      <span>
+                        {couponData.discountKind === 'PERCENTAGE' 
+                          ? `- ${couponData.discount}%` 
+                          : `- R$ ${couponData.discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                      </span>
+                    </div>
+                  </div>
+                  <Separator />
+                </>
+              )}
+
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total:</span>
                 <span className="text-primary">
-                  R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {(couponData 
+                    ? (couponData.discountKind === 'PERCENTAGE' 
+                      ? plan.price * (1 - couponData.discount / 100)
+                      : Math.max(0, plan.price - couponData.discount))
+                    : plan.price
+                  ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 

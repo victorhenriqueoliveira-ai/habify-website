@@ -1,36 +1,74 @@
-# Sistema de Cupons de Desconto - AbacatePay
+# Sistema de Cupons de Desconto - Habify + AbacatePay
 
-## Como Funciona
+## Como Funciona (Versão Atualizada)
 
-A AbacatePay **não possui um endpoint separado** para validar cupons antes de criar uma cobrança. Os cupons são aplicados diretamente na página de checkout da AbacatePay.
+O sistema de cupons foi implementado para aplicar descontos **automaticamente no checkout da Habify**, enviando o valor final já com desconto para a AbacatePay.
 
 ## Fluxo de Integração
 
-### 1. No Checkout (Frontend)
+### 1. Usuário Insere Cupom (Frontend)
 ```typescript
-// O usuário insere o código do cupom
+// O usuário digita o código do cupom
 const couponCode = "DANILO20";
 
-// O sistema salva localmente para enviar no payload
-setCouponData({ id: couponCode });
+// Sistema valida com a AbacatePay
+const { data } = await supabase.functions.invoke('validate-coupon', {
+  body: { couponId: couponCode }
+});
+
+// Resposta:
+{
+  "success": true,
+  "coupon": {
+    "id": "DANILO20",
+    "discountKind": "PERCENTAGE",
+    "discount": 20
+  }
+}
 ```
 
-### 2. Criação do Billing (Backend)
+### 2. Cálculo do Desconto (Frontend)
 ```typescript
-const billingPayload = {
-  // ... outros campos
-  allowCoupons: true,  // Permite uso de cupons
-  coupons: ["DANILO20"],  // Array com códigos disponíveis
-};
+// Desconto percentual
+const finalPrice = originalPrice * (1 - discount / 100);
+// Ex: R$ 897 * (1 - 20/100) = R$ 717,60
 
-// POST https://api.abacatepay.com/v1/billing/create
+// Ou desconto fixo
+const finalPrice = Math.max(0, originalPrice - discount);
+// Ex: R$ 897 - R$ 50 = R$ 847
 ```
 
-### 3. Na Página da AbacatePay
-- O usuário é redirecionado para o checkout da AbacatePay
-- O cupom é automaticamente aplicado se for válido
-- O desconto é calculado e exibido
-- O valor final já vem com desconto aplicado
+### 3. Criação do Billing (Backend)
+```typescript
+// Edge Function: create-payment
+const finalPrice = plan.price; // R$ 897
+
+if (couponId) {
+  // Valida cupom na AbacatePay
+  const coupon = await validateCouponWithAbacatePay(couponId);
+  
+  if (coupon.discountKind === 'PERCENTAGE') {
+    finalPrice = plan.price * (1 - coupon.discount / 100);
+  } else {
+    finalPrice = Math.max(0, plan.price - coupon.discount);
+  }
+}
+
+// Envia para AbacatePay com preço final
+const billingPayload = {
+  products: [{
+    name: plan.name,
+    price: Math.round(finalPrice * 100), // Valor JÁ com desconto
+    description: `${plan.name} (Cupom ${couponId} aplicado)`
+  }],
+  // ...outros campos
+};
+```
+
+### 4. Checkout na AbacatePay
+- O usuário vê o valor final **já com desconto aplicado**
+- Não precisa inserir o cupom novamente
+- O pagamento é processado com o valor correto
 
 ## Estrutura do Cupom
 
@@ -38,73 +76,152 @@ const billingPayload = {
 {
   "id": "DANILO20",
   "discountKind": "PERCENTAGE",  // ou "FIXED"
-  "discount": 20,  // 20% ou R$ 20,00 (em centavos: 2000)
+  "discount": 20,  // 20% ou R$ 20,00
   "maxRedeems": -1,  // -1 = ilimitado
-  "redeemsCount": 5,
+  "redeems": 5,  // Quantos já foram usados
   "status": "ACTIVE",
   "devMode": true
 }
 ```
 
-## Validações Automáticas da AbacatePay
+## Validações Implementadas
 
-A AbacatePay valida automaticamente:
-- ✅ Se o cupom existe
-- ✅ Se está ativo (`status === "ACTIVE"`)
-- ✅ Se não atingiu o limite de usos
-- ✅ Se está no ambiente correto (devMode)
+### Edge Function: `validate-coupon`
+- ✅ Lista todos os cupons da AbacatePay
+- ✅ Encontra o cupom pelo ID (case-insensitive)
+- ✅ Verifica se está `ACTIVE`
+- ✅ Verifica se não atingiu `maxRedeems`
+- ✅ Retorna tipo e valor do desconto
 
-## Limitações
+### Edge Function: `create-payment`
+- ✅ Valida cupom antes de criar billing
+- ✅ Calcula preço final com desconto
+- ✅ Envia valor já descontado para AbacatePay
+- ✅ Salva informações do cupom em `payment_data`
 
-❌ **Não é possível:**
-- Validar cupons ANTES de criar o billing
-- Mostrar o desconto exato no seu checkout
-- Verificar se o cupom existe sem criar uma cobrança
+### Frontend: `CheckoutModal`
+- ✅ Validação em tempo real
+- ✅ Exibição do desconto antes do checkout
+- ✅ Cálculo do total com desconto
+- ✅ Feedback visual do cupom aplicado
 
-✅ **Alternativa:**
-- Mostrar mensagem informativa: "O desconto será calculado automaticamente"
-- Enviar o cupom e deixar a AbacatePay aplicar
-- Verificar na resposta do webhook se o cupom foi aplicado
+## Metadados Salvos
 
-## Payload Exemplo
-
-### Request
 ```json
 {
-  "frequency": "ONE_TIME",
-  "methods": ["PIX", "CARD"],
-  "products": [{
-    "externalId": "plan-123",
-    "name": "Plano Premium",
-    "price": 10000
-  }],
-  "allowCoupons": true,
-  "coupons": ["DANILO20", "PROMO10"],
-  "customerId": "cust_abc123"
+  "originalPrice": 897,
+  "appliedCoupon": {
+    "id": "DANILO20",
+    "discountKind": "PERCENTAGE",
+    "discount": 20
+  },
+  "customerData": { /* ... */ },
+  "abacatePayData": { /* ... */ }
 }
 ```
 
-### Response (com cupom aplicado)
-```json
-{
-  "data": {
-    "id": "bill_123456",
-    "url": "https://pay.abacatepay.com/bill-123456",
-    "amount": 10000,
-    "discountApplied": 2000,  // Desconto de R$ 20,00
-    "amountFinal": 8000,  // R$ 80,00 final
-    "status": "PENDING",
-    "coupon": {
-      "id": "DANILO20",
-      "discountKind": "PERCENTAGE",
-      "discount": 20
-    }
+## Vantagens desta Abordagem
+
+✅ **Transparência Total**
+- Usuário vê o desconto ANTES de ir para AbacatePay
+- Cálculo em tempo real
+- Feedback imediato
+
+✅ **Automático**
+- Não precisa inserir cupom na AbacatePay
+- Valor já vem com desconto
+- Experiência fluida
+
+✅ **Seguro**
+- Validação com API oficial da AbacatePay
+- Verificação de status e limites
+- Rastreabilidade completa
+
+✅ **Rastreável**
+- Informações salvas no pedido
+- Histórico de cupons aplicados
+- Auditoria completa
+
+## Limitações da AbacatePay (Contornadas)
+
+❌ **A AbacatePay NÃO suporta:**
+- Aplicação automática via campo `coupons`
+- Pré-aplicação de cupons no checkout
+- Validação via endpoint `/v1/coupon/{id}`
+
+✅ **Nossa Solução:**
+- Validamos via `/v1/coupon/list`
+- Aplicamos desconto no lado da Habify
+- Enviamos valor final para AbacatePay
+- Experiência melhor para o usuário
+
+## Testando Cupons
+
+### 1. Criar Cupom na AbacatePay
+```
+- Acesse o painel da AbacatePay
+- Vá em Cupons > Criar Novo
+- Configure: ID, tipo, valor, limite
+- Ative o cupom (status: ACTIVE)
+```
+
+### 2. Testar no Checkout
+```
+1. Abra o checkout da Habify
+2. Digite o código do cupom
+3. Clique em "Validar Cupom"
+4. Veja o desconto sendo aplicado
+5. Prossiga para pagamento
+6. Confirme valor na AbacatePay
+```
+
+### 3. Verificar Logs
+```
+- Edge Function: validate-coupon
+  - Logs de validação
+  - Status do cupom
+  
+- Edge Function: create-payment
+  - Preço original
+  - Preço final
+  - Cupom aplicado
+```
+
+## API Endpoints
+
+### Validar Cupom
+```typescript
+POST /functions/v1/validate-coupon
+Body: { couponId: "DANILO20" }
+
+Response: {
+  success: true,
+  coupon: {
+    id: "DANILO20",
+    discountKind: "PERCENTAGE",
+    discount: 20
   }
+}
+```
+
+### Criar Pagamento (com cupom)
+```typescript
+POST /functions/v1/create-payment
+Body: {
+  planId: "uuid",
+  customerData: { /* ... */ },
+  couponId: "DANILO20"  // Opcional
+}
+
+Response: {
+  success: true,
+  paymentUrl: "https://...",
+  orderId: "uuid"
 }
 ```
 
 ## Documentação Oficial
 
-- [Criar Cobrança](https://docs.abacatepay.com/api-reference/criar-uma-nova-cobran%C3%A7a)
-- [Parâmetro allowCoupons](https://docs.abacatepay.com/api-reference/criar-uma-nova-cobran%C3%A7a#body-allow-coupons)
-- [Parâmetro coupons](https://docs.abacatepay.com/api-reference/criar-uma-nova-cobran%C3%A7a#body-coupons)
+- [API AbacatePay - Criar Cobrança](https://docs.abacatepay.com/pages/payment/create)
+- [API AbacatePay - Listar Cupons](https://docs.abacatepay.com/api-reference/listar-todos-os-cupons)
+- [Documentação de Cupons](https://docs.abacatepay.com/pages/payment/create#body-coupons)
