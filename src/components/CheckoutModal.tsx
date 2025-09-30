@@ -87,65 +87,17 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
       return;
     }
 
-    setValidatingCoupon(true);
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { couponId: couponCode.trim().toUpperCase() },
-      });
-
-      console.log('Coupon validation response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        toast.error('Erro ao validar cupom');
-        setCouponData(null);
-        return;
-      }
-
-      if (!data.success) {
-        toast.error(data.error || 'Cupom inválido ou expirado');
-        setCouponData(null);
-        return;
-      }
-
-      if (data.coupon) {
-        setCouponData(data.coupon);
-        toast.success(`✓ Cupom aplicado: ${data.coupon.discountKind === 'PERCENTAGE' ? `${data.coupon.discount}% OFF` : `R$ ${(data.coupon.discount / 100).toFixed(2)} OFF`}`);
-      } else {
-        toast.error('Cupom inválido ou inativo');
-        setCouponData(null);
-      }
-    } catch (error) {
-      console.error('Validation error:', error);
-      toast.error('Erro ao validar cupom');
-      setCouponData(null);
-    } finally {
-      setValidatingCoupon(false);
-    }
+    // Na AbacatePay, cupons são aplicados diretamente na página de checkout
+    // Apenas salvamos o código para enviar no payload
+    const upperCoupon = couponCode.trim().toUpperCase();
+    setCouponData({ id: upperCoupon });
+    toast.success(`✓ Cupom ${upperCoupon} será aplicado no checkout da AbacatePay`);
   };
 
   const removeCoupon = () => {
     setCouponData(null);
     setCouponCode('');
     toast.info('Cupom removido');
-  };
-
-  const calculateDiscount = () => {
-    if (!plan || !couponData) return 0;
-
-    const amount = plan.price;
-    if (couponData.discountKind === 'PERCENTAGE') {
-      return amount * (couponData.discount / 100);
-    } else if (couponData.discountKind === 'FIXED') {
-      return couponData.discount / 100;
-    }
-    return 0;
-  };
-
-  const calculateFinalAmount = () => {
-    if (!plan) return 0;
-    return Math.max(0, plan.price - calculateDiscount());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -317,23 +269,16 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                     placeholder="Digite o código do cupom"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    disabled={validatingCoupon || !!couponData}
+                    disabled={!!couponData}
                   />
                   {!couponData ? (
                     <Button 
                       type="button" 
                       variant="outline"
                       onClick={validateCoupon}
-                      disabled={validatingCoupon || !couponCode.trim()}
+                      disabled={!couponCode.trim()}
                     >
-                      {validatingCoupon ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Validando...
-                        </>
-                      ) : (
-                        'Aplicar'
-                      )}
+                      Aplicar
                     </Button>
                   ) : (
                     <Button 
@@ -349,19 +294,12 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md space-y-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                        ✓ Cupom aplicado: {couponData.id}
+                        ✓ Cupom {couponData.id} será aplicado
                       </p>
                     </div>
                     <p className="text-xs text-green-600 dark:text-green-300">
-                      Desconto: {couponData.discountKind === 'PERCENTAGE' 
-                        ? `${couponData.discount}% OFF` 
-                        : `R$ ${(couponData.discount / 100).toFixed(2)} OFF`}
+                      O desconto será calculado automaticamente pela AbacatePay no checkout
                     </p>
-                    {couponData.maxRedeems !== -1 && (
-                      <p className="text-xs text-green-600 dark:text-green-300">
-                        Usos: {couponData.redeemsCount}/{couponData.maxRedeems}
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -454,24 +392,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               </div>
 
               <Separator />
-
-              {/* Price Summary */}
-              {couponData && (
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Valor do Plano:</span>
-                    <span>R$ {plan.price.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                    <span>Desconto:</span>
-                    <span>- R$ {calculateDiscount().toFixed(2)}</span>
-                  </div>
-                  <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span className="text-primary">R$ {calculateFinalAmount().toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
 
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Shield className="h-4 w-4" />

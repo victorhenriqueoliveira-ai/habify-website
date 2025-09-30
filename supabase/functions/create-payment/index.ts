@@ -196,7 +196,9 @@ serve(async (req) => {
 
     // Add coupon if provided
     if (couponId) {
-      billingPayload.coupon = { id: couponId };
+      billingPayload.allowCoupons = true;
+      billingPayload.coupons = [couponId.trim().toUpperCase()];
+      console.log('Coupon added to billing:', couponId);
     }
     
     console.log('AbacatePay billing payload with webhook:', JSON.stringify(billingPayload, null, 2));
