@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ExternalLink, MapPin, Home, Bed, Bath, Square, Calendar, User, MessageSquare } from 'lucide-react';
+import { ExternalLink, MapPin, Home, Bed, Bath, Square, Calendar, User, MessageSquare, Palette, Layout, Image, Building2, Mail, Phone, MapPinned } from 'lucide-react';
 import { Project, ProjectStatus } from '@/types/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
+import { usePortfolioProperties } from '@/hooks/usePortfolioProperties';
 import { ProjectChat } from './ProjectChat';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -48,6 +49,7 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   const { hasRole } = useAuth();
   const { updateProject } = useProjects();
   const { users } = useUsers();
+  const { properties: portfolioProperties } = usePortfolioProperties(project?.id);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   
   console.log('ProjectDetailsModal - project:', project);
@@ -61,8 +63,37 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   // Check if this is a realtor project with multiple properties
   const isRealtorProject = project.projectType === 'realtor_multiple';
   const corretorData = isRealtorProject ? project.features?.corretorData : null;
+  const wizardData = project.wizardData || {};
 
   const projectOwner = users.find(u => u.userId === project.userId);
+
+  const layoutLabels = {
+    classic: 'Clássico',
+    modern: 'Moderno',
+    minimalist: 'Minimalista',
+    vibrant: 'Vibrante',
+  };
+
+  const colorLabels = {
+    blue: 'Azul Profissional',
+    orange: 'Laranja Energia',
+    green: 'Verde Confiança',
+    purple: 'Roxo Sofisticado',
+    neutral: 'Neutro Elegante',
+  };
+
+  const propertyTypeLabels = {
+    apartment: 'Apartamento',
+    house: 'Casa',
+    commercial: 'Comercial',
+    land: 'Terreno',
+    penthouse: 'Cobertura',
+  };
+
+  const purposeLabels = {
+    sale: 'Venda',
+    rent: 'Aluguel',
+  };
 
   const handleStatusChange = async (newStatus: ProjectStatus) => {
     setUpdatingStatus(true);
@@ -117,8 +148,9 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
         </DialogHeader>
 
         <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Detalhes</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="details">Informações</TabsTrigger>
+            <TabsTrigger value="wizard">Dados do Wizard</TabsTrigger>
             <TabsTrigger value="photos">Fotos</TabsTrigger>
             <TabsTrigger value="chat">
               <MessageSquare className="w-4 h-4 mr-2" />
@@ -127,6 +159,183 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
           </TabsList>
 
           <TabsContent value="details" className="flex-1 overflow-auto space-y-4">
+            {/* Visual Design Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Palette className="w-5 h-5 mr-2" />
+                  Design Visual
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Layout */}
+                  {project.layoutChoice && (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <Layout className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <h4 className="font-medium">Layout</h4>
+                      </div>
+                      <Badge variant="outline" className="text-base">
+                        {layoutLabels[project.layoutChoice as keyof typeof layoutLabels] || project.layoutChoice}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Color Palette */}
+                  {wizardData.palette && (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <Palette className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <h4 className="font-medium">Paleta de Cores</h4>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">
+                          {colorLabels[wizardData.palette.id as keyof typeof colorLabels] || wizardData.palette.id}
+                        </p>
+                        <div className="flex gap-2">
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{ backgroundColor: wizardData.palette.colors.primary }}
+                            title="Primary"
+                          />
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{ backgroundColor: wizardData.palette.colors.secondary }}
+                            title="Secondary"
+                          />
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{ backgroundColor: wizardData.palette.colors.accent }}
+                            title="Accent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Logo */}
+                  {project.logoUrl && (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <Image className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <h4 className="font-medium">Logotipo</h4>
+                      </div>
+                      <img
+                        src={project.logoUrl}
+                        alt="Logo"
+                        className="h-16 object-contain bg-muted rounded p-2"
+                      />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Portfolio Properties */}
+            {portfolioProperties.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Building2 className="w-5 h-5 mr-2" />
+                    Imóveis do Portfólio ({portfolioProperties.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {portfolioProperties.map((property, index) => (
+                      <Card key={property.id} className="border">
+                        <CardContent className="pt-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-semibold text-lg">{property.title}</h4>
+                              <Badge variant="secondary">#{index + 1}</Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center text-sm">
+                                  <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                                  {property.location}
+                                </div>
+                                <div className="text-sm">
+                                  <span className="font-medium">Tipo: </span>
+                                  {propertyTypeLabels[property.propertyType as keyof typeof propertyTypeLabels] || property.propertyType}
+                                </div>
+                                <div className="text-sm">
+                                  <span className="font-medium">Finalidade: </span>
+                                  {purposeLabels[property.purpose as keyof typeof purposeLabels] || property.purpose}
+                                </div>
+                                <div className="text-lg font-bold text-green-600">
+                                  R$ {property.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                {property.bedrooms && (
+                                  <div className="flex items-center text-sm">
+                                    <Bed className="w-4 h-4 mr-1" />
+                                    {property.bedrooms} quartos
+                                  </div>
+                                )}
+                                {property.bathrooms && (
+                                  <div className="flex items-center text-sm">
+                                    <Bath className="w-4 h-4 mr-1" />
+                                    {property.bathrooms} banheiros
+                                  </div>
+                                )}
+                                <div className="flex items-center text-sm">
+                                  <Square className="w-4 h-4 mr-1" />
+                                  {property.area} m²
+                                </div>
+                                {property.parkingSpaces && (
+                                  <div className="text-sm">
+                                    🚗 {property.parkingSpaces} vagas
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {property.description && (
+                              <p className="text-sm text-muted-foreground">{property.description}</p>
+                            )}
+
+                            {property.amenities && property.amenities.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {property.amenities.map((amenity, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {amenity}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            {property.photos.length > 0 && (
+                              <div className="flex gap-2 overflow-x-auto">
+                                {property.photos.slice(0, 5).map((photo, photoIndex) => (
+                                  <img
+                                    key={photoIndex}
+                                    src={photo}
+                                    alt={`Foto ${photoIndex + 1}`}
+                                    className="w-24 h-24 object-cover rounded flex-shrink-0"
+                                  />
+                                ))}
+                                {property.photos.length > 5 && (
+                                  <div className="w-24 h-24 bg-muted rounded flex items-center justify-center text-sm">
+                                    +{property.photos.length - 5}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Client Info */}
               {hasRole(['admin', 'dev']) && (
@@ -378,6 +587,130 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="wizard" className="flex-1 overflow-auto space-y-4">
+            {/* Wizard Data */}
+            {Object.keys(wizardData).length > 0 && (
+              <div className="space-y-4">
+                {/* Profile Type */}
+                {wizardData.profileType && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Perfil</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge variant="outline" className="text-base">
+                        {wizardData.profileType === 'corretor' ? 'Corretor' : 'Imobiliária'}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Company & Owner Info */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Building2 className="w-5 h-5 mr-2" />
+                      Informações da Empresa
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {wizardData.ownerName && (
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Responsável</h4>
+                          <p>{wizardData.ownerName}</p>
+                        </div>
+                      )}
+                      {wizardData.companyName && (
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Nome da Empresa</h4>
+                          <p>{wizardData.companyName}</p>
+                        </div>
+                      )}
+                      {wizardData.creciNumber && (
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-1">CRECI</h4>
+                          <p>{wizardData.creciNumber} ({wizardData.creciType === 'individual' ? 'Individual' : 'Jurídico'})</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Address */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MapPinned className="w-5 h-5 mr-2" />
+                      Endereço
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {wizardData.addressCep && (
+                        <p className="text-sm"><span className="font-medium">CEP:</span> {wizardData.addressCep}</p>
+                      )}
+                      {wizardData.addressStreet && wizardData.addressNumber && (
+                        <p className="text-sm">
+                          <span className="font-medium">Rua:</span> {wizardData.addressStreet}, {wizardData.addressNumber}
+                          {wizardData.addressComplement && ` - ${wizardData.addressComplement}`}
+                        </p>
+                      )}
+                      {wizardData.addressNeighborhood && (
+                        <p className="text-sm"><span className="font-medium">Bairro:</span> {wizardData.addressNeighborhood}</p>
+                      )}
+                      {wizardData.addressCity && wizardData.addressState && (
+                        <p className="text-sm">
+                          <span className="font-medium">Cidade/Estado:</span> {wizardData.addressCity} - {wizardData.addressState}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Contact */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Phone className="w-5 h-5 mr-2" />
+                      Contatos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {wizardData.contactMobile && (
+                        <div className="flex items-center text-sm">
+                          <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Celular:</span> {wizardData.contactMobile}
+                        </div>
+                      )}
+                      {wizardData.contactPhone && (
+                        <div className="flex items-center text-sm">
+                          <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">Telefone:</span> {wizardData.contactPhone}
+                        </div>
+                      )}
+                      {wizardData.contactEmail && (
+                        <div className="flex items-center text-sm">
+                          <Mail className="w-4 h-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium mr-2">E-mail:</span> {wizardData.contactEmail}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {Object.keys(wizardData).length === 0 && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">Nenhum dado do wizard disponível</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="photos" className="flex-1 overflow-auto">
