@@ -27,9 +27,13 @@ serve(async (req) => {
     }
 
     console.log('Validating coupon:', couponId);
+    console.log('API Key exists:', !!abacatePayApiKey);
+
+    const apiUrl = `https://api.abacatepay.com/v1/coupons/${couponId}`;
+    console.log('Calling API URL:', apiUrl);
 
     // Validate coupon with AbacatePay using the correct endpoint
-    const response = await fetch(`https://api.abacatepay.com/v1/coupons/${couponId}`, {
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${abacatePayApiKey}`,
@@ -37,8 +41,15 @@ serve(async (req) => {
       },
     });
 
+    console.log('API Response status:', response.status);
+    console.log('API Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
+
+    // Try to get response body regardless of status
+    const responseText = await response.text();
+    console.log('API Response body:', responseText);
+
     if (!response.ok) {
-      console.error('Coupon not found or API error:', response.status);
+      console.error('Coupon validation failed:', response.status, responseText);
       return new Response(
         JSON.stringify({
           success: false,
@@ -51,7 +62,23 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse response:', parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Erro ao processar resposta da API',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     console.log('Coupon API response:', JSON.stringify(data, null, 2));
 
     const coupon = data.data;
