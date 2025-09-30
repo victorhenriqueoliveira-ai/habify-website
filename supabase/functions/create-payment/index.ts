@@ -233,10 +233,18 @@ serve(async (req) => {
       throw new Error('Resposta inválida do sistema de pagamento.');
     }
 
-    const paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
+    let paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
     if (!paymentUrl) {
       console.error('No payment URL in response:', abacatePayData);
       throw new Error('URL de pagamento não foi gerada.');
+    }
+
+    // Add coupon as query parameter to pre-fill it in the checkout
+    if (couponId) {
+      const url = new URL(paymentUrl);
+      url.searchParams.set('coupon', couponId.trim().toUpperCase());
+      paymentUrl = url.toString();
+      console.log('Coupon added to checkout URL:', paymentUrl);
     }
 
     // Create order record with profile reference
