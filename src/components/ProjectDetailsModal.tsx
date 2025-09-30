@@ -159,6 +159,27 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
           </TabsList>
 
           <TabsContent value="details" className="flex-1 overflow-auto space-y-4">
+            {/* Logotipo Section - Destacado */}
+            {project.logoUrl && (
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Image className="w-5 h-5 mr-2" />
+                    Logotipo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center p-6 bg-muted rounded-lg">
+                    <img
+                      src={project.logoUrl}
+                      alt="Logo do projeto"
+                      className="max-h-32 object-contain"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Visual Design Section */}
             <Card>
               <CardHeader>
@@ -168,7 +189,7 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Layout */}
                   {project.layoutChoice && (
                     <div>
@@ -213,24 +234,92 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                       </div>
                     </div>
                   )}
-
-                  {/* Logo */}
-                  {project.logoUrl && (
-                    <div>
-                      <div className="flex items-center mb-2">
-                        <Image className="w-4 h-4 mr-2 text-muted-foreground" />
-                        <h4 className="font-medium">Logotipo</h4>
-                      </div>
-                      <img
-                        src={project.logoUrl}
-                        alt="Logo"
-                        className="h-16 object-contain bg-muted rounded p-2"
-                      />
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Dados do Corretor/Imobiliária */}
+            {(wizardData.ownerName || wizardData.companyName) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Building2 className="w-5 h-5 mr-2" />
+                    {wizardData.profileType === 'corretor' ? 'Dados do Corretor' : 'Dados da Imobiliária'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {wizardData.ownerName && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Nome</p>
+                        <p className="font-medium">{wizardData.ownerName}</p>
+                      </div>
+                    )}
+                    {wizardData.companyName && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Empresa</p>
+                        <p className="font-medium">{wizardData.companyName}</p>
+                      </div>
+                    )}
+                    {wizardData.creciNumber && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">CRECI</p>
+                        <p className="font-medium">{wizardData.creciNumber} ({wizardData.creciType === 'individual' ? 'Individual' : 'Jurídico'})</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Endereço */}
+            {project.location && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MapPinned className="w-5 h-5 mr-2" />
+                    Endereço
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{project.location}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Contatos */}
+            {(wizardData.contactEmail || wizardData.contactMobile || wizardData.contactPhone) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Phone className="w-5 h-5 mr-2" />
+                    Contatos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {wizardData.contactEmail && (
+                      <div className="flex items-center">
+                        <Mail className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <p className="text-sm">{wizardData.contactEmail}</p>
+                      </div>
+                    )}
+                    {wizardData.contactMobile && (
+                      <div className="flex items-center">
+                        <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <p className="text-sm">Celular: {wizardData.contactMobile}</p>
+                      </div>
+                    )}
+                    {wizardData.contactPhone && wizardData.contactPhone !== wizardData.contactMobile && (
+                      <div className="flex items-center">
+                        <Phone className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <p className="text-sm">Telefone: {wizardData.contactPhone}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Portfolio Properties */}
             {portfolioProperties.length > 0 && (

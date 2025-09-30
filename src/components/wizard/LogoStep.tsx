@@ -69,61 +69,13 @@ export const LogoStep = ({
       <div>
         <Label className="text-lg font-semibold">Logotipo</Label>
         <p className="text-sm text-muted-foreground mt-1">
-          Você já possui um logotipo ou deseja criar um novo?
+          Faça upload do seu logotipo
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card
-          className={`cursor-pointer transition-all hover:shadow-lg ${
-            hasLogo
-              ? 'ring-2 ring-primary'
-              : 'hover:ring-1 hover:ring-border'
-          }`}
-          onClick={() => onHasLogoChange(true)}
-        >
-          <CardContent className="p-6 text-center">
-            <div className="mb-4 flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Upload className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Sim, já possuo</h3>
-            <p className="text-sm text-muted-foreground">
-              Faça upload do seu logotipo existente
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={`cursor-pointer transition-all hover:shadow-lg ${
-            !hasLogo
-              ? 'ring-2 ring-primary'
-              : 'hover:ring-1 hover:ring-border'
-          }`}
-          onClick={() => {
-            onHasLogoChange(false);
-            onLogoUrlChange('');
-          }}
-        >
-          <CardContent className="p-6 text-center">
-            <div className="mb-4 flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-secondary/50 flex items-center justify-center">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Não, desejo criar</h3>
-            <p className="text-sm text-muted-foreground">
-              Criaremos um logotipo para você
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {hasLogo && (
-        <Card>
-          <CardContent className="p-6">
-            <Label className="block mb-3">Upload do Logotipo</Label>
+      <Card>
+        <CardContent className="p-6">
+          <Label className="block mb-3">Upload do Logotipo</Label>
             
             {logoUrl ? (
               <div className="space-y-4">
@@ -173,17 +125,16 @@ export const LogoStep = ({
               </div>
             )}
 
-            <input
-              id="logo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileUpload}
-              disabled={uploading}
-            />
-          </CardContent>
-        </Card>
-      )}
+          <input
+            id="logo-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+            disabled={uploading}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

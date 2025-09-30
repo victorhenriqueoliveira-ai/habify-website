@@ -202,6 +202,17 @@ const ProjectWizardPage = () => {
         }
       } : undefined;
 
+      // Build full address
+      const fullAddress = [
+        wizardData.addressStreet,
+        wizardData.addressNumber,
+        wizardData.addressComplement,
+        wizardData.addressNeighborhood,
+        wizardData.addressCity,
+        wizardData.addressState,
+        wizardData.addressCep
+      ].filter(Boolean).join(', ');
+
       console.log('Creating project with data:', {
         layoutChoice: wizardData.layoutChoice,
         colorPalette: wizardData.colorPalette,
@@ -209,13 +220,23 @@ const ProjectWizardPage = () => {
         hasLogo: wizardData.hasLogo,
         paletteData,
         propertiesCount: portfolioProperties.length,
+        fullAddress,
       });
+      
+      // Build photos array (logo + property photos)
+      const projectPhotos: string[] = [];
+      if (wizardData.logoUrl) {
+        projectPhotos.push(wizardData.logoUrl);
+      }
       
       const result = await createProject({
         userId,
         title: wizardData.companyName || 'Novo Projeto',
         description: `Projeto ${wizardData.profileType === 'corretor' ? 'de Corretor' : 'de Imobiliária'} - ${wizardData.ownerName}`,
         status: 'pending',
+        location: fullAddress,
+        photos: projectPhotos,
+        projectType: 'realtor_multiple',
         layoutChoice: wizardData.layoutChoice,
         colorPalette: wizardData.colorPalette,
         logoUrl: wizardData.logoUrl,
