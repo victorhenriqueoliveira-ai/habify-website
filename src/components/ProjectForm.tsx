@@ -92,7 +92,15 @@ export const ProjectForm = ({
 
       const uploadedUrls = await Promise.all(uploadPromises);
       
-      onUpdate('photos', [...project.photos, ...uploadedUrls]);
+      console.log('Photos uploaded successfully:', uploadedUrls);
+      
+      // Ensure we're updating with a clean array
+      const currentPhotos = Array.isArray(project.photos) ? project.photos : [];
+      const newPhotos = [...currentPhotos, ...uploadedUrls];
+      
+      console.log('Updating project with photos:', { current: currentPhotos.length, new: newPhotos.length });
+      
+      onUpdate('photos', newPhotos);
 
       toast.success(`${uploadedUrls.length} foto(s) enviada(s) e otimizada(s) com sucesso!`);
     } catch (error) {

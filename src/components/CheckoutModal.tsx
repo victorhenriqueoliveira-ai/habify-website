@@ -91,28 +91,44 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { couponId: couponCode },
+        body: { couponId: couponCode.trim().toUpperCase() },
       });
 
-      if (error || !data.success) {
-        toast.error(data?.error || 'Cupom inválido ou expirado');
+      console.log('Coupon validation response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        toast.error('Erro ao validar cupom');
+        setCouponData(null);
+        return;
+      }
+
+      if (!data.success) {
+        toast.error(data.error || 'Cupom inválido ou expirado');
         setCouponData(null);
         return;
       }
 
       if (data.coupon) {
         setCouponData(data.coupon);
-        toast.success('Cupom aplicado com sucesso!');
+        toast.success(`✓ Cupom aplicado: ${data.coupon.discountKind === 'PERCENTAGE' ? `${data.coupon.discount}% OFF` : `R$ ${(data.coupon.discount / 100).toFixed(2)} OFF`}`);
       } else {
         toast.error('Cupom inválido ou inativo');
         setCouponData(null);
       }
     } catch (error) {
+      console.error('Validation error:', error);
       toast.error('Erro ao validar cupom');
       setCouponData(null);
     } finally {
       setValidatingCoupon(false);
     }
+  };
+
+  const removeCoupon = () => {
+    setCouponData(null);
+    setCouponCode('');
+    toast.info('Cupom removido');
   };
 
   const calculateDiscount = () => {
@@ -301,26 +317,51 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                     placeholder="Digite o código do cupom"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    disabled={validatingCoupon || !!couponData}
                   />
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={validateCoupon}
-                    disabled={validatingCoupon || !couponCode.trim()}
-                  >
-                    {validatingCoupon ? 'Validando...' : 'Aplicar'}
-                  </Button>
+                  {!couponData ? (
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={validateCoupon}
+                      disabled={validatingCoupon || !couponCode.trim()}
+                    >
+                      {validatingCoupon ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Validando...
+                        </>
+                      ) : (
+                        'Aplicar'
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      onClick={removeCoupon}
+                    >
+                      Remover
+                    </Button>
+                  )}
                 </div>
                 {couponData && (
-                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
-                    <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                      ✓ Cupom aplicado: {couponData.id}
-                    </p>
+                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                        ✓ Cupom aplicado: {couponData.id}
+                      </p>
+                    </div>
                     <p className="text-xs text-green-600 dark:text-green-300">
                       Desconto: {couponData.discountKind === 'PERCENTAGE' 
-                        ? `${couponData.discount}%` 
-                        : `R$ ${(couponData.discount / 100).toFixed(2)}`}
+                        ? `${couponData.discount}% OFF` 
+                        : `R$ ${(couponData.discount / 100).toFixed(2)} OFF`}
                     </p>
+                    {couponData.maxRedeems !== -1 && (
+                      <p className="text-xs text-green-600 dark:text-green-300">
+                        Usos: {couponData.redeemsCount}/{couponData.maxRedeems}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

@@ -388,28 +388,53 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {!project.photos || !Array.isArray(project.photos) || project.photos.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Nenhuma foto enviada ainda</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {project.photos.filter(photo => photo && typeof photo === 'string').map((photo, index) => (
-                      <div key={index} className="aspect-square overflow-hidden rounded-lg border bg-muted">
-                        <img
-                          src={photo}
-                          alt={`Foto ${index + 1} do projeto`}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                          onClick={() => window.open(photo, '_blank')}
-                          onError={(e) => {
-                            console.error('Erro ao carregar foto:', photo);
-                            (e.target as HTMLImageElement).src = '/placeholder.svg';
-                          }}
-                        />
+                {(() => {
+                  console.log('Rendering photos tab - project.photos:', project.photos);
+                  
+                  if (!project.photos || !Array.isArray(project.photos) || project.photos.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-muted-foreground space-y-2">
+                        <p>Nenhuma foto enviada ainda</p>
+                        <p className="text-xs">As fotos serão exibidas aqui após o upload</p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  }
+
+                  const validPhotos = project.photos.filter(photo => photo && typeof photo === 'string' && photo.trim() !== '');
+                  console.log('Valid photos filtered:', validPhotos.length, 'of', project.photos.length);
+
+                  if (validPhotos.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>Nenhuma foto válida encontrada</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {validPhotos.map((photo, index) => (
+                        <div key={`${photo}-${index}`} className="aspect-square overflow-hidden rounded-lg border bg-muted hover:shadow-lg transition-shadow">
+                          <img
+                            src={photo}
+                            alt={`Foto ${index + 1} do projeto ${project.title}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                            onClick={() => window.open(photo, '_blank')}
+                            onError={(e) => {
+                              console.error('Error loading photo:', photo);
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = '/placeholder.svg';
+                            }}
+                            onLoad={() => {
+                              console.log('Photo loaded successfully:', photo);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

@@ -49,6 +49,10 @@ export const useProjects = () => {
 
   const createProject = async (projectData: Partial<Project> & { userId: string }) => {
     try {
+      // Ensure photos is always an array
+      const photos = Array.isArray(projectData.photos) ? projectData.photos : [];
+      console.log('Creating project with photos:', photos.length);
+
       const { data, error } = await supabase
         .from('projects')
         .insert({
@@ -61,7 +65,7 @@ export const useProjects = () => {
           bedrooms: projectData.bedrooms,
           bathrooms: projectData.bathrooms,
           area: projectData.area,
-          photos: projectData.photos || [],
+          photos: photos,
           project_type: projectData.projectType || 'single_property',
           features: projectData.features || {},
           status: projectData.status || 'pending',
@@ -69,7 +73,12 @@ export const useProjects = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating project:', error);
+        throw error;
+      }
+      
+      console.log('Project created successfully:', { id: data.id, photos: data.photos?.length || 0 });
       
       // Log the create action
       await logProjectAction('CREATE_PROJECT', data.id, {
@@ -82,6 +91,7 @@ export const useProjects = () => {
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
+      console.error('Failed to create project:', error);
       return { success: false, error };
     }
   };
@@ -94,7 +104,11 @@ export const useProjects = () => {
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.status) updateData.status = updates.status;
       if (updates.landingPageUrl !== undefined) updateData.landing_page_url = updates.landingPageUrl;
-      if (updates.photos) updateData.photos = updates.photos;
+      if (updates.photos !== undefined) {
+        // Ensure photos is always an array
+        updateData.photos = Array.isArray(updates.photos) ? updates.photos : [];
+        console.log('Updating project photos:', { id, photosCount: updateData.photos.length });
+      }
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.location !== undefined) updateData.location = updates.location;
       if (updates.propertyType) updateData.property_type = updates.propertyType;
@@ -108,6 +122,8 @@ export const useProjects = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
+      console.log('Updating project in database:', { id, updateData });
+
       const { data, error } = await supabase
         .from('projects')
         .update(updateData)
@@ -116,12 +132,15 @@ export const useProjects = () => {
         .maybeSingle();
 
       if (error) {
+        console.error('Error updating project:', error);
         throw error;
       }
 
       if (!data) {
         throw new Error('Projeto não encontrado ou sem permissão para atualizar');
       }
+      
+      console.log('Project updated successfully:', { id, photos: data.photos?.length || 0 });
       
       // Log the update action
       await logProjectAction('UPDATE_PROJECT', id, {
@@ -133,6 +152,7 @@ export const useProjects = () => {
       await fetchProjects();
       return { success: true, data };
     } catch (error) {
+      console.error('Failed to update project:', error);
       return { success: false, error };
     }
   };

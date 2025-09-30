@@ -26,6 +26,8 @@ serve(async (req) => {
       throw new Error('Configuração de pagamento não encontrada');
     }
 
+    console.log('Validating coupon:', couponId);
+
     // Validate coupon with AbacatePay
     const response = await fetch(`https://api.abacatepay.com/v1/coupon/${couponId}`, {
       headers: {
@@ -34,6 +36,39 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error('Coupon not found or API error:', response.status);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Cupom não encontrado ou inválido',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    const data = await response.json();
+    console.log('Coupon API response:', JSON.stringify(data, null, 2));
+
+    const coupon = data.data;
+
+    if (!coupon) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Cupom não encontrado',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Check if coupon is active
+    if (coupon.status !== 'ACTIVE') {
       return new Response(
         JSON.stringify({
           success: false,
@@ -46,13 +81,12 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
-
-    if (!data.data || data.data.status !== 'ACTIVE') {
+    // Check if coupon has reached max redeems (if maxRedeems is not -1)
+    if (coupon.maxRedeems !== -1 && coupon.redeemsCount >= coupon.maxRedeems) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Cupom inválido ou inativo',
+          error: 'Cupom já atingiu o limite de usos',
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -61,10 +95,11 @@ serve(async (req) => {
       );
     }
 
+    // Return valid coupon
     return new Response(
       JSON.stringify({
         success: true,
-        coupon: data.data,
+        coupon: coupon,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
