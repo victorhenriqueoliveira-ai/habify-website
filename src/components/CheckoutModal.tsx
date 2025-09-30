@@ -26,9 +26,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   const [installments, setInstallments] = useState('1');
-  const [couponCode, setCouponCode] = useState('');
-  const [couponData, setCouponData] = useState<any>(null);
-  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -82,41 +79,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
     return true;
   };
 
-  const validateCoupon = async () => {
-    if (!couponCode.trim()) {
-      toast.error('Digite um código de cupom');
-      return;
-    }
-
-    setValidatingCoupon(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('validate-coupon', {
-        body: { couponId: couponCode.trim() }
-      });
-
-      if (error || !data?.success) {
-        toast.error(data?.error || 'Erro ao validar cupom');
-        setCouponData(null);
-        return;
-      }
-
-      setCouponData(data.coupon);
-      toast.success(`✓ Cupom aplicado: ${data.coupon.discountKind === 'PERCENTAGE' ? `${data.coupon.discount}% de desconto` : `R$ ${data.coupon.discount.toFixed(2)} de desconto`}`);
-    } catch (error) {
-      console.error('Error validating coupon:', error);
-      toast.error('Erro ao validar cupom');
-      setCouponData(null);
-    } finally {
-      setValidatingCoupon(false);
-    }
-  };
-
-  const removeCoupon = () => {
-    setCouponData(null);
-    setCouponCode('');
-    toast.info('Cupom removido');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -133,7 +95,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
         installments: paymentMethod === 'CARD' ? parseInt(installments) : undefined,
         isLoggedInPurchase,
         userId: isLoggedInPurchase ? user?.id : undefined,
-      }, couponData?.id);
+      });
 
       if (response.success && response.paymentUrl) {
         // Store order data for post-payment verification
@@ -211,37 +173,16 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
 
               <Separator />
 
-              {couponData && (
-                <>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="flex justify-between text-green-600">
-                      <span>Desconto ({couponData.id}):</span>
-                      <span>
-                        {couponData.discountKind === 'PERCENTAGE' 
-                          ? `- ${couponData.discount}%` 
-                          : `- R$ ${couponData.discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                      </span>
-                    </div>
-                  </div>
-                  <Separator />
-                </>
-              )}
-
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total:</span>
                 <span className="text-primary">
-                  R$ {(couponData 
-                    ? (couponData.discountKind === 'PERCENTAGE' 
-                      ? plan.price * (1 - couponData.discount / 100)
-                      : Math.max(0, plan.price - couponData.discount))
-                    : plan.price
-                  ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
+
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                * Cupons de desconto podem ser aplicados no checkout da AbacatePay
+              </p>
 
               {plan.type === 'website_maintenance_6m' && (
                 <p className="text-xs text-muted-foreground text-center">
@@ -299,51 +240,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                     </Select>
                   </div>
                  )}
-              </div>
-
-              <Separator />
-
-              {/* Coupon Section */}
-              <div className="space-y-2">
-                <Label>Cupom de Desconto (opcional)</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Digite o código do cupom"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    disabled={!!couponData}
-                  />
-                  {!couponData ? (
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={validateCoupon}
-                      disabled={!couponCode.trim()}
-                    >
-                      Aplicar
-                    </Button>
-                  ) : (
-                    <Button 
-                      type="button" 
-                      variant="destructive"
-                      onClick={removeCoupon}
-                    >
-                      Remover
-                    </Button>
-                  )}
-                </div>
-                {couponData && (
-                  <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md space-y-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                        ✓ Cupom {couponData.id} será aplicado
-                      </p>
-                    </div>
-                    <p className="text-xs text-green-600 dark:text-green-300">
-                      O desconto será calculado automaticamente pela AbacatePay no checkout
-                    </p>
-                  </div>
-                )}
               </div>
 
               <Separator />

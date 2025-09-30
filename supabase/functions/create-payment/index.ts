@@ -20,7 +20,6 @@ interface PaymentRequest {
     isLoggedInPurchase?: boolean;
     userId?: string;
   };
-  couponId?: string;
 }
 
 serve(async (req) => {
@@ -46,7 +45,7 @@ serve(async (req) => {
     );
 
     // Parse request body
-    const { planId, customerData, couponId }: PaymentRequest = await req.json();
+    const { planId, customerData }: PaymentRequest = await req.json();
 
     console.log('Creating payment for plan:', planId, 'customer:', customerData.email);
 
@@ -71,60 +70,7 @@ serve(async (req) => {
       throw new Error('Plano não encontrado. Tente novamente.');
     }
 
-    // Validate and apply coupon discount if provided
-    let finalPrice = plan.price;
-    let appliedCoupon = null;
-
-    if (couponId) {
-      console.log('Validating coupon:', couponId);
-      
-      const couponResponse = await fetch('https://api.abacatepay.com/v1/coupon/list', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${abacatePayApiKey}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (couponResponse.ok) {
-        const couponsData = await couponResponse.json();
-        const coupon = couponsData.data?.find((c: any) => 
-          c.id.toUpperCase() === couponId.toUpperCase()
-        );
-
-        if (coupon && coupon.status === 'ACTIVE') {
-          if (coupon.maxRedeems === -1 || coupon.redeems < coupon.maxRedeems) {
-            appliedCoupon = {
-              id: coupon.id,
-              discountKind: coupon.discountKind,
-              discount: coupon.discount
-            };
-
-            // Calculate discounted price
-            if (coupon.discountKind === 'PERCENTAGE') {
-              finalPrice = plan.price * (1 - coupon.discount / 100);
-            } else if (coupon.discountKind === 'FIXED') {
-              finalPrice = Math.max(0, plan.price - coupon.discount);
-            }
-
-            console.log('Coupon applied:', {
-              originalPrice: plan.price,
-              finalPrice,
-              discount: coupon.discount,
-              discountKind: coupon.discountKind
-            });
-          } else {
-            console.log('Coupon has no remaining uses');
-          }
-        } else {
-          console.log('Coupon not found or inactive');
-        }
-      } else {
-        console.log('Failed to validate coupon, proceeding without discount');
-      }
-    }
-
-    console.log('Creating payment with AbacatePay for plan:', plan.name, 'original price:', plan.price, 'final price:', finalPrice);
+    console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -227,11 +173,9 @@ serve(async (req) => {
       products: [{
         externalId: planId,
         name: plan.name,
-        description: appliedCoupon 
-          ? `${plan.description || plan.name} (Cupom ${appliedCoupon.id} aplicado)`
-          : plan.description || plan.name,
+        description: plan.description || plan.name,
         quantity: 1,
-        price: Math.round(finalPrice * 100), // Use final price with discount
+        price: Math.round(plan.price * 100),
       }],
       customerId: customerId,
       returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
@@ -242,6 +186,7 @@ serve(async (req) => {
         : 'https://habify.com.br/payment-success',
       webhookUrl: webhookUrl,
       externalId: `habify-${planId}-${Date.now()}`,
+      allowCoupons: true, // Enable coupon field in AbacatePay checkout
     };
 
     // Add installments if CARD method
@@ -294,7 +239,7 @@ serve(async (req) => {
         user_id: profileId, // Reference to profile, not auth.users yet
         plan_id: planId,
         abacatepay_id: responseData.id,
-        amount: finalPrice, // Store final price with discount
+        amount: plan.price,
         status: 'pending',
         payment_method: customerData.paymentMethod || 'PIX',
         payment_data: {
@@ -305,8 +250,6 @@ serve(async (req) => {
           abacatePayData,
           installments: customerData.installments,
           isLoggedInPurchase: customerData.isLoggedInPurchase,
-          originalPrice: plan.price,
-          appliedCoupon: appliedCoupon, // Store coupon info
         }
       })
       .select()
