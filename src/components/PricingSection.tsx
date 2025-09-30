@@ -122,8 +122,73 @@ const PricingSection = () => {
                     {getPlanIcon(plan.type)}
                   </div>
                   <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold text-primary">
+                  { plan.type === 'website_only' && (
+                    <>
+                    <div className='flex flex-row items-center justify-center gap-3'>
+                      <div className="text-1xl font-bold text-primary">
+                        12x de
+                      </div>
+                      <div className="text-3xl font-bold text-primary">
+                        R$ 73,90
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        via cartão
+                    </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        ou
+                      </p>
+                    </div>
+                    </>
+                  )}
+                  { plan.type === 'website_maintenance_1m' && (
+                    <>
+                    <div className='flex flex-row items-center justify-center gap-3'>
+                      <div className="text-1xl font-bold text-primary">
+                        12x de
+                      </div>
+                      <div className="text-3xl font-bold text-primary">
+                        R$ 83,90
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        via cartão
+                    </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        ou
+                      </p>
+                    </div>
+                    </>
+                  )}
+                  { plan.type === 'website_maintenance_6m' && (
+                    <>
+                    <div className='flex flex-row items-center justify-center gap-3'>
+                      <div className="text-1xl font-bold text-primary">
+                        12x de
+                      </div>
+                      <div className="text-3xl font-bold text-primary">
+                        R$ 133,08
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        via cartão
+                    </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        ou
+                      </p>
+                    </div>
+                    </>
+                  )}
+                  <div className='flex flex-row items-center justify-center gap-3'>
+                  <div className="text-1xl font-bold text-primary">
                     R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                  </div>
+                    <p className="text-sm text-muted-foreground">
+                      via PIX
+                    </p>
                   </div>
                   {monthlyMaintenanceNote && (
                     <p className="text-sm text-muted-foreground font-medium">
