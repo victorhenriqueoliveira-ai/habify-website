@@ -220,7 +220,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Cartão de Crédito</div>
-                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Mercado Pago</div>
+                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Kiwify</div>
                       </div>
                     </Label>
                   </div>
@@ -230,7 +230,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Boleto Bancário</div>
-                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Mercado Pago</div>
+                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Kiwify</div>
                       </div>
                     </Label>
                   </div>

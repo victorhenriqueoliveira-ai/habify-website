@@ -51,7 +51,7 @@ serve(async (req) => {
 
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
-    const useMercadoPago = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
+    const useKiwify = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
 
     // Check if required API keys are available
     if (useAbacatePay) {
@@ -62,10 +62,10 @@ serve(async (req) => {
       }
     }
 
-    if (useMercadoPago) {
-      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
-      if (!mercadoPagoToken) {
-        console.error('MERCADOPAGO_ACCESS_TOKEN is not configured');
+    if (useKiwify) {
+      const kiwifyToken = Deno.env.get('KIWIFY_API_TOKEN');
+      if (!kiwifyToken) {
+        console.error('KIWIFY_API_TOKEN is not configured');
         throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
       }
     }
@@ -140,7 +140,7 @@ serve(async (req) => {
     // Process payment based on gateway
     let paymentUrl: string;
     let paymentId: string;
-    let gateway: 'ABACATEPAY' | 'MERCADOPAGO';
+    let gateway: 'ABACATEPAY' | 'KIWIFY';
 
     if (useAbacatePay) {
       // AbacatePay flow for PIX
@@ -245,85 +245,58 @@ serve(async (req) => {
         throw new Error('URL de pagamento não foi gerada.');
       }
     } else {
-      // Mercado Pago flow for CARD and BOLETO
-      gateway = 'MERCADOPAGO';
-      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')!;
+      // Kiwify flow for CARD and BOLETO
+      gateway = 'KIWIFY';
+      const kiwifyToken = Deno.env.get('KIWIFY_API_TOKEN')!;
 
-      const preferencePayload = {
-        items: [{
-          id: planId,
-          title: plan.name,
-          description: plan.description || plan.name,
-          quantity: 1,
-          unit_price: Number(plan.price),
-          currency_id: 'BRL'
-        }],
-        payer: {
+      const kiwifyPayload = {
+        product_id: planId,
+        customer: {
           name: customerData.name,
           email: customerData.email,
-          phone: {
-            area_code: customerData.phone?.substring(0, 2) || '',
-            number: customerData.phone?.substring(2) || ''
-          },
-          identification: {
-            type: 'CPF',
-            number: customerData.cpf || ''
-          }
+          phone: customerData.phone,
+          cpf: customerData.cpf,
         },
-        back_urls: {
-          success: origin.includes('localhost') || origin.includes('lovable.dev') 
-            ? `${origin}/payment-success` 
-            : 'https://habify.com.br/payment-success',
-          failure: origin.includes('localhost') || origin.includes('lovable.dev') 
-            ? `${origin}/payment-canceled` 
-            : 'https://habify.com.br/payment-canceled',
-          pending: origin.includes('localhost') || origin.includes('lovable.dev') 
-            ? `${origin}/payment-success` 
-            : 'https://habify.com.br/payment-success'
-        },
-        auto_return: 'approved',
-        notification_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/mercadopago-webhook`,
-        external_reference: `habify-${planId}-${Date.now()}`,
-        payment_methods: {
-          excluded_payment_types: customerData.paymentMethod === 'CARD' 
-            ? [{ id: 'ticket' }] 
-            : [{ id: 'credit_card' }, { id: 'debit_card' }],
-          installments: customerData.paymentMethod === 'CARD' ? (customerData.installments || 12) : 1
-        }
+        payment_method: customerData.paymentMethod === 'CARD' ? 'credit_card' : 'boleto',
+        installments: customerData.paymentMethod === 'CARD' ? (customerData.installments || 1) : 1,
+        return_url: origin.includes('localhost') || origin.includes('lovable.dev') 
+          ? `${origin}/payment-success` 
+          : 'https://habify.com.br/payment-success',
+        webhook_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/kiwify-webhook`,
       };
 
-      console.log('Mercado Pago preference payload:', JSON.stringify(preferencePayload, null, 2));
+      console.log('Kiwify payment payload:', JSON.stringify(kiwifyPayload, null, 2));
 
-      const mercadoPagoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      const kiwifyResponse = await fetch('https://api.kiwify.com.br/v1/checkouts', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mercadoPagoToken}`,
+          'Authorization': `Bearer ${kiwifyToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(preferencePayload),
+        body: JSON.stringify(kiwifyPayload),
       });
 
-      console.log('Mercado Pago response status:', mercadoPagoResponse.status);
+      console.log('Kiwify response status:', kiwifyResponse.status);
 
-      if (!mercadoPagoResponse.ok) {
-        const errorText = await mercadoPagoResponse.text();
-        console.error('Mercado Pago error response:', errorText);
+      if (!kiwifyResponse.ok) {
+        const errorText = await kiwifyResponse.text();
+        console.error('Kiwify error response:', errorText);
         throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
       }
 
-      const mercadoPagoData = await mercadoPagoResponse.json();
-      console.log('Mercado Pago response data:', mercadoPagoData);
+      const kiwifyData = await kiwifyResponse.json();
+      console.log('Kiwify response data:', kiwifyData);
 
-      if (!mercadoPagoData || !mercadoPagoData.id) {
-        console.error('Invalid Mercado Pago response - missing ID:', mercadoPagoData);
+      if (!kiwifyData || !kiwifyData.id) {
+        console.error('Invalid Kiwify response - missing ID:', kiwifyData);
         throw new Error('Resposta inválida do sistema de pagamento.');
       }
 
-      paymentUrl = mercadoPagoData.init_point;
-      paymentId = mercadoPagoData.id;
+      paymentUrl = kiwifyData.checkout_url;
+      paymentId = kiwifyData.id;
 
       if (!paymentUrl) {
-        console.error('No payment URL in response:', mercadoPagoData);
+        console.error('No payment URL in response:', kiwifyData);
         throw new Error('URL de pagamento não foi gerada.');
       }
     }
