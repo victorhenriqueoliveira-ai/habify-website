@@ -149,6 +149,7 @@ export type Database = {
           features: Json | null
           id: string
           is_active: boolean
+          kiwify_product_id: string | null
           name: string
           price: number
           type: Database["public"]["Enums"]["plan_type"]
@@ -160,6 +161,7 @@ export type Database = {
           features?: Json | null
           id?: string
           is_active?: boolean
+          kiwify_product_id?: string | null
           name: string
           price: number
           type: Database["public"]["Enums"]["plan_type"]
@@ -171,6 +173,7 @@ export type Database = {
           features?: Json | null
           id?: string
           is_active?: boolean
+          kiwify_product_id?: string | null
           name?: string
           price?: number
           type?: Database["public"]["Enums"]["plan_type"]

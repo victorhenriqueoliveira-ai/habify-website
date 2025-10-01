@@ -25,45 +25,65 @@ serve(async (req) => {
     );
 
     // Extract payment information from Kiwify webhook
-    const paymentId = payload.id || payload.payment_id;
-    const status = payload.status; // 'paid', 'pending', 'refused', etc.
+    const orderId = payload.order_id;
+    const orderRef = payload.order_ref;
+    const customerEmail = payload.Customer?.email;
+    const status = payload.order_status; // 'paid', 'waiting_payment', 'refused', etc.
+    const productId = payload.Product?.product_id;
     
-    console.log('Processing payment:', paymentId, 'Status:', status);
+    console.log('Kiwify webhook data:', {
+      orderId,
+      orderRef,
+      customerEmail,
+      status,
+      productId
+    });
 
-    // Find the order by payment_id in payment_data
+    // Find the order by customer email and product
     const { data: order, error: orderError } = await supabaseService
       .from('orders')
-      .select('*')
+      .select('*, plans!inner(*)')
       .eq('gateway', 'KIWIFY')
-      .contains('payment_data', { paymentId: paymentId })
-      .single();
+      .eq('plans.kiwify_product_id', productId)
+      .filter('payment_data->>customerData->>email', 'eq', customerEmail)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (orderError || !order) {
-      console.error('Order not found for payment:', paymentId, orderError);
+      console.error('Order not found for:', { customerEmail, productId }, orderError);
       return new Response(
         JSON.stringify({ error: 'Order not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Order found:', order.id);
+    console.log('Order found:', order?.id);
 
     // Map Kiwify status to our status
     let orderStatus = 'pending';
-    if (status === 'paid' || status === 'approved') {
+    if (status === 'paid') {
       orderStatus = 'paid';
-    } else if (status === 'refused' || status === 'refunded') {
+    } else if (status === 'refused' || status === 'refunded' || status === 'chargedback') {
       orderStatus = 'failed';
     }
 
-    // Update order status
+    // Update order status with Kiwify order ID
+    const updateData: any = {
+      status: orderStatus,
+      paid_at: orderStatus === 'paid' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+      payment_data: {
+        ...order.payment_data,
+        kiwifyOrderId: orderId,
+        kiwifyOrderRef: orderRef,
+      }
+    };
+
     const { error: updateError } = await supabaseService
       .from('orders')
-      .update({
-        status: orderStatus,
-        paid_at: orderStatus === 'paid' ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', order.id);
 
     if (updateError) {

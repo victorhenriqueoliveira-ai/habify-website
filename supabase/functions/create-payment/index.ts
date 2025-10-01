@@ -62,14 +62,6 @@ serve(async (req) => {
       }
     }
 
-    if (useKiwify) {
-      const kiwifyToken = Deno.env.get('KIWIFY_API_TOKEN');
-      if (!kiwifyToken) {
-        console.error('KIWIFY_API_TOKEN is not configured');
-        throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
-      }
-    }
-
     // Get plan details
     const { data: plan, error: planError } = await supabaseClient
       .from('plans')
@@ -247,58 +239,32 @@ serve(async (req) => {
     } else {
       // Kiwify flow for CARD and BOLETO
       gateway = 'KIWIFY';
-      const kiwifyToken = Deno.env.get('KIWIFY_API_TOKEN')!;
+      
+      // Check if plan has Kiwify product ID
+      if (!plan.kiwify_product_id) {
+        console.error('Plan does not have kiwify_product_id configured');
+        throw new Error('Produto não configurado na Kiwify. Entre em contato com o suporte.');
+      }
 
-      const kiwifyPayload = {
-        product_id: planId,
-        customer: {
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          cpf: customerData.cpf,
-        },
-        payment_method: customerData.paymentMethod === 'CARD' ? 'credit_card' : 'boleto',
-        installments: customerData.paymentMethod === 'CARD' ? (customerData.installments || 1) : 1,
-        return_url: origin.includes('localhost') || origin.includes('lovable.dev') 
-          ? `${origin}/payment-success` 
-          : 'https://habify.com.br/payment-success',
-        webhook_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/kiwify-webhook`,
-      };
-
-      console.log('Kiwify payment payload:', JSON.stringify(kiwifyPayload, null, 2));
-
-      const kiwifyResponse = await fetch('https://api.kiwify.com.br/v1/checkouts', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${kiwifyToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(kiwifyPayload),
+      // Generate Kiwify checkout URL with customer parameters
+      // Kiwify expects: https://pay.kiwify.com.br/[product_id]?email=...&name=...&phone=...
+      const kiwifyParams = new URLSearchParams({
+        email: customerData.email,
+        name: customerData.name,
       });
 
-      console.log('Kiwify response status:', kiwifyResponse.status);
-
-      if (!kiwifyResponse.ok) {
-        const errorText = await kiwifyResponse.text();
-        console.error('Kiwify error response:', errorText);
-        throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
+      if (customerData.phone) {
+        kiwifyParams.append('phone', customerData.phone);
       }
 
-      const kiwifyData = await kiwifyResponse.json();
-      console.log('Kiwify response data:', kiwifyData);
-
-      if (!kiwifyData || !kiwifyData.id) {
-        console.error('Invalid Kiwify response - missing ID:', kiwifyData);
-        throw new Error('Resposta inválida do sistema de pagamento.');
+      if (customerData.cpf) {
+        kiwifyParams.append('cpf', customerData.cpf);
       }
 
-      paymentUrl = kiwifyData.checkout_url;
-      paymentId = kiwifyData.id;
+      paymentUrl = `https://pay.kiwify.com.br/${plan.kiwify_product_id}?${kiwifyParams.toString()}`;
+      paymentId = `kiwify-${Date.now()}`; // Temporary ID - will be updated by webhook
 
-      if (!paymentUrl) {
-        console.error('No payment URL in response:', kiwifyData);
-        throw new Error('URL de pagamento não foi gerada.');
-      }
+      console.log('Kiwify checkout URL generated:', paymentUrl);
     }
 
     // Create order record with profile reference and gateway info

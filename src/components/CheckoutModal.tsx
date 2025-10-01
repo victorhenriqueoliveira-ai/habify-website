@@ -182,7 +182,10 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               </div>
 
               <p className="text-xs text-muted-foreground text-center mt-2">
-                * Cupons de desconto podem ser aplicados no checkout da AbacatePay
+                {paymentMethod === 'PIX' 
+                  ? '* Cupons de desconto podem ser aplicados no checkout da AbacatePay'
+                  : '* Você será redirecionado para o checkout seguro da Kiwify'
+                }
               </p>
 
               {plan.type === 'website_maintenance_6m' && (
@@ -239,24 +242,11 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 {paymentMethod === 'CARD' && (
                   <div>
                     <Label htmlFor="installments">Parcelamento</Label>
-                    <Select value={installments} onValueChange={setInstallments}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => {
-                          const installmentValue = plan ? plan.price / num : 0;
-                          return (
-                            <SelectItem key={num} value={num.toString()}>
-                              {num}x de R$ {installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              {num === 1 ? ' (sem juros)' : ''}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Opções de parcelamento disponíveis no checkout da Kiwify
+                    </p>
                   </div>
-                 )}
+                )}
               </div>
 
               <Separator />
@@ -350,7 +340,12 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
 
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                <span>Pagamento 100% seguro via AbacatePay</span>
+                <span>
+                  {paymentMethod === 'PIX' 
+                    ? 'Pagamento 100% seguro via AbacatePay' 
+                    : 'Pagamento 100% seguro via Kiwify'
+                  }
+                </span>
               </div>
 
               <Button 
@@ -371,10 +366,21 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
             </form>
 
             <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>• PIX (instantâneo) ou Cartão de Crédito (até 12x)</p>
-              <p>• Pagamento 100% seguro</p>
-              <p>• Garantia de 30 dias</p>
-              <p>• Suporte direto via WhatsApp</p>
+              {paymentMethod === 'PIX' ? (
+                <>
+                  <p>• PIX instantâneo via AbacatePay</p>
+                  <p>• Pagamento 100% seguro</p>
+                  <p>• Garantia de 30 dias</p>
+                  <p>• Suporte direto via WhatsApp</p>
+                </>
+              ) : (
+                <>
+                  <p>• Cartão de Crédito (até 12x) ou Boleto Bancário</p>
+                  <p>• Processamento seguro via Kiwify</p>
+                  <p>• Garantia de 30 dias</p>
+                  <p>• Suporte direto via WhatsApp</p>
+                </>
+              )}
             </div>
           </div>
         </div>
