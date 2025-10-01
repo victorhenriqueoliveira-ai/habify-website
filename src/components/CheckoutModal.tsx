@@ -24,7 +24,7 @@ interface CheckoutModalProps {
 export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = false }: CheckoutModalProps) => {
   const { createPayment, loading } = usePayment();
   const { user } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD' | 'BOLETO'>('PIX');
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   const [installments, setInstallments] = useState('1');
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -178,9 +178,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Método:</span>
                   <span className="text-sm font-medium">
-                    {paymentMethod === 'PIX' ? 'PIX (à vista)' : 
-                     paymentMethod === 'CARD' ? 'Cartão (12x)' : 
-                     'Boleto'}
+                    {paymentMethod === 'PIX' ? 'PIX (à vista)' : 'Cartão (12x)'}
                   </span>
                 </div>
                 
@@ -208,10 +206,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               <p className="text-xs text-muted-foreground text-center mt-2">
                 {paymentMethod === 'PIX' 
                   ? '✓ Cupons de desconto disponíveis no checkout'
-                  : paymentMethod === 'CARD'
-                  ? '✓ Mercado Pago oferece cupons de desconto'
-                  : '✓ Campo de cupom disponível no checkout'
-                }
+                  : '✓ Mercado Pago oferece cupons de desconto'}
               </p>
 
               {plan.type === 'website_maintenance_6m' && (
@@ -232,7 +227,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <span>Método de Pagamento</span>
                 </h3>
 
-                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD' | 'BOLETO')}>
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD')}>
                   <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                     <RadioGroupItem value="PIX" id="pix" />
                     <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
@@ -250,16 +245,6 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <div>
                         <div>Cartão de Crédito</div>
                         <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Mercado Pago</div>
-                      </div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
-                    <RadioGroupItem value="BOLETO" id="boleto" />
-                    <Label htmlFor="boleto" className="flex items-center cursor-pointer flex-1">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      <div>
-                        <div>Boleto Bancário</div>
-                        <div className="text-xs text-muted-foreground">Pagamento via Stripe</div>
                       </div>
                     </Label>
                   </div>
@@ -384,10 +369,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <span>
                   {paymentMethod === 'PIX' 
                     ? 'Pagamento 100% seguro via AbacatePay' 
-                    : paymentMethod === 'CARD'
-                    ? 'Pagamento 100% seguro via Mercado Pago'
-                    : 'Pagamento 100% seguro via Stripe'
-                  }
+                    : 'Pagamento 100% seguro via Mercado Pago'}
                 </span>
               </div>
 
@@ -416,17 +398,10 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <p>• Garantia de 30 dias</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>
-              ) : paymentMethod === 'CARD' ? (
+              ) : (
                 <>
                   <p>• Cartão de Crédito (até 12x sem juros)</p>
                   <p>• Processamento seguro via Mercado Pago</p>
-                  <p>• Garantia de 30 dias</p>
-                  <p>• Suporte direto via WhatsApp</p>
-                </>
-              ) : (
-                <>
-                  <p>• Boleto Bancário</p>
-                  <p>• Processamento seguro via Stripe</p>
                   <p>• Garantia de 30 dias</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>

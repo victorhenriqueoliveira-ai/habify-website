@@ -53,7 +53,6 @@ serve(async (req) => {
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
     const useMercadoPago = customerData.paymentMethod === 'CARD';
-    const useStripe = customerData.paymentMethod === 'BOLETO';
 
     // Check if required API keys are available
     if (useAbacatePay) {
@@ -89,7 +88,7 @@ serve(async (req) => {
     // Get the correct price based on gateway
     const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
     
-    const gateway = useAbacatePay ? 'ABACATEPAY' : useMercadoPago ? 'MERCADOPAGO' : 'STRIPE';
+    let gateway = useAbacatePay ? 'ABACATEPAY' : 'MERCADOPAGO';
     console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
 
     // Create Supabase service client for database operations
@@ -335,98 +334,6 @@ serve(async (req) => {
         console.error('No payment URL in Mercado Pago response:', mercadoPagoData);
         throw new Error('URL de pagamento não foi gerada.');
       }
-    } else {
-      // Stripe flow for BOLETO only
-      
-      // Check if plan has Stripe price ID
-      if (!plan.stripe_price_id) {
-        console.error('Plan does not have stripe_price_id configured');
-        throw new Error('Produto não configurado no Stripe. Entre em contato com o suporte.');
-      }
-
-      console.log('Creating Stripe checkout session for price:', plan.stripe_price_id);
-
-      // Initialize Stripe
-      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-      if (!stripeKey) {
-        console.error('STRIPE_SECRET_KEY not configured');
-        throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
-      }
-      
-      const stripe = new Stripe(stripeKey, {
-        apiVersion: '2024-11-20.acacia',
-      });
-
-      // Check if customer exists in Stripe
-      const customers = await stripe.customers.list({ 
-        email: customerData.email, 
-        limit: 1 
-      });
-      
-      let customerId;
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-        console.log('Using existing Stripe customer:', customerId);
-      }
-
-      // Create Stripe checkout session
-      const sessionConfig: any = {
-        customer: customerId,
-        customer_email: customerId ? undefined : customerData.email,
-        line_items: [
-          {
-            price: plan.stripe_price_id,
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
-        allow_promotion_codes: true, // Enable coupon field in checkout
-        locale: 'pt-BR', // Set locale to Brazil
-        billing_address_collection: 'required', // Required for Brazil
-        payment_intent_data: {
-          setup_future_usage: undefined, // One-time payment only
-        },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/payment-canceled`,
-        metadata: {
-          planId: planId,
-          profileId: profileId,
-          customerEmail: customerData.email,
-          customerName: customerData.name,
-          customerPassword: customerData.isLoggedInPurchase ? '' : customerData.password,
-          isLoggedInPurchase: customerData.isLoggedInPurchase ? 'true' : 'false',
-        },
-      };
-
-      // Configure payment methods based on selection
-      if (customerData.paymentMethod === 'BOLETO') {
-        sessionConfig.payment_method_types = ['boleto'];
-      } else {
-        sessionConfig.payment_method_types = ['card'];
-        // Enable installments for card payments (Brazil)
-        // Stripe automatically presents installment options based on card issuer
-        sessionConfig.payment_method_options = {
-          card: {
-            installments: {
-              enabled: true
-            }
-          }
-        };
-      }
-
-      console.log('Creating Stripe session with config:', JSON.stringify(sessionConfig, null, 2));
-      
-      const session = await stripe.checkout.sessions.create(sessionConfig);
-
-      paymentUrl = session.url || '';
-      paymentId = session.id;
-
-      if (!paymentUrl) {
-        console.error('No Stripe checkout URL generated');
-        throw new Error('URL de pagamento não foi gerada.');
-      }
-
-      console.log('Stripe checkout session created:', session.id);
     }
 
     // Create order record with profile reference and gateway info
