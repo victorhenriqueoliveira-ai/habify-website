@@ -284,6 +284,8 @@ serve(async (req) => {
         ],
         mode: 'payment',
         allow_promotion_codes: true, // Enable coupon field in checkout
+        locale: 'pt-BR', // Set locale to Brazil
+        billing_address_collection: 'required', // Required for Brazil
         payment_intent_data: {
           setup_future_usage: undefined, // One-time payment only
         },
@@ -305,10 +307,15 @@ serve(async (req) => {
       } else {
         sessionConfig.payment_method_types = ['card'];
         // Enable installments for card payments (Brazil)
+        // Must specify plan with eligible amount ranges
         sessionConfig.payment_method_options = {
           card: {
             installments: {
               enabled: true,
+              plan: {
+                count: 12, // Maximum number of installments
+                type: 'fixed_count',
+              },
             },
           },
         };
