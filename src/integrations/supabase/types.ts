@@ -88,6 +88,7 @@ export type Database = {
           amount: number
           created_at: string
           gateway: string | null
+          hubla_transaction_id: string | null
           id: string
           paid_at: string | null
           payment_data: Json | null
@@ -102,6 +103,7 @@ export type Database = {
           amount: number
           created_at?: string
           gateway?: string | null
+          hubla_transaction_id?: string | null
           id?: string
           paid_at?: string | null
           payment_data?: Json | null
@@ -116,6 +118,7 @@ export type Database = {
           amount?: number
           created_at?: string
           gateway?: string | null
+          hubla_transaction_id?: string | null
           id?: string
           paid_at?: string | null
           payment_data?: Json | null
@@ -144,9 +147,11 @@ export type Database = {
       }
       plans: {
         Row: {
+          card_gateway: string | null
           created_at: string
           description: string | null
           features: Json | null
+          hubla_checkout_url: string | null
           id: string
           is_active: boolean
           kiwify_product_id: string | null
@@ -159,9 +164,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          card_gateway?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
+          hubla_checkout_url?: string | null
           id?: string
           is_active?: boolean
           kiwify_product_id?: string | null
@@ -174,9 +181,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          card_gateway?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
+          hubla_checkout_url?: string | null
           id?: string
           is_active?: boolean
           kiwify_product_id?: string | null
