@@ -19,7 +19,7 @@ interface PaymentResponse {
   paymentUrl?: string;
   orderId?: string;
   paymentId?: string;
-  gateway?: 'ABACATEPAY' | 'MERCADOPAGO';
+  gateway?: 'ABACATEPAY' | 'STRIPE';
   error?: string;
 }
 

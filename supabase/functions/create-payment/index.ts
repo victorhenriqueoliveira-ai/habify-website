@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,7 +52,7 @@ serve(async (req) => {
 
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
-    const useKiwify = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
+    const useStripe = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
 
     // Check if required API keys are available
     if (useAbacatePay) {
@@ -132,7 +133,7 @@ serve(async (req) => {
     // Process payment based on gateway
     let paymentUrl: string;
     let paymentId: string;
-    let gateway: 'ABACATEPAY' | 'KIWIFY';
+    let gateway: 'ABACATEPAY' | 'STRIPE';
 
     if (useAbacatePay) {
       // AbacatePay flow for PIX
@@ -237,34 +238,67 @@ serve(async (req) => {
         throw new Error('URL de pagamento não foi gerada.');
       }
     } else {
-      // Kiwify flow for CARD and BOLETO
-      gateway = 'KIWIFY';
+      // Stripe flow for CARD and BOLETO
+      gateway = 'STRIPE';
       
-      // Check if plan has Kiwify product ID
-      if (!plan.kiwify_product_id) {
-        console.error('Plan does not have kiwify_product_id configured');
-        throw new Error('Produto não configurado na Kiwify. Entre em contato com o suporte.');
+      // Check if plan has Stripe price ID
+      if (!plan.stripe_price_id) {
+        console.error('Plan does not have stripe_price_id configured');
+        throw new Error('Produto não configurado no Stripe. Entre em contato com o suporte.');
       }
 
-      // Generate Kiwify checkout URL with customer parameters
-      // Kiwify expects: https://pay.kiwify.com.br/[product_id]?email=...&name=...&phone=...
-      const kiwifyParams = new URLSearchParams({
-        email: customerData.email,
-        name: customerData.name,
+      console.log('Creating Stripe checkout session for price:', plan.stripe_price_id);
+
+      // Initialize Stripe
+      const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+        apiVersion: '2025-08-27.basil',
       });
 
-      if (customerData.phone) {
-        kiwifyParams.append('phone', customerData.phone);
+      // Check if customer exists in Stripe
+      const customers = await stripe.customers.list({ 
+        email: customerData.email, 
+        limit: 1 
+      });
+      
+      let customerId;
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        console.log('Using existing Stripe customer:', customerId);
       }
 
-      if (customerData.cpf) {
-        kiwifyParams.append('cpf', customerData.cpf);
+      // Create Stripe checkout session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : customerData.email,
+        line_items: [
+          {
+            price: plan.stripe_price_id,
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        payment_method_types: customerData.paymentMethod === 'BOLETO' ? ['boleto'] : ['card'],
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/payment-canceled`,
+        metadata: {
+          planId: planId,
+          profileId: profileId,
+          customerEmail: customerData.email,
+          customerName: customerData.name,
+          customerPassword: customerData.isLoggedInPurchase ? '' : customerData.password,
+          isLoggedInPurchase: customerData.isLoggedInPurchase ? 'true' : 'false',
+        },
+      });
+
+      paymentUrl = session.url || '';
+      paymentId = session.id;
+
+      if (!paymentUrl) {
+        console.error('No Stripe checkout URL generated');
+        throw new Error('URL de pagamento não foi gerada.');
       }
 
-      paymentUrl = `https://pay.kiwify.com.br/${plan.kiwify_product_id}?${kiwifyParams.toString()}`;
-      paymentId = `kiwify-${Date.now()}`; // Temporary ID - will be updated by webhook
-
-      console.log('Kiwify checkout URL generated:', paymentUrl);
+      console.log('Stripe checkout session created:', session.id);
     }
 
     // Create order record with profile reference and gateway info

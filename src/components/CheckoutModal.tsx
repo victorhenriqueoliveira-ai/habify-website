@@ -184,7 +184,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               <p className="text-xs text-muted-foreground text-center mt-2">
                 {paymentMethod === 'PIX' 
                   ? '* Cupons de desconto podem ser aplicados no checkout da AbacatePay'
-                  : '* Você será redirecionado para o checkout seguro da Kiwify'
+                  : '* Você será redirecionado para o checkout seguro do Stripe'
                 }
               </p>
 
@@ -223,7 +223,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Cartão de Crédito</div>
-                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Kiwify</div>
+                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Stripe</div>
                       </div>
                     </Label>
                   </div>
@@ -233,7 +233,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Boleto Bancário</div>
-                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Kiwify</div>
+                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Stripe</div>
                       </div>
                     </Label>
                   </div>
@@ -243,7 +243,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <div>
                     <Label htmlFor="installments">Parcelamento</Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Opções de parcelamento disponíveis no checkout da Kiwify
+                      Opções de parcelamento disponíveis no checkout do Stripe
                     </p>
                   </div>
                 )}
@@ -343,7 +343,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <span>
                   {paymentMethod === 'PIX' 
                     ? 'Pagamento 100% seguro via AbacatePay' 
-                    : 'Pagamento 100% seguro via Kiwify'
+                    : 'Pagamento 100% seguro via Stripe'
                   }
                 </span>
               </div>
@@ -376,7 +376,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               ) : (
                 <>
                   <p>• Cartão de Crédito (até 12x) ou Boleto Bancário</p>
-                  <p>• Processamento seguro via Kiwify</p>
+                  <p>• Processamento seguro via Stripe</p>
                   <p>• Garantia de 30 dias</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>
