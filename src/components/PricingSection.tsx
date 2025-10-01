@@ -201,10 +201,10 @@ const PricingSection = () => {
               Todos os planos incluem garantia de 30 dias
             </p>
             <p className="text-sm text-muted-foreground">
-              Pagamento 100% seguro via AbacatePay (PIX) e Stripe (Cartão/Boleto)
+              Pagamento 100% seguro via AbacatePay (PIX) e Hubla (Cartão/Boleto)
             </p>
             <p className="text-xs text-blue-600 italic">
-              *Parcelamento em até 12x no cartão de crédito. As opções de parcelamento dependem do banco emissor do seu cartão e serão apresentadas no checkout do Stripe.
+              *Parcelamento em até 12x no cartão de crédito. As opções de parcelamento dependem do banco emissor do seu cartão e serão apresentadas no checkout do Hubla.
             </p>
           </div>
         </div>
