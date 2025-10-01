@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CreditCard, Shield, CheckCircle, QrCode } from 'lucide-react';
+import { Loader2, CreditCard, Shield, CheckCircle, QrCode, Info } from 'lucide-react';
 import { usePayment } from '@/hooks/usePayment';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -264,11 +264,26 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 </RadioGroup>
 
                 {paymentMethod === 'CARD' && (
-                  <div>
-                    <Label htmlFor="installments">Parcelamento</Label>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Opções de parcelamento disponíveis no checkout do Stripe
-                    </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                    <div className="flex items-start space-x-2">
+                      <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-blue-900">
+                          Parcelamento disponível em até 12x
+                        </p>
+                        <p className="text-xs text-blue-700">
+                          As opções de parcelamento serão apresentadas no checkout do Stripe e dependem do banco emissor do seu cartão.
+                        </p>
+                        <p className="text-xs text-blue-700 font-medium mt-2">
+                          Valores estimados por parcela (12x):
+                        </p>
+                        <ul className="text-xs text-blue-700 space-y-0.5 ml-4">
+                          <li>• Plano 1: ~R$ 73,90/mês</li>
+                          <li>• Plano 2: ~R$ 83,90/mês</li>
+                          <li>• Plano 3: ~R$ 150,00/mês</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

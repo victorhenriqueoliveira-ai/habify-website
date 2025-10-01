@@ -140,6 +140,9 @@ const PricingSection = () => {
                       <p className="text-xs text-muted-foreground">
                         Total: R$ {plan.stripe_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
+                      <p className="text-xs text-blue-600 italic">
+                        Parcelamento disponível no checkout*
+                      </p>
                       <div>
                         <p className="text-sm text-muted-foreground">
                           ou
@@ -193,12 +196,15 @@ const PricingSection = () => {
             })}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 space-y-3">
             <p className="text-muted-foreground mb-4">
               Todos os planos incluem garantia de 30 dias
             </p>
             <p className="text-sm text-muted-foreground">
-              Pagamento 100% seguro via AbacatePay • Aceita PIX e Cartão
+              Pagamento 100% seguro via AbacatePay (PIX) e Stripe (Cartão/Boleto)
+            </p>
+            <p className="text-xs text-blue-600 italic">
+              *Parcelamento em até 12x no cartão de crédito. As opções de parcelamento dependem do banco emissor do seu cartão e serão apresentadas no checkout do Stripe.
             </p>
           </div>
         </div>
