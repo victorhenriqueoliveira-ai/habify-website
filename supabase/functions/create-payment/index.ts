@@ -90,7 +90,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    let profileId: string;
+    let profileId: string | null = null;
 
     // Se for compra de usuário logado, usa o perfil existente
     if (customerData.isLoggedInPurchase && customerData.userId) {
@@ -109,29 +109,9 @@ serve(async (req) => {
 
       profileId = existingProfile.id;
     } else {
-      // Create inactive profile (not in Supabase Auth yet)
-      console.log('Creating inactive profile for:', customerData.email);
-      
-      const { data: profile, error: profileError } = await supabaseService
-        .from('profiles')
-        .insert({
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone || null,
-          role: 'user',
-          is_active: false, // Will be activated when payment is confirmed
-          user_id: null // Will be set when auth user is created
-        })
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('Failed to create profile:', profileError);
-        throw new Error('Erro ao criar perfil do usuário');
-      }
-
-    console.log('Profile created:', profile.id);
-      profileId = profile.id;
+      // NÃO criar perfil agora - será criado no webhook após confirmação do pagamento
+      console.log('New user purchase - profile will be created after payment confirmation');
+      profileId = null;
     }
 
     // Process payment based on gateway
@@ -261,11 +241,11 @@ serve(async (req) => {
       console.log('Using Hubla checkout URL:', paymentUrl);
     }
 
-    // Create order record with profile reference and gateway info
+    // Create order record - sem user_id se for novo usuário (será linkado no webhook)
     const { data: order, error: orderError } = await supabaseService
       .from('orders')
       .insert({
-        user_id: profileId,
+        user_id: profileId, // null para novos usuários
         plan_id: planId,
         abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
         hubla_transaction_id: gateway === 'HUBLA' ? paymentId : null,
@@ -275,7 +255,10 @@ serve(async (req) => {
         gateway: gateway,
         payment_data: {
           customerData: {
-            ...customerData,
+            name: customerData.name,
+            email: customerData.email,
+            phone: customerData.phone,
+            cpf: customerData.cpf,
             password: customerData.isLoggedInPurchase ? undefined : customerData.password
           },
           paymentId: paymentId,

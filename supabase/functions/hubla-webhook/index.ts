@@ -154,85 +154,80 @@ serve(async (req) => {
 
     console.log('Order updated successfully via Hubla webhook:', updatedOrder);
 
-    // If payment is completed, create user in Supabase Auth and activate profile
-    if (isPaid && updatedOrder && updatedOrder.user_id) {
-      console.log('Payment completed, creating auth user and activating profile:', updatedOrder.user_id);
+    // If payment is completed, create user and profile
+    if (isPaid && updatedOrder) {
+      const customerData = updatedOrder.payment_data?.customerData;
       
-      // Get profile data
-      const { data: profile, error: profileError } = await supabaseService
-        .from('profiles')
-        .select('*')
-        .eq('id', updatedOrder.user_id)
-        .single();
-
-      if (profileError) {
-        console.error('Failed to get profile:', profileError);
-      } else {
-        const customerData = updatedOrder.payment_data?.customerData;
+      // Se for compra de usuário já logado, só ativa o perfil
+      if (updatedOrder.payment_data?.isLoggedInPurchase && updatedOrder.user_id) {
+        console.log('Logged in user purchase - just updating order');
+        // Nada mais a fazer, order já está linkado ao perfil
+      } else if (customerData?.email && customerData?.password) {
+        // Novo usuário - criar tudo do zero
+        console.log('New user purchase - creating auth user and profile');
         
-        // Check if user already has auth account
-        if (profile.auth_user_id) {
-          console.log('User already has auth account, just activating profile');
-          
-          // Just activate the profile
-          const { error: profileUpdateError } = await supabaseService
-            .from('profiles')
-            .update({ 
-              is_active: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', updatedOrder.user_id);
-
-          if (profileUpdateError) {
-            console.error('Failed to activate profile:', profileUpdateError);
-          } else {
-            console.log('Profile activated successfully');
-          }
-        } else if (customerData?.email && customerData?.password) {
-          try {
-            // Create user in Supabase Auth
-            const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-              email: customerData.email,
-              password: customerData.password,
-              email_confirm: true, // User is confirmed after payment
-              user_metadata: {
-                name: customerData.name,
-                phone: customerData.phone || null,
-                payment_confirmed: true,
-                payment_gateway: 'HUBLA',
-                activated_via_webhook: true,
-                activated_at: new Date().toISOString()
-              }
-            });
-
-            if (authError) {
-              console.error('Failed to create auth user via webhook:', authError);
-            } else {
-              console.log('Auth user created successfully via webhook:', authData.user?.id);
-              
-              // Update profile with auth_user_id and activate it
-              const { error: profileUpdateError } = await supabaseService
-                .from('profiles')
-                .update({ 
-                  auth_user_id: authData.user.id,
-                  user_id: authData.user.id, // Now link to auth.users
-                  is_active: true,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', updatedOrder.user_id);
-
-              if (profileUpdateError) {
-                console.error('Failed to activate profile via webhook:', profileUpdateError);
-              } else {
-                console.log('Profile activated and linked to auth user successfully via webhook');
-              }
+        try {
+          // 1. Criar usuário no Supabase Auth
+          const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
+            email: customerData.email,
+            password: customerData.password,
+            email_confirm: true,
+            user_metadata: {
+              name: customerData.name,
+              phone: customerData.phone || null,
+              payment_confirmed: true,
+              payment_gateway: 'HUBLA',
+              activated_via_webhook: true,
+              activated_at: new Date().toISOString()
             }
-          } catch (error) {
-            console.error('Error creating auth user via webhook:', error);
+          });
+
+          if (authError) {
+            console.error('Failed to create auth user:', authError);
+            throw authError;
           }
-        } else {
-          console.error('Missing email or password in order data');
+
+          console.log('Auth user created:', authData.user?.id);
+
+          // 2. Criar perfil ativo
+          const { data: newProfile, error: profileError } = await supabaseService
+            .from('profiles')
+            .insert({
+              auth_user_id: authData.user.id,
+              user_id: authData.user.id,
+              name: customerData.name,
+              email: customerData.email,
+              phone: customerData.phone || null,
+              role: 'user',
+              is_active: true
+            })
+            .select()
+            .single();
+
+          if (profileError) {
+            console.error('Failed to create profile:', profileError);
+            throw profileError;
+          }
+
+          console.log('Profile created:', newProfile.id);
+
+          // 3. Atualizar order com o profile_id
+          const { error: orderUpdateError } = await supabaseService
+            .from('orders')
+            .update({ user_id: newProfile.id })
+            .eq('id', updatedOrder.id);
+
+          if (orderUpdateError) {
+            console.error('Failed to link order to profile:', orderUpdateError);
+          } else {
+            console.log('Order linked to profile successfully');
+          }
+
+        } catch (error) {
+          console.error('Error in user creation flow:', error);
         }
+      } else {
+        console.error('Missing email or password in order data');
       }
     }
 
