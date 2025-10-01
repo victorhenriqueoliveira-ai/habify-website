@@ -16,12 +16,14 @@ serve(async (req) => {
     console.log('AbacatePay webhook called - Method:', req.method);
     console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
     
-    // Validate webhook secret
+    // Validate webhook secret from query params or headers
     const url = new URL(req.url);
-    const webhookSecret = url.searchParams.get('webhookSecret');
+    const webhookSecretFromQuery = url.searchParams.get('webhookSecret');
+    const webhookSecretFromHeader = req.headers.get('x-webhook-secret') || req.headers.get('webhook-secret');
+    const webhookSecret = webhookSecretFromQuery || webhookSecretFromHeader;
     const expectedSecret = 'VictorOliveira@123';
     
-    console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing');
+    console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing', 'From:', webhookSecretFromQuery ? 'query' : webhookSecretFromHeader ? 'header' : 'none');
     
     if (!webhookSecret || webhookSecret !== expectedSecret) {
       console.error('Invalid webhook secret');
