@@ -310,16 +310,11 @@ serve(async (req) => {
       } else {
         sessionConfig.payment_method_types = ['card'];
         // Enable installments for card payments (Brazil)
-        // The number of installments available depends on the card issuer
+        // Stripe automatically presents installment options based on card issuer
         sessionConfig.payment_method_options = {
           card: {
             installments: {
-              enabled: true,
-              plan: {
-                count: 12, // Maximum installments available
-                interval: 'month',
-                type: 'fixed_count'
-              }
+              enabled: true
             }
           }
         };
