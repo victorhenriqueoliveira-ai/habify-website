@@ -77,7 +77,10 @@ serve(async (req) => {
       throw new Error('Plano não encontrado. Tente novamente.');
     }
 
-    console.log('Creating payment with AbacatePay for plan:', plan.name, 'price:', plan.price);
+    // Get the correct price based on gateway
+    const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
+    
+    console.log('Creating payment for plan:', plan.name, 'gateway:', useAbacatePay ? 'ABACATEPAY' : 'STRIPE', 'price:', planPrice);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -187,7 +190,7 @@ serve(async (req) => {
           name: plan.name,
           description: plan.description || plan.name,
           quantity: 1,
-          price: Math.round(plan.price * 100),
+          price: Math.round(planPrice * 100),
         }],
         customerId: customerId,
         returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
@@ -338,7 +341,7 @@ serve(async (req) => {
         user_id: profileId,
         plan_id: planId,
         abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
-        amount: plan.price,
+        amount: planPrice,
         status: 'pending',
         payment_method: customerData.paymentMethod || 'PIX',
         gateway: gateway,

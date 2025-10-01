@@ -174,17 +174,41 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
 
               <Separator />
 
-              <div className="flex justify-between items-center text-lg font-bold">
-                <span>Total:</span>
-                <span className="text-primary">
-                  R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Método:</span>
+                  <span className="text-sm font-medium">
+                    {paymentMethod === 'PIX' ? 'PIX (à vista)' : 
+                     paymentMethod === 'CARD' ? 'Cartão (12x)' : 
+                     'Boleto'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total:</span>
+                  <span className="text-primary">
+                    {paymentMethod === 'PIX' ? (
+                      <>R$ {(plan.pix_price || plan.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</>
+                    ) : (
+                      <>
+                        <div className="text-right">
+                          <div className="text-lg">
+                            R$ {((plan.stripe_price || plan.price) / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês
+                          </div>
+                          <div className="text-sm text-muted-foreground font-normal">
+                            Total: R$ {(plan.stripe_price || plan.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
 
               <p className="text-xs text-muted-foreground text-center mt-2">
                 {paymentMethod === 'PIX' 
-                  ? '* Cupons de desconto podem ser aplicados no checkout da AbacatePay'
-                  : '* Você será redirecionado para o checkout seguro do Stripe'
+                  ? '✓ Cupons de desconto disponíveis no checkout'
+                  : '✓ Campo de cupom disponível no checkout do Stripe'
                 }
               </p>
 

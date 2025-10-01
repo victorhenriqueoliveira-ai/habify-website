@@ -151,7 +151,9 @@ export type Database = {
           is_active: boolean
           kiwify_product_id: string | null
           name: string
+          pix_price: number | null
           price: number
+          stripe_price: number | null
           stripe_price_id: string | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
@@ -164,7 +166,9 @@ export type Database = {
           is_active?: boolean
           kiwify_product_id?: string | null
           name: string
+          pix_price?: number | null
           price: number
+          stripe_price?: number | null
           stripe_price_id?: string | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
@@ -177,7 +181,9 @@ export type Database = {
           is_active?: boolean
           kiwify_product_id?: string | null
           name?: string
+          pix_price?: number | null
           price?: number
+          stripe_price?: number | null
           stripe_price_id?: string | null
           type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string

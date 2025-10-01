@@ -6,6 +6,8 @@ export interface Plan {
   name: string;
   type: 'website_only' | 'website_maintenance_1m' | 'website_maintenance_6m';
   price: number;
+  pix_price?: number;
+  stripe_price?: number;
   description: string;
   features: string[];
   is_active: boolean;
@@ -34,6 +36,8 @@ export const usePlans = () => {
         name: plan.name,
         type: plan.type,
         price: Number(plan.price),
+        pix_price: plan.pix_price ? Number(plan.pix_price) : undefined,
+        stripe_price: plan.stripe_price ? Number(plan.stripe_price) : undefined,
         description: plan.description || '',
         features: Array.isArray(plan.features) ? plan.features.filter(f => typeof f === 'string') as string[] : [],
         is_active: plan.is_active,

@@ -122,74 +122,42 @@ const PricingSection = () => {
                     {getPlanIcon(plan.type)}
                   </div>
                   <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                  { plan.type === 'website_only' && (
+                  
+                  {/* Preço Cartão (Stripe) */}
+                  {plan.stripe_price && (
                     <>
-                    <div className='flex flex-row items-center justify-center gap-3'>
-                      <div className="text-1xl font-bold text-primary">
-                        12x de
+                      <div className='flex flex-row items-center justify-center gap-3'>
+                        <div className="text-1xl font-bold text-primary">
+                          12x de
+                        </div>
+                        <div className="text-3xl font-bold text-primary">
+                          R$ {(plan.stripe_price / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          via cartão
+                        </p>
                       </div>
-                      <div className="text-3xl font-bold text-primary">
-                        R$ 73,90
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        via cartão
-                    </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        ou
+                      <p className="text-xs text-muted-foreground">
+                        Total: R$ {plan.stripe_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                    </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          ou
+                        </p>
+                      </div>
                     </>
                   )}
-                  { plan.type === 'website_maintenance_1m' && (
-                    <>
-                    <div className='flex flex-row items-center justify-center gap-3'>
-                      <div className="text-1xl font-bold text-primary">
-                        12x de
-                      </div>
-                      <div className="text-3xl font-bold text-primary">
-                        R$ 83,90
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        via cartão
-                    </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        ou
-                      </p>
-                    </div>
-                    </>
-                  )}
-                  { plan.type === 'website_maintenance_6m' && (
-                    <>
-                    <div className='flex flex-row items-center justify-center gap-3'>
-                      <div className="text-1xl font-bold text-primary">
-                        12x de
-                      </div>
-                      <div className="text-3xl font-bold text-primary">
-                        R$ 133,08
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        via cartão
-                    </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        ou
-                      </p>
-                    </div>
-                    </>
-                  )}
+                  
+                  {/* Preço PIX */}
                   <div className='flex flex-row items-center justify-center gap-3'>
-                  <div className="text-1xl font-bold text-primary">
-                    R$ {plan.price.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-                  </div>
+                    <div className="text-1xl font-bold text-primary">
+                      R$ {(plan.pix_price || plan.price).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       via PIX
                     </p>
                   </div>
+                  
                   {monthlyMaintenanceNote && (
                     <p className="text-sm text-muted-foreground font-medium">
                       {monthlyMaintenanceNote}
