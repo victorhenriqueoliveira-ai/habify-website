@@ -307,15 +307,10 @@ serve(async (req) => {
       } else {
         sessionConfig.payment_method_types = ['card'];
         // Enable installments for card payments (Brazil)
-        // Must specify plan with eligible amount ranges
         sessionConfig.payment_method_options = {
           card: {
             installments: {
               enabled: true,
-              plan: {
-                count: 12, // Maximum number of installments
-                type: 'fixed_count',
-              },
             },
           },
         };
