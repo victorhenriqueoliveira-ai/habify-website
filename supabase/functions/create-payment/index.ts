@@ -52,7 +52,8 @@ serve(async (req) => {
 
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
-    const useStripe = customerData.paymentMethod === 'CARD' || customerData.paymentMethod === 'BOLETO';
+    const useMercadoPago = customerData.paymentMethod === 'CARD';
+    const useStripe = customerData.paymentMethod === 'BOLETO';
 
     // Check if required API keys are available
     if (useAbacatePay) {
@@ -60,6 +61,14 @@ serve(async (req) => {
       if (!abacatePayApiKey) {
         console.error('ABACATEPAY_API_KEY is not configured');
         throw new Error('Configuração de pagamento PIX não encontrada. Entre em contato com o suporte.');
+      }
+    }
+
+    if (useMercadoPago) {
+      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
+      if (!mercadoPagoToken) {
+        console.error('MERCADOPAGO_ACCESS_TOKEN is not configured');
+        throw new Error('Configuração de pagamento com cartão não encontrada. Entre em contato com o suporte.');
       }
     }
 
@@ -80,7 +89,8 @@ serve(async (req) => {
     // Get the correct price based on gateway
     const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
     
-    console.log('Creating payment for plan:', plan.name, 'gateway:', useAbacatePay ? 'ABACATEPAY' : 'STRIPE', 'price:', planPrice);
+    const gateway = useAbacatePay ? 'ABACATEPAY' : useMercadoPago ? 'MERCADOPAGO' : 'STRIPE';
+    console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -136,7 +146,6 @@ serve(async (req) => {
     // Process payment based on gateway
     let paymentUrl: string;
     let paymentId: string;
-    let gateway: 'ABACATEPAY' | 'STRIPE';
 
     if (useAbacatePay) {
       // AbacatePay flow for PIX
@@ -240,9 +249,94 @@ serve(async (req) => {
         console.error('No payment URL in response:', abacatePayData);
         throw new Error('URL de pagamento não foi gerada.');
       }
+    } else if (useMercadoPago) {
+      // Mercado Pago flow for CARD with installments
+      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')!;
+
+      console.log('Creating Mercado Pago preference for card payment with installments');
+
+      // Create preference for Mercado Pago
+      const preferencePayload = {
+        items: [{
+          id: planId,
+          title: plan.name,
+          description: plan.description || plan.name,
+          quantity: 1,
+          unit_price: planPrice,
+          currency_id: 'BRL',
+        }],
+        payer: {
+          name: customerData.name,
+          email: customerData.email,
+          phone: customerData.phone ? {
+            area_code: customerData.phone.substring(0, 2),
+            number: customerData.phone.substring(2),
+          } : undefined,
+          identification: customerData.cpf ? {
+            type: 'CPF',
+            number: customerData.cpf,
+          } : undefined,
+        },
+        payment_methods: {
+          excluded_payment_types: [
+            { id: 'ticket' }, // Exclude boleto
+            { id: 'atm' }, // Exclude ATM
+            { id: 'debit_card' }, // Exclude debit card
+          ],
+          installments: 12, // Allow up to 12 installments
+        },
+        back_urls: {
+          success: origin.includes('localhost') || origin.includes('lovable.dev')
+            ? `${origin}/payment-success`
+            : 'https://habify.com.br/payment-success',
+          failure: origin.includes('localhost') || origin.includes('lovable.dev')
+            ? `${origin}/payment-canceled`
+            : 'https://habify.com.br/payment-canceled',
+          pending: origin.includes('localhost') || origin.includes('lovable.dev')
+            ? `${origin}/payment-success`
+            : 'https://habify.com.br/payment-success',
+        },
+        auto_return: 'approved',
+        external_reference: `habify-${planId}-${Date.now()}`,
+        notification_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/mercadopago-webhook`,
+        metadata: {
+          plan_id: planId,
+          profile_id: profileId,
+          customer_email: customerData.email,
+        },
+      };
+
+      console.log('Mercado Pago preference payload:', JSON.stringify(preferencePayload, null, 2));
+
+      const mercadoPagoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${mercadoPagoToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferencePayload),
+      });
+
+      console.log('Mercado Pago response status:', mercadoPagoResponse.status);
+
+      if (!mercadoPagoResponse.ok) {
+        const errorText = await mercadoPagoResponse.text();
+        console.error('Mercado Pago error response:', errorText);
+        throw new Error('Falha ao processar pagamento com cartão. Tente novamente.');
+      }
+
+      const mercadoPagoData = await mercadoPagoResponse.json();
+      console.log('Mercado Pago preference created:', mercadoPagoData);
+
+      paymentUrl = mercadoPagoData.init_point;
+      paymentId = mercadoPagoData.id;
+
+      if (!paymentUrl) {
+        console.error('No payment URL in Mercado Pago response:', mercadoPagoData);
+        throw new Error('URL de pagamento não foi gerada.');
+      }
     } else {
-      // Stripe flow for CARD and BOLETO
-      gateway = 'STRIPE';
+      // Stripe flow for BOLETO only
       
       // Check if plan has Stripe price ID
       if (!plan.stripe_price_id) {

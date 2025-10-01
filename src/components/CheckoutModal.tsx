@@ -208,7 +208,9 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               <p className="text-xs text-muted-foreground text-center mt-2">
                 {paymentMethod === 'PIX' 
                   ? '✓ Cupons de desconto disponíveis no checkout'
-                  : '✓ Campo de cupom disponível no checkout do Stripe'
+                  : paymentMethod === 'CARD'
+                  ? '✓ Mercado Pago oferece cupons de desconto'
+                  : '✓ Campo de cupom disponível no checkout'
                 }
               </p>
 
@@ -247,7 +249,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Cartão de Crédito</div>
-                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Stripe</div>
+                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Mercado Pago</div>
                       </div>
                     </Label>
                   </div>
@@ -257,7 +259,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Boleto Bancário</div>
-                        <div className="text-xs text-muted-foreground">Pagamento via boleto com Stripe</div>
+                        <div className="text-xs text-muted-foreground">Pagamento via Stripe</div>
                       </div>
                     </Label>
                   </div>
@@ -269,18 +271,18 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-blue-900">
-                          Parcelamento disponível em até 12x
+                          Parcelamento em até 12x sem juros
                         </p>
                         <p className="text-xs text-blue-700">
-                          As opções de parcelamento serão apresentadas no checkout do Stripe e dependem do banco emissor do seu cartão.
+                          Você poderá escolher o número de parcelas no checkout do Mercado Pago. O parcelamento depende do banco emissor do seu cartão.
                         </p>
                         <p className="text-xs text-blue-700 font-medium mt-2">
-                          Valores estimados por parcela (12x):
+                          Valores mensais estimados (12x):
                         </p>
                         <ul className="text-xs text-blue-700 space-y-0.5 ml-4">
-                          <li>• Plano 1: ~R$ 73,90/mês</li>
-                          <li>• Plano 2: ~R$ 83,90/mês</li>
-                          <li>• Plano 3: ~R$ 150,00/mês</li>
+                          <li>• Só o Site: 12x de R$ 73,90</li>
+                          <li>• Site + Manutenção: 12x de R$ 83,90</li>
+                          <li>• Múltiplos Projetos: 12x de R$ 150,00</li>
                         </ul>
                       </div>
                     </div>
@@ -382,6 +384,8 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <span>
                   {paymentMethod === 'PIX' 
                     ? 'Pagamento 100% seguro via AbacatePay' 
+                    : paymentMethod === 'CARD'
+                    ? 'Pagamento 100% seguro via Mercado Pago'
                     : 'Pagamento 100% seguro via Stripe'
                   }
                 </span>
@@ -412,9 +416,16 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                   <p>• Garantia de 30 dias</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>
+              ) : paymentMethod === 'CARD' ? (
+                <>
+                  <p>• Cartão de Crédito (até 12x sem juros)</p>
+                  <p>• Processamento seguro via Mercado Pago</p>
+                  <p>• Garantia de 30 dias</p>
+                  <p>• Suporte direto via WhatsApp</p>
+                </>
               ) : (
                 <>
-                  <p>• Cartão de Crédito (até 12x) ou Boleto Bancário</p>
+                  <p>• Boleto Bancário</p>
                   <p>• Processamento seguro via Stripe</p>
                   <p>• Garantia de 30 dias</p>
                   <p>• Suporte direto via WhatsApp</p>
