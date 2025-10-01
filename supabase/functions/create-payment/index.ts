@@ -283,6 +283,10 @@ serve(async (req) => {
           },
         ],
         mode: 'payment',
+        allow_promotion_codes: true, // Enable coupon field in checkout
+        payment_intent_data: {
+          setup_future_usage: undefined, // One-time payment only
+        },
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/payment-canceled`,
         metadata: {
@@ -300,6 +304,14 @@ serve(async (req) => {
         sessionConfig.payment_method_types = ['boleto'];
       } else {
         sessionConfig.payment_method_types = ['card'];
+        // Enable installments for card payments (Brazil)
+        sessionConfig.payment_method_options = {
+          card: {
+            installments: {
+              enabled: true,
+            },
+          },
+        };
       }
 
       console.log('Creating Stripe session with config:', JSON.stringify(sessionConfig, null, 2));
