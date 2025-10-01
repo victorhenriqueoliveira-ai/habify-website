@@ -250,8 +250,14 @@ serve(async (req) => {
       console.log('Creating Stripe checkout session for price:', plan.stripe_price_id);
 
       // Initialize Stripe
-      const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-        apiVersion: '2025-08-27.basil',
+      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+      if (!stripeKey) {
+        console.error('STRIPE_SECRET_KEY not configured');
+        throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
+      }
+      
+      const stripe = new Stripe(stripeKey, {
+        apiVersion: '2024-11-20.acacia',
       });
 
       // Check if customer exists in Stripe
@@ -267,7 +273,7 @@ serve(async (req) => {
       }
 
       // Create Stripe checkout session
-      const session = await stripe.checkout.sessions.create({
+      const sessionConfig: any = {
         customer: customerId,
         customer_email: customerId ? undefined : customerData.email,
         line_items: [
@@ -277,7 +283,6 @@ serve(async (req) => {
           },
         ],
         mode: 'payment',
-        payment_method_types: customerData.paymentMethod === 'BOLETO' ? ['boleto'] : ['card'],
         success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/payment-canceled`,
         metadata: {
@@ -288,7 +293,18 @@ serve(async (req) => {
           customerPassword: customerData.isLoggedInPurchase ? '' : customerData.password,
           isLoggedInPurchase: customerData.isLoggedInPurchase ? 'true' : 'false',
         },
-      });
+      };
+
+      // Configure payment methods based on selection
+      if (customerData.paymentMethod === 'BOLETO') {
+        sessionConfig.payment_method_types = ['boleto'];
+      } else {
+        sessionConfig.payment_method_types = ['card'];
+      }
+
+      console.log('Creating Stripe session with config:', JSON.stringify(sessionConfig, null, 2));
+      
+      const session = await stripe.checkout.sessions.create(sessionConfig);
 
       paymentUrl = session.url || '';
       paymentId = session.id;
