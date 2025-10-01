@@ -206,12 +206,12 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
               <p className="text-xs text-muted-foreground text-center mt-2">
                 {paymentMethod === 'PIX' 
                   ? '✓ Cupons de desconto disponíveis no checkout'
-                  : '✓ Mercado Pago oferece cupons de desconto'}
+                  : '✓ Hubla oferece cupons de desconto no checkout'}
               </p>
 
               {plan.type === 'website_maintenance_6m' && (
                 <p className="text-xs text-muted-foreground text-center">
-                  Manutenção por apenas R$ 166,16/mês
+                  Manutenção por apenas R$ 162,99/mês
                 </p>
               )}
             </CardContent>
@@ -244,7 +244,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <CreditCard className="h-4 w-4 mr-2" />
                       <div>
                         <div>Cartão de Crédito</div>
-                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Mercado Pago</div>
+                        <div className="text-xs text-muted-foreground">Parcelamento em até 12x via Hubla</div>
                       </div>
                     </Label>
                   </div>
@@ -256,18 +256,18 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                       <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-blue-900">
-                          Parcelamento em até 12x sem juros
+                          Parcelamento em até 12x
                         </p>
                         <p className="text-xs text-blue-700">
-                          Você poderá escolher o número de parcelas no checkout do Mercado Pago. O parcelamento depende do banco emissor do seu cartão.
+                          Você poderá escolher o número de parcelas no checkout da Hubla. Cupons de desconto disponíveis!
                         </p>
                         <p className="text-xs text-blue-700 font-medium mt-2">
-                          Valores mensais estimados (12x):
+                          Valores de parcelamento (12x):
                         </p>
                         <ul className="text-xs text-blue-700 space-y-0.5 ml-4">
-                          <li>• Só o Site: 12x de R$ 73,90</li>
-                          <li>• Site + Manutenção: 12x de R$ 83,90</li>
-                          <li>• Múltiplos Projetos: 12x de R$ 150,00</li>
+                          <li>• Só o Site: 12x de R$ 81,01</li>
+                          <li>• Site + Manutenção 1 Mês: 12x de R$ 111,79</li>
+                          <li>• Site + Manutenção 6 Meses: 12x de R$ 199,02</li>
                         </ul>
                       </div>
                     </div>
@@ -369,7 +369,7 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <span>
                   {paymentMethod === 'PIX' 
                     ? 'Pagamento 100% seguro via AbacatePay' 
-                    : 'Pagamento 100% seguro via Mercado Pago'}
+                    : 'Pagamento 100% seguro via Hubla'}
                 </span>
               </div>
 
@@ -395,14 +395,14 @@ export const CheckoutModal = ({ plan, isOpen, onClose, isLoggedInPurchase = fals
                 <>
                   <p>• PIX instantâneo via AbacatePay</p>
                   <p>• Pagamento 100% seguro</p>
-                  <p>• Garantia de 30 dias</p>
+                  <p>• Cupons de desconto disponíveis</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>
               ) : (
                 <>
-                  <p>• Cartão de Crédito (até 12x sem juros)</p>
-                  <p>• Processamento seguro via Mercado Pago</p>
-                  <p>• Garantia de 30 dias</p>
+                  <p>• Cartão de Crédito (até 12x)</p>
+                  <p>• Processamento seguro via Hubla</p>
+                  <p>• Cupons de desconto disponíveis</p>
                   <p>• Suporte direto via WhatsApp</p>
                 </>
               )}

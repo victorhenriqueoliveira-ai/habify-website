@@ -16,6 +16,9 @@ verify_jwt = false
 [functions.abacatepay-webhook]
 verify_jwt = false
 
+[functions.hubla-webhook]
+verify_jwt = false
+
 [functions.kiwify-webhook]
 verify_jwt = false
 

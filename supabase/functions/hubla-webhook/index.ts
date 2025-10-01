@@ -1,0 +1,258 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    console.log('Hubla webhook called - Method:', req.method);
+    console.log('Hubla webhook headers:', Object.fromEntries(req.headers.entries()));
+    
+    // Validate webhook token from headers
+    const webhookToken = req.headers.get('authorization') || req.headers.get('x-webhook-token');
+    const expectedToken = Deno.env.get('HUBLA_WEBHOOK_TOKEN');
+    
+    console.log('Webhook token received:', webhookToken ? 'Present' : 'Missing');
+    
+    if (!webhookToken || !expectedToken) {
+      console.error('Webhook token missing');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Token missing' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    
+    // Remove 'Bearer ' prefix if present
+    const cleanToken = webhookToken.replace('Bearer ', '');
+    
+    if (cleanToken !== expectedToken) {
+      console.error('Invalid webhook token');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    
+    console.log('Webhook token validated successfully');
+    
+    const webhookData = await req.json();
+    console.log('Hubla webhook received:', JSON.stringify(webhookData, null, 2));
+
+    // Extract transaction details from Hubla webhook
+    // Hubla sends different event types, we're interested in payment confirmation
+    const eventType = webhookData.event || webhookData.type;
+    const transactionId = webhookData.transaction?.id || webhookData.data?.id || webhookData.id;
+    const transactionStatus = webhookData.transaction?.status || webhookData.data?.status || webhookData.status;
+    const customerEmail = webhookData.transaction?.customer?.email || webhookData.customer?.email || webhookData.data?.customer?.email;
+    
+    console.log('Processing Hubla webhook:', { eventType, transactionId, transactionStatus, customerEmail });
+
+    if (!transactionId) {
+      console.error('No transaction ID found in webhook data');
+      return new Response(
+        JSON.stringify({ error: 'No transaction ID found in webhook' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Create Supabase client
+    const supabaseService = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    // Map Hubla status to our database status
+    const isPaid = transactionStatus === 'PAID' || transactionStatus === 'APPROVED' || 
+                   transactionStatus === 'paid' || transactionStatus === 'approved' ||
+                   transactionStatus === 'COMPLETED' || transactionStatus === 'completed';
+    const status = isPaid ? 'completed' : 
+                   transactionStatus === 'FAILED' || transactionStatus === 'failed' || 
+                   transactionStatus === 'REFUNDED' || transactionStatus === 'refunded' ? 'failed' : 'pending';
+    
+    console.log('Payment status mapping:', { transactionStatus, isPaid, status });
+
+    // Try to find order by transaction ID or customer email
+    let order;
+    let updateError;
+    
+    // First try to find by Hubla transaction ID
+    const { data: orderByTransactionId } = await supabaseService
+      .from('orders')
+      .select('*, payment_data')
+      .eq('hubla_transaction_id', transactionId)
+      .single();
+
+    if (orderByTransactionId) {
+      order = orderByTransactionId;
+      console.log('Found order by Hubla transaction ID:', order.id);
+    } else if (customerEmail) {
+      // Try to find by customer email in payment_data
+      const { data: allOrders } = await supabaseService
+        .from('orders')
+        .select('*, payment_data')
+        .eq('gateway', 'HUBLA')
+        .eq('status', 'pending');
+
+      if (allOrders && allOrders.length > 0) {
+        order = allOrders.find(o => 
+          o.payment_data?.customerData?.email === customerEmail
+        );
+        
+        if (order) {
+          console.log('Found order by customer email:', order.id);
+          // Update with transaction ID for future lookups
+          await supabaseService
+            .from('orders')
+            .update({ hubla_transaction_id: transactionId })
+            .eq('id', order.id);
+        }
+      }
+    }
+
+    if (!order) {
+      console.error('Order not found for Hubla transaction:', transactionId);
+      return new Response(
+        JSON.stringify({ error: 'Order not found', transaction_id: transactionId }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+
+    // Update order in database
+    const { data: updatedOrder, error: orderUpdateError } = await supabaseService
+      .from('orders')
+      .update({
+        status: isPaid ? 'paid' : status,
+        paid_at: isPaid ? new Date().toISOString() : null,
+        hubla_transaction_id: transactionId,
+        payment_data: {
+          ...order.payment_data,
+          webhook_data: webhookData,
+          updated_via_webhook: true,
+          updated_at: new Date().toISOString()
+        }
+      })
+      .eq('id', order.id)
+      .select('*')
+      .single();
+
+    if (orderUpdateError) {
+      console.error('Failed to update order:', orderUpdateError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to update order', details: orderUpdateError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    console.log('Order updated successfully via Hubla webhook:', updatedOrder);
+
+    // If payment is completed, create user in Supabase Auth and activate profile
+    if (isPaid && updatedOrder && updatedOrder.user_id) {
+      console.log('Payment completed, creating auth user and activating profile:', updatedOrder.user_id);
+      
+      // Get profile data
+      const { data: profile, error: profileError } = await supabaseService
+        .from('profiles')
+        .select('*')
+        .eq('id', updatedOrder.user_id)
+        .single();
+
+      if (profileError) {
+        console.error('Failed to get profile:', profileError);
+      } else {
+        const customerData = updatedOrder.payment_data?.customerData;
+        
+        // Check if user already has auth account
+        if (profile.auth_user_id) {
+          console.log('User already has auth account, just activating profile');
+          
+          // Just activate the profile
+          const { error: profileUpdateError } = await supabaseService
+            .from('profiles')
+            .update({ 
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', updatedOrder.user_id);
+
+          if (profileUpdateError) {
+            console.error('Failed to activate profile:', profileUpdateError);
+          } else {
+            console.log('Profile activated successfully');
+          }
+        } else if (customerData?.email && customerData?.password) {
+          try {
+            // Create user in Supabase Auth
+            const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
+              email: customerData.email,
+              password: customerData.password,
+              email_confirm: true, // User is confirmed after payment
+              user_metadata: {
+                name: customerData.name,
+                phone: customerData.phone || null,
+                payment_confirmed: true,
+                payment_gateway: 'HUBLA',
+                activated_via_webhook: true,
+                activated_at: new Date().toISOString()
+              }
+            });
+
+            if (authError) {
+              console.error('Failed to create auth user via webhook:', authError);
+            } else {
+              console.log('Auth user created successfully via webhook:', authData.user?.id);
+              
+              // Update profile with auth_user_id and activate it
+              const { error: profileUpdateError } = await supabaseService
+                .from('profiles')
+                .update({ 
+                  auth_user_id: authData.user.id,
+                  user_id: authData.user.id, // Now link to auth.users
+                  is_active: true,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', updatedOrder.user_id);
+
+              if (profileUpdateError) {
+                console.error('Failed to activate profile via webhook:', profileUpdateError);
+              } else {
+                console.log('Profile activated and linked to auth user successfully via webhook');
+              }
+            }
+          } catch (error) {
+            console.error('Error creating auth user via webhook:', error);
+          }
+        } else {
+          console.error('Missing email or password in order data');
+        }
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Hubla webhook processed successfully',
+        order_updated: !!updatedOrder
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
+
+  } catch (error) {
+    console.error('Hubla webhook processing error:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
+  }
+});

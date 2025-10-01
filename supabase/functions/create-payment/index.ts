@@ -52,7 +52,7 @@ serve(async (req) => {
 
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
-    const useMercadoPago = customerData.paymentMethod === 'CARD';
+    const useHubla = customerData.paymentMethod === 'CARD';
 
     // Check if required API keys are available
     if (useAbacatePay) {
@@ -60,14 +60,6 @@ serve(async (req) => {
       if (!abacatePayApiKey) {
         console.error('ABACATEPAY_API_KEY is not configured');
         throw new Error('Configuração de pagamento PIX não encontrada. Entre em contato com o suporte.');
-      }
-    }
-
-    if (useMercadoPago) {
-      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
-      if (!mercadoPagoToken) {
-        console.error('MERCADOPAGO_ACCESS_TOKEN is not configured');
-        throw new Error('Configuração de pagamento com cartão não encontrada. Entre em contato com o suporte.');
       }
     }
 
@@ -88,7 +80,7 @@ serve(async (req) => {
     // Get the correct price based on gateway
     const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
     
-    let gateway = useAbacatePay ? 'ABACATEPAY' : 'MERCADOPAGO';
+    let gateway = useAbacatePay ? 'ABACATEPAY' : 'HUBLA';
     console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
 
     // Create Supabase service client for database operations
@@ -248,92 +240,25 @@ serve(async (req) => {
         console.error('No payment URL in response:', abacatePayData);
         throw new Error('URL de pagamento não foi gerada.');
       }
-    } else if (useMercadoPago) {
-      // Mercado Pago flow for CARD with installments
-      const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')!;
-
-      console.log('Creating Mercado Pago preference for card payment with installments');
-
-      // Create preference for Mercado Pago
-      const preferencePayload = {
-        items: [{
-          id: planId,
-          title: plan.name,
-          description: plan.description || plan.name,
-          quantity: 1,
-          unit_price: planPrice,
-          currency_id: 'BRL',
-        }],
-        payer: {
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone ? {
-            area_code: customerData.phone.substring(0, 2),
-            number: customerData.phone.substring(2),
-          } : undefined,
-          identification: customerData.cpf ? {
-            type: 'CPF',
-            number: customerData.cpf,
-          } : undefined,
-        },
-        payment_methods: {
-          excluded_payment_types: [
-            { id: 'ticket' }, // Exclude boleto
-            { id: 'atm' }, // Exclude ATM
-            { id: 'debit_card' }, // Exclude debit card
-          ],
-          installments: 12, // Allow up to 12 installments
-        },
-        back_urls: {
-          success: origin.includes('localhost') || origin.includes('lovable.dev')
-            ? `${origin}/payment-success`
-            : 'https://habify.com.br/payment-success',
-          failure: origin.includes('localhost') || origin.includes('lovable.dev')
-            ? `${origin}/payment-canceled`
-            : 'https://habify.com.br/payment-canceled',
-          pending: origin.includes('localhost') || origin.includes('lovable.dev')
-            ? `${origin}/payment-success`
-            : 'https://habify.com.br/payment-success',
-        },
-        auto_return: 'approved',
-        external_reference: `habify-${planId}-${Date.now()}`,
-        notification_url: `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/mercadopago-webhook`,
-        metadata: {
-          plan_id: planId,
-          profile_id: profileId,
-          customer_email: customerData.email,
-        },
-      };
-
-      console.log('Mercado Pago preference payload:', JSON.stringify(preferencePayload, null, 2));
-
-      const mercadoPagoResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mercadoPagoToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(preferencePayload),
-      });
-
-      console.log('Mercado Pago response status:', mercadoPagoResponse.status);
-
-      if (!mercadoPagoResponse.ok) {
-        const errorText = await mercadoPagoResponse.text();
-        console.error('Mercado Pago error response:', errorText);
-        throw new Error('Falha ao processar pagamento com cartão. Tente novamente.');
+    } else if (useHubla) {
+      // Hubla flow for CARD with installments
+      gateway = 'HUBLA';
+      
+      console.log('Using Hubla for card payment');
+      
+      // Check if plan has Hubla checkout URL configured
+      if (!plan.hubla_checkout_url) {
+        console.error('Hubla checkout URL not configured for plan:', planId);
+        throw new Error('Link de pagamento com cartão não está configurado. Entre em contato com o suporte.');
       }
-
-      const mercadoPagoData = await mercadoPagoResponse.json();
-      console.log('Mercado Pago preference created:', mercadoPagoData);
-
-      paymentUrl = mercadoPagoData.init_point;
-      paymentId = mercadoPagoData.id;
-
-      if (!paymentUrl) {
-        console.error('No payment URL in Mercado Pago response:', mercadoPagoData);
-        throw new Error('URL de pagamento não foi gerada.');
-      }
+      
+      // Use the pre-configured Hubla checkout URL
+      paymentUrl = plan.hubla_checkout_url;
+      
+      // Generate a unique reference for tracking
+      paymentId = `hubla-${planId}-${Date.now()}`;
+      
+      console.log('Using Hubla checkout URL:', paymentUrl);
     }
 
     // Create order record with profile reference and gateway info
@@ -343,6 +268,7 @@ serve(async (req) => {
         user_id: profileId,
         plan_id: planId,
         abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
+        hubla_transaction_id: gateway === 'HUBLA' ? paymentId : null,
         amount: planPrice,
         status: 'pending',
         payment_method: customerData.paymentMethod || 'PIX',
