@@ -14,6 +14,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
+import { CreditsDisplay } from '@/components/CreditsDisplay';
 
 export const AdminTopbar = () => {
   const { user, logout } = useAuth();
@@ -53,6 +54,9 @@ export const AdminTopbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
+        {/* Credits Display */}
+        <CreditsDisplay />
+        
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

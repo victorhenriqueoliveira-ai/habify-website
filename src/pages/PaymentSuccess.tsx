@@ -2,14 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Coins } from 'lucide-react';
 import { usePostPaymentFlow } from '@/hooks/usePostPaymentFlow';
+import { useCredits } from '@/hooks/useCredits';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isProcessing } = usePostPaymentFlow();
+  const { credits, fetchCredits } = useCredits();
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [autoRedirectSeconds, setAutoRedirectSeconds] = useState(5);
+
+  useEffect(() => {
+    // Atualizar créditos quando a página carregar
+    fetchCredits();
+  }, []);
+
+  useEffect(() => {
+    // Auto redirect countdown
+    if (!isProcessing && autoRedirectSeconds > 0) {
+      const timer = setTimeout(() => {
+        setAutoRedirectSeconds(autoRedirectSeconds - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (autoRedirectSeconds === 0) {
+      navigate('/admin/my-projects');
+    }
+  }, [autoRedirectSeconds, isProcessing, navigate]);
 
   useEffect(() => {
     // Get payment_id from URL and store it (supports both AbacatePay and Mercado Pago)
@@ -69,10 +89,21 @@ const PaymentSuccess = () => {
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             <p className="text-lg">
-              Parabéns! Seu pagamento foi processado com sucesso e sua conta foi criada automaticamente.
+              Parabéns! Seu pagamento foi processado com sucesso{transactionData ? ' e sua conta foi criada automaticamente' : ''}.
             </p>
             <p className="text-muted-foreground">
-              Você será redirecionado para o painel em alguns segundos, ou clique no botão abaixo.
+              Redirecionando para o painel em {autoRedirectSeconds} segundos...
+            </p>
+          </div>
+
+          {/* Display Credits */}
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Coins className="h-6 w-6 text-primary" />
+              <h3 className="text-2xl font-bold">{credits} Crédito{credits !== 1 ? 's' : ''}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Você pode criar {credits} site{credits !== 1 ? 's' : ''} com seus créditos
             </p>
           </div>
 

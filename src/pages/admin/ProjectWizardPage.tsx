@@ -10,6 +10,7 @@ import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioProperties
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/hooks/useCredits';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ const ProjectWizardPage = () => {
   const navigate = useNavigate();
   const { createProject } = useProjects();
   const { user } = useAuth();
+  const { credits, useCreditsForProject } = useCredits();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -176,6 +178,18 @@ const ProjectWizardPage = () => {
       return;
     }
 
+    // Verificar se tem créditos antes de criar projeto
+    if (credits < 1) {
+      toast.error('Você não tem créditos suficientes para criar um site', {
+        description: 'Compre mais créditos para continuar',
+        action: {
+          label: 'Comprar Créditos',
+          onClick: () => navigate('/admin/new-project-purchase')
+        }
+      });
+      return;
+    }
+
     setLoading(true);
     
     const loadingToast = toast.loading('Criando projeto e fazendo upload das imagens...');
@@ -321,8 +335,14 @@ const ProjectWizardPage = () => {
             console.error('Error saving portfolio properties:', propertiesError);
             toast.error('Projeto criado, mas houve erro ao salvar os imóveis', { id: loadingToast });
           } else {
-            console.log('Properties saved successfully');
+          console.log('Properties saved successfully');
           }
+        }
+
+        // Usar 1 crédito após criar o projeto com sucesso
+        const creditsUsed = await useCreditsForProject();
+        if (!creditsUsed) {
+          console.error('Failed to use credits after project creation');
         }
 
         toast.success('Projeto criado com sucesso!', { id: loadingToast });

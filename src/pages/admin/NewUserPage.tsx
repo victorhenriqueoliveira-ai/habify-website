@@ -33,6 +33,7 @@ export const NewUserPage = () => {
     phone: '',
     company: '',
     role: '' as UserRole | '',
+    credits: 0,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +57,7 @@ export const NewUserPage = () => {
         phone: formData.phone,
         company: formData.company,
         role: formData.role as UserRole,
+        credits: formData.credits,
       });
 
       toast({
@@ -180,6 +182,21 @@ export const NewUserPage = () => {
                     <SelectItem value="dev">{roleLabels.dev}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="credits">Créditos Iniciais</Label>
+                <Input
+                  id="credits"
+                  type="number"
+                  min="0"
+                  value={formData.credits}
+                  onChange={(e) => handleChange('credits', e.target.value)}
+                  placeholder="0"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Quantidade de sites que o usuário poderá criar
+                </p>
               </div>
             </div>
 

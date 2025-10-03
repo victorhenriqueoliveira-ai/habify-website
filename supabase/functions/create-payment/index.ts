@@ -96,15 +96,16 @@ serve(async (req) => {
     if (customerData.isLoggedInPurchase && customerData.userId) {
       console.log('Using existing profile for logged in user:', customerData.userId);
       
+      // Buscar por auth_user_id ao invés de user_id
       const { data: existingProfile, error: profileFetchError } = await supabaseService
         .from('profiles')
         .select('id')
-        .eq('user_id', customerData.userId)
+        .eq('auth_user_id', customerData.userId)
         .single();
 
       if (profileFetchError || !existingProfile) {
         console.error('Failed to find existing profile:', profileFetchError);
-        throw new Error('Perfil de usuário não encontrado');
+        throw new Error('Perfil de usuário não encontrado. Por favor, faça login novamente.');
       }
 
       profileId = existingProfile.id;

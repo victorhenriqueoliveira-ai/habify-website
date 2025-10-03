@@ -111,6 +111,7 @@ export const useUsers = () => {
     phone?: string;
     role?: string;
     company?: string;
+    credits?: number;
   }) => {
     try {
       const { data, error } = await supabase.auth.admin.createUser({
@@ -124,16 +125,29 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      // Update the profile with additional data
-      if (data.user && (userData.phone || userData.role || userData.company)) {
-        await supabase
+      // Update the profile with additional data including credits
+      if (data.user) {
+        const { data: profile } = await supabase
           .from('profiles')
           .update({
             phone: userData.phone,
             role: (userData.role as 'user' | 'admin' | 'dev') || 'user',
             company: userData.company,
+            credits: userData.credits || 0,
           })
-          .eq('user_id', data.user.id);
+          .eq('auth_user_id', data.user.id)
+          .select()
+          .single();
+
+        // Se créditos foram concedidos, registrar no histórico
+        if (profile && userData.credits && userData.credits > 0) {
+          await supabase.rpc('add_credits', {
+            _user_id: profile.id,
+            _amount: 0, // Não adicionar, só registrar
+            _type: 'admin_grant',
+            _description: `Créditos iniciais concedidos pelo admin ao criar usuário`
+          });
+        }
       }
       
       // Log the create action
@@ -141,6 +155,7 @@ export const useUsers = () => {
         email: userData.email,
         name: userData.name,
         role: userData.role || 'user',
+        credits: userData.credits || 0,
         timestamp: new Date().toISOString()
       });
       

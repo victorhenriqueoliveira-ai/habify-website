@@ -52,6 +52,61 @@ export type Database = {
           },
         ]
       }
+      credits_history: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          order_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credits_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -149,6 +204,7 @@ export type Database = {
         Row: {
           card_gateway: string | null
           created_at: string
+          credits_granted: number
           description: string | null
           features: Json | null
           hubla_checkout_url: string | null
@@ -166,6 +222,7 @@ export type Database = {
         Insert: {
           card_gateway?: string | null
           created_at?: string
+          credits_granted?: number
           description?: string | null
           features?: Json | null
           hubla_checkout_url?: string | null
@@ -183,6 +240,7 @@ export type Database = {
         Update: {
           card_gateway?: string | null
           created_at?: string
+          credits_granted?: number
           description?: string | null
           features?: Json | null
           hubla_checkout_url?: string | null
@@ -282,6 +340,7 @@ export type Database = {
           avatar_url: string | null
           company: string | null
           created_at: string
+          credits: number
           email: string | null
           id: string
           is_active: boolean
@@ -296,6 +355,7 @@ export type Database = {
           avatar_url?: string | null
           company?: string | null
           created_at?: string
+          credits?: number
           email?: string | null
           id?: string
           is_active?: boolean
@@ -310,6 +370,7 @@ export type Database = {
           avatar_url?: string | null
           company?: string | null
           created_at?: string
+          credits?: number
           email?: string | null
           id?: string
           is_active?: boolean
@@ -547,6 +608,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_credits: {
+        Args: {
+          _amount: number
+          _description?: string
+          _order_id?: string
+          _type: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["user_role"]
@@ -566,6 +637,10 @@ export type Database = {
       link_user_transaction: {
         Args: { user_email: string }
         Returns: undefined
+      }
+      use_credits: {
+        Args: { _amount: number; _description?: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

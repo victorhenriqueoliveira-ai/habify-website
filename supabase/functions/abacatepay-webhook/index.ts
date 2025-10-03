@@ -110,10 +110,32 @@ serve(async (req) => {
     if (isPaid && order) {
       const customerData = order.payment_data?.customerData;
       
-      // Se for compra de usuário já logado, só ativa o perfil
+      // Se for compra de usuário já logado, adicionar créditos
       if (order.payment_data?.isLoggedInPurchase && order.user_id) {
-        console.log('Logged in user purchase - just updating order');
-        // Nada mais a fazer, order já está linkado ao perfil
+        console.log('Logged in user purchase - adding credits');
+        
+        // Adicionar créditos ao perfil existente
+        const { data: planData } = await supabaseService
+          .from('plans')
+          .select('credits_granted')
+          .eq('id', order.plan_id)
+          .single();
+
+        if (planData?.credits_granted) {
+          const { error: creditsError } = await supabaseService.rpc('add_credits', {
+            _user_id: order.user_id,
+            _amount: planData.credits_granted,
+            _type: 'purchase',
+            _description: `Créditos do plano via AbacatePay`,
+            _order_id: order.id
+          });
+
+          if (creditsError) {
+            console.error('Failed to add credits:', creditsError);
+          } else {
+            console.log(`Added ${planData.credits_granted} credits to existing user ${order.user_id}`);
+          }
+        }
       } else if (customerData?.email && customerData?.password) {
         // Novo usuário - criar tudo do zero
         console.log('New user purchase - creating auth user and profile');
@@ -173,6 +195,29 @@ serve(async (req) => {
             console.error('Failed to link order to profile:', orderUpdateError);
           } else {
             console.log('Order linked to profile successfully');
+          }
+
+          // 4. Adicionar créditos ao usuário baseado no plano
+          const { data: planData } = await supabaseService
+            .from('plans')
+            .select('credits_granted')
+            .eq('id', order.plan_id)
+            .single();
+
+          if (planData?.credits_granted) {
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: newProfile.id,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Créditos do plano via AbacatePay`,
+              _order_id: order.id
+            });
+
+            if (creditsError) {
+              console.error('Failed to add credits:', creditsError);
+            } else {
+              console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
+            }
           }
 
         } catch (error) {
