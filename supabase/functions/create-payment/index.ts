@@ -96,21 +96,36 @@ serve(async (req) => {
     if (customerData.isLoggedInPurchase && customerData.userId) {
       console.log('Using existing profile for logged in user:', customerData.userId);
       
-      // Buscar por auth_user_id ao invés de user_id
+      // Buscar profile usando auth_user_id
       const { data: existingProfile, error: profileFetchError } = await supabaseService
         .from('profiles')
         .select('id')
         .eq('auth_user_id', customerData.userId)
-        .single();
+        .maybeSingle();
 
-      if (profileFetchError || !existingProfile) {
-        console.error('Failed to find existing profile:', profileFetchError);
-        throw new Error('Perfil de usuário não encontrado. Por favor, faça login novamente.');
+      if (profileFetchError) {
+        console.error('Error fetching profile:', profileFetchError);
+        
+        // Log error
+        await supabaseService.from('payment_logs').insert({
+          gateway: gateway,
+          error_message: `Failed to find profile: ${profileFetchError.message}`,
+          request_body: { customerData },
+          user_id: null
+        });
+        
+        throw new Error('Erro ao buscar perfil do usuário. Tente novamente.');
+      }
+
+      if (!existingProfile) {
+        console.error('Profile not found for user:', customerData.userId);
+        throw new Error('Perfil não encontrado. Faça login novamente.');
       }
 
       profileId = existingProfile.id;
+      console.log('Found existing profile:', profileId);
     } else {
-      // NÃO criar perfil agora - será criado no webhook após confirmação do pagamento
+      // Novo usuário - perfil será criado no webhook após confirmação do pagamento
       console.log('New user purchase - profile will be created after payment confirmation');
       profileId = null;
     }
@@ -201,7 +216,17 @@ serve(async (req) => {
       if (!abacatePayResponse.ok) {
         const errorText = await abacatePayResponse.text();
         console.error('AbacatePay error response:', errorText);
-        throw new Error('Falha ao processar pagamento. Tente novamente em alguns minutos.');
+        
+        // Log error
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          status_code: abacatePayResponse.status,
+          error_message: errorText,
+          request_body: billingPayload,
+          response_body: { error: errorText }
+        });
+        
+        throw new Error('Falha ao processar pagamento PIX. Verifique os dados e tente novamente.');
       }
 
       const abacatePayData = await abacatePayResponse.json();
@@ -219,8 +244,25 @@ serve(async (req) => {
 
       if (!paymentUrl) {
         console.error('No payment URL in response:', abacatePayData);
+        
+        // Log error
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          error_message: 'No payment URL in response',
+          response_body: abacatePayData
+        });
+        
         throw new Error('URL de pagamento não foi gerada.');
       }
+
+      // Log success
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'ABACATEPAY',
+        status_code: 200,
+        request_body: billingPayload,
+        response_body: abacatePayData
+      });
+      
     } else if (useHubla) {
       // Hubla flow for CARD with installments
       gateway = 'HUBLA';
@@ -230,6 +272,14 @@ serve(async (req) => {
       // Check if plan has Hubla checkout URL configured
       if (!plan.hubla_checkout_url) {
         console.error('Hubla checkout URL not configured for plan:', planId);
+        
+        // Log error
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'HUBLA',
+          error_message: 'Hubla checkout URL not configured',
+          request_body: { planId, planData: plan }
+        });
+        
         throw new Error('Link de pagamento com cartão não está configurado. Entre em contato com o suporte.');
       }
       
@@ -240,6 +290,14 @@ serve(async (req) => {
       paymentId = `hubla-${planId}-${Date.now()}`;
       
       console.log('Using Hubla checkout URL:', paymentUrl);
+      
+      // Log success
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'HUBLA',
+        status_code: 200,
+        request_body: { planId, customerData: { name: customerData.name, email: customerData.email } },
+        response_body: { paymentUrl, paymentId }
+      });
     }
 
     // Create order record - sem user_id se for novo usuário (será linkado no webhook)
@@ -293,6 +351,24 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Payment creation error:', error);
+    
+    // Log error with Supabase service client
+    try {
+      const supabaseService = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+      
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'UNKNOWN',
+        error_message: error instanceof Error ? error.message : String(error),
+        request_body: { error: 'Failed to parse request' }
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,

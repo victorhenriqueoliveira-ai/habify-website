@@ -151,7 +151,7 @@ export type Database = {
           plan_id: string | null
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           abacatepay_id?: string | null
@@ -166,7 +166,7 @@ export type Database = {
           plan_id?: string | null
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           abacatepay_id?: string | null
@@ -181,7 +181,7 @@ export type Database = {
           plan_id?: string | null
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -196,6 +196,57 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          gateway: string
+          id: string
+          order_id: string | null
+          request_body: Json | null
+          response_body: Json | null
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          gateway: string
+          id?: string
+          order_id?: string | null
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          gateway?: string
+          id?: string
+          order_id?: string | null
+          request_body?: Json | null
+          response_body?: Json | null
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

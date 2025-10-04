@@ -146,11 +146,29 @@ serve(async (req) => {
 
     if (orderUpdateError) {
       console.error('Failed to update order:', orderUpdateError);
+      
+      // Log error
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'HUBLA',
+        error_message: `Failed to update order: ${orderUpdateError.message}`,
+        request_body: webhookData,
+        order_id: order?.id
+      });
+      
       return new Response(
         JSON.stringify({ error: 'Failed to update order', details: orderUpdateError }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    // Log successful update
+    await supabaseService.from('payment_logs').insert({
+      gateway: 'HUBLA',
+      status_code: 200,
+      request_body: webhookData,
+      response_body: { order_updated: true, order_id: order.id },
+      order_id: order.id
+    });
 
     console.log('Order updated successfully via Hubla webhook:', updatedOrder);
 
@@ -287,6 +305,24 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Hubla webhook processing error:', error);
+    
+    // Log error
+    try {
+      const supabaseService = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+      
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'HUBLA',
+        error_message: error instanceof Error ? error.message : String(error),
+        request_body: { error: 'Webhook processing failed' }
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 

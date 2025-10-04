@@ -62,14 +62,15 @@ export const NewUserPage = () => {
 
       toast({
         title: 'Usuário criado',
-        description: `${formData.name} foi adicionado ao sistema com sucesso.`,
+        description: `${formData.name} foi adicionado ao sistema com sucesso${formData.credits > 0 ? ` com ${formData.credits} crédito(s)` : ''}.`,
       });
 
       navigate('/admin/users');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('User creation error:', error);
       toast({
         title: 'Erro ao criar usuário',
-        description: 'Ocorreu um erro ao criar o usuário. Tente novamente.',
+        description: error?.message || 'Ocorreu um erro ao criar o usuário. Tente novamente.',
         variant: 'destructive',
       });
     } finally {

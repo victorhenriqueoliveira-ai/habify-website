@@ -24,9 +24,13 @@ export const useCredits = () => {
         .from('profiles')
         .select('credits')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching credits:', error);
+        return;
+      }
+      
       setCredits(profile?.credits || 0);
     } catch (error) {
       console.error('Error fetching credits:', error);

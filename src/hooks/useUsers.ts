@@ -114,44 +114,89 @@ export const useUsers = () => {
     credits?: number;
   }) => {
     try {
+      // 1. Criar usuário no Auth
       const { data, error } = await supabase.auth.admin.createUser({
         email: userData.email,
         password: userData.password,
         email_confirm: true,
         user_metadata: {
           name: userData.name,
+          role: userData.role || 'user',
+          phone: userData.phone,
+          company: userData.company,
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Auth user creation error:', error);
+        throw error;
+      }
 
-      // Update the profile with additional data including credits
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .update({
-            phone: userData.phone,
-            role: (userData.role as 'user' | 'admin' | 'dev') || 'user',
-            company: userData.company,
-            credits: userData.credits || 0,
-          })
-          .eq('auth_user_id', data.user.id)
-          .select()
-          .single();
+      if (!data.user) {
+        throw new Error('Usuário não foi criado');
+      }
 
-        // Se créditos foram concedidos, registrar no histórico
-        if (profile && userData.credits && userData.credits > 0) {
-          await supabase.rpc('add_credits', {
-            _user_id: profile.id,
-            _amount: 0, // Não adicionar, só registrar
-            _type: 'admin_grant',
-            _description: `Créditos iniciais concedidos pelo admin ao criar usuário`
-          });
+      console.log('Auth user created:', data.user.id);
+
+      // 2. Aguardar um pouco para o trigger criar o perfil
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 3. Buscar o perfil criado pelo trigger
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_user_id', data.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw new Error('Erro ao buscar perfil criado');
+      }
+
+      if (!profile) {
+        console.error('Profile not created by trigger');
+        throw new Error('Perfil não foi criado automaticamente');
+      }
+
+      console.log('Profile found:', profile.id);
+
+      // 4. Atualizar perfil com dados adicionais
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          phone: userData.phone || null,
+          role: (userData.role as 'user' | 'admin' | 'dev') || 'user',
+          company: userData.company || null,
+          is_active: true,
+        })
+        .eq('id', profile.id);
+
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw new Error('Erro ao atualizar perfil');
+      }
+
+      console.log('Profile updated successfully');
+
+      // 5. Adicionar créditos iniciais se fornecidos
+      if (userData.credits && userData.credits > 0) {
+        const { error: creditsError } = await supabase.rpc('add_credits', {
+          _user_id: profile.id,
+          _amount: userData.credits,
+          _type: 'admin_grant',
+          _description: 'Créditos iniciais concedidos pelo admin'
+        });
+
+        if (creditsError) {
+          console.error('Credits error:', creditsError);
+          // Não falha a criação se der erro nos créditos
+        } else {
+          console.log(`Added ${userData.credits} credits to user ${profile.id}`);
         }
       }
       
-      // Log the create action
-      await logUserAction('CREATE_USER', data.user!.id, { 
+      // 6. Log da ação
+      await logUserAction('CREATE_USER', data.user.id, { 
         email: userData.email,
         name: userData.name,
         role: userData.role || 'user',
@@ -163,7 +208,7 @@ export const useUsers = () => {
       return { success: true, data };
     } catch (error) {
       console.error('Error creating user:', error);
-      return { success: false, error };
+      throw error;
     }
   };
 
