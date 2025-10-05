@@ -12,34 +12,27 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
-import { UserRole } from '@/types/admin';
+import { usePlans } from '@/hooks/usePlans';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-const roleLabels = {
-  user: 'Corretor',
-  admin: 'Administrador',
-  dev: 'Desenvolvedor',
-};
-
 export const NewUserPage = () => {
   const navigate = useNavigate();
-  const { createUser } = useUsers();
+  const { createUserWithPlan } = useUsers();
+  const { plans, loading: plansLoading } = usePlans();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    full_name: '',
     email: '',
     password: '',
-    phone: '',
-    company: '',
-    role: '' as UserRole | '',
-    credits: 0,
+    plan_id: '',
+    gateway: '' as 'abacatepay' | 'hubla' | '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.password || !formData.role) {
+    if (!formData.full_name || !formData.email || !formData.password || !formData.plan_id || !formData.gateway) {
       toast({
         title: 'Erro de validação',
         description: 'Preencha todos os campos obrigatórios.',
@@ -50,19 +43,19 @@ export const NewUserPage = () => {
 
     setLoading(true);
     try {
-      await createUser({
-        name: formData.name,
+      const result = await createUserWithPlan({
         email: formData.email,
         password: formData.password,
-        phone: formData.phone,
-        company: formData.company,
-        role: formData.role as UserRole,
-        credits: formData.credits,
+        full_name: formData.full_name,
+        plan_id: formData.plan_id,
+        gateway: formData.gateway as 'abacatepay' | 'hubla',
       });
 
+      const selectedPlan = plans.find(p => p.id === formData.plan_id);
+
       toast({
-        title: 'Usuário criado',
-        description: `${formData.name} foi adicionado ao sistema com sucesso${formData.credits > 0 ? ` com ${formData.credits} crédito(s)` : ''}.`,
+        title: 'Usuário criado com sucesso',
+        description: `${formData.full_name} foi criado com o plano ${selectedPlan?.name} e ${result.data?.credits || 0} crédito(s).`,
       });
 
       navigate('/admin/users');
@@ -117,11 +110,11 @@ export const NewUserPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
+                <Label htmlFor="full_name">Nome Completo *</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
+                  id="full_name"
+                  value={formData.full_name}
+                  onChange={(e) => handleChange('full_name', e.target.value)}
                   placeholder="João Silva"
                   required
                 />
@@ -148,55 +141,46 @@ export const NewUserPage = () => {
                   onChange={(e) => handleChange('password', e.target.value)}
                   placeholder="Senha segura"
                   required
+                  minLength={6}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="company">Empresa</Label>
-                <Input
-                  id="company"
-                  value={formData.company}
-                  onChange={(e) => handleChange('company', e.target.value)}
-                  placeholder="Imobiliária XYZ"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Perfil *</Label>
-                <Select value={formData.role} onValueChange={(value) => handleChange('role', value)}>
+                <Label htmlFor="plan_id">Plano *</Label>
+                <Select 
+                  value={formData.plan_id} 
+                  onValueChange={(value) => handleChange('plan_id', value)}
+                  disabled={plansLoading}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o perfil" />
+                    <SelectValue placeholder="Selecione o plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">{roleLabels.user}</SelectItem>
-                    <SelectItem value="admin">{roleLabels.admin}</SelectItem>
-                    <SelectItem value="dev">{roleLabels.dev}</SelectItem>
+                    {plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} - {plan.credits_granted || 1} crédito(s)
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  Créditos serão concedidos automaticamente
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="credits">Créditos Iniciais</Label>
-                <Input
-                  id="credits"
-                  type="number"
-                  min="0"
-                  value={formData.credits}
-                  onChange={(e) => handleChange('credits', e.target.value)}
-                  placeholder="0"
-                />
+                <Label htmlFor="gateway">Método de Pagamento *</Label>
+                <Select value={formData.gateway} onValueChange={(value) => handleChange('gateway', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o método" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="abacatepay">PIX (AbacatePay)</SelectItem>
+                    <SelectItem value="hubla">Cartão (Hubla)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground">
-                  Quantidade de sites que o usuário poderá criar
+                  Define qual valor será registrado no sistema
                 </p>
               </div>
             </div>

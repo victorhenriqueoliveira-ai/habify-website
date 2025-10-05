@@ -11,6 +11,7 @@ export interface Plan {
   description: string;
   features: string[];
   is_active: boolean;
+  credits_granted?: number;
 }
 
 export const usePlans = () => {
@@ -41,6 +42,7 @@ export const usePlans = () => {
         description: plan.description || '',
         features: Array.isArray(plan.features) ? plan.features.filter(f => typeof f === 'string') as string[] : [],
         is_active: plan.is_active,
+        credits_granted: plan.credits_granted || 1,
       })) || [];
 
       setPlans(formattedPlans);

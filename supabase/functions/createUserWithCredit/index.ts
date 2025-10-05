@@ -1,0 +1,225 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface CreateUserRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  plan_id: string;
+  gateway: 'abacatepay' | 'hubla';
+  created_by: string;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Criar cliente admin
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Criar cliente regular para verificar permissões
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
+    );
+
+    // Verificar se quem está chamando é admin
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!profile || !['admin', 'dev'].includes(profile.role)) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin access required' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body: CreateUserRequest = await req.json();
+    const { email, password, full_name, plan_id, gateway, created_by } = body;
+
+    console.log('Creating user with plan:', { email, plan_id, gateway });
+
+    // Buscar detalhes do plano
+    const { data: plan, error: planError } = await supabaseAdmin
+      .from('plans')
+      .select('*')
+      .eq('id', plan_id)
+      .single();
+
+    if (planError || !plan) {
+      console.error('Plan not found:', planError);
+      throw new Error('Plano não encontrado');
+    }
+
+    console.log('Plan found:', plan);
+
+    // Determinar o valor e créditos baseado no gateway
+    const amount = gateway === 'abacatepay' 
+      ? Number(plan.pix_price || plan.price)
+      : Number(plan.stripe_price || plan.price);
+    
+    const credits = plan.credits_granted || 1;
+
+    // 1. Criar usuário no Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        name: full_name,
+        role: 'user'
+      }
+    });
+
+    if (authError || !authData.user) {
+      console.error('Auth error:', authError);
+      throw new Error(`Erro ao criar usuário: ${authError?.message}`);
+    }
+
+    console.log('Auth user created:', authData.user.id);
+
+    // 2. Aguardar trigger criar o perfil
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 3. Buscar perfil criado
+    const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('auth_user_id', authData.user.id)
+      .single();
+
+    if (profileFetchError || !createdProfile) {
+      console.error('Profile not found:', profileFetchError);
+      throw new Error('Perfil não foi criado automaticamente');
+    }
+
+    console.log('Profile found:', createdProfile.id);
+
+    // 4. Adicionar créditos usando a função RPC
+    const { error: creditsError } = await supabaseAdmin.rpc('add_credits', {
+      _user_id: createdProfile.id,
+      _amount: credits,
+      _type: 'admin_grant',
+      _description: `Créditos iniciais - ${plan.name} via ${gateway}`
+    });
+
+    if (creditsError) {
+      console.error('Credits error:', creditsError);
+    } else {
+      console.log(`Added ${credits} credits to user ${createdProfile.id}`);
+    }
+
+    // 5. Criar log de crédito
+    const { error: logError } = await supabaseAdmin
+      .from('credit_logs')
+      .insert({
+        user_id: createdProfile.id,
+        plan_id: plan_id,
+        gateway: gateway,
+        amount: amount,
+        credits_granted: credits,
+        created_by: created_by
+      });
+
+    if (logError) {
+      console.error('Credit log error:', logError);
+    }
+
+    // 6. Criar registro em payment_logs para auditoria
+    const { error: paymentLogError } = await supabaseAdmin
+      .from('payment_logs')
+      .insert({
+        gateway: `admin_create_${gateway}`,
+        status_code: 200,
+        request_body: {
+          email,
+          plan_id,
+          created_by,
+          full_name
+        },
+        response_body: {
+          user_id: authData.user.id,
+          profile_id: createdProfile.id,
+          credits,
+          amount
+        },
+        user_id: createdProfile.id
+      });
+
+    if (paymentLogError) {
+      console.error('Payment log error:', paymentLogError);
+    }
+
+    console.log('User created successfully:', {
+      user_id: authData.user.id,
+      profile_id: createdProfile.id,
+      credits,
+      plan: plan.name
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        user_id: authData.user.id,
+        profile_id: createdProfile.id,
+        credits: credits,
+        amount: amount,
+        plan_name: plan.name
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error('Error in createUserWithCredit:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        details: error.toString()
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});

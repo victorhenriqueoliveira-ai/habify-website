@@ -212,6 +212,53 @@ export const useUsers = () => {
     }
   };
 
+  const createUserWithPlan = async (userData: {
+    email: string;
+    password: string;
+    full_name: string;
+    plan_id: string;
+    gateway: 'abacatepay' | 'hubla';
+  }) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Você precisa estar autenticado');
+      }
+
+      // Buscar o profile_id do admin
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_user_id', session.user.id)
+        .single();
+
+      if (!adminProfile) {
+        throw new Error('Perfil do admin não encontrado');
+      }
+
+      const response = await supabase.functions.invoke('createUserWithCredit', {
+        body: {
+          email: userData.email,
+          password: userData.password,
+          full_name: userData.full_name,
+          plan_id: userData.plan_id,
+          gateway: userData.gateway,
+          created_by: adminProfile.id
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao criar usuário');
+      }
+
+      await fetchUsers();
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Error creating user with plan:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -223,5 +270,6 @@ export const useUsers = () => {
     updateUser,
     deleteUser,
     createUser,
+    createUserWithPlan,
   };
 };
