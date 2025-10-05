@@ -27,15 +27,25 @@ export const NewUserPage = () => {
     password: '',
     plan_id: '',
     gateway: '' as 'abacatepay' | 'hubla' | '',
+    creation_type: '' as 'pago' | 'permuta' | '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.full_name || !formData.email || !formData.password || !formData.plan_id || !formData.gateway) {
+    if (!formData.full_name || !formData.email || !formData.password || !formData.plan_id || !formData.creation_type) {
       toast({
         title: 'Erro de validação',
         description: 'Preencha todos os campos obrigatórios.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (formData.creation_type === 'pago' && !formData.gateway) {
+      toast({
+        title: 'Erro de validação',
+        description: 'Selecione o método de pagamento para usuários pagos.',
         variant: 'destructive',
       });
       return;
@@ -48,7 +58,8 @@ export const NewUserPage = () => {
         password: formData.password,
         full_name: formData.full_name,
         plan_id: formData.plan_id,
-        gateway: formData.gateway as 'abacatepay' | 'hubla',
+        gateway: formData.creation_type === 'pago' ? (formData.gateway as 'abacatepay' | 'hubla') : 'manual',
+        creation_type: formData.creation_type as 'pago' | 'permuta',
       });
 
       const selectedPlan = plans.find(p => p.id === formData.plan_id);
@@ -169,8 +180,30 @@ export const NewUserPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gateway">Método de Pagamento *</Label>
-                <Select value={formData.gateway} onValueChange={(value) => handleChange('gateway', value)}>
+                <Label htmlFor="creation_type">Tipo de Criação *</Label>
+                <Select value={formData.creation_type} onValueChange={(value) => handleChange('creation_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="permuta">Permuta (Gratuito)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecione 'Permuta' se o usuário não pagará pelo plano (crédito gratuito)
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gateway">
+                  Método de Pagamento {formData.creation_type === 'pago' ? '*' : ''}
+                </Label>
+                <Select 
+                  value={formData.gateway} 
+                  onValueChange={(value) => handleChange('gateway', value)}
+                  disabled={formData.creation_type === 'permuta' || !formData.creation_type}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o método" />
                   </SelectTrigger>
@@ -180,7 +213,9 @@ export const NewUserPage = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Define qual valor será registrado no sistema
+                  {formData.creation_type === 'permuta' 
+                    ? 'Não aplicável para usuários de permuta' 
+                    : 'Define qual valor será registrado no sistema'}
                 </p>
               </div>
             </div>

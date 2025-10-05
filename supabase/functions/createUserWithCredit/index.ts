@@ -10,7 +10,8 @@ interface CreateUserRequest {
   password: string;
   full_name: string;
   plan_id: string;
-  gateway: 'abacatepay' | 'hubla';
+  gateway: 'abacatepay' | 'hubla' | 'manual';
+  creation_type: 'pago' | 'permuta';
   created_by: string;
 }
 
@@ -72,9 +73,9 @@ Deno.serve(async (req) => {
     }
 
     const body: CreateUserRequest = await req.json();
-    const { email, password, full_name, plan_id, gateway, created_by } = body;
+    const { email, password, full_name, plan_id, gateway, creation_type, created_by } = body;
 
-    console.log('Creating user with plan:', { email, plan_id, gateway });
+    console.log('Creating user with plan:', { email, plan_id, gateway, creation_type });
 
     // Buscar detalhes do plano
     const { data: plan, error: planError } = await supabaseAdmin
@@ -90,12 +91,16 @@ Deno.serve(async (req) => {
 
     console.log('Plan found:', plan);
 
-    // Determinar o valor e créditos baseado no gateway
-    const amount = gateway === 'abacatepay' 
-      ? Number(plan.pix_price || plan.price)
-      : Number(plan.stripe_price || plan.price);
-    
+    // Determinar o valor e créditos baseado no tipo de criação e gateway
+    let amount = 0;
     const credits = plan.credits_granted || 1;
+
+    if (creation_type === 'pago') {
+      amount = gateway === 'abacatepay' 
+        ? Number(plan.pix_price || plan.price)
+        : Number(plan.stripe_price || plan.price);
+    }
+    // Se for permuta, amount permanece 0
 
     // 1. Criar usuário no Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -133,11 +138,15 @@ Deno.serve(async (req) => {
     console.log('Profile found:', createdProfile.id);
 
     // 4. Adicionar créditos usando a função RPC
+    const creditDescription = creation_type === 'permuta'
+      ? `Créditos iniciais - ${plan.name} (Permuta)`
+      : `Créditos iniciais - ${plan.name} via ${gateway}`;
+
     const { error: creditsError } = await supabaseAdmin.rpc('add_credits', {
       _user_id: createdProfile.id,
       _amount: credits,
-      _type: 'admin_grant',
-      _description: `Créditos iniciais - ${plan.name} via ${gateway}`
+      _type: creation_type === 'permuta' ? 'admin_grant' : 'purchase',
+      _description: creditDescription
     });
 
     if (creditsError) {
@@ -162,29 +171,32 @@ Deno.serve(async (req) => {
       console.error('Credit log error:', logError);
     }
 
-    // 6. Criar registro em payment_logs para auditoria
-    const { error: paymentLogError } = await supabaseAdmin
-      .from('payment_logs')
-      .insert({
-        gateway: `admin_create_${gateway}`,
-        status_code: 200,
-        request_body: {
-          email,
-          plan_id,
-          created_by,
-          full_name
-        },
-        response_body: {
-          user_id: authData.user.id,
-          profile_id: createdProfile.id,
-          credits,
-          amount
-        },
-        user_id: createdProfile.id
-      });
+    // 6. Criar registro em payment_logs para auditoria (apenas para pagos)
+    if (creation_type === 'pago') {
+      const { error: paymentLogError } = await supabaseAdmin
+        .from('payment_logs')
+        .insert({
+          gateway: `admin_create_${gateway}`,
+          status_code: 200,
+          request_body: {
+            email,
+            plan_id,
+            created_by,
+            full_name,
+            creation_type
+          },
+          response_body: {
+            user_id: authData.user.id,
+            profile_id: createdProfile.id,
+            credits,
+            amount
+          },
+          user_id: createdProfile.id
+        });
 
-    if (paymentLogError) {
-      console.error('Payment log error:', paymentLogError);
+      if (paymentLogError) {
+        console.error('Payment log error:', paymentLogError);
+      }
     }
 
     console.log('User created successfully:', {

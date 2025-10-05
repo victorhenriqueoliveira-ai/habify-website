@@ -217,7 +217,8 @@ export const useUsers = () => {
     password: string;
     full_name: string;
     plan_id: string;
-    gateway: 'abacatepay' | 'hubla';
+    gateway: 'abacatepay' | 'hubla' | 'manual';
+    creation_type: 'pago' | 'permuta';
   }) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
