@@ -10,6 +10,8 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import { LoginPage } from '@/pages/admin/LoginPage';
+import { ForgotPasswordPage } from '@/pages/admin/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/admin/ResetPasswordPage';
 import { AuthPage } from '@/pages/admin/AuthPage';
 import { AdminLayout } from "./components/admin/AdminLayout";
 
@@ -82,8 +84,10 @@ const App = () => (
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             
-            {/* Admin Routes */}
+            {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth" element={<AuthPage />} />
             
             <Route path="/admin" element={
