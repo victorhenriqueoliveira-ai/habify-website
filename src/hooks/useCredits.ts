@@ -23,7 +23,7 @@ export const useCredits = () => {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('credits')
-        .eq('auth_user_id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) {
@@ -46,7 +46,7 @@ export const useCredits = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('auth_user_id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (!profile) return;
@@ -74,7 +74,7 @@ export const useCredits = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id, credits')
-        .eq('auth_user_id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (!profile) return false;

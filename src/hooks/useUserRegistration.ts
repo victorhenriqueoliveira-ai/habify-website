@@ -22,7 +22,7 @@ export const useUserRegistration = () => {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('auth_user_id', signInData.user.id)
+          .eq('user_id', signInData.user.id)
           .single();
 
         if (!profileError && profile?.is_active) {

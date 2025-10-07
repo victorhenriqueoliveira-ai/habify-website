@@ -145,7 +145,7 @@ export const useUsers = () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('auth_user_id', data.user.id)
+        .eq('user_id', data.user.id)
         .maybeSingle();
 
       if (profileError) {
@@ -227,13 +227,14 @@ export const useUsers = () => {
       }
 
       // Buscar o profile_id do admin
-      const { data: adminProfile } = await supabase
+      const { data: adminProfile, error: adminProfileError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('auth_user_id', session.user.id)
+        .eq('user_id', session.user.id)
         .single();
-
-      if (!adminProfile) {
+      
+      if (adminProfileError || !adminProfile) {
+        console.error('Admin profile error:', adminProfileError);
         throw new Error('Perfil do admin não encontrado');
       }
 
@@ -244,6 +245,7 @@ export const useUsers = () => {
           full_name: userData.full_name,
           plan_id: userData.plan_id,
           gateway: userData.gateway,
+          creation_type: userData.creation_type,
           created_by: adminProfile.id
         }
       });
