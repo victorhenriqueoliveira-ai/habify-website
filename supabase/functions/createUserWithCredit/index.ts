@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Criar cliente admin
+    // Criar cliente admin com service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -34,38 +34,53 @@ Deno.serve(async (req) => {
       }
     );
 
-    // Criar cliente regular para verificar permissões
+    console.log('Admin client created');
+
+    // Verificar se quem está chamando é admin usando admin client
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
-
-    // Verificar se quem está chamando é admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Extrair o token do header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verificar o usuário usando admin client
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error('User verification error:', userError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }), 
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { data: profile } = await supabase
+    console.log('User verified:', user.id);
+
+    // Buscar perfil usando admin client (bypassa RLS)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('role')
-      .eq('auth_user_id', user.id)
+      .select('id, role')
+      .eq('user_id', user.id)
       .single();
 
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Profile not found' }), 
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Profile found:', profile);
+
     if (!profile || !['admin', 'dev'].includes(profile.role)) {
+      console.error('Access denied for role:', profile?.role);
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }), 
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -127,7 +142,7 @@ Deno.serve(async (req) => {
     const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('id')
-      .eq('auth_user_id', authData.user.id)
+      .eq('user_id', authData.user.id)
       .single();
 
     if (profileFetchError || !createdProfile) {
@@ -171,32 +186,33 @@ Deno.serve(async (req) => {
       console.error('Credit log error:', logError);
     }
 
-    // 6. Criar registro em payment_logs para auditoria (apenas para pagos)
-    if (creation_type === 'pago') {
-      const { error: paymentLogError } = await supabaseAdmin
-        .from('payment_logs')
-        .insert({
-          gateway: `admin_create_${gateway}`,
-          status_code: 200,
-          request_body: {
-            email,
-            plan_id,
-            created_by,
-            full_name,
-            creation_type
-          },
-          response_body: {
-            user_id: authData.user.id,
-            profile_id: createdProfile.id,
-            credits,
-            amount
-          },
-          user_id: createdProfile.id
-        });
+    // 6. Criar registro em payment_logs para auditoria
+    const { error: paymentLogError } = await supabaseAdmin
+      .from('payment_logs')
+      .insert({
+        gateway: creation_type === 'permuta' ? 'admin_create_manual' : `admin_create_${gateway}`,
+        status_code: 200,
+        request_body: {
+          email,
+          plan_id,
+          created_by: profile.id,
+          full_name,
+          creation_type,
+          gateway: gateway || 'manual'
+        },
+        response_body: {
+          user_id: authData.user.id,
+          profile_id: createdProfile.id,
+          credits,
+          amount,
+          creation_type
+        },
+        user_id: createdProfile.id,
+        order_id: null
+      });
 
-      if (paymentLogError) {
-        console.error('Payment log error:', paymentLogError);
-      }
+    if (paymentLogError) {
+      console.error('Payment log error:', paymentLogError);
     }
 
     console.log('User created successfully:', {

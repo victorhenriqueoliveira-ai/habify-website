@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.validate-coupon]
 verify_jwt = false
+
+[functions.createUserWithCredit]
+verify_jwt = true
