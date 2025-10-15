@@ -36,3 +36,6 @@ verify_jwt = false
 
 [functions.createUserWithCredit]
 verify_jwt = true
+
+[functions.send-payment-confirmation]
+verify_jwt = false

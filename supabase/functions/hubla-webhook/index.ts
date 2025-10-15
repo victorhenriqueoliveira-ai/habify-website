@@ -202,6 +202,37 @@ serve(async (req) => {
             console.log(`Added ${planData.credits_granted} credits to existing user ${updatedOrder.user_id}`);
           }
         }
+
+        // Enviar e-mails de confirmação para usuário logado
+        try {
+          const { data: planDetails } = await supabaseService
+            .from('plans')
+            .select('name, price, stripe_price')
+            .eq('id', updatedOrder.plan_id)
+            .single();
+
+          const { data: userProfile } = await supabaseService
+            .from('profiles')
+            .select('name, email')
+            .eq('id', updatedOrder.user_id)
+            .single();
+
+          if (planDetails && userProfile) {
+            await supabaseService.functions.invoke('send-payment-confirmation', {
+              body: {
+                customerName: userProfile.name,
+                customerEmail: userProfile.email,
+                planName: planDetails.name,
+                planPrice: (planDetails.stripe_price || planDetails.price).toFixed(2),
+                gateway: 'HUBLA',
+                creditsGranted: planData?.credits_granted || 1
+              }
+            });
+            console.log('Confirmation emails sent successfully');
+          }
+        } catch (emailError) {
+          console.error('Failed to send confirmation emails:', emailError);
+        }
       } else if (customerData?.email && customerData?.password) {
         // Novo usuário - criar tudo do zero
         console.log('New user purchase - creating auth user and profile');
@@ -284,6 +315,31 @@ serve(async (req) => {
             } else {
               console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
             }
+          }
+
+          // Enviar e-mails de confirmação
+          try {
+            const { data: planDetails } = await supabaseService
+              .from('plans')
+              .select('name, price, stripe_price')
+              .eq('id', updatedOrder.plan_id)
+              .single();
+
+            if (planDetails) {
+              await supabaseService.functions.invoke('send-payment-confirmation', {
+                body: {
+                  customerName: customerData.name,
+                  customerEmail: customerData.email,
+                  planName: planDetails.name,
+                  planPrice: (planDetails.stripe_price || planDetails.price).toFixed(2),
+                  gateway: 'HUBLA',
+                  creditsGranted: planData?.credits_granted || 1
+                }
+              });
+              console.log('Confirmation emails sent successfully');
+            }
+          } catch (emailError) {
+            console.error('Failed to send confirmation emails:', emailError);
           }
 
         } catch (error) {
