@@ -25,7 +25,7 @@ serve(async (req) => {
   try {
     const { customerName, customerEmail, planName, planPrice, gateway, creditsGranted }: EmailData = await req.json();
     
-    console.log('Sending payment confirmation emails:', { customerEmail, planName });
+    // console.log('Sending payment confirmation emails:', { customerEmail, planName });
 
     // Email para o cliente
     const customerEmailResponse = await resend.emails.send({
@@ -64,7 +64,7 @@ serve(async (req) => {
       `,
     });
 
-    console.log('Customer email sent:', customerEmailResponse);
+    // console.log('Customer email sent:', customerEmailResponse);
 
     // Email para o admin
     const adminEmail = Deno.env.get("ADMIN_EMAIL") || "admin@habify.com";
@@ -102,7 +102,7 @@ serve(async (req) => {
       `,
     });
 
-    console.log('Admin email sent:', adminEmailResponse);
+    // console.log('Admin email sent:', adminEmailResponse);
 
     return new Response(
       JSON.stringify({ 

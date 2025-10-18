@@ -226,7 +226,7 @@ export const MyProjectsPage = () => {
             size="sm" 
             variant="outline" 
             onClick={() => {
-              console.log('Clicked Visualizar project:', project);
+              // console.log('Clicked Visualizar project:', project);
               setSelectedProject(project);
             }}
             className="w-full"
@@ -393,7 +393,7 @@ export const MyProjectsPage = () => {
         project={selectedProject}
         open={!!selectedProject}
         onClose={() => {
-          console.log('Closing modal');
+          // console.log('Closing modal');
           setSelectedProject(null);
         }}
       />

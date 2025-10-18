@@ -52,11 +52,11 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
   const { properties: portfolioProperties } = usePortfolioProperties(project?.id);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   
-  console.log('ProjectDetailsModal - project:', project);
-  console.log('ProjectDetailsModal - open:', open);
+  // console.log('ProjectDetailsModal - project:', project);
+  // console.log('ProjectDetailsModal - open:', open);
   
   if (!project) {
-    console.log('ProjectDetailsModal - No project provided, returning null');
+    // console.log('ProjectDetailsModal - No project provided, returning null');
     return null;
   }
 
@@ -114,7 +114,7 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
-      console.log('Dialog onOpenChange:', open);
+      // console.log('Dialog onOpenChange:', open);
       !open && onClose();
     }}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -892,11 +892,11 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
 
                   const totalPhotos = projectPhotos.length + portfolioPhotos.length;
 
-                  console.log('Photos collected:', { 
-                    projectPhotos: projectPhotos.length, 
-                    portfolioPhotos: portfolioPhotos.length,
-                    total: totalPhotos 
-                  });
+                  // console.log('Photos collected:', { 
+                  //   projectPhotos: projectPhotos.length, 
+                  //   portfolioPhotos: portfolioPhotos.length,
+                  //   total: totalPhotos 
+                  // });
                   
                   if (totalPhotos === 0) {
                     return (

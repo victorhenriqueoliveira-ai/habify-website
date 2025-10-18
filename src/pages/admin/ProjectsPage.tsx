@@ -316,7 +316,7 @@ export const ProjectsPage = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => {
-                              console.log('Clicked Visualizar project:', project);
+                              // console.log('Clicked Visualizar project:', project);
                               setSelectedProject(project);
                             }}>
                               <Eye className="mr-2 h-4 w-4" />
@@ -387,7 +387,7 @@ export const ProjectsPage = () => {
         project={selectedProject}
         open={!!selectedProject}
         onClose={() => {
-          console.log('Closing modal from ProjectsPage');
+          // console.log('Closing modal from ProjectsPage');
           setSelectedProject(null);
         }}
       />

@@ -136,7 +136,7 @@ export const useUsers = () => {
         throw new Error('Usuário não foi criado');
       }
 
-      console.log('Auth user created:', data.user.id);
+      // console.log('Auth user created:', data.user.id);
 
       // 2. Aguardar um pouco para o trigger criar o perfil
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -158,7 +158,7 @@ export const useUsers = () => {
         throw new Error('Perfil não foi criado automaticamente');
       }
 
-      console.log('Profile found:', profile.id);
+      // console.log('Profile found:', profile.id);
 
       // 4. Atualizar perfil com dados adicionais
       const { error: updateError } = await supabase
@@ -176,7 +176,7 @@ export const useUsers = () => {
         throw new Error('Erro ao atualizar perfil');
       }
 
-      console.log('Profile updated successfully');
+      // console.log('Profile updated successfully');
 
       // 5. Adicionar créditos iniciais se fornecidos
       if (userData.credits && userData.credits > 0) {
@@ -191,7 +191,7 @@ export const useUsers = () => {
           console.error('Credits error:', creditsError);
           // Não falha a criação se der erro nos créditos
         } else {
-          console.log(`Added ${userData.credits} credits to user ${profile.id}`);
+          // console.log(`Added ${userData.credits} credits to user ${profile.id}`);
         }
       }
       

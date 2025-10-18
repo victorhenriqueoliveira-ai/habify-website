@@ -24,11 +24,11 @@ interface PaymentRequest {
 }
 
 serve(async (req) => {
-  console.log('Edge function started. Method:', req.method);
+  // console.log('Edge function started. Method:', req.method);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
+    // console.log('Handling CORS preflight request');
     return new Response(null, { 
       status: 200,
       headers: corsHeaders 
@@ -38,7 +38,7 @@ serve(async (req) => {
   try {
     const origin = req.headers.get('origin') || 'https://habify.com.br';
     
-    console.log('Payment request received from origin:', origin);
+    // console.log('Payment request received from origin:', origin);
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -48,7 +48,7 @@ serve(async (req) => {
     // Parse request body
     const { planId, customerData }: PaymentRequest = await req.json();
 
-    console.log('Creating payment for plan:', planId, 'customer:', customerData.email, 'method:', customerData.paymentMethod);
+    // console.log('Creating payment for plan:', planId, 'customer:', customerData.email, 'method:', customerData.paymentMethod);
 
     // Determine gateway based on payment method
     const useAbacatePay = customerData.paymentMethod === 'PIX';
@@ -70,7 +70,7 @@ serve(async (req) => {
       .eq('id', planId)
       .single();
 
-    console.log('Plan query result:', { plan, planError });
+    // console.log('Plan query result:', { plan, planError });
 
     if (planError || !plan) {
       console.error('Plan not found:', planError);
@@ -81,7 +81,7 @@ serve(async (req) => {
     const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
     
     let gateway = useAbacatePay ? 'ABACATEPAY' : 'HUBLA';
-    console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
+    // console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -94,7 +94,7 @@ serve(async (req) => {
 
     // Se for compra de usuário logado, usa o perfil existente
     if (customerData.isLoggedInPurchase && customerData.userId) {
-      console.log('Using existing profile for logged in user:', customerData.userId);
+      // console.log('Using existing profile for logged in user:', customerData.userId);
       
       // Buscar profile usando auth_user_id
       const { data: existingProfile, error: profileFetchError } = await supabaseService
@@ -123,10 +123,10 @@ serve(async (req) => {
       }
 
       profileId = existingProfile.id;
-      console.log('Found existing profile:', profileId);
+      // console.log('Found existing profile:', profileId);
     } else {
       // Novo usuário - perfil será criado no webhook após confirmação do pagamento
-      console.log('New user purchase - profile will be created after payment confirmation');
+      // console.log('New user purchase - profile will be created after payment confirmation');
       profileId = null;
     }
 
@@ -147,7 +147,7 @@ serve(async (req) => {
         taxId: customerData.cpf,
       };
 
-      console.log('Creating customer with payload:', JSON.stringify(customerPayload, null, 2));
+      // console.log('Creating customer with payload:', JSON.stringify(customerPayload, null, 2));
 
       const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
         method: 'POST',
@@ -158,7 +158,7 @@ serve(async (req) => {
         body: JSON.stringify(customerPayload),
       });
 
-      console.log('Customer response status:', customerResponse.status);
+      // console.log('Customer response status:', customerResponse.status);
 
       if (!customerResponse.ok) {
         const customerErrorText = await customerResponse.text();
@@ -167,7 +167,7 @@ serve(async (req) => {
       }
 
       const customerResponseData = await customerResponse.json();
-      console.log('Customer created:', customerResponseData);
+      // console.log('Customer created:', customerResponseData);
 
       const customerId = customerResponseData.data?.id;
       if (!customerId) {
@@ -200,7 +200,7 @@ serve(async (req) => {
         allowCoupons: true,
       };
       
-      console.log('AbacatePay billing payload:', JSON.stringify(billingPayload, null, 2));
+      // console.log('AbacatePay billing payload:', JSON.stringify(billingPayload, null, 2));
 
       const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
         method: 'POST',
@@ -211,7 +211,7 @@ serve(async (req) => {
         body: JSON.stringify(billingPayload),
       });
 
-      console.log('AbacatePay response status:', abacatePayResponse.status);
+      // console.log('AbacatePay response status:', abacatePayResponse.status);
 
       if (!abacatePayResponse.ok) {
         const errorText = await abacatePayResponse.text();
@@ -230,7 +230,7 @@ serve(async (req) => {
       }
 
       const abacatePayData = await abacatePayResponse.json();
-      console.log('AbacatePay response data:', abacatePayData);
+      // console.log('AbacatePay response data:', abacatePayData);
 
       const responseData = abacatePayData.data || abacatePayData;
       
@@ -267,7 +267,7 @@ serve(async (req) => {
       // Hubla flow for CARD with installments
       gateway = 'HUBLA';
       
-      console.log('Using Hubla for card payment');
+      // console.log('Using Hubla for card payment');
       
       // Check if plan has Hubla checkout URL configured
       if (!plan.hubla_checkout_url) {
@@ -289,7 +289,7 @@ serve(async (req) => {
       // Generate a unique reference for tracking
       paymentId = `hubla-${planId}-${Date.now()}`;
       
-      console.log('Using Hubla checkout URL:', paymentUrl);
+      // console.log('Using Hubla checkout URL:', paymentUrl);
       
       // Log success
       await supabaseService.from('payment_logs').insert({
@@ -333,7 +333,7 @@ serve(async (req) => {
       throw new Error('Falha ao registrar pedido.');
     }
 
-    console.log('Order created successfully:', order.id);
+    // console.log('Order created successfully:', order.id);
 
     return new Response(
       JSON.stringify({

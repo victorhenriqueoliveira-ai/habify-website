@@ -36,7 +36,7 @@ const PaymentSuccess = () => {
     const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
     if (paymentId) {
       localStorage.setItem('paymentId', paymentId);
-      console.log('Stored paymentId from URL:', paymentId);
+      // console.log('Stored paymentId from URL:', paymentId);
     }
 
     // Check if we have verified payment data

@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Stripe webhook received');
+  // console.log('Stripe webhook received');
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,8 +43,8 @@ serve(async (req) => {
     // For now, we'll just parse the body
     const event = JSON.parse(body);
 
-    console.log('Stripe event type:', event.type);
-    console.log('Stripe event data:', JSON.stringify(event.data, null, 2));
+    // console.log('Stripe event type:', event.type);
+    // console.log('Stripe event data:', JSON.stringify(event.data, null, 2));
 
     // Handle checkout.session.completed event
     if (event.type === 'checkout.session.completed') {
@@ -53,11 +53,11 @@ serve(async (req) => {
       const paymentStatus = session.payment_status;
       const metadata = session.metadata;
 
-      console.log('Checkout session completed:', {
-        sessionId,
-        paymentStatus,
-        metadata,
-      });
+      // console.log('Checkout session completed:', {
+      //   sessionId,
+      //   paymentStatus,
+      //   metadata,
+      // });
 
       // Find the order by payment_data
       const { data: orders, error: orderFetchError } = await supabaseService
@@ -87,7 +87,7 @@ serve(async (req) => {
         });
       }
 
-      console.log('Found order:', order.id);
+      // console.log('Found order:', order.id);
 
       // Update order status based on payment status
       const newStatus = paymentStatus === 'paid' ? 'paid' : 'failed';
@@ -113,7 +113,7 @@ serve(async (req) => {
         });
       }
 
-      console.log('Order updated to status:', newStatus);
+      // console.log('Order updated to status:', newStatus);
 
       // If paid, handle user registration (if not logged in purchase)
       if (paymentStatus === 'paid') {
@@ -126,7 +126,7 @@ serve(async (req) => {
           const customerPassword = order.payment_data?.customerData?.password || metadata?.customerPassword;
 
           if (customerEmail && customerPassword) {
-            console.log('Creating auth user for:', customerEmail);
+            // console.log('Creating auth user for:', customerEmail);
 
             const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
               email: customerEmail,
@@ -140,7 +140,7 @@ serve(async (req) => {
             if (authError) {
               console.error('Error creating auth user:', authError);
             } else {
-              console.log('Auth user created:', authData.user.id);
+              // console.log('Auth user created:', authData.user.id);
 
               // Update profile with auth user ID and activate
               const { error: profileUpdateError } = await supabaseService
@@ -154,7 +154,7 @@ serve(async (req) => {
               if (profileUpdateError) {
                 console.error('Error updating profile:', profileUpdateError);
               } else {
-                console.log('Profile activated for user:', authData.user.id);
+                // console.log('Profile activated for user:', authData.user.id);
               }
             }
           }
@@ -168,7 +168,7 @@ serve(async (req) => {
           if (profileActivateError) {
             console.error('Error activating profile:', profileActivateError);
           } else {
-            console.log('Profile activated');
+            // console.log('Profile activated');
           }
         }
       }
@@ -177,13 +177,13 @@ serve(async (req) => {
     // Handle payment_intent.succeeded (for additional confirmation)
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
-      console.log('Payment intent succeeded:', paymentIntent.id);
+      // console.log('Payment intent succeeded:', paymentIntent.id);
     }
 
     // Handle payment_intent.payment_failed
     if (event.type === 'payment_intent.payment_failed') {
       const paymentIntent = event.data.object;
-      console.log('Payment intent failed:', paymentIntent.id);
+      // console.log('Payment intent failed:', paymentIntent.id);
     }
 
     return new Response(JSON.stringify({ received: true }), {
