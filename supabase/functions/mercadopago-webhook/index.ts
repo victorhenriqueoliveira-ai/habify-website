@@ -13,17 +13,17 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Mercado Pago webhook received');
+    // console.log('Mercado Pago webhook received');
 
     const body = await req.json();
-    console.log('Webhook body:', JSON.stringify(body, null, 2));
+    // console.log('Webhook body:', JSON.stringify(body, null, 2));
 
     // Mercado Pago sends notifications in this format
     const { type, data } = body;
 
     // Only process payment notifications
     if (type !== 'payment') {
-      console.log('Ignoring non-payment notification:', type);
+      // console.log('Ignoring non-payment notification:', type);
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -39,7 +39,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Processing payment ID:', paymentId);
+    // console.log('Processing payment ID:', paymentId);
 
     // Get payment details from Mercado Pago
     const mercadoPagoToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN');
@@ -68,7 +68,7 @@ serve(async (req) => {
     }
 
     const payment = await paymentResponse.json();
-    console.log('Payment details:', JSON.stringify(payment, null, 2));
+    // console.log('Payment details:', JSON.stringify(payment, null, 2));
 
     // Map Mercado Pago status to our status
     let orderStatus = 'pending';
@@ -78,7 +78,7 @@ serve(async (req) => {
       orderStatus = 'failed';
     }
 
-    console.log('Mapped status:', orderStatus);
+    // console.log('Mapped status:', orderStatus);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -100,7 +100,7 @@ serve(async (req) => {
     const externalReference = payment.external_reference;
     const preferenceId = payment.metadata?.preference_id;
 
-    console.log('Looking for order with external reference:', externalReference);
+    // console.log('Looking for order with external reference:', externalReference);
 
     // First try to find by payment_data containing the preference_id
     const { data: orders, error: orderError } = await supabase
@@ -131,7 +131,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Found order:', order.id);
+    // console.log('Found order:', order.id);
 
     // Update order status
     const updateData: any = {
@@ -161,11 +161,11 @@ serve(async (req) => {
       });
     }
 
-    console.log('Order updated successfully');
+    // console.log('Order updated successfully');
 
     // If payment successful and user needs to be created
     if (orderStatus === 'paid' && order.user_id) {
-      console.log('Payment successful, checking if user needs to be created');
+      // console.log('Payment successful, checking if user needs to be created');
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -174,7 +174,7 @@ serve(async (req) => {
         .single();
 
       if (profile && !profile.is_active) {
-        console.log('Creating auth user for profile:', profile.id);
+        // console.log('Creating auth user for profile:', profile.id);
 
         const customerData = order.payment_data?.customerData;
         if (customerData?.email && customerData?.password) {
@@ -190,7 +190,7 @@ serve(async (req) => {
           if (authError) {
             console.error('Error creating auth user:', authError);
           } else if (authData?.user) {
-            console.log('Auth user created:', authData.user.id);
+            // console.log('Auth user created:', authData.user.id);
 
             // Update profile with auth user ID
             const { error: profileUpdateError } = await supabase
@@ -205,7 +205,7 @@ serve(async (req) => {
             if (profileUpdateError) {
               console.error('Error updating profile:', profileUpdateError);
             } else {
-              console.log('Profile updated with auth user ID');
+              // console.log('Profile updated with auth user ID');
             }
           }
         }

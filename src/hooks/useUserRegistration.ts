@@ -7,7 +7,7 @@ export const useUserRegistration = () => {
 
   const registerUser = async (email: string, password: string, name: string) => {
     try {
-      console.log('Attempting to sign in user:', email);
+      // console.log('Attempting to sign in user:', email);
       
       // First try to sign in (user might have been created during payment)
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -16,7 +16,7 @@ export const useUserRegistration = () => {
       });
 
       if (!signInError && signInData.user) {
-        console.log('User signed in successfully:', signInData.user.id);
+        // console.log('User signed in successfully:', signInData.user.id);
         
         // Check if profile is active
         const { data: profile, error: profileError } = await supabase
@@ -30,7 +30,7 @@ export const useUserRegistration = () => {
         }
       }
 
-      console.log('Sign in failed or user inactive, checking if user needs activation:', signInError?.message);
+      // console.log('Sign in failed or user inactive, checking if user needs activation:', signInError?.message);
 
       // If sign in failed, user might not exist in auth yet - this is normal in our flow
       // User will be created via webhook when payment is confirmed

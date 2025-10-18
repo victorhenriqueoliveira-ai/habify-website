@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Kiwify webhook received');
+    // console.log('Kiwify webhook received');
     
     const payload = await req.json();
-    console.log('Kiwify webhook payload:', JSON.stringify(payload, null, 2));
+    // console.log('Kiwify webhook payload:', JSON.stringify(payload, null, 2));
 
     const supabaseService = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -31,13 +31,13 @@ serve(async (req) => {
     const status = payload.order_status; // 'paid', 'waiting_payment', 'refused', etc.
     const productId = payload.Product?.product_id;
     
-    console.log('Kiwify webhook data:', {
-      orderId,
-      orderRef,
-      customerEmail,
-      status,
-      productId
-    });
+    // console.log('Kiwify webhook data:', {
+    //   orderId,
+    //   orderRef,
+    //   customerEmail,
+    //   status,
+    //   productId
+    // });
 
     // Find the order by customer email and product
     const { data: order, error: orderError } = await supabaseService
@@ -59,7 +59,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Order found:', order?.id);
+    // console.log('Order found:', order?.id);
 
     // Map Kiwify status to our status
     let orderStatus = 'pending';
@@ -91,7 +91,7 @@ serve(async (req) => {
       throw new Error('Failed to update order');
     }
 
-    console.log('Order status updated to:', orderStatus);
+    // console.log('Order status updated to:', orderStatus);
 
     // If payment is successful, create auth user and activate profile
     if (orderStatus === 'paid') {
@@ -99,10 +99,10 @@ serve(async (req) => {
       
       // Check if this is a logged-in purchase
       if (customerData?.isLoggedInPurchase) {
-        console.log('Logged-in purchase detected, skipping user creation');
+        // console.log('Logged-in purchase detected, skipping user creation');
       } else {
         // Create auth user
-        console.log('Creating auth user for:', customerData?.email);
+        // console.log('Creating auth user for:', customerData?.email);
         
         const { data: authUser, error: authError } = await supabaseService.auth.admin.createUser({
           email: customerData?.email,
@@ -115,7 +115,7 @@ serve(async (req) => {
           throw new Error('Failed to create user account');
         }
 
-        console.log('Auth user created:', authUser.user.id);
+        // console.log('Auth user created:', authUser.user.id);
 
         // Update profile with auth user id and activate it
         const { error: profileUpdateError } = await supabaseService
@@ -132,7 +132,7 @@ serve(async (req) => {
           throw new Error('Failed to update profile');
         }
 
-        console.log('Profile activated for user:', authUser.user.id);
+        // console.log('Profile activated for user:', authUser.user.id);
       }
     }
 

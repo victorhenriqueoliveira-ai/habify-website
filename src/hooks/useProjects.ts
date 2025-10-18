@@ -71,11 +71,11 @@ export const useProjects = () => {
 
       // Usar o primeiro plano disponível (pode ser parametrizável no futuro)
       const selectedPlan = availablePlans[0];
-      console.log('Using plan:', selectedPlan.plan_name);
+      // console.log('Using plan:', selectedPlan.plan_name);
 
       // Ensure photos is always an array
       const photos = Array.isArray(projectData.photos) ? projectData.photos : [];
-      console.log('Creating project with photos:', photos.length);
+      // console.log('Creating project with photos:', photos.length);
 
       const { data, error } = await supabase
         .from('projects')
@@ -106,7 +106,7 @@ export const useProjects = () => {
         throw error;
       }
       
-      console.log('Project created successfully:', { id: data.id, photos: data.photos?.length || 0 });
+      // console.log('Project created successfully:', { id: data.id, photos: data.photos?.length || 0 });
 
       // Usar o plano após criar o projeto
       const planUsed = await usePlanForProject(selectedPlan.plan_id, data.id);
@@ -148,7 +148,7 @@ export const useProjects = () => {
       if (updates.photos !== undefined) {
         // Ensure photos is always an array
         updateData.photos = Array.isArray(updates.photos) ? updates.photos : [];
-        console.log('Updating project photos:', { id, photosCount: updateData.photos.length });
+        // console.log('Updating project photos:', { id, photosCount: updateData.photos.length });
       }
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.location !== undefined) updateData.location = updates.location;
@@ -163,7 +163,7 @@ export const useProjects = () => {
         updateData.completed_at = new Date().toISOString();
       }
 
-      console.log('Updating project in database:', { id, updateData });
+      // console.log('Updating project in database:', { id, updateData });
 
       const { data, error } = await supabase
         .from('projects')
@@ -181,7 +181,7 @@ export const useProjects = () => {
         throw new Error('Projeto não encontrado ou sem permissão para atualizar');
       }
       
-      console.log('Project updated successfully:', { id, photos: data.photos?.length || 0 });
+      // console.log('Project updated successfully:', { id, photos: data.photos?.length || 0 });
       
       // Log the update action
       await logProjectAction('UPDATE_PROJECT', id, {

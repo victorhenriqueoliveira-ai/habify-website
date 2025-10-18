@@ -18,7 +18,7 @@ serve(async (req) => {
     // Support both new paymentId and legacy abacatePayId
     const id = paymentId || abacatePayId;
     
-    console.log('Verifying payment:', id);
+    // console.log('Verifying payment:', id);
 
     // Create Supabase service client
     const supabaseService = createClient(
@@ -27,7 +27,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    console.log('Checking order status in database for paymentId:', id);
+    // console.log('Checking order status in database for paymentId:', id);
     
     // Check order status directly from database (webhook should have already updated it)
     // Try to find by abacatepay_id or by payment_data.paymentId for Mercado Pago
@@ -38,7 +38,7 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(1);
       
-    console.log('Order query result:', { orders, orderError });
+    // console.log('Order query result:', { orders, orderError });
 
     if (orderError || !orders || orders.length === 0) {
       console.error('Order fetch error:', orderError);
@@ -48,11 +48,11 @@ serve(async (req) => {
     const order = orders[0];
 
     const isPaid = order.status === 'paid';
-    console.log('Order status check:', { isPaid, status: order.status });
+    // console.log('Order status check:', { isPaid, status: order.status });
 
     // If payment is already confirmed via webhook, create auth user if not exists
     if (isPaid && order) {
-      console.log('Payment confirmed, checking auth user for order:', order.id);
+      // console.log('Payment confirmed, checking auth user for order:', order.id);
       
       // Get profile data
       const { data: profile, error: profileError } = await supabaseService
@@ -68,7 +68,7 @@ serve(async (req) => {
         
         if (customerData?.email && customerData?.password && !profile.auth_user_id) {
           try {
-            console.log('Creating auth user for email:', customerData.email);
+            // console.log('Creating auth user for email:', customerData.email);
             
             // Create user in Supabase Auth
             const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
@@ -87,7 +87,7 @@ serve(async (req) => {
             if (authError) {
               console.error('Failed to create auth user:', authError);
             } else {
-              console.log('Auth user created successfully:', authData.user?.id);
+              // console.log('Auth user created successfully:', authData.user?.id);
               
               // Update profile with auth_user_id and activate it
               const { error: profileUpdateError } = await supabaseService
@@ -103,14 +103,14 @@ serve(async (req) => {
               if (profileUpdateError) {
                 console.error('Failed to activate profile:', profileUpdateError);
               } else {
-                console.log('Profile activated and linked to auth user successfully');
+                // console.log('Profile activated and linked to auth user successfully');
               }
             }
           } catch (error) {
             console.error('Error creating auth user:', error);
           }
         } else if (profile.auth_user_id) {
-          console.log('Auth user already exists for profile:', profile.auth_user_id);
+          // console.log('Auth user already exists for profile:', profile.auth_user_id);
         } else {
           console.error('Missing customerData in order:', { customerData: !!customerData, email: !!customerData?.email, password: !!customerData?.password });
         }

@@ -13,14 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Hubla webhook called - Method:', req.method);
-    console.log('Hubla webhook headers:', Object.fromEntries(req.headers.entries()));
+    // console.log('Hubla webhook called - Method:', req.method);
+    // console.log('Hubla webhook headers:', Object.fromEntries(req.headers.entries()));
     
     // Validate webhook token from headers
     const webhookToken = req.headers.get('authorization') || req.headers.get('x-webhook-token');
     const expectedToken = Deno.env.get('HUBLA_WEBHOOK_TOKEN');
     
-    console.log('Webhook token received:', webhookToken ? 'Present' : 'Missing');
+    // console.log('Webhook token received:', webhookToken ? 'Present' : 'Missing');
     
     if (!webhookToken || !expectedToken) {
       console.error('Webhook token missing');
@@ -41,10 +41,10 @@ serve(async (req) => {
       );
     }
     
-    console.log('Webhook token validated successfully');
+    // console.log('Webhook token validated successfully');
     
     const webhookData = await req.json();
-    console.log('Hubla webhook received:', JSON.stringify(webhookData, null, 2));
+    // console.log('Hubla webhook received:', JSON.stringify(webhookData, null, 2));
 
     // Extract transaction details from Hubla webhook
     // Hubla sends different event types, we're interested in payment confirmation
@@ -53,7 +53,7 @@ serve(async (req) => {
     const transactionStatus = webhookData.transaction?.status || webhookData.data?.status || webhookData.status;
     const customerEmail = webhookData.transaction?.customer?.email || webhookData.customer?.email || webhookData.data?.customer?.email;
     
-    console.log('Processing Hubla webhook:', { eventType, transactionId, transactionStatus, customerEmail });
+    // console.log('Processing Hubla webhook:', { eventType, transactionId, transactionStatus, customerEmail });
 
     if (!transactionId) {
       console.error('No transaction ID found in webhook data');
@@ -78,7 +78,7 @@ serve(async (req) => {
                    transactionStatus === 'FAILED' || transactionStatus === 'failed' || 
                    transactionStatus === 'REFUNDED' || transactionStatus === 'refunded' ? 'failed' : 'pending';
     
-    console.log('Payment status mapping:', { transactionStatus, isPaid, status });
+    // console.log('Payment status mapping:', { transactionStatus, isPaid, status });
 
     // Try to find order by transaction ID or customer email
     let order;
@@ -93,7 +93,7 @@ serve(async (req) => {
 
     if (orderByTransactionId) {
       order = orderByTransactionId;
-      console.log('Found order by Hubla transaction ID:', order.id);
+      // console.log('Found order by Hubla transaction ID:', order.id);
     } else if (customerEmail) {
       // Try to find by customer email in payment_data
       const { data: allOrders } = await supabaseService
@@ -108,7 +108,7 @@ serve(async (req) => {
         );
         
         if (order) {
-          console.log('Found order by customer email:', order.id);
+          // console.log('Found order by customer email:', order.id);
           // Update with transaction ID for future lookups
           await supabaseService
             .from('orders')
@@ -170,7 +170,7 @@ serve(async (req) => {
       order_id: order.id
     });
 
-    console.log('Order updated successfully via Hubla webhook:', updatedOrder);
+    // console.log('Order updated successfully via Hubla webhook:', updatedOrder);
 
     // If payment is completed, create user and profile
     if (isPaid && updatedOrder) {
@@ -178,7 +178,7 @@ serve(async (req) => {
       
       // Se for compra de usuário já logado, adicionar créditos
       if (updatedOrder.payment_data?.isLoggedInPurchase && updatedOrder.user_id) {
-        console.log('Logged in user purchase - adding credits');
+        // console.log('Logged in user purchase - adding credits');
         
         // Adicionar créditos ao perfil existente
         const { data: planData } = await supabaseService
@@ -197,7 +197,7 @@ serve(async (req) => {
           if (planError) {
             console.error('Error adding user plan:', planError);
           } else {
-            console.log('User plan added successfully:', userPlanId);
+            // console.log('User plan added successfully:', userPlanId);
           }
 
         // Enviar e-mails de confirmação para usuário logado
@@ -225,14 +225,14 @@ serve(async (req) => {
                 creditsGranted: planData?.credits_granted || 1
               }
             });
-            console.log('Confirmation emails sent successfully');
+            // console.log('Confirmation emails sent successfully');
           }
         } catch (emailError) {
           console.error('Failed to send confirmation emails:', emailError);
         }
       } else if (customerData?.email && customerData?.password) {
         // Novo usuário - criar tudo do zero
-        console.log('New user purchase - creating auth user and profile');
+        // console.log('New user purchase - creating auth user and profile');
         
         try {
           // 1. Criar usuário no Supabase Auth
@@ -255,7 +255,7 @@ serve(async (req) => {
             throw authError;
           }
 
-          console.log('Auth user created:', authData.user?.id);
+          // console.log('Auth user created:', authData.user?.id);
 
           // 2. Criar perfil ativo
           const { data: newProfile, error: profileError } = await supabaseService
@@ -277,7 +277,7 @@ serve(async (req) => {
             throw profileError;
           }
 
-          console.log('Profile created:', newProfile.id);
+          // console.log('Profile created:', newProfile.id);
 
           // 3. Atualizar order com o profile_id
           const { error: orderUpdateError } = await supabaseService
@@ -288,7 +288,7 @@ serve(async (req) => {
           if (orderUpdateError) {
             console.error('Failed to link order to profile:', orderUpdateError);
           } else {
-            console.log('Order linked to profile successfully');
+            // console.log('Order linked to profile successfully');
           }
 
           // 4. Adicionar créditos ao usuário baseado no plano
@@ -308,7 +308,7 @@ serve(async (req) => {
           if (planError) {
             console.error('Error adding user plan:', planError);
           } else {
-            console.log('User plan added successfully:', userPlanId);
+            // console.log('User plan added successfully:', userPlanId);
           }
 
           // Enviar e-mails de confirmação
@@ -330,7 +330,7 @@ serve(async (req) => {
                   creditsGranted: planData?.credits_granted || 1
                 }
               });
-              console.log('Confirmation emails sent successfully');
+              // console.log('Confirmation emails sent successfully');
             }
           } catch (emailError) {
             console.error('Failed to send confirmation emails:', emailError);

@@ -7,19 +7,19 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Validate coupon function started. Method:', req.method);
+  // console.log('Validate coupon function started. Method:', req.method);
   
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    // console.log('Handling CORS preflight request');
+    // return new Response(null, { 
+    //   status: 200,
+    //   headers: corsHeaders 
+    // });
   }
 
   try {
     const { couponId } = await req.json();
-    console.log('Validating coupon:', couponId);
+    // console.log('Validating coupon:', couponId);
     
     if (!couponId) {
       throw new Error('Código do cupom é obrigatório');
@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // List all coupons and find the matching one
     const listUrl = 'https://api.abacatepay.com/v1/coupon/list';
-    console.log('Fetching coupons list from:', listUrl);
+    // console.log('Fetching coupons list from:', listUrl);
     
     const response = await fetch(listUrl, {
       method: 'GET',
@@ -43,7 +43,7 @@ serve(async (req) => {
       },
     });
 
-    console.log('AbacatePay response status:', response.status);
+    // console.log('AbacatePay response status:', response.status);
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -61,7 +61,7 @@ serve(async (req) => {
     }
 
     const couponsData = await response.json();
-    console.log('Coupons list retrieved:', couponsData);
+    // console.log('Coupons list retrieved:', couponsData);
 
     // Find the coupon with matching id (case-insensitive)
     const coupon = couponsData.data?.find((c: any) => 
@@ -69,7 +69,7 @@ serve(async (req) => {
     );
 
     if (!coupon) {
-      console.log('Coupon not found:', couponId);
+      // console.log('Coupon not found:', couponId);
       return new Response(
         JSON.stringify({
           success: false,
@@ -84,7 +84,7 @@ serve(async (req) => {
 
     // Check if coupon is active
     if (coupon.status !== 'ACTIVE') {
-      console.log('Coupon is not active:', coupon.status);
+      // console.log('Coupon is not active:', coupon.status);
       return new Response(
         JSON.stringify({
           success: false,
@@ -99,7 +99,7 @@ serve(async (req) => {
 
     // Check if coupon has remaining uses (if maxRedeems is not -1)
     if (coupon.maxRedeems !== -1 && coupon.redeems >= coupon.maxRedeems) {
-      console.log('Coupon has no remaining uses');
+      // console.log('Coupon has no remaining uses');
       return new Response(
         JSON.stringify({
           success: false,
@@ -112,11 +112,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('Coupon validated successfully:', {
-      id: coupon.id,
-      discountKind: coupon.discountKind,
-      discount: coupon.discount
-    });
+    // console.log('Coupon validated successfully:', {
+    //   id: coupon.id,
+    //   discountKind: coupon.discountKind,
+    //   discount: coupon.discount
+    // });
 
     return new Response(
       JSON.stringify({

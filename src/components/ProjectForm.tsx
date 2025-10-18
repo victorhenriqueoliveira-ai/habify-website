@@ -92,13 +92,13 @@ export const ProjectForm = ({
 
       const uploadedUrls = await Promise.all(uploadPromises);
       
-      console.log('Photos uploaded successfully:', uploadedUrls);
+      // console.log('Photos uploaded successfully:', uploadedUrls);
       
       // Ensure we're updating with a clean array
       const currentPhotos = Array.isArray(project.photos) ? project.photos : [];
       const newPhotos = [...currentPhotos, ...uploadedUrls];
       
-      console.log('Updating project with photos:', { current: currentPhotos.length, new: newPhotos.length });
+      // console.log('Updating project with photos:', { current: currentPhotos.length, new: newPhotos.length });
       
       onUpdate('photos', newPhotos);
 

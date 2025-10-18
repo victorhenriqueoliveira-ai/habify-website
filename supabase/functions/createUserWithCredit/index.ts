@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       }
     );
 
-    console.log('Admin client created');
+    // console.log('Admin client created');
 
     // Verificar se quem está chamando é admin usando admin client
     const authHeader = req.headers.get('Authorization');
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('User verified:', user.id);
+    // console.log('User verified:', user.id);
 
     // Buscar perfil usando admin client (bypassa RLS)
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Profile found:', profile);
+    // console.log('Profile found:', profile);
 
     if (!profile || !['admin', 'dev'].includes(profile.role)) {
       console.error('Access denied for role:', profile?.role);
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     const body: CreateUserRequest = await req.json();
     const { email, password, full_name, plan_id, gateway, creation_type, created_by } = body;
 
-    console.log('Creating user with plan:', { email, plan_id, gateway, creation_type });
+    // console.log('Creating user with plan:', { email, plan_id, gateway, creation_type });
 
     // Buscar detalhes do plano
     const { data: plan, error: planError } = await supabaseAdmin
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       throw new Error('Plano não encontrado');
     }
 
-    console.log('Plan found:', plan);
+    // console.log('Plan found:', plan);
 
     // Determinar o valor e créditos baseado no tipo de criação e gateway
     let amount = 0;
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
       throw new Error(`Erro ao criar usuário: ${authError?.message}`);
     }
 
-    console.log('Auth user created:', authData.user.id);
+    // console.log('Auth user created:', authData.user.id);
 
     // 2. Aguardar trigger criar o perfil
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       throw new Error('Perfil não foi criado automaticamente');
     }
 
-    console.log('Profile found:', createdProfile.id);
+    // console.log('Profile found:', createdProfile.id);
 
     // 4. Adicionar créditos usando a função RPC
     const creditDescription = creation_type === 'permuta'
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     if (creditsError) {
       console.error('Credits error:', creditsError);
     } else {
-      console.log(`Added ${credits} credits to user ${createdProfile.id}`);
+      // console.log(`Added ${credits} credits to user ${createdProfile.id}`);
     }
 
     // 5. Criar log de crédito
@@ -215,12 +215,12 @@ Deno.serve(async (req) => {
       console.error('Payment log error:', paymentLogError);
     }
 
-    console.log('User created successfully:', {
-      user_id: authData.user.id,
-      profile_id: createdProfile.id,
-      credits,
-      plan: plan.name
-    });
+    // console.log('User created successfully:', {
+    //   user_id: authData.user.id,
+    //   profile_id: createdProfile.id,
+    //   credits,
+    //   plan: plan.name
+    // });
 
     return new Response(
       JSON.stringify({

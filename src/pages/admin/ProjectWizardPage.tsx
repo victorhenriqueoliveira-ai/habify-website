@@ -227,15 +227,15 @@ const ProjectWizardPage = () => {
         wizardData.addressCep
       ].filter(Boolean).join(', ');
 
-      console.log('Creating project with data:', {
-        layoutChoice: wizardData.layoutChoice,
-        colorPalette: wizardData.colorPalette,
-        logoUrl: wizardData.logoUrl,
-        hasLogo: wizardData.hasLogo,
-        paletteData,
-        propertiesCount: portfolioProperties.length,
-        fullAddress,
-      });
+      // console.log('Creating project with data:', {
+      //   layoutChoice: wizardData.layoutChoice,
+      //   colorPalette: wizardData.colorPalette,
+      //   logoUrl: wizardData.logoUrl,
+      //   hasLogo: wizardData.hasLogo,
+      //   paletteData,
+      //   propertiesCount: portfolioProperties.length,
+      //   fullAddress,
+      // });
       
       // Build photos array (logo + property photos)
       const projectPhotos: string[] = [];
@@ -277,7 +277,7 @@ const ProjectWizardPage = () => {
 
       if (result.success && result.data) {
         const projectId = result.data.id;
-        console.log('Project created successfully with ID:', projectId);
+        // console.log('Project created successfully with ID:', projectId);
         
         // Save portfolio properties to database
         if (portfolioProperties.length > 0) {
@@ -291,7 +291,7 @@ const ProjectWizardPage = () => {
               // Upload photos if they are File objects
               for (const photo of prop.photos) {
                 if (photo instanceof File) {
-                  console.log(`Uploading photo for property: ${prop.title}`);
+                  // console.log(`Uploading photo for property: ${prop.title}`);
                   const fileUrls = await uploadMultipleFiles([photo], 'project-photos', `properties/${projectId}`);
                   if (fileUrls.length > 0) {
                     photoUrls.push(...fileUrls);
@@ -302,7 +302,7 @@ const ProjectWizardPage = () => {
                 }
               }
               
-              console.log(`Uploaded ${photoUrls.length} photos for property: ${prop.title}`);
+              // console.log(`Uploaded ${photoUrls.length} photos for property: ${prop.title}`);
               
               return {
                 project_id: projectId,
@@ -326,7 +326,7 @@ const ProjectWizardPage = () => {
             })
           );
 
-          console.log('Inserting properties into database:', propertiesWithUrls.length);
+          // console.log('Inserting properties into database:', propertiesWithUrls.length);
           const { error: propertiesError } = await supabase
             .from('portfolio_properties')
             .insert(propertiesWithUrls);
@@ -335,7 +335,7 @@ const ProjectWizardPage = () => {
             console.error('Error saving portfolio properties:', propertiesError);
             toast.error('Projeto criado, mas houve erro ao salvar os imóveis', { id: loadingToast });
           } else {
-          console.log('Properties saved successfully');
+          // console.log('Properties saved successfully');
           }
         }
 

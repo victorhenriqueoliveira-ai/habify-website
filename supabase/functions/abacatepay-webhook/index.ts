@@ -13,8 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    console.log('AbacatePay webhook called - Method:', req.method);
-    console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
+    // console.log('AbacatePay webhook called - Method:', req.method);
+    // console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
     
     // Validate webhook secret from query params or headers
     const url = new URL(req.url);
@@ -23,7 +23,7 @@ serve(async (req) => {
     const webhookSecret = webhookSecretFromQuery || webhookSecretFromHeader;
     const expectedSecret = 'VictorOliveira@123';
     
-    console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing', 'From:', webhookSecretFromQuery ? 'query' : webhookSecretFromHeader ? 'header' : 'none');
+    // console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing', 'From:', webhookSecretFromQuery ? 'query' : webhookSecretFromHeader ? 'header' : 'none');
     
     if (!webhookSecret || webhookSecret !== expectedSecret) {
       console.error('Invalid webhook secret');
@@ -33,16 +33,16 @@ serve(async (req) => {
       );
     }
     
-    console.log('Webhook secret validated successfully');
+    // console.log('Webhook secret validated successfully');
     
     const webhookData = await req.json();
-    console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
+    // console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
 
     // Extract bill ID and status from webhook - try multiple formats
     let billId = webhookData.data?.billing?.id || webhookData.data?.id || webhookData.id || webhookData.bill?.id;
     const paymentStatus = webhookData.data?.billing?.status || webhookData.data?.status || webhookData.status || webhookData.bill?.status;
     
-    console.log('Processing webhook for bill:', billId, 'status:', paymentStatus);
+    // console.log('Processing webhook for bill:', billId, 'status:', paymentStatus);
 
     if (!billId) {
       console.error('No bill ID found in webhook data. Full webhook:', JSON.stringify(webhookData, null, 2));
@@ -54,7 +54,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
-      console.log('Found alternative bill ID:', altBillId);
+      // console.log('Found alternative bill ID:', altBillId);
       billId = altBillId;
     }
 
@@ -69,7 +69,7 @@ serve(async (req) => {
     const isPaid = paymentStatus === 'PAID' || paymentStatus === 'APPROVED' || paymentStatus === 'paid' || paymentStatus === 'approved';
     const status = isPaid ? 'completed' : paymentStatus === 'FAILED' || paymentStatus === 'failed' ? 'failed' : 'pending';
     
-    console.log('Updating transaction status:', { billId, isPaid, status });
+    // console.log('Updating transaction status:', { billId, isPaid, status });
 
     // Get current order to preserve original customerData
     const { data: currentOrder } = await supabaseService
@@ -122,7 +122,7 @@ serve(async (req) => {
       order_id: order.id
     });
 
-    console.log('Order updated successfully via webhook:', order);
+    // console.log('Order updated successfully via webhook:', order);
 
     // If payment is completed, create user and profile
     if (isPaid && order) {
@@ -130,7 +130,7 @@ serve(async (req) => {
       
       // Se for compra de usuário já logado, adicionar créditos
       if (order.payment_data?.isLoggedInPurchase && order.user_id) {
-        console.log('Logged in user purchase - adding credits');
+        // console.log('Logged in user purchase - adding credits');
         
         // Adicionar créditos ao perfil existente
         const { data: planData } = await supabaseService
@@ -151,7 +151,7 @@ serve(async (req) => {
           if (creditsError) {
             console.error('Failed to add credits:', creditsError);
           } else {
-            console.log(`Added ${planData.credits_granted} credits to existing user ${order.user_id}`);
+            // console.log(`Added ${planData.credits_granted} credits to existing user ${order.user_id}`);
           }
         }
 
@@ -180,14 +180,14 @@ serve(async (req) => {
                 creditsGranted: planData?.credits_granted || 1
               }
             });
-            console.log('Confirmation emails sent successfully');
+            // console.log('Confirmation emails sent successfully');
           }
         } catch (emailError) {
           console.error('Failed to send confirmation emails:', emailError);
         }
       } else if (customerData?.email && customerData?.password) {
         // Novo usuário - criar tudo do zero
-        console.log('New user purchase - creating auth user and profile');
+        // console.log('New user purchase - creating auth user and profile');
         
         try {
           // 1. Criar usuário no Supabase Auth
@@ -210,7 +210,7 @@ serve(async (req) => {
             throw authError;
           }
 
-          console.log('Auth user created:', authData.user?.id);
+          // console.log('Auth user created:', authData.user?.id);
 
           // 2. Criar perfil ativo
           const { data: newProfile, error: profileError } = await supabaseService
@@ -232,7 +232,7 @@ serve(async (req) => {
             throw profileError;
           }
 
-          console.log('Profile created:', newProfile.id);
+          // console.log('Profile created:', newProfile.id);
 
           // 3. Atualizar order com o profile_id
           const { error: orderUpdateError } = await supabaseService
@@ -243,7 +243,7 @@ serve(async (req) => {
           if (orderUpdateError) {
             console.error('Failed to link order to profile:', orderUpdateError);
           } else {
-            console.log('Order linked to profile successfully');
+            // console.log('Order linked to profile successfully');
           }
 
           // 4. Adicionar créditos ao usuário baseado no plano
@@ -265,7 +265,7 @@ serve(async (req) => {
             if (creditsError) {
               console.error('Failed to add credits:', creditsError);
             } else {
-              console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
+              // console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
             }
           }
 
@@ -288,7 +288,7 @@ serve(async (req) => {
                   creditsGranted: planData?.credits_granted || 1
                 }
               });
-              console.log('Confirmation emails sent successfully');
+              // console.log('Confirmation emails sent successfully');
             }
           } catch (emailError) {
             console.error('Failed to send confirmation emails:', emailError);
