@@ -709,6 +709,74 @@ export type Database = {
           },
         ]
       }
+      user_plans: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          plan_id: string
+          status: string
+          used_at: string | null
+          used_for_project_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          plan_id: string
+          status?: string
+          used_at?: string | null
+          used_for_project_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          plan_id?: string
+          status?: string
+          used_at?: string | null
+          used_for_project_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_plans_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_plans_used_for_project_id_fkey"
+            columns: ["used_for_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -723,6 +791,20 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      add_user_plan: {
+        Args: { _order_id?: string; _plan_id: string; _user_id: string }
+        Returns: string
+      }
+      get_available_user_plans: {
+        Args: { _user_id: string }
+        Returns: {
+          count: number
+          expires_at: string
+          plan_id: string
+          plan_name: string
+          plan_type: string
+        }[]
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
@@ -746,6 +828,10 @@ export type Database = {
       }
       use_credits: {
         Args: { _amount: number; _description?: string; _user_id: string }
+        Returns: boolean
+      }
+      use_user_plan: {
+        Args: { _plan_id: string; _project_id: string; _user_id: string }
         Returns: boolean
       }
     }

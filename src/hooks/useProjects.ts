@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Project } from '@/types/admin';
 import { useAuditLogger } from './useAuditLogger';
+import { useUserPlans } from './useUserPlans';
+import { toast } from 'sonner';
 
 export const useProjects = () => {
   const { logProjectAction } = useAuditLogger();
+  const { usePlanForProject, availablePlans } = useUserPlans();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,22 +56,22 @@ export const useProjects = () => {
 
   const createProject = async (projectData: Partial<Project> & { userId: string }) => {
     try {
-      // Buscar o profile_id do usuário
+      // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, credits')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) throw new Error('Perfil não encontrado');
-
-      // Verificar se o usuário tem créditos suficientes (1 crédito = 1 site)
-      if (profile.credits < 1) {
-        throw new Error('Você não tem créditos suficientes para criar um novo site. Por favor, adquira um plano.');
+      if (!user) {
+        toast.error('Você precisa estar autenticado para criar um projeto');
+        throw new Error('Usuário não autenticado');
       }
+
+      // Verificar se tem plano disponível
+      if (availablePlans.length === 0) {
+        toast.error('Você não tem planos disponíveis. Por favor, adquira um plano primeiro.');
+        throw new Error('Nenhum plano disponível');
+      }
+
+      // Usar o primeiro plano disponível (pode ser parametrizável no futuro)
+      const selectedPlan = availablePlans[0];
+      console.log('Using plan:', selectedPlan.plan_name);
 
       // Ensure photos is always an array
       const photos = Array.isArray(projectData.photos) ? projectData.photos : [];
@@ -105,27 +108,24 @@ export const useProjects = () => {
       
       console.log('Project created successfully:', { id: data.id, photos: data.photos?.length || 0 });
 
-      // Consumir 1 crédito após criar o projeto com sucesso
-      const { data: creditResult, error: creditError } = await supabase.rpc('use_credits', {
-        _user_id: profile.id,
-        _amount: 1,
-        _description: `Crédito usado para criar projeto: ${projectData.title}`
-      });
-
-      if (creditError) {
-        console.error('Error consuming credit:', creditError);
-        // Não vamos falhar o projeto se o crédito não for consumido, mas vamos logar
-      } else if (!creditResult) {
-        console.warn('Credit consumption returned false - user might not have enough credits');
-      } else {
-        console.log('Credit consumed successfully');
+      // Usar o plano após criar o projeto
+      const planUsed = await usePlanForProject(selectedPlan.plan_id, data.id);
+      
+      if (!planUsed) {
+        // Se não conseguiu usar o plano, deletar o projeto criado
+        await supabase.from('projects').delete().eq('id', data.id);
+        toast.error('Erro ao usar o plano. Projeto não foi criado.');
+        throw new Error('Failed to use plan');
       }
+
+      toast.success('Projeto criado com sucesso!');
       
       // Log the create action
       await logProjectAction('CREATE_PROJECT', data.id, {
         title: projectData.title,
         location: projectData.location,
         price: projectData.price,
+        planUsed: selectedPlan.plan_name,
         timestamp: new Date().toISOString()
       });
       

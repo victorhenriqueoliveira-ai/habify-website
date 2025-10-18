@@ -187,21 +187,18 @@ serve(async (req) => {
           .eq('id', updatedOrder.plan_id)
           .single();
 
-        if (planData?.credits_granted) {
-          const { error: creditsError } = await supabaseService.rpc('add_credits', {
+          // Adicionar plano ao usuário
+          const { data: userPlanId, error: planError } = await supabaseService.rpc('add_user_plan', {
             _user_id: updatedOrder.user_id,
-            _amount: planData.credits_granted,
-            _type: 'purchase',
-            _description: `Créditos do plano: ${updatedOrder.plan_id}`,
+            _plan_id: updatedOrder.plan_id,
             _order_id: updatedOrder.id
           });
 
-          if (creditsError) {
-            console.error('Failed to add credits:', creditsError);
+          if (planError) {
+            console.error('Error adding user plan:', planError);
           } else {
-            console.log(`Added ${planData.credits_granted} credits to existing user ${updatedOrder.user_id}`);
+            console.log('User plan added successfully:', userPlanId);
           }
-        }
 
         // Enviar e-mails de confirmação para usuário logado
         try {
@@ -301,20 +298,17 @@ serve(async (req) => {
             .eq('id', updatedOrder.plan_id)
             .single();
 
-          if (planData?.credits_granted) {
-            const { error: creditsError } = await supabaseService.rpc('add_credits', {
-              _user_id: newProfile.id,
-              _amount: planData.credits_granted,
-              _type: 'purchase',
-              _description: `Créditos do plano: ${updatedOrder.plan_id}`,
-              _order_id: updatedOrder.id
-            });
+          // Adicionar plano ao usuário
+          const { data: userPlanId, error: planError } = await supabaseService.rpc('add_user_plan', {
+            _user_id: newProfile.id,
+            _plan_id: updatedOrder.plan_id,
+            _order_id: updatedOrder.id
+          });
 
-            if (creditsError) {
-              console.error('Failed to add credits:', creditsError);
-            } else {
-              console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
-            }
+          if (planError) {
+            console.error('Error adding user plan:', planError);
+          } else {
+            console.log('User plan added successfully:', userPlanId);
           }
 
           // Enviar e-mails de confirmação
