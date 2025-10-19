@@ -160,17 +160,31 @@ serve(async (req) => {
             .single();
 
           if (planDetails && userProfile) {
+            // Enviar confirmação ao usuário
             await supabaseService.functions.invoke('send-payment-confirmation', {
               body: {
                 customerName: userProfile.name,
                 customerEmail: userProfile.email,
                 planName: planDetails.name,
                 planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                gateway: 'ABACATEPAY',
-                paymentMethod: 'PIX'
+                paymentMethod: 'PIX',
+                gateway: 'ABACATEPAY'
               }
             });
-            // console.log('Confirmation emails sent successfully');
+            
+            // Notificar administração
+            await supabaseService.functions.invoke('send-admin-notification', {
+              body: {
+                customerName: userProfile.name,
+                customerEmail: userProfile.email,
+                planName: planDetails.name,
+                planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
+                paymentMethod: 'PIX',
+                gateway: 'ABACATEPAY'
+              }
+            });
+            
+            // console.log('Emails sent successfully');
           }
         } catch (emailError) {
           console.error('Failed to send confirmation emails:', emailError);
@@ -256,6 +270,37 @@ serve(async (req) => {
               .select('name, price, pix_price')
               .eq('id', order.plan_id)
               .single();
+
+            if (planDetails && newProfile) {
+              // Enviar confirmação ao usuário
+              await supabaseService.functions.invoke('send-payment-confirmation', {
+                body: {
+                  customerName: customerData.name,
+                  customerEmail: customerData.email,
+                  planName: planDetails.name,
+                  planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
+                  paymentMethod: 'PIX',
+                  gateway: 'ABACATEPAY'
+                }
+              });
+              
+              // Notificar administração
+              await supabaseService.functions.invoke('send-admin-notification', {
+                body: {
+                  customerName: customerData.name,
+                  customerEmail: customerData.email,
+                  planName: planDetails.name,
+                  planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
+                  paymentMethod: 'PIX',
+                  gateway: 'ABACATEPAY'
+                }
+              });
+              
+              // console.log('Emails sent successfully');
+            }
+          } catch (emailError) {
+            console.error('Failed to send confirmation emails:', emailError);
+          }
 
             if (planDetails) {
               await supabaseService.functions.invoke('send-payment-confirmation', {

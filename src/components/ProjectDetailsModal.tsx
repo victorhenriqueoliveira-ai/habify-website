@@ -117,7 +117,11 @@ export const ProjectDetailsModal = ({ project, open, onClose }: ProjectDetailsMo
       // console.log('Dialog onOpenChange:', open);
       !open && onClose();
     }}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent 
+        className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">{project.title}</DialogTitle>

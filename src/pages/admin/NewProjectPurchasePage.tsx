@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,12 +6,21 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Check, Star } from 'lucide-react';
 import { CheckoutModal } from '@/components/CheckoutModal';
 import { usePlans } from '@/hooks/usePlans';
+import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 
 const NewProjectPurchasePage = () => {
   const navigate = useNavigate();
   const { plans, loading } = usePlans();
+  const { canViewPlans } = useCanViewPlans();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  
+  // Redirecionar admin/dev para página de criação de projeto
+  useEffect(() => {
+    if (!canViewPlans) {
+      navigate('/admin/new-project');
+    }
+  }, [canViewPlans, navigate]);
 
   const handlePurchasePlan = (planId: string) => {
     setSelectedPlan(planId);

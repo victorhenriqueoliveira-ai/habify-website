@@ -37,6 +37,7 @@ import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
+import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 
 const statusColors = {
   pending: 'secondary',
@@ -67,6 +68,7 @@ export const MyProjectsPage = () => {
   const { projects, loading } = useProjects();
   const { users } = useUsers();
   const { canCreateProject, activeProjectsCount } = useProjectLimits();
+  const { canViewPlans } = useCanViewPlans();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -106,21 +108,28 @@ export const MyProjectsPage = () => {
               : 'Acompanhe o status e gerencie seus projetos'}
           </p>
         </div>
-        {canCreateProject ? (
+        {canViewPlans ? (
+          canCreateProject ? (
+            <Button onClick={() => navigate('/admin/new-project')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Projeto
+            </Button>
+          ) : (
+            <Button onClick={() => navigate('/admin/new-project-purchase')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Contratar Novo Projeto
+            </Button>
+          )
+        ) : (
           <Button onClick={() => navigate('/admin/new-project')}>
             <Plus className="mr-2 h-4 w-4" />
             Novo Projeto
-          </Button>
-        ) : (
-          <Button onClick={() => navigate('/admin/new-project-purchase')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Contratar Novo Projeto
           </Button>
         )}
       </div>
 
       {/* Limit Alert */}
-      {!canCreateProject && (
+      {canViewPlans && !canCreateProject && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">

@@ -51,6 +51,14 @@ export const AssignPlanModal = ({
     setSubmitting(true);
 
     try {
+      // Buscar dados do admin que está atribuindo
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data: adminProfile } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('user_id', currentUser?.id)
+        .single();
+
       const { data, error } = await supabase.rpc('admin_assign_plan_to_user', {
         _user_id: userId,
         _plan_id: selectedPlanId,
@@ -58,6 +66,46 @@ export const AssignPlanModal = ({
       });
 
       if (error) throw error;
+
+      // Buscar detalhes do plano e usuário para notificações
+      const { data: planDetails } = await supabase
+        .from('plans')
+        .select('name, price')
+        .eq('id', selectedPlanId)
+        .single();
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('id', userId)
+        .single();
+
+      if (planDetails && userProfile) {
+        // Enviar confirmação ao usuário
+        await supabase.functions.invoke('send-payment-confirmation', {
+          body: {
+            customerName: userProfile.name,
+            customerEmail: userProfile.email,
+            planName: planDetails.name,
+            planPrice: planDetails.price.toFixed(2),
+            paymentMethod: 'MANUAL',
+            gateway: 'ADMIN'
+          }
+        });
+
+        // Notificar administração
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            customerName: userProfile.name,
+            customerEmail: userProfile.email,
+            planName: planDetails.name,
+            planPrice: planDetails.price.toFixed(2),
+            paymentMethod: 'MANUAL',
+            gateway: 'ADMIN',
+            assignedBy: adminProfile?.name || 'Admin'
+          }
+        });
+      }
 
       toast.success(`Plano atribuído com sucesso para ${userName}`);
       setSelectedPlanId('');
