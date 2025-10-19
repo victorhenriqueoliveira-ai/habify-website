@@ -779,7 +779,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_plans_detailed: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string | null
+          notes: string | null
+          plan_id: string | null
+          plan_name: string | null
+          plan_type: Database["public"]["Enums"]["plan_type"] | null
+          price: number | null
+          status: string | null
+          used_at: string | null
+          used_for_project_id: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_plans_used_for_project_id_fkey"
+            columns: ["used_for_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       add_credits: {
@@ -794,6 +835,10 @@ export type Database = {
       }
       add_user_plan: {
         Args: { _order_id?: string; _plan_id: string; _user_id: string }
+        Returns: string
+      }
+      admin_assign_plan_to_user: {
+        Args: { _notes?: string; _plan_id: string; _user_id: string }
         Returns: string
       }
       get_available_user_plans: {

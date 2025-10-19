@@ -132,27 +132,17 @@ serve(async (req) => {
       if (order.payment_data?.isLoggedInPurchase && order.user_id) {
         // console.log('Logged in user purchase - adding credits');
         
-        // Adicionar créditos ao perfil existente
-        const { data: planData } = await supabaseService
-          .from('plans')
-          .select('credits_granted')
-          .eq('id', order.plan_id)
-          .single();
+        // Adicionar plano ao perfil existente
+        const { error: planError } = await supabaseService.rpc('add_user_plan', {
+          _user_id: order.user_id,
+          _plan_id: order.plan_id,
+          _order_id: order.id
+        });
 
-        if (planData?.credits_granted) {
-          const { error: creditsError } = await supabaseService.rpc('add_credits', {
-            _user_id: order.user_id,
-            _amount: planData.credits_granted,
-            _type: 'purchase',
-            _description: `Créditos do plano via AbacatePay`,
-            _order_id: order.id
-          });
-
-          if (creditsError) {
-            console.error('Failed to add credits:', creditsError);
-          } else {
-            // console.log(`Added ${planData.credits_granted} credits to existing user ${order.user_id}`);
-          }
+        if (planError) {
+          console.error('Failed to add plan:', planError);
+        } else {
+          // console.log(`Added plan to existing user ${order.user_id}`);
         }
 
         // Enviar e-mails de confirmação para usuário logado
@@ -177,7 +167,7 @@ serve(async (req) => {
                 planName: planDetails.name,
                 planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
                 gateway: 'ABACATEPAY',
-                creditsGranted: planData?.credits_granted || 1
+                paymentMethod: 'PIX'
               }
             });
             // console.log('Confirmation emails sent successfully');
@@ -246,27 +236,17 @@ serve(async (req) => {
             // console.log('Order linked to profile successfully');
           }
 
-          // 4. Adicionar créditos ao usuário baseado no plano
-          const { data: planData } = await supabaseService
-            .from('plans')
-            .select('credits_granted')
-            .eq('id', order.plan_id)
-            .single();
+          // 4. Adicionar plano ao usuário
+          const { error: planError } = await supabaseService.rpc('add_user_plan', {
+            _user_id: newProfile.id,
+            _plan_id: order.plan_id,
+            _order_id: order.id
+          });
 
-          if (planData?.credits_granted) {
-            const { error: creditsError } = await supabaseService.rpc('add_credits', {
-              _user_id: newProfile.id,
-              _amount: planData.credits_granted,
-              _type: 'purchase',
-              _description: `Créditos do plano via AbacatePay`,
-              _order_id: order.id
-            });
-
-            if (creditsError) {
-              console.error('Failed to add credits:', creditsError);
-            } else {
-              // console.log(`Added ${planData.credits_granted} credits to user ${newProfile.id}`);
-            }
+          if (planError) {
+            console.error('Failed to add plan:', planError);
+          } else {
+            // console.log(`Added plan to user ${newProfile.id}`);
           }
 
           // Enviar e-mails de confirmação
@@ -285,7 +265,7 @@ serve(async (req) => {
                   planName: planDetails.name,
                   planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
                   gateway: 'ABACATEPAY',
-                  creditsGranted: planData?.credits_granted || 1
+                  paymentMethod: 'PIX'
                 }
               });
               // console.log('Confirmation emails sent successfully');

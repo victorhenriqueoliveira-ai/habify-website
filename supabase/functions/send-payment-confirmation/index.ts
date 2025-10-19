@@ -14,7 +14,7 @@ interface EmailData {
   planName: string;
   planPrice: string;
   gateway: string;
-  creditsGranted: number;
+  paymentMethod: string;
 }
 
 serve(async (req) => {
@@ -23,7 +23,7 @@ serve(async (req) => {
   }
 
   try {
-    const { customerName, customerEmail, planName, planPrice, gateway, creditsGranted }: EmailData = await req.json();
+    const { customerName, customerEmail, planName, planPrice, gateway, paymentMethod }: EmailData = await req.json();
     
     // console.log('Sending payment confirmation emails:', { customerEmail, planName });
 
@@ -42,15 +42,15 @@ serve(async (req) => {
             <h2 style="margin-top: 0; color: #333;">Detalhes da sua compra:</h2>
             <p><strong>Plano:</strong> ${planName}</p>
             <p><strong>Valor:</strong> R$ ${planPrice}</p>
-            <p><strong>Forma de pagamento:</strong> ${gateway === 'ABACATEPAY' ? 'PIX' : 'Cartão de Crédito'}</p>
-            <p><strong>Créditos concedidos:</strong> ${creditsGranted}</p>
+            <p><strong>Forma de pagamento:</strong> ${paymentMethod}</p>
+            <p><strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}</p>
           </div>
           
-          <h3 style="color: #333;">Como usar seus créditos:</h3>
+          <h3 style="color: #333;">Próximos passos:</h3>
           <ol style="line-height: 1.8;">
             <li>Acesse sua conta no painel administrativo</li>
-            <li>Clique em "Meus Projetos"</li>
-            <li>Crie um novo projeto usando seus créditos</li>
+            <li>Clique em "Novo Projeto"</li>
+            <li>Preencha as informações do seu projeto</li>
             <li>Nossa equipe irá desenvolver seu site personalizado</li>
           </ol>
           
@@ -87,8 +87,9 @@ serve(async (req) => {
             <h2 style="margin-top: 0; color: #333;">Detalhes da Compra:</h2>
             <p><strong>Plano:</strong> ${planName}</p>
             <p><strong>Valor:</strong> R$ ${planPrice}</p>
-            <p><strong>Gateway:</strong> ${gateway === 'ABACATEPAY' ? 'PIX (AbacatePay)' : 'Cartão (Hubla)'}</p>
-            <p><strong>Créditos concedidos:</strong> ${creditsGranted}</p>
+            <p><strong>Gateway:</strong> ${gateway}</p>
+            <p><strong>Forma de pagamento:</strong> ${paymentMethod}</p>
+            <p><strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}</p>
           </div>
           
           <p style="margin-top: 30px; color: #666;">

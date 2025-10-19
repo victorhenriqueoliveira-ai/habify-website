@@ -31,6 +31,7 @@ import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditUserModal } from '@/components/EditUserModal';
+import { AssignPlanModal } from '@/components/admin/AssignPlanModal';
 import { toast } from '@/hooks/use-toast';
 
 const roleColors = {
@@ -51,6 +52,7 @@ export const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [assigningPlanUser, setAssigningPlanUser] = useState<User | null>(null);
 
   // Filter users based on search and role
   const filteredUsers = users.filter((user) => {
@@ -227,6 +229,12 @@ export const UsersPage = () => {
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
+                            {user.role === 'user' && (
+                              <DropdownMenuItem onClick={() => setAssigningPlanUser(user)}>
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Atribuir Plano
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => handleToggleStatus(user.id)}>
                               {user.isActive ? 'Desativar' : 'Ativar'}
                             </DropdownMenuItem>
@@ -263,6 +271,22 @@ export const UsersPage = () => {
         open={!!editingUser}
         onClose={() => setEditingUser(null)}
       />
+
+      {/* Assign Plan Modal */}
+      {assigningPlanUser && (
+        <AssignPlanModal
+          open={!!assigningPlanUser}
+          onClose={() => setAssigningPlanUser(null)}
+          userId={assigningPlanUser.id}
+          userName={assigningPlanUser.name}
+          onSuccess={() => {
+            toast({
+              title: 'Plano atribuído!',
+              description: `Plano foi atribuído com sucesso para ${assigningPlanUser.name}`,
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
