@@ -31,6 +31,7 @@ import { SettingsPage } from "./pages/admin/SettingsPage";
 import { LogsPage } from "./pages/admin/LogsPage";
 import { NewUserPage } from "./pages/admin/NewUserPage";
 import { SubscriptionsUserPage } from "./pages/admin/subscriptionsUser";
+import { UserSubscriptionsPage } from "./pages/admin/UserSubscriptionsPage";
 
 const queryClient = new QueryClient();
 
@@ -135,9 +136,9 @@ const App = () => (
                   <SubscriptionsUserPage />
                 </RoleBasedRoute>
               } />
-              <Route path="subscriptions/user" element={
-                <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
-                  <SubscriptionsUserPage />
+              <Route path="users/:userId/subscriptions" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <UserSubscriptionsPage />
                 </RoleBasedRoute>
               } />
 

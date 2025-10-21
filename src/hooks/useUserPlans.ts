@@ -86,11 +86,19 @@ export const useUserPlans = () => {
       const { data: availableData, error: availableError } = await supabase
         .rpc('get_available_user_plans', { _user_id: profile.id });
 
-      if (availableError) throw availableError;
-
-      setAvailablePlans(availableData || []);
+      if (availableError) {
+        console.error('Error fetching available plans:', availableError);
+        // Não quebrar se der erro, apenas deixar vazio
+        setAvailablePlans([]);
+      } else {
+        setAvailablePlans(availableData || []);
+      }
     } catch (error) {
       console.error('Error fetching user plans:', error);
+      setPlans([]);
+      setAvailablePlans([]);
+    } finally {
+      setLoading(false);
     }
   };
 

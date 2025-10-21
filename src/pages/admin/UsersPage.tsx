@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ import {
   Trash2, 
   Shield,
   Filter,
+  Package,
 } from 'lucide-react';
 import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
@@ -47,6 +49,7 @@ const roleLabels = {
 };
 
 export const UsersPage = () => {
+  const navigate = useNavigate();
   const { users, loading, updateUser, deleteUser } = useUsers();
   const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -96,7 +99,7 @@ export const UsersPage = () => {
             Gerencie todos os usuários do sistema
           </p>
         </div>
-        <Button onClick={() => window.location.href = '/admin/users/new'}>
+        <Button onClick={() => navigate('/admin/users/new')}>
           <UserPlus className="mr-2 h-4 w-4" />
           Novo Usuário
         </Button>
@@ -226,10 +229,16 @@ export const UsersPage = () => {
                               Editar
                             </DropdownMenuItem>
                             {user.role === 'user' && (
-                              <DropdownMenuItem onClick={() => setAssigningPlanUser(user)}>
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Atribuir Plano
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem onClick={() => setAssigningPlanUser(user)}>
+                                  <UserPlus className="mr-2 h-4 w-4" />
+                                  Atribuir Plano
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/subscriptions`)}>
+                                  <Package className="mr-2 h-4 w-4" />
+                                  Ver Assinaturas
+                                </DropdownMenuItem>
+                              </>
                             )}
                             <DropdownMenuItem onClick={() => handleToggleStatus(user.id)}>
                               {user.isActive ? 'Desativar' : 'Ativar'}

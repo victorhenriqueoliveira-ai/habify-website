@@ -1,30 +1,149 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useUserPlans } from "@/hooks/useUserPlans";
-import { Package, Calendar, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Package, Calendar, AlertCircle, ArrowLeft, User } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
-export const SubscriptionsUserPage: React.FC = () => {
-  const { plans, availablePlans, loading } = useUserPlans();
+interface UserPlan {
+  id: string;
+  plan_id: string;
+  plan_name: string;
+  plan_type: 'website_only' | 'website_maintenance_1m' | 'website_maintenance_6m';
+  status: 'active' | 'used' | 'expired' | 'cancelled';
+  created_at: string;
+  used_at?: string;
+  expires_at?: string;
+  used_for_project_id?: string;
+  plan_price: string;
+  notes?: string;
+}
+
+interface AvailablePlan {
+  plan_id: string;
+  plan_name: string;
+  plan_type: string;
+  count: number;
+  expires_at?: string;
+}
+
+interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export const UserSubscriptionsPage: React.FC = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const [plans, setPlans] = useState<UserPlan[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<AvailablePlan[]>([]);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 text-green-700 border-green-500/20";
+      case "used":
+        return "bg-blue-100 text-blue-700 border-blue-500/20";
+      case "expired":
+        return "bg-orange-100 text-orange-700 border-orange-500/20";
       case "cancelled":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 border-red-500/20";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) return;
+
+      try {
+        setLoading(true);
+
+        // Buscar informações do usuário
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .eq('id', userId)
+          .single();
+
+        if (profileError) throw profileError;
+        setUserInfo(profile);
+
+        // Buscar todos os planos do usuário
+        const { data: userPlansData, error: plansError } = await supabase
+          .from('user_plans_detailed')
+          .select(`
+            id,
+            plan_id,
+            status,
+            created_at,
+            used_at,
+            price,
+            notes,
+            expires_at,
+            used_for_project_id,
+            plans:plan_id (
+              name,
+              type
+            )
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (plansError) throw plansError;
+
+        const formattedPlans: UserPlan[] = (userPlansData || []).map((up: any) => ({
+          id: up.id,
+          plan_id: up.plan_id,
+          plan_name: up.plans?.name || 'Plano Desconhecido',
+          plan_type: up.plans?.type || 'website_only',
+          plan_price: up.price,
+          notes: up.notes,
+          status: up.status,
+          created_at: up.created_at,
+          used_at: up.used_at,
+          expires_at: up.expires_at,
+          used_for_project_id: up.used_for_project_id,
+        }));
+
+        setPlans(formattedPlans);
+
+        // Buscar planos disponíveis
+        const { data: availableData, error: availableError } = await supabase
+          .rpc('get_available_user_plans', { _user_id: userId });
+
+        if (availableError) {
+          console.error('Error fetching available plans:', availableError);
+          setAvailablePlans([]);
+        } else {
+          setAvailablePlans(availableData || []);
+        }
+      } catch (error) {
+        console.error('Error fetching user subscriptions:', error);
+        toast.error('Erro ao carregar assinaturas do usuário');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [userId]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando suas assinaturas...</p>
+          <p className="text-muted-foreground">Carregando assinaturas...</p>
         </div>
       </div>
     );
@@ -33,12 +152,22 @@ export const SubscriptionsUserPage: React.FC = () => {
   return (
     <div className="container mx-auto p-6 space-y-6 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Minhas Assinaturas</h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie e visualize seus planos contratados
-          </p>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/admin/users')}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold">Assinaturas do Usuário</h1>
+          {userInfo && (
+            <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{userInfo.name} ({userInfo.email})</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -52,7 +181,7 @@ export const SubscriptionsUserPage: React.FC = () => {
             <div>
               <h2 className="text-xl font-semibold">Planos Ativos</h2>
               <p className="text-sm text-muted-foreground">
-                Você tem {availablePlans.reduce((sum, p) => sum + p.count, 0)} crédito(s) disponível(is)
+                {availablePlans.reduce((sum, p) => sum + p.count, 0)} crédito(s) disponível(is)
               </p>
             </div>
           </div>
@@ -166,7 +295,7 @@ export const SubscriptionsUserPage: React.FC = () => {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Você ainda não possui nenhum plano contratado. Entre em contato com o administrador para adquirir um plano.
+            Este usuário ainda não possui nenhum plano contratado.
           </AlertDescription>
         </Alert>
       )}
