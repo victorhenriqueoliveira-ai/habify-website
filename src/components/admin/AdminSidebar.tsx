@@ -10,6 +10,7 @@ import {
   BarChart3,
   Shield,
   CreditCard,
+  Package
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +31,12 @@ const menuItems = [
     title: 'Meus Projetos',
     url: '/admin/my-projects',
     icon: Building2,
+    roles: ['user'],
+  },
+  {
+    title: 'Assinaturas',
+    url: '/admin/subscriptions',
+    icon: Package,
     roles: ['user'],
   },
   {

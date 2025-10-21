@@ -37,14 +37,6 @@ const ProjectTypeSelectionPage = () => {
             Escolha o tipo de site que você deseja criar
           </p>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate('/admin/my-projects')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para Meus Projetos
-        </Button>
       </div>
 
       {/* Project Type Cards */}
@@ -148,12 +140,15 @@ const ProjectTypeSelectionPage = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Additional Info */}
-      <div className="text-center pt-8">
-        <p className="text-sm text-muted-foreground">
-          Não sabe qual escolher? Entre em contato conosco para uma consultoria gratuita
-        </p>
+      <div className="flex justify-center mt-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/admin/my-projects')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para Meus Projetos
+          </Button>
       </div>
     </div>
   );

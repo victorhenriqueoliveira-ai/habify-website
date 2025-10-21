@@ -30,9 +30,9 @@ export const UserPlansDisplay = () => {
   const totalAvailable = availablePlans.reduce((sum, plan) => sum + plan.count, 0);
 
   return (
-    <div className="space-y-4">
+    <div className="">
       {/* Summary Card */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* <div className="flex items-center gap-3 flex-wrap">
         <Card className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 flex-1 min-w-[200px]">
           <div className="p-2 rounded-lg bg-primary/20">
             <Package className="h-5 w-5 text-primary" />
@@ -45,17 +45,7 @@ export const UserPlansDisplay = () => {
             </span>
           </div>
         </Card>
-        
-        <Button 
-          size="default" 
-          onClick={() => navigate('/admin/new-project/purchase')}
-          className="gap-2"
-          variant={totalAvailable === 0 ? "default" : "outline"}
-        >
-          <ShoppingCart className="h-4 w-4" />
-          {totalAvailable === 0 ? 'Contratar Plano' : 'Contratar Mais'}
-        </Button>
-      </div>
+      </div> */}
 
       {/* Available Plans Details */}
       {availablePlans.length > 0 && (

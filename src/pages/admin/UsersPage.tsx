@@ -169,7 +169,6 @@ export const UsersPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Usuário</TableHead>
-                    <TableHead>Empresa</TableHead>
                     <TableHead>Perfil</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Último Login</TableHead>
@@ -197,9 +196,6 @@ export const UsersPage = () => {
                             </div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{user.company || '-'}</div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={roleColors[user.role]}>

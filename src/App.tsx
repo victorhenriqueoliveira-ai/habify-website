@@ -30,6 +30,7 @@ import { ReportsPage } from "./pages/admin/ReportsPage";
 import { SettingsPage } from "./pages/admin/SettingsPage";
 import { LogsPage } from "./pages/admin/LogsPage";
 import { NewUserPage } from "./pages/admin/NewUserPage";
+import { SubscriptionsUserPage } from "./pages/admin/subscriptionsUser";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,19 @@ const App = () => (
                   <MyProjectsPage />
                 </RoleBasedRoute>
               } />
+              {/* Subscriptions */}
+              <Route path="subscriptions" element={
+                <RoleBasedRoute allowedRoles={['user']}>
+                  <SubscriptionsUserPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="subscriptions/user" element={
+                <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
+                  <SubscriptionsUserPage />
+                </RoleBasedRoute>
+              } />
+
+              {/* New Project Creation Flow */}
               <Route path="new-project" element={
                 <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
                   <ProjectTypeSelectionPage />
