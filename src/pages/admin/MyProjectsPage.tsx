@@ -33,7 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
-import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
@@ -71,7 +71,6 @@ export const MyProjectsPage = () => {
   const { canViewPlans } = useCanViewPlans();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   
   // Enable realtime updates
   useRealtimeProjects();
@@ -234,10 +233,7 @@ export const MyProjectsPage = () => {
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={() => {
-              // console.log('Clicked Visualizar project:', project);
-              setSelectedProject(project);
-            }}
+            onClick={() => navigate(`/admin/projects/${project.id}`)}
             className="w-full"
           >
                           <Eye className="mr-2 h-4 w-4" />
@@ -288,7 +284,7 @@ export const MyProjectsPage = () => {
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            onClick={() => setSelectedProject(project)}
+                            onClick={() => navigate(`/admin/projects/${project.id}`)}
                             className="flex-1"
                           >
                             <Eye className="mr-2 h-4 w-4" />
@@ -296,7 +292,7 @@ export const MyProjectsPage = () => {
                           </Button>
                           <Button 
                             size="sm" 
-                            onClick={() => setSelectedProject(project)}
+                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
                             className="flex-1"
                           >
                             <MessageSquare className="mr-2 h-4 w-4" />
@@ -348,7 +344,7 @@ export const MyProjectsPage = () => {
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            onClick={() => setSelectedProject(project)}
+                            onClick={() => navigate(`/admin/projects/${project.id}`)}
                             className="flex-1"
                           >
                             <Eye className="mr-2 h-4 w-4" />
@@ -395,17 +391,6 @@ export const MyProjectsPage = () => {
           </Card>
         )}
       </div>
-
-
-      {/* Project Details Modal */}
-      <ProjectDetailsModal
-        project={selectedProject}
-        open={!!selectedProject}
-        onClose={() => {
-          // console.log('Closing modal');
-          setSelectedProject(null);
-        }}
-      />
     </div>
   );
 };

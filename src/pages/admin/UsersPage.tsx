@@ -32,7 +32,7 @@ import {
 import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
-import { EditUserModal } from '@/components/EditUserModal';
+
 import { AssignPlanModal } from '@/components/admin/AssignPlanModal';
 import { toast } from '@/hooks/use-toast';
 
@@ -54,7 +54,6 @@ export const UsersPage = () => {
   const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [assigningPlanUser, setAssigningPlanUser] = useState<User | null>(null);
 
   // Filter users based on search and role
@@ -224,7 +223,7 @@ export const UsersPage = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                            <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/edit`)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
@@ -269,13 +268,6 @@ export const UsersPage = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Edit User Modal */}
-      <EditUserModal
-        user={editingUser}
-        open={!!editingUser}
-        onClose={() => setEditingUser(null)}
-      />
 
       {/* Assign Plan Modal */}
       {assigningPlanUser && (
