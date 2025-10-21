@@ -12,6 +12,8 @@ export interface UserPlan {
   used_at?: string;
   expires_at?: string;
   used_for_project_id?: string;
+  plan_price: string;
+  notes?: string;
 }
 
 export interface AvailablePlan {
@@ -43,13 +45,15 @@ export const useUserPlans = () => {
 
       // Buscar todos os planos do usuário
       const { data: userPlansData, error: plansError } = await supabase
-        .from('user_plans')
+        .from('user_plans_detailed')
         .select(`
           id,
           plan_id,
           status,
           created_at,
           used_at,
+          price,
+          notes,
           expires_at,
           used_for_project_id,
           plans:plan_id (
@@ -67,6 +71,8 @@ export const useUserPlans = () => {
         plan_id: up.plan_id,
         plan_name: up.plans?.name || 'Plano Desconhecido',
         plan_type: up.plans?.type || 'website_only',
+        plan_price: up.price,
+        notes: up.notes,
         status: up.status,
         created_at: up.created_at,
         used_at: up.used_at,

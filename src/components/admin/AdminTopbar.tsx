@@ -42,21 +42,10 @@ export const AdminTopbar = () => {
           <h2 className="text-lg font-semibold">
             Bem-vindo, {user.name.split(' ')[0]}!
           </h2>
-          <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString('pt-BR', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        {/* Credits Display */}
-        <UserPlansDisplay />
-        
+      <div className="flex items-center space-x-4">     
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
