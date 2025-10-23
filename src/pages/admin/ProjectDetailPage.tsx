@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
+import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
 
 const statusColors = {
   pending: 'secondary',
@@ -257,6 +258,9 @@ export const ProjectDetailPage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Plan Information */}
+          {id && <ProjectPlanInfo projectId={id} />}
 
           {/* Description */}
           <Card>

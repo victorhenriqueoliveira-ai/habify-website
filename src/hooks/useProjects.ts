@@ -54,7 +54,7 @@ export const useProjects = () => {
     }
   };
 
-  const createProject = async (projectData: Partial<Project> & { userId: string }) => {
+  const createProject = async (projectData: Partial<Project> & { userId: string; selectedPlanId?: string }) => {
     try {
       // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser();
@@ -69,13 +69,18 @@ export const useProjects = () => {
         throw new Error('Nenhum plano disponível');
       }
 
-      // Usar o primeiro plano disponível (pode ser parametrizável no futuro)
-      const selectedPlan = availablePlans[0];
-      // console.log('Using plan:', selectedPlan.plan_name);
+      // Usar o plano selecionado ou o primeiro disponível
+      const selectedPlan = projectData.selectedPlanId 
+        ? availablePlans.find(p => p.plan_id === projectData.selectedPlanId)
+        : availablePlans[0];
+
+      if (!selectedPlan) {
+        toast.error('Plano selecionado não está disponível');
+        throw new Error('Invalid plan selection');
+      }
 
       // Ensure photos is always an array
       const photos = Array.isArray(projectData.photos) ? projectData.photos : [];
-      // console.log('Creating project with photos:', photos.length);
 
       const { data, error } = await supabase
         .from('projects')
@@ -105,17 +110,25 @@ export const useProjects = () => {
         console.error('Error creating project:', error);
         throw error;
       }
-      
-      // console.log('Project created successfully:', { id: data.id, photos: data.photos?.length || 0 });
 
       // Usar o plano após criar o projeto
-      const planUsed = await usePlanForProject(selectedPlan.plan_id, data.id);
+      const userPlanId = await usePlanForProject(selectedPlan.plan_id, data.id);
       
-      if (!planUsed) {
+      if (!userPlanId) {
         // Se não conseguiu usar o plano, deletar o projeto criado
         await supabase.from('projects').delete().eq('id', data.id);
         toast.error('Erro ao usar o plano. Projeto não foi criado.');
         throw new Error('Failed to use plan');
+      }
+
+      // Atualizar o projeto com o user_plan_id
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ user_plan_id: userPlanId })
+        .eq('id', data.id);
+
+      if (updateError) {
+        console.error('Error updating project with user_plan_id:', updateError);
       }
 
       toast.success('Projeto criado com sucesso!');
@@ -126,6 +139,7 @@ export const useProjects = () => {
         location: projectData.location,
         price: projectData.price,
         planUsed: selectedPlan.plan_name,
+        userPlanId,
         timestamp: new Date().toISOString()
       });
       

@@ -560,6 +560,7 @@ export type Database = {
           transaction_id: string | null
           updated_at: string
           user_id: string
+          user_plan_id: string | null
           wizard_data: Json | null
         }
         Insert: {
@@ -585,6 +586,7 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           user_id: string
+          user_plan_id?: string | null
           wizard_data?: Json | null
         }
         Update: {
@@ -610,6 +612,7 @@ export type Database = {
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
+          user_plan_id?: string | null
           wizard_data?: Json | null
         }
         Relationships: [
@@ -618,6 +621,20 @@ export type Database = {
             columns: ["transaction_id"]
             isOneToOne: false
             referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans_detailed"
             referencedColumns: ["id"]
           },
         ]
@@ -852,21 +869,12 @@ export type Database = {
         }[]
       }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
-      get_database_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_system_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      is_admin_or_dev: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      get_database_stats: { Args: never; Returns: Json }
+      get_system_metrics: { Args: never; Returns: Json }
+      is_admin_or_dev: { Args: never; Returns: boolean }
       link_user_transaction: {
         Args: { user_email: string }
         Returns: undefined
@@ -877,7 +885,7 @@ export type Database = {
       }
       use_user_plan: {
         Args: { _plan_id: string; _project_id: string; _user_id: string }
-        Returns: boolean
+        Returns: string
       }
     }
     Enums: {

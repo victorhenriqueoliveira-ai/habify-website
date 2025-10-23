@@ -11,7 +11,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
-import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
+import { PlanSelector } from '@/components/PlanSelector';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,6 +48,7 @@ const NewProjectPage = () => {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<ProjectStatus>('pending');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   // For devs/admins, always allow project creation
   const isDevOrAdmin = hasRole(['admin', 'dev']);
@@ -85,6 +86,12 @@ const NewProjectPage = () => {
     setLoading(true);
     
     try {
+      // Verificar se o plano foi selecionado (apenas para usuários regulares)
+      if (!isDevOrAdmin && !selectedPlanId) {
+        toast.error('Selecione um plano para criar o projeto');
+        return;
+      }
+
       const result = await createProject({
         userId: targetUserId,
         title: title.trim(),
@@ -93,6 +100,7 @@ const NewProjectPage = () => {
         location: '',
         propertyType: 'house',
         price: 0,
+        selectedPlanId: selectedPlanId || undefined,
       });
       
       if (result.success) {
@@ -104,6 +112,7 @@ const NewProjectPage = () => {
         setDescription('');
         setStatus('pending');
         setSelectedUserId('');
+        setSelectedPlanId(null);
         
         // Don't navigate, stay on page to create more projects
       } else {
@@ -174,6 +183,16 @@ const NewProjectPage = () => {
                   </div>
                 )}
 
+                {/* Plan Selection for Regular Users */}
+                {!isDevOrAdmin && (
+                  <div className="space-y-2">
+                    <PlanSelector
+                      selectedPlanId={selectedPlanId}
+                      onPlanSelect={setSelectedPlanId}
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="title">Nome do Projeto</Label>
                   <Input
@@ -214,7 +233,12 @@ const NewProjectPage = () => {
 
                 <Button 
                   type="submit" 
-                  disabled={loading || (isDevOrAdmin && !selectedUserId) || !title.trim()}
+                  disabled={
+                    loading || 
+                    (isDevOrAdmin && !selectedUserId) || 
+                    (!isDevOrAdmin && !selectedPlanId) ||
+                    !title.trim()
+                  }
                   className="w-full"
                 >
                   {loading ? 'Criando...' : 'Criar Projeto'}
@@ -224,7 +248,7 @@ const NewProjectPage = () => {
           </Card>
         </div>
 
-        {/* Projects Display */}
+      {/* Projects Display */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4">
@@ -452,13 +476,6 @@ const NewProjectPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Project Details Modal */}
-      <ProjectDetailsModal
-        project={selectedProject}
-        open={!!selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
     </div>
   );
 };

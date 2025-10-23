@@ -102,10 +102,10 @@ export const useUserPlans = () => {
     }
   };
 
-  const usePlanForProject = async (planId: string, projectId: string) => {
+  const usePlanForProject = async (planId: string, projectId: string): Promise<string | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) return null;
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -113,10 +113,10 @@ export const useUserPlans = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (!profile) return false;
+      if (!profile) return null;
 
-      // Usar plano via RPC
-      const { data: success, error } = await supabase.rpc('use_user_plan', {
+      // Usar plano via RPC - agora retorna o user_plan_id
+      const { data: userPlanId, error } = await supabase.rpc('use_user_plan', {
         _user_id: profile.id,
         _plan_id: planId,
         _project_id: projectId
@@ -124,18 +124,18 @@ export const useUserPlans = () => {
 
       if (error) throw error;
 
-      if (!success) {
+      if (!userPlanId) {
         toast.error('Você não tem um plano disponível deste tipo');
-        return false;
+        return null;
       }
 
       await fetchUserPlans();
       toast.success('Plano utilizado com sucesso!');
-      return true;
+      return userPlanId;
     } catch (error) {
       console.error('Error using plan:', error);
       toast.error('Erro ao usar plano');
-      return false;
+      return null;
     }
   };
 
