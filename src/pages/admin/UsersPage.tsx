@@ -32,8 +32,6 @@ import {
 import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
-
-import { AssignPlanModal } from '@/components/admin/AssignPlanModal';
 import { toast } from '@/hooks/use-toast';
 
 const roleColors = {
@@ -54,7 +52,6 @@ export const UsersPage = () => {
   const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
-  const [assigningPlanUser, setAssigningPlanUser] = useState<User | null>(null);
 
   // Filter users based on search and role
   const filteredUsers = users.filter((user) => {
@@ -229,7 +226,7 @@ export const UsersPage = () => {
                             </DropdownMenuItem>
                             {user.role === 'user' && (
                               <>
-                                <DropdownMenuItem onClick={() => setAssigningPlanUser(user)}>
+                                <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}/assign-plan`)}>
                                   <UserPlus className="mr-2 h-4 w-4" />
                                   Atribuir Plano
                                 </DropdownMenuItem>
@@ -268,22 +265,6 @@ export const UsersPage = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Assign Plan Modal */}
-      {assigningPlanUser && (
-        <AssignPlanModal
-          open={!!assigningPlanUser}
-          onClose={() => setAssigningPlanUser(null)}
-          userId={assigningPlanUser.id}
-          userName={assigningPlanUser.name}
-          onSuccess={() => {
-            toast({
-              title: 'Plano atribuído!',
-              description: `Plano foi atribuído com sucesso para ${assigningPlanUser.name}`,
-            });
-          }}
-        />
-      )}
     </div>
   );
 };

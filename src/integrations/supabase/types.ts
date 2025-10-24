@@ -863,9 +863,11 @@ export type Database = {
         Returns: {
           count: number
           expires_at: string
+          plan_description: string
+          plan_features: Json
           plan_id: string
           plan_name: string
-          plan_type: string
+          plan_type: Database["public"]["Enums"]["plan_type"]
         }[]
       }
       get_current_user_role: {

@@ -35,6 +35,10 @@ import { UserSubscriptionsPage } from "./pages/admin/UserSubscriptionsPage";
 import { ProjectDetailPage } from "./pages/admin/ProjectDetailPage";
 import { ProjectEditPage } from "./pages/admin/ProjectEditPage";
 import { UserEditPage } from "./pages/admin/UserEditPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import AssignPlanPage from "./pages/admin/AssignPlanPage";
+import PaymentDetailPage from "./pages/admin/PaymentDetailPage";
+import { PaymentLogsPage } from "./pages/admin/PaymentLogsPage";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +92,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
+            <Route path="/checkout/:planId" element={<CheckoutPage />} />
             
             {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -128,6 +133,16 @@ const App = () => (
                   <PaymentsPage />
                 </RoleBasedRoute>
               } />
+              <Route path="payments/:orderId" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <PaymentDetailPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="payment-logs" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <PaymentLogsPage />
+                </RoleBasedRoute>
+              } />
               <Route path="my-projects" element={
                 <RoleBasedRoute allowedRoles={['user']}>
                   <MyProjectsPage />
@@ -161,6 +176,11 @@ const App = () => (
               <Route path="users/:id/edit" element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
                   <UserEditPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="users/:userId/assign-plan" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <AssignPlanPage />
                 </RoleBasedRoute>
               } />
 

@@ -20,8 +20,10 @@ export interface AvailablePlan {
   plan_id: string;
   plan_name: string;
   plan_type: string;
+  plan_description: string | null;
+  plan_features: any;
   count: number;
-  expires_at?: string;
+  expires_at: string | null;
 }
 
 export const useUserPlans = () => {
@@ -88,10 +90,18 @@ export const useUserPlans = () => {
 
       if (availableError) {
         console.error('Error fetching available plans:', availableError);
-        // Não quebrar se der erro, apenas deixar vazio
         setAvailablePlans([]);
       } else {
-        setAvailablePlans(availableData || []);
+        const formattedAvailable: AvailablePlan[] = (availableData || []).map((plan: any) => ({
+          plan_id: plan.plan_id,
+          plan_name: plan.plan_name,
+          plan_type: plan.plan_type,
+          plan_description: plan.plan_description,
+          plan_features: plan.plan_features,
+          count: Number(plan.count),
+          expires_at: plan.expires_at,
+        }));
+        setAvailablePlans(formattedAvailable);
       }
     } catch (error) {
       console.error('Error fetching user plans:', error);

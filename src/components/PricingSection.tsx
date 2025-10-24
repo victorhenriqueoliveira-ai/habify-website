@@ -1,19 +1,16 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles, TrendingUp } from 'lucide-react';
 import { usePlans, type Plan } from '@/hooks/usePlans';
-import { CheckoutModal } from './CheckoutModal';
 
 const PricingSection = () => {
+  const navigate = useNavigate();
   const { plans, loading, error } = usePlans();
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [showCheckout, setShowCheckout] = useState(false);
 
-  const handleSelectPlan = (plan: Plan) => {
-    setSelectedPlan(plan);
-    setShowCheckout(true);
+  const handleSelectPlan = (planId: string) => {
+    navigate(`/checkout/${planId}`);
   };
 
   const getPlanIcon = (type: Plan['type']) => {
@@ -183,7 +180,7 @@ const PricingSection = () => {
 
                   <div className="mt-auto">
                     <Button 
-                      onClick={() => handleSelectPlan(plan)}
+                      onClick={() => handleSelectPlan(plan.id)}
                       className="w-full"
                       variant={isPopular ? "default" : "outline"}
                     >
@@ -209,15 +206,6 @@ const PricingSection = () => {
           </div>
         </div>
       </section>
-
-      <CheckoutModal
-        plan={selectedPlan}
-        isOpen={showCheckout}
-        onClose={() => {
-          setShowCheckout(false);
-          setSelectedPlan(null);
-        }}
-      />
     </>
   );
 };

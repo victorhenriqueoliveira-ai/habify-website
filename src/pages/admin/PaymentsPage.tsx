@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,8 @@ const getStatusText = (status: string) => {
 };
 
 export const PaymentsPage = () => {
+  const navigate = useNavigate();
   const { orders, loading, error, fetchOrders, getTotalRevenue, getOrdersByStatus } = usePayments();
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const handleFilter = (filters: any) => {
     fetchOrders(filters.dateRange, filters.status);
@@ -178,7 +179,7 @@ export const PaymentsPage = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={() => navigate(`/admin/payments/${order.id}`)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -196,44 +197,6 @@ export const PaymentsPage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Order Details Modal (simplified) */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="max-w-lg w-full m-4">
-            <CardHeader>
-              <CardTitle>Detalhes do Pagamento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <strong>ID:</strong> {selectedOrder.id}
-              </div>
-              <div>
-                <strong>Data:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString('pt-BR')}
-              </div>
-              <div>
-                <strong>Valor:</strong> R$ {selectedOrder.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </div>
-              <div>
-                <strong>Status:</strong> {getStatusText(selectedOrder.status)}
-              </div>
-              {selectedOrder.paymentId && (
-                <div>
-                  <strong>Payment ID:</strong> {selectedOrder.paymentId}
-                </div>
-              )}
-              {selectedOrder.gateway && (
-                <div>
-                  <strong>Gateway:</strong> {selectedOrder.gateway}
-                </div>
-              )}
-              <Button onClick={() => setSelectedOrder(null)} className="w-full">
-                Fechar
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };

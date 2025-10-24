@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Check, Star } from 'lucide-react';
-import { CheckoutModal } from '@/components/CheckoutModal';
 import { usePlans } from '@/hooks/usePlans';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 
@@ -12,8 +11,6 @@ const NewProjectPurchasePage = () => {
   const navigate = useNavigate();
   const { plans, loading } = usePlans();
   const { canViewPlans } = useCanViewPlans();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [showCheckout, setShowCheckout] = useState(false);
   
   // Redirecionar admin/dev para página de criação de projeto
   useEffect(() => {
@@ -23,8 +20,7 @@ const NewProjectPurchasePage = () => {
   }, [canViewPlans, navigate]);
 
   const handlePurchasePlan = (planId: string) => {
-    setSelectedPlan(planId);
-    setShowCheckout(true);
+    navigate(`/checkout/${planId}`);
   };
 
   if (loading) {
@@ -158,19 +154,6 @@ const NewProjectPurchasePage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Checkout Modal */}
-      {selectedPlan && (
-        <CheckoutModal
-          isOpen={showCheckout}
-          onClose={() => {
-            setShowCheckout(false);
-            setSelectedPlan(null);
-          }}
-          plan={plans.find(p => p.id === selectedPlan) || null}
-          isLoggedInPurchase={true}
-        />
-      )}
     </div>
   );
 };
