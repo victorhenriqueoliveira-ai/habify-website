@@ -286,7 +286,8 @@ export const LogsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="overflow-x-auto -mx-6 px-6">
+            <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Timestamp</TableHead>
@@ -341,6 +342,7 @@ export const LogsPage = () => {
               })}
             </TableBody>
           </Table>
+          </div>
           
           {filteredLogs.length === 0 && (
             <div className="text-center py-8">

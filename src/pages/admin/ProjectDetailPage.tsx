@@ -174,7 +174,7 @@ export const ProjectDetailPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {project.photos.map((photo, index) => (
                     <div 
                       key={index} 
@@ -223,7 +223,7 @@ export const ProjectDetailPage = () => {
                       
                       {/* Property Photos */}
                       {property.photos && property.photos.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                           {property.photos.slice(0, 4).map((photo, photoIndex) => (
                             <div key={photoIndex} className="aspect-square rounded overflow-hidden bg-muted border">
                               <img 
@@ -244,7 +244,7 @@ export const ProjectDetailPage = () => {
                       )}
                       
                       {/* Property Details */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pt-2">
                         <div>
                           <p className="text-xs text-muted-foreground">Tipo</p>
                           <p className="font-medium capitalize">{property.propertyType}</p>
@@ -310,7 +310,7 @@ export const ProjectDetailPage = () => {
           )}
 
           {/* Project Info */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -422,7 +422,7 @@ export const ProjectDetailPage = () => {
           {id && <ProjectPlanInfo projectId={id} />}
 
           {/* Wizard & Customization Data */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             {/* Customization */}
             {(project.layoutChoice || project.colorPalette || project.logoUrl) && (
               <Card>

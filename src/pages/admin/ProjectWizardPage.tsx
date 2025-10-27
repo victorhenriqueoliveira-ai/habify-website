@@ -383,14 +383,14 @@ const ProjectWizardPage = () => {
 
         {/* Progress */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               <div className="flex justify-between text-sm font-medium">
                 <span>Passo {currentStep} de 4</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-1 sm:gap-2">
                 {steps.map((step) => (
                   <div
                     key={step.id}
@@ -398,9 +398,9 @@ const ProjectWizardPage = () => {
                       step.id === currentStep ? 'text-primary' : 'text-muted-foreground'
                     }`}
                   >
-                    <div className="flex items-center justify-center mb-2">
+                    <div className="flex items-center justify-center mb-1 sm:mb-2">
                       <div
-                        className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                        className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs sm:text-sm ${
                           step.id < currentStep
                             ? 'bg-primary text-primary-foreground'
                             : step.id === currentStep
@@ -409,14 +409,14 @@ const ProjectWizardPage = () => {
                         }`}
                       >
                         {step.id < currentStep ? (
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                         ) : (
                           step.id
                         )}
                       </div>
                     </div>
-                    <p className="text-xs font-medium">{step.title}</p>
-                    <p className="text-xs text-muted-foreground hidden md:block">
+                    <p className="text-[10px] sm:text-xs font-medium leading-tight">{step.title}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden lg:block mt-1">
                       {step.description}
                     </p>
                   </div>

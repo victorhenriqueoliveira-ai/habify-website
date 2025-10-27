@@ -241,7 +241,8 @@ export const ProjectsPage = () => {
             </div>
           ) : (
             <>
-              <Table>
+              <div className="overflow-x-auto -mx-6 px-6">
+                <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Projeto</TableHead>
@@ -363,6 +364,7 @@ export const ProjectsPage = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               
               {filteredProjects.length === 0 && (
                 <div className="text-center py-8">

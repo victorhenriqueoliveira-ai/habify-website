@@ -163,7 +163,8 @@ export const UsersPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="overflow-x-auto -mx-6 px-6">
+            <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Usuário</TableHead>
@@ -252,6 +253,7 @@ export const UsersPage = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               
               {filteredUsers.length === 0 && (
                 <div className="text-center py-8">
