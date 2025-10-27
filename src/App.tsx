@@ -2,11 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TransactionLinker } from "@/components/TransactionLinker";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useErrorTracking } from "@/hooks/useErrorTracking";
+import { useRouteTracking } from "@/hooks/useAnalytics";
 
 // ✅ FASE 3 - Item 12: Lazy Loading para páginas pesadas
 const Index = lazy(() => import("./pages/Index"));
@@ -103,15 +105,26 @@ const RoleBasedRoute = ({
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <TransactionLinker />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
+// Route tracking wrapper
+const RouteTracker = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const trackRoute = useRouteTracking();
+
+  useEffect(() => {
+    trackRoute(location);
+  }, [location, trackRoute]);
+
+  return <>{children}</>;
+};
+
+// App with monitoring
+const AppContent = () => {
+  useErrorTracking(); // Enable global error tracking
+  
+  return (
+    <BrowserRouter>
+      <RouteTracker>
+        <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
@@ -273,10 +286,22 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-      </BrowserRouter>
-    </AuthProvider>
-  </TooltipProvider>
-</QueryClientProvider>
+      </RouteTracker>
+    </BrowserRouter>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AuthProvider>
+        <TransactionLinker />
+        <AppContent />
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
