@@ -50,7 +50,7 @@ export const LoginPage = () => {
     } else {
       toast({
         title: 'Erro',
-        description: 'Email ou senha incorretos. Use uma das contas de teste abaixo.',
+        description: 'Email ou senha incorretos.',
         variant: 'destructive',
       });
     }
