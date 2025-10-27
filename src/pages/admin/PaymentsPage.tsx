@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Eye, Download, DollarSign, TrendingUp, Users, Clock } from 'lucide-react';
 import { usePayments } from '@/hooks/usePayments';
 import { PaymentsFilter } from '@/components/admin/PaymentsFilter';
+import { PaymentsTableSkeleton } from '@/components/ui/skeleton-loaders';
+import { ErrorMessages } from '@/lib/errorMessages';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -54,18 +56,15 @@ export const PaymentsPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <PaymentsTableSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 py-8">
-        <p>Erro ao carregar pagamentos: {error}</p>
-        <Button onClick={() => fetchOrders()} className="mt-4">Tentar Novamente</Button>
+      <div className="text-center py-8">
+        <p className="text-destructive mb-2">{ErrorMessages.NETWORK_ERROR}</p>
+        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        <Button onClick={() => fetchOrders()}>Tentar Novamente</Button>
       </div>
     );
   }

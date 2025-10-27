@@ -33,6 +33,7 @@ import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { UsersTableSkeleton } from '@/components/ui/skeleton-loaders';
 
 const roleColors = {
   user: 'default',
@@ -52,6 +53,10 @@ export const UsersPage = () => {
   const { hasRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
+
+  if (loading) {
+    return <UsersTableSkeleton />;
+  }
 
   // Filter users based on search and role
   const filteredUsers = users.filter((user) => {
@@ -158,16 +163,10 @@ export const UsersPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuário</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Usuário</TableHead>
                     <TableHead>Perfil</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Último Login</TableHead>
@@ -261,8 +260,6 @@ export const UsersPage = () => {
                   </p>
                 </div>
               )}
-            </>
-          )}
         </CardContent>
       </Card>
     </div>

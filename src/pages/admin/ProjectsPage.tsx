@@ -36,6 +36,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 import { toast } from '@/hooks/use-toast';
+import { ProjectsTableSkeleton } from '@/components/ui/skeleton-loaders';
 
 const statusColors = {
   pending: 'secondary',
