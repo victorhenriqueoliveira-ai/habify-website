@@ -106,15 +106,22 @@ export const usePayments = () => {
   useEffect(() => {
     fetchOrders();
     
-    // Subscribe to order changes for real-time updates
+    // Subscribe to order changes for real-time updates with debouncing
+    let debounceTimer: NodeJS.Timeout | null = null;
+    
     const subscription = supabase
       .channel('payments-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders();
+        // Debounce orders refetch to prevent excessive calls
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          fetchOrders();
+        }, 1000); // 1 second debounce
       })
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       subscription.unsubscribe();
     };
   }, []);

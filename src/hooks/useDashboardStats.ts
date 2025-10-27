@@ -90,15 +90,22 @@ export const useDashboardStats = () => {
   useEffect(() => {
     fetchStats();
     
-    // Subscribe to order changes for real-time updates
+    // Subscribe to order changes for real-time updates with debouncing
+    let debounceTimer: NodeJS.Timeout | null = null;
+    
     const subscription = supabase
       .channel('dashboard-stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchStats();
+        // Debounce stats refetch to prevent excessive calls
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          fetchStats();
+        }, 1000); // 1 second debounce for stats
       })
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       subscription.unsubscribe();
     };
   }, []);
