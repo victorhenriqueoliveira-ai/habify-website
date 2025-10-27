@@ -262,6 +262,97 @@ export const ProjectDetailPage = () => {
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}
 
+          {/* Wizard & Customization Data */}
+          {(project.wizardData || project.layoutChoice || project.colorPalette) && (
+            <div className="grid gap-6 md:grid-cols-2">
+              {project.layoutChoice && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Personalização</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Layout Escolhido</p>
+                      <p className="font-medium capitalize">{project.layoutChoice}</p>
+                    </div>
+                    {project.colorPalette && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Paleta de Cores</p>
+                          <p className="font-medium capitalize">{project.colorPalette}</p>
+                        </div>
+                      </>
+                    )}
+                    {project.logoUrl && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Logo</p>
+                          <img 
+                            src={project.logoUrl} 
+                            alt="Logo" 
+                            className="mt-2 max-h-16 object-contain"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {project.wizardData && Object.keys(project.wizardData).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Dados do Wizard</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(project.wizardData).map(([key, value]) => {
+                        if (!value || key === 'hasLogo') return null;
+                        return (
+                          <div key={key}>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </p>
+                            <p className="font-medium text-sm">
+                              {typeof value === 'string' ? value : JSON.stringify(value)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Features */}
+          {project.features && Object.keys(project.features).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Recursos e Características</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {Object.entries(project.features).map(([key, value]) => (
+                    <div key={key} className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-sm font-medium capitalize mb-1">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : 
+                         typeof value === 'object' ? JSON.stringify(value) : 
+                         String(value)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Description */}
           <Card>
             <CardHeader>

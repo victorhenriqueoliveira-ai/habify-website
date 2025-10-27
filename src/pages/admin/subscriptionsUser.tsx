@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useUserPlans } from "@/hooks/useUserPlans";
@@ -57,7 +58,7 @@ export const SubscriptionsUserPage: React.FC = () => {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {availablePlans.map((plan) => (
+              {availablePlans.map((plan) => (
               <Card key={plan.plan_id} className="p-4 bg-background">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold">{plan.plan_name}</h3>
@@ -65,6 +66,18 @@ export const SubscriptionsUserPage: React.FC = () => {
                     {plan.count} {plan.count === 1 ? 'crédito' : 'créditos'}
                   </Badge>
                 </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {plan.plan_type === 'website_only' ? 'Criação de site único' : 
+                   plan.plan_type === 'website_maintenance_1m' ? 'Site + Suporte técnico por 1 mês' :
+                   'Site + Suporte técnico por 6 meses'}
+                </p>
+                {plan.plan_features && Array.isArray(plan.plan_features) && plan.plan_features.length > 0 && (
+                  <ul className="text-xs space-y-1 mb-3 text-muted-foreground">
+                    {plan.plan_features.slice(0, 3).map((feature: string, idx: number) => (
+                      <li key={idx}>• {feature}</li>
+                    ))}
+                  </ul>
+                )}
                 {plan.expires_at && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
@@ -98,6 +111,16 @@ export const SubscriptionsUserPage: React.FC = () => {
                                plan.plan_type === 'website_maintenance_1m' ? 'Site + 1 Mês de Manutenção' : 
                                'Site + 6 Meses de Manutenção'}
                       </p>
+                      {plan.used_for_project_id && (
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          className="h-auto p-0 mt-2"
+                          onClick={() => window.location.href = `/admin/projects/${plan.used_for_project_id}`}
+                        >
+                          Ver Projeto Vinculado →
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <Badge className={getStatusColor(plan.status)}>
