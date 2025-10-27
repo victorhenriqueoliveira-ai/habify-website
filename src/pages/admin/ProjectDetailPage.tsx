@@ -18,10 +18,15 @@ import {
   Calendar,
   User,
   MessageSquare,
+  Building,
+  Palette,
+  Layout,
+  Image,
 } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePortfolioProperties } from '@/hooks/usePortfolioProperties';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
@@ -50,12 +55,18 @@ const propertyTypeLabels = {
   commercial: 'Comercial',
 };
 
+const projectTypeLabels = {
+  single_property: 'Propriedade Única',
+  realtor_multiple: 'Portfólio de Imóveis',
+};
+
 export const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { projects, loading } = useProjects();
   const { users } = useUsers();
   const { hasRole } = useAuth();
+  const { properties: portfolioProperties, loading: loadingProperties } = usePortfolioProperties(id);
   const [activeTab, setActiveTab] = useState('details');
 
   const project = projects.find(p => p.id === id);
@@ -128,21 +139,169 @@ export const ProjectDetailPage = () => {
         </TabsList>
 
         <TabsContent value="details" className="space-y-6">
-          {/* Photos */}
+          {/* Project Type Badge */}
+          {project.projectType && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Building className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tipo de Projeto</p>
+                      <p className="text-lg font-semibold">{projectTypeLabels[project.projectType]}</p>
+                    </div>
+                  </div>
+                  {project.projectType === 'realtor_multiple' && (
+                    <Badge variant="secondary">
+                      {portfolioProperties.length} {portfolioProperties.length === 1 ? 'imóvel' : 'imóveis'}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Photos - Main Project Photos */}
           {project.photos && project.photos.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Fotos do Projeto</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Image className="h-5 w-5" />
+                    Fotos do Projeto
+                  </CardTitle>
+                  <Badge variant="outline">{project.photos.length} fotos</Badge>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {project.photos.map((photo, index) => (
-                    <div key={index} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                    <div 
+                      key={index} 
+                      className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors group"
+                    >
                       <img 
                         src={photo} 
-                        alt={`Foto ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        alt={`Foto ${index + 1} - ${project.title}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end p-2">
+                        <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                          Foto {index + 1}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Portfolio Properties */}
+          {project.projectType === 'realtor_multiple' && portfolioProperties.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Imóveis do Portfólio
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {portfolioProperties.map((property, index) => (
+                    <div key={property.id} className="border rounded-lg p-4 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-lg">{property.title}</h4>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3" />
+                            {property.location}
+                          </p>
+                        </div>
+                        <Badge variant="outline">Imóvel {index + 1}</Badge>
+                      </div>
+                      
+                      {/* Property Photos */}
+                      {property.photos && property.photos.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {property.photos.slice(0, 4).map((photo, photoIndex) => (
+                            <div key={photoIndex} className="aspect-square rounded overflow-hidden bg-muted border">
+                              <img 
+                                src={photo} 
+                                alt={`${property.title} - Foto ${photoIndex + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                          {property.photos.length > 4 && (
+                            <div className="aspect-square rounded overflow-hidden bg-muted border flex items-center justify-center">
+                              <span className="text-sm text-muted-foreground">
+                                +{property.photos.length - 4} fotos
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Property Details */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Tipo</p>
+                          <p className="font-medium capitalize">{property.propertyType}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Finalidade</p>
+                          <p className="font-medium capitalize">{property.purpose}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Área</p>
+                          <p className="font-medium">{property.area}m²</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Valor</p>
+                          <p className="font-medium">
+                            R$ {property.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        
+                        {property.bedrooms && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Quartos</p>
+                            <p className="font-medium">{property.bedrooms}</p>
+                          </div>
+                        )}
+                        {property.bathrooms && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Banheiros</p>
+                            <p className="font-medium">{property.bathrooms}</p>
+                          </div>
+                        )}
+                        {property.parkingSpaces && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Vagas</p>
+                            <p className="font-medium">{property.parkingSpaces}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {property.description && (
+                        <div className="pt-2 border-t">
+                          <p className="text-sm text-muted-foreground">{property.description}</p>
+                        </div>
+                      )}
+                      
+                      {property.amenities && property.amenities.length > 0 && (
+                        <div className="pt-2">
+                          <p className="text-xs text-muted-foreground mb-2">Comodidades</p>
+                          <div className="flex flex-wrap gap-1">
+                            {property.amenities.map((amenity, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">
+                                {amenity}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -263,70 +422,100 @@ export const ProjectDetailPage = () => {
           {id && <ProjectPlanInfo projectId={id} />}
 
           {/* Wizard & Customization Data */}
-          {(project.wizardData || project.layoutChoice || project.colorPalette) && (
-            <div className="grid gap-6 md:grid-cols-2">
-              {project.layoutChoice && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Personalização</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Layout Escolhido</p>
-                      <p className="font-medium capitalize">{project.layoutChoice}</p>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Customization */}
+            {(project.layoutChoice || project.colorPalette || project.logoUrl) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Personalização Visual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.layoutChoice && (
+                    <div className="flex items-start gap-3">
+                      <Layout className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Layout Escolhido</p>
+                        <p className="font-semibold capitalize">{project.layoutChoice}</p>
+                      </div>
                     </div>
-                    {project.colorPalette && (
-                      <>
-                        <Separator />
+                  )}
+                  
+                  {project.colorPalette && (
+                    <>
+                      <Separator />
+                      <div className="flex items-start gap-3">
+                        <Palette className="h-5 w-5 text-muted-foreground mt-0.5" />
                         <div>
-                          <p className="text-sm text-muted-foreground">Paleta de Cores</p>
-                          <p className="font-medium capitalize">{project.colorPalette}</p>
+                          <p className="text-sm font-medium text-muted-foreground">Paleta de Cores</p>
+                          <p className="font-semibold capitalize">{project.colorPalette}</p>
                         </div>
-                      </>
-                    )}
-                    {project.logoUrl && (
-                      <>
-                        <Separator />
-                        <div>
-                          <p className="text-sm text-muted-foreground">Logo</p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {project.logoUrl && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Logo do Projeto</p>
+                        <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center">
                           <img 
                             src={project.logoUrl} 
                             alt="Logo" 
-                            className="mt-2 max-h-16 object-contain"
+                            className="max-h-24 object-contain"
                           />
                         </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-              {project.wizardData && Object.keys(project.wizardData).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Dados do Wizard</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {Object.entries(project.wizardData).map(([key, value]) => {
-                        if (!value || key === 'hasLogo') return null;
-                        return (
-                          <div key={key}>
-                            <p className="text-sm text-muted-foreground capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </p>
-                            <p className="font-medium text-sm">
-                              {typeof value === 'string' ? value : JSON.stringify(value)}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+            {/* Wizard Data */}
+            {project.wizardData && Object.keys(project.wizardData).length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados do Wizard</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {Object.entries(project.wizardData).map(([key, value]) => {
+                      if (!value || key === 'hasLogo' || key === 'layoutChoice' || key === 'colorPalette') return null;
+                      
+                      const label = key
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/^./, str => str.toUpperCase())
+                        .trim();
+                      
+                      let displayValue: string;
+                      if (typeof value === 'boolean') {
+                        displayValue = value ? 'Sim' : 'Não';
+                      } else if (typeof value === 'object') {
+                        displayValue = JSON.stringify(value, null, 2);
+                      } else {
+                        displayValue = String(value);
+                      }
+                      
+                      return (
+                        <div key={key} className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                            {label}
+                          </p>
+                          <p className="text-sm font-medium whitespace-pre-wrap">
+                            {displayValue}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
           {/* Features */}
           {project.features && Object.keys(project.features).length > 0 && (
@@ -335,19 +524,44 @@ export const ProjectDetailPage = () => {
                 <CardTitle>Recursos e Características</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {Object.entries(project.features).map(([key, value]) => (
-                    <div key={key} className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-sm font-medium capitalize mb-1">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : 
-                         typeof value === 'object' ? JSON.stringify(value) : 
-                         String(value)}
-                      </p>
-                    </div>
-                  ))}
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(project.features).map(([key, value]) => {
+                    const label = key
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, str => str.toUpperCase())
+                      .trim();
+                    
+                    let displayValue: string;
+                    let isActive = false;
+                    
+                    if (typeof value === 'boolean') {
+                      displayValue = value ? 'Ativado' : 'Desativado';
+                      isActive = value;
+                    } else if (typeof value === 'object' && value !== null) {
+                      displayValue = JSON.stringify(value, null, 2);
+                    } else {
+                      displayValue = String(value);
+                    }
+                    
+                    return (
+                      <div 
+                        key={key} 
+                        className={`p-4 rounded-lg border ${isActive ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold">
+                            {label}
+                          </p>
+                          {typeof value === 'boolean' && (
+                            <div className={`h-2 w-2 rounded-full ${isActive ? 'bg-primary' : 'bg-muted-foreground'}`} />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {displayValue}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
