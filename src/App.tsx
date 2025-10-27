@@ -5,60 +5,81 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TransactionLinker } from "@/components/TransactionLinker";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCanceled from "./pages/PaymentCanceled";
-import { LoginPage } from '@/pages/admin/LoginPage';
-import { ForgotPasswordPage } from '@/pages/admin/ForgotPasswordPage';
-import { ResetPasswordPage } from '@/pages/admin/ResetPasswordPage';
-import { AuthPage } from '@/pages/admin/AuthPage';
-import { AdminLayout } from "./components/admin/AdminLayout";
+import { Suspense, lazy } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { UsersPage } from "./pages/admin/UsersPage";
-import { ProjectsPage } from "./pages/admin/ProjectsPage";
-import { PaymentsPage } from "./pages/admin/PaymentsPage";
-import { MyProjectsPage } from "./pages/admin/MyProjectsPage";
-import NewProjectPurchasePage from "./pages/admin/NewProjectPurchasePage";
-import NewProjectPage from "./pages/admin/NewProjectPage";
-import ProjectTypeSelectionPage from "./pages/admin/ProjectTypeSelectionPage";
-import CreateEmpreendimentoPage from "./pages/admin/CreateEmpreendimentoPage";
-import CreateCorretorPage from "./pages/admin/CreateCorretorPage";
-import ProjectWizardPage from "./pages/admin/ProjectWizardPage";
-import { ProfilePage } from "./pages/admin/ProfilePage";
-import { ReportsPage } from "./pages/admin/ReportsPage";
-import { SettingsPage } from "./pages/admin/SettingsPage";
-import { LogsPage } from "./pages/admin/LogsPage";
-import { NewUserPage } from "./pages/admin/NewUserPage";
-import { SubscriptionsUserPage } from "./pages/admin/subscriptionsUser";
-import { UserSubscriptionsPage } from "./pages/admin/UserSubscriptionsPage";
-import { ProjectDetailPage } from "./pages/admin/ProjectDetailPage";
-import { ProjectEditPage } from "./pages/admin/ProjectEditPage";
-import { UserEditPage } from "./pages/admin/UserEditPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import AssignPlanPage from "./pages/admin/AssignPlanPage";
-import PaymentDetailPage from "./pages/admin/PaymentDetailPage";
-import { PaymentLogsPage } from "./pages/admin/PaymentLogsPage";
+// ✅ FASE 3 - Item 12: Lazy Loading para páginas pesadas
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+
+// Auth pages
+const LoginPage = lazy(() => import("@/pages/admin/LoginPage").then(m => ({ default: m.LoginPage })));
+const ForgotPasswordPage = lazy(() => import("@/pages/admin/ForgotPasswordPage").then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import("@/pages/admin/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
+const AuthPage = lazy(() => import("@/pages/admin/AuthPage").then(m => ({ default: m.AuthPage })));
+
+// Admin Layout
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
+
+// Admin pages
+const UsersPage = lazy(() => import("./pages/admin/UsersPage").then(m => ({ default: m.UsersPage })));
+const ProjectsPage = lazy(() => import("./pages/admin/ProjectsPage").then(m => ({ default: m.ProjectsPage })));
+const PaymentsPage = lazy(() => import("./pages/admin/PaymentsPage").then(m => ({ default: m.PaymentsPage })));
+const MyProjectsPage = lazy(() => import("./pages/admin/MyProjectsPage").then(m => ({ default: m.MyProjectsPage })));
+const NewProjectPurchasePage = lazy(() => import("./pages/admin/NewProjectPurchasePage"));
+const NewProjectPage = lazy(() => import("./pages/admin/NewProjectPage"));
+const ProjectTypeSelectionPage = lazy(() => import("./pages/admin/ProjectTypeSelectionPage"));
+const CreateEmpreendimentoPage = lazy(() => import("./pages/admin/CreateEmpreendimentoPage"));
+const CreateCorretorPage = lazy(() => import("./pages/admin/CreateCorretorPage"));
+const ProjectWizardPage = lazy(() => import("./pages/admin/ProjectWizardPage"));
+const ProfilePage = lazy(() => import("./pages/admin/ProfilePage").then(m => ({ default: m.ProfilePage })));
+const ReportsPage = lazy(() => import("./pages/admin/ReportsPage").then(m => ({ default: m.ReportsPage })));
+const SettingsPage = lazy(() => import("./pages/admin/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const LogsPage = lazy(() => import("./pages/admin/LogsPage").then(m => ({ default: m.LogsPage })));
+const NewUserPage = lazy(() => import("./pages/admin/NewUserPage").then(m => ({ default: m.NewUserPage })));
+const SubscriptionsUserPage = lazy(() => import("./pages/admin/subscriptionsUser").then(m => ({ default: m.SubscriptionsUserPage })));
+const UserSubscriptionsPage = lazy(() => import("./pages/admin/UserSubscriptionsPage").then(m => ({ default: m.UserSubscriptionsPage })));
+const ProjectDetailPage = lazy(() => import("./pages/admin/ProjectDetailPage").then(m => ({ default: m.ProjectDetailPage })));
+const ProjectEditPage = lazy(() => import("./pages/admin/ProjectEditPage").then(m => ({ default: m.ProjectEditPage })));
+const UserEditPage = lazy(() => import("./pages/admin/UserEditPage").then(m => ({ default: m.UserEditPage })));
+const AssignPlanPage = lazy(() => import("./pages/admin/AssignPlanPage"));
+const PaymentDetailPage = lazy(() => import("./pages/admin/PaymentDetailPage"));
+const PaymentLogsPage = lazy(() => import("./pages/admin/PaymentLogsPage").then(m => ({ default: m.PaymentLogsPage })));
 
 const queryClient = new QueryClient();
+
+// ✅ FASE 3 - Item 9: Skeleton Loader para carregamento
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="space-y-4 w-full max-w-md p-8">
+      <Skeleton className="h-12 w-3/4 mx-auto" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-10 w-32 mx-auto mt-6" />
+    </div>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  return <>{children}</>;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
+  );
 };
 
 // Role-based Route Component
@@ -72,11 +93,14 @@ const RoleBasedRoute = ({
   const { hasRole } = useAuth();
   
   if (!hasRole(allowedRoles)) {
-    // Redirect regular users to my-projects, others to admin panel
     return <Navigate to="/admin/my-projects" replace />;
   }
   
-  return <>{children}</>;
+  return (
+    <Suspense fallback={<PageLoader />}>
+      {children}
+    </Suspense>
+  );
 };
 
 const App = () => (
@@ -87,12 +111,13 @@ const App = () => (
       <AuthProvider>
         <TransactionLinker />
         <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-canceled" element={<PaymentCanceled />} />
-            <Route path="/checkout/:planId" element={<CheckoutPage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-canceled" element={<PaymentCanceled />} />
+              <Route path="/checkout/:planId" element={<CheckoutPage />} />
             
             {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -247,10 +272,11 @@ const App = () => (
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
+  </TooltipProvider>
+</QueryClientProvider>
 );
 
 export default App;
