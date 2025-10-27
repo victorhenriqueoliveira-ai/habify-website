@@ -54,7 +54,7 @@ export const useProjects = () => {
     }
   };
 
-  const createProject = async (projectData: Partial<Project> & { userId: string; selectedPlanId?: string }) => {
+  const createProject = async (projectData: Partial<Project> & { userId: string; selectedPlanId?: string; isAdminOrDev?: boolean }) => {
     try {
       // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser();
@@ -63,20 +63,35 @@ export const useProjects = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Verificar se tem plano disponível
-      if (availablePlans.length === 0) {
+      // Verificar role do usuário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      const isAdminOrDev = profile?.role === 'admin' || profile?.role === 'dev';
+
+      // Apenas usuários regulares precisam validar planos
+      if (!isAdminOrDev && availablePlans.length === 0) {
         toast.error('Você não tem planos disponíveis. Por favor, adquira um plano primeiro.');
         throw new Error('Nenhum plano disponível');
       }
 
-      // Usar o plano selecionado ou o primeiro disponível
-      const selectedPlan = projectData.selectedPlanId 
-        ? availablePlans.find(p => p.plan_id === projectData.selectedPlanId)
-        : availablePlans[0];
+      // Admin/Dev podem criar sem plano, usuários regulares precisam de plano
+      let selectedPlan = null;
+      let userPlanId = null;
 
-      if (!selectedPlan) {
-        toast.error('Plano selecionado não está disponível');
-        throw new Error('Invalid plan selection');
+      if (!isAdminOrDev) {
+        // Usar o plano selecionado ou o primeiro disponível
+        selectedPlan = projectData.selectedPlanId 
+          ? availablePlans.find(p => p.plan_id === projectData.selectedPlanId)
+          : availablePlans[0];
+
+        if (!selectedPlan) {
+          toast.error('Plano selecionado não está disponível');
+          throw new Error('Invalid plan selection');
+        }
       }
 
       // Ensure photos is always an array
@@ -111,24 +126,26 @@ export const useProjects = () => {
         throw error;
       }
 
-      // Usar o plano após criar o projeto
-      const userPlanId = await usePlanForProject(selectedPlan.plan_id, data.id);
-      
-      if (!userPlanId) {
-        // Se não conseguiu usar o plano, deletar o projeto criado
-        await supabase.from('projects').delete().eq('id', data.id);
-        toast.error('Erro ao usar o plano. Projeto não foi criado.');
-        throw new Error('Failed to use plan');
-      }
+      // Usar o plano apenas se não for admin/dev
+      if (!isAdminOrDev && selectedPlan) {
+        userPlanId = await usePlanForProject(selectedPlan.plan_id, data.id);
+        
+        if (!userPlanId) {
+          // Se não conseguiu usar o plano, deletar o projeto criado
+          await supabase.from('projects').delete().eq('id', data.id);
+          toast.error('Erro ao usar o plano. Projeto não foi criado.');
+          throw new Error('Failed to use plan');
+        }
 
-      // Atualizar o projeto com o user_plan_id
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ user_plan_id: userPlanId })
-        .eq('id', data.id);
+        // Atualizar o projeto com o user_plan_id
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update({ user_plan_id: userPlanId })
+          .eq('id', data.id);
 
-      if (updateError) {
-        console.error('Error updating project with user_plan_id:', updateError);
+        if (updateError) {
+          console.error('Error updating project with user_plan_id:', updateError);
+        }
       }
 
       toast.success('Projeto criado com sucesso!');
@@ -138,8 +155,9 @@ export const useProjects = () => {
         title: projectData.title,
         location: projectData.location,
         price: projectData.price,
-        planUsed: selectedPlan.plan_name,
-        userPlanId,
+        planUsed: selectedPlan?.plan_name || 'Admin/Dev (sem plano)',
+        userPlanId: userPlanId || null,
+        isAdminCreated: isAdminOrDev,
         timestamp: new Date().toISOString()
       });
       

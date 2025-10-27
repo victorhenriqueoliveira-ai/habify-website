@@ -89,6 +89,7 @@ const NewProjectPage = () => {
       // Verificar se o plano foi selecionado (apenas para usuários regulares)
       if (!isDevOrAdmin && !selectedPlanId) {
         toast.error('Selecione um plano para criar o projeto');
+        setLoading(false);
         return;
       }
 
@@ -101,6 +102,7 @@ const NewProjectPage = () => {
         propertyType: 'house',
         price: 0,
         selectedPlanId: selectedPlanId || undefined,
+        isAdminOrDev: isDevOrAdmin,
       });
       
       if (result.success) {
