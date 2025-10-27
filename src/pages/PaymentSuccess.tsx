@@ -20,16 +20,26 @@ const PaymentSuccess = () => {
   }, []);
 
   useEffect(() => {
-    // Auto redirect countdown
-    if (!isProcessing && autoRedirectSeconds > 0) {
+    // Auto redirect countdown - apenas se não estiver processando e tiver transactionData
+    if (!isProcessing && transactionData && autoRedirectSeconds > 0) {
       const timer = setTimeout(() => {
         setAutoRedirectSeconds(autoRedirectSeconds - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (autoRedirectSeconds === 0) {
-      navigate('/admin/my-projects');
+    } else if (autoRedirectSeconds === 0 && transactionData) {
+      const isLoggedInPurchase = transactionData.payment_data?.isLoggedInPurchase;
+      if (isLoggedInPurchase) {
+        navigate('/admin/my-projects');
+      } else {
+        navigate('/admin/auth', { 
+          state: { 
+            message: 'Faça login para acessar seus projetos',
+            email: transactionData.payment_data?.customerData?.email
+          }
+        });
+      }
     }
-  }, [autoRedirectSeconds, isProcessing, navigate]);
+  }, [autoRedirectSeconds, isProcessing, transactionData, navigate]);
 
   useEffect(() => {
     // Get payment_id from URL and store it (supports both AbacatePay and Mercado Pago)
@@ -89,11 +99,16 @@ const PaymentSuccess = () => {
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             <p className="text-lg">
-              Parabéns! Seu pagamento foi processado com sucesso{transactionData ? ' e sua conta foi criada automaticamente' : ''}.
+              Parabéns! Seu pagamento foi processado com sucesso.
             </p>
-            <p className="text-muted-foreground">
-              Redirecionando para o painel em {autoRedirectSeconds} segundos...
-            </p>
+            {transactionData && (
+              <p className="text-muted-foreground">
+                {transactionData.payment_data?.isLoggedInPurchase 
+                  ? `Redirecionando para o painel em ${autoRedirectSeconds} segundos...`
+                  : `Redirecionando para login em ${autoRedirectSeconds} segundos...`
+                }
+              </p>
+            )}
           </div>
 
           {/* Display Credits */}
@@ -123,14 +138,29 @@ const PaymentSuccess = () => {
                 <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
                 <span className="line-through text-muted-foreground">Pagamento confirmado</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
-                <span className="line-through text-muted-foreground">Conta criada automaticamente</span>
-              </div>
-              <div className="flex items-start space-x-2">
-                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
-                <span>Acessar o painel e adicionar informações do seu empreendimento</span>
-              </div>
+              {transactionData?.payment_data?.isLoggedInPurchase ? (
+                <>
+                  <div className="flex items-start space-x-2">
+                    <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
+                    <span className="line-through text-muted-foreground">Créditos adicionados à sua conta</span>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Criar novo projeto com seus créditos</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start space-x-2">
+                    <span className="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
+                    <span className="line-through text-muted-foreground">Conta criada automaticamente</span>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Fazer login e acessar o painel</span>
+                  </div>
+                </>
+              )}
               <div className="flex items-start space-x-2">
                 <span className="bg-muted text-muted-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
                 <span>Nossa equipe começará a desenvolver seu site</span>

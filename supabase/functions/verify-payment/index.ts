@@ -29,20 +29,29 @@ serve(async (req) => {
 
     // console.log('Checking order status in database for paymentId:', id);
     
+    if (!id) {
+      throw new Error('ID de pagamento não fornecido');
+    }
+    
     // Check order status directly from database (webhook should have already updated it)
-    // Try to find by abacatepay_id or by payment_data.paymentId for Mercado Pago
+    // Try to find by abacatepay_id, hubla_transaction_id or by id
     const { data: orders, error: orderError } = await supabaseService
       .from('orders')
       .select('*')
-      .or(`abacatepay_id.eq.${id},payment_data->paymentId.eq.${id}`)
+      .or(`abacatepay_id.eq.${id},hubla_transaction_id.eq.${id},id.eq.${id}`)
       .order('created_at', { ascending: false })
       .limit(1);
       
     // console.log('Order query result:', { orders, orderError });
 
-    if (orderError || !orders || orders.length === 0) {
-      console.error('Order fetch error:', orderError);
-      throw new Error('Order not found');
+    if (orderError) {
+      console.error('Erro ao buscar pedido:', orderError);
+      throw new Error('Erro ao verificar pedido. Tente novamente em instantes.');
+    }
+
+    if (!orders || orders.length === 0) {
+      console.error('Pedido não encontrado para ID:', id);
+      throw new Error('Pedido não encontrado. Verifique se o pagamento foi concluído.');
     }
 
     const order = orders[0];
@@ -50,70 +59,25 @@ serve(async (req) => {
     const isPaid = order.status === 'paid';
     // console.log('Order status check:', { isPaid, status: order.status });
 
-    // If payment is already confirmed via webhook, create auth user if not exists
-    if (isPaid && order) {
-      // console.log('Payment confirmed, checking auth user for order:', order.id);
+    // ✅ SECURITY: Webhook já criou o usuário, apenas verificar se está ativo
+    if (isPaid && order && order.user_id) {
+      // console.log('Payment confirmed, verifying user is active:', order.user_id);
       
       // Get profile data
       const { data: profile, error: profileError } = await supabaseService
         .from('profiles')
-        .select('*')
+        .select('id, auth_user_id, is_active, email')
         .eq('id', order.user_id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
-        console.error('Failed to get profile:', profileError);
+        console.error('Erro ao buscar perfil:', profileError);
+      } else if (!profile) {
+        console.error('Perfil não encontrado para pedido:', order.id);
+      } else if (!profile.is_active) {
+        console.error('ALERTA: Perfil existe mas não está ativo:', profile.id);
       } else {
-        const customerData = order.payment_data?.customerData;
-        
-        if (customerData?.email && customerData?.password && !profile.auth_user_id) {
-          try {
-            // console.log('Creating auth user for email:', customerData.email);
-            
-            // Create user in Supabase Auth
-            const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-              email: customerData.email,
-              password: customerData.password,
-              email_confirm: true, // User is confirmed after payment
-              user_metadata: {
-                name: customerData.name,
-                phone: customerData.phone || null,
-                payment_confirmed: true,
-                activated_via_verify: true,
-                activated_at: new Date().toISOString()
-              }
-            });
-
-            if (authError) {
-              console.error('Failed to create auth user:', authError);
-            } else {
-              // console.log('Auth user created successfully:', authData.user?.id);
-              
-              // Update profile with auth_user_id and activate it
-              const { error: profileUpdateError } = await supabaseService
-                .from('profiles')
-                .update({ 
-                  auth_user_id: authData.user.id,
-                  user_id: authData.user.id, // Now link to auth.users
-                  is_active: true,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', order.user_id);
-
-              if (profileUpdateError) {
-                console.error('Failed to activate profile:', profileUpdateError);
-              } else {
-                // console.log('Profile activated and linked to auth user successfully');
-              }
-            }
-          } catch (error) {
-            console.error('Error creating auth user:', error);
-          }
-        } else if (profile.auth_user_id) {
-          // console.log('Auth user already exists for profile:', profile.auth_user_id);
-        } else {
-          console.error('Missing customerData in order:', { customerData: !!customerData, email: !!customerData?.email, password: !!customerData?.password });
-        }
+        // console.log('Perfil ativo e pronto:', profile.id);
       }
     }
 
