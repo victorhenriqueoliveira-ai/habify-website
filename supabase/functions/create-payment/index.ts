@@ -77,8 +77,25 @@ serve(async (req) => {
       throw new Error('Plano não encontrado. Tente novamente.');
     }
 
+    // Validar se plano está ativo
+    if (!plan.is_active) {
+      console.error('Plan is inactive:', planId);
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'UNKNOWN',
+        error_message: 'Tentativa de comprar plano inativo',
+        request_body: { planId, plan }
+      });
+      throw new Error('Este plano não está mais disponível para compra. Entre em contato com o suporte.');
+    }
+
     // Get the correct price based on gateway
     const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
+    
+    // Validar preço mínimo
+    if (planPrice <= 0) {
+      console.error('Invalid plan price:', planPrice);
+      throw new Error('Preço do plano inválido. Entre em contato com o suporte.');
+    }
     
     let gateway = useAbacatePay ? 'ABACATEPAY' : 'HUBLA';
     // console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
@@ -124,6 +141,25 @@ serve(async (req) => {
 
       profileId = existingProfile.id;
       // console.log('Found existing profile:', profileId);
+      
+      // Validar se já não tem order pendente
+      const { data: pendingOrders, error: pendingError } = await supabaseService
+        .from('orders')
+        .select('id, created_at')
+        .eq('user_id', profileId)
+        .eq('status', 'pending')
+        .limit(1);
+        
+      if (!pendingError && pendingOrders && pendingOrders.length > 0) {
+        console.error('User has pending order:', profileId, pendingOrders[0].id);
+        await supabaseService.from('payment_logs').insert({
+          gateway: gateway,
+          error_message: 'Tentativa de criar pedido duplicado',
+          request_body: { profileId, existingOrderId: pendingOrders[0].id },
+          user_id: profileId
+        });
+        throw new Error('Você já tem um pedido pendente. Complete o pagamento anterior ou aguarde alguns minutos e tente novamente.');
+      }
     } else {
       // Novo usuário - perfil será criado no webhook após confirmação do pagamento
       // console.log('New user purchase - profile will be created after payment confirmation');
@@ -270,13 +306,13 @@ serve(async (req) => {
       // console.log('Using Hubla for card payment');
       
       // Check if plan has Hubla checkout URL configured
-      if (!plan.hubla_checkout_url) {
-        console.error('Hubla checkout URL not configured for plan:', planId);
+      if (!plan.hubla_checkout_url || plan.hubla_checkout_url.trim() === '') {
+        console.error('Hubla checkout URL not configured or empty for plan:', planId);
         
         // Log error
         await supabaseService.from('payment_logs').insert({
           gateway: 'HUBLA',
-          error_message: 'Hubla checkout URL not configured',
+          error_message: 'Hubla checkout URL not configured or empty',
           request_body: { planId, planData: plan }
         });
         
@@ -317,12 +353,13 @@ serve(async (req) => {
             name: customerData.name,
             email: customerData.email,
             phone: customerData.phone,
-            cpf: customerData.cpf,
-            password: customerData.isLoggedInPurchase ? undefined : customerData.password
+            cpf: customerData.cpf
           },
           paymentId: paymentId,
           installments: customerData.installments,
           isLoggedInPurchase: customerData.isLoggedInPurchase,
+          isNewUser: !customerData.isLoggedInPurchase,
+          password: customerData.isLoggedInPurchase ? undefined : customerData.password
         }
       })
       .select()

@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { usePlans } from '@/hooks/usePlans';
 import { usePayment } from '@/hooks/usePayment';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, ArrowLeft, CreditCard } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, QrCode, Info, CheckCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
@@ -19,6 +20,7 @@ export default function CheckoutPage() {
   const { plans, loading: plansLoading } = usePlans();
   const { createPayment, loading: paymentLoading } = usePayment();
   
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -41,14 +43,40 @@ export default function CheckoutPage() {
 
     if (!plan) return;
 
+    // Validação de senha forte para novos usuários
     if (!user && !formData.password) {
-      toast.error('Senha é obrigatória para novos usuários');
+      toast.error('Senha é obrigatória');
       return;
+    }
+
+    if (!user) {
+      // Validar senha forte
+      if (formData.password.length < 8) {
+        toast.error('Senha deve ter no mínimo 8 caracteres');
+        return;
+      }
+      if (!/[A-Z]/.test(formData.password)) {
+        toast.error('Senha deve conter pelo menos uma letra maiúscula');
+        return;
+      }
+      if (!/[a-z]/.test(formData.password)) {
+        toast.error('Senha deve conter pelo menos uma letra minúscula');
+        return;
+      }
+      if (!/[0-9]/.test(formData.password)) {
+        toast.error('Senha deve conter pelo menos um número');
+        return;
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+        toast.error('Senha deve conter pelo menos um caractere especial');
+        return;
+      }
     }
 
     try {
       const response = await createPayment(plan.id, {
         ...formData,
+        paymentMethod,
         isLoggedInPurchase: !!user,
       });
 
@@ -117,16 +145,24 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total:</span>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">
-                    R$ {plan.price.toFixed(2)}
-                  </div>
-                  {plan.pix_price && plan.pix_price < plan.price && (
-                    <Badge variant="secondary" className="mt-1">
-                      PIX: R$ {plan.pix_price.toFixed(2)}
-                    </Badge>
+                <span className="text-primary">
+                  {paymentMethod === 'PIX' ? (
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">
+                        R$ {(plan.pix_price || plan.price).toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <div className="text-lg font-bold">
+                        R$ {((plan.stripe_price || plan.price) / 12).toFixed(2)}/mês
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Total: R$ {(plan.stripe_price || plan.price).toFixed(2)}
+                      </div>
+                    </div>
                   )}
-                </div>
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -141,6 +177,56 @@ export default function CheckoutPage() {
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
+                {/* Payment Method Selection */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center space-x-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Método de Pagamento</span>
+                  </h3>
+
+                  <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD')}>
+                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="PIX" id="pix" />
+                      <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
+                        <QrCode className="h-5 w-5 mr-3" />
+                        <div>
+                          <div className="font-medium">PIX</div>
+                          <div className="text-sm text-muted-foreground">
+                            Pagamento instantâneo - R$ {(plan.pix_price || plan.price).toFixed(2)}
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="CARD" id="card" />
+                      <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                        <CreditCard className="h-5 w-5 mr-3" />
+                        <div>
+                          <div className="font-medium">Cartão de Crédito</div>
+                          <div className="text-sm text-muted-foreground">
+                            Parcelamento em até 12x - R$ {((plan.stripe_price || plan.price) / 12).toFixed(2)}/mês
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {paymentMethod === 'CARD' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-2">
+                        <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <div className="text-sm text-blue-700">
+                          <p className="font-medium mb-1">Parcelamento via Hubla</p>
+                          <p>Você escolherá o número de parcelas no checkout da Hubla. Cupons de desconto disponíveis!</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo *</Label>
                   <Input
@@ -172,10 +258,10 @@ export default function CheckoutPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
-                      minLength={6}
+                      minLength={8}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Mínimo 6 caracteres
+                      Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial
                     </p>
                   </div>
                 )}

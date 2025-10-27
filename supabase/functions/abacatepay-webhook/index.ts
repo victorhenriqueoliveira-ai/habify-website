@@ -145,49 +145,19 @@ serve(async (req) => {
           // console.log(`Added plan to existing user ${order.user_id}`);
         }
 
-        // Enviar e-mails de confirmação para usuário logado
-        try {
-          const { data: planDetails } = await supabaseService
-            .from('plans')
-            .select('name, price, pix_price')
-            .eq('id', order.plan_id)
-            .single();
+        // Enviar e-mails de confirmação
+        const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
+          body: { orderId: order.id }
+        });
 
-          const { data: userProfile } = await supabaseService
-            .from('profiles')
-            .select('name, email')
-            .eq('id', order.user_id)
-            .single();
-
-          if (planDetails && userProfile) {
-            // Enviar confirmação ao usuário
-            await supabaseService.functions.invoke('send-payment-confirmation', {
-              body: {
-                customerName: userProfile.name,
-                customerEmail: userProfile.email,
-                planName: planDetails.name,
-                planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                paymentMethod: 'PIX',
-                gateway: 'ABACATEPAY'
-              }
-            });
-            
-            // Notificar administração
-            await supabaseService.functions.invoke('send-admin-notification', {
-              body: {
-                customerName: userProfile.name,
-                customerEmail: userProfile.email,
-                planName: planDetails.name,
-                planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                paymentMethod: 'PIX',
-                gateway: 'ABACATEPAY'
-              }
-            });
-            
-            // console.log('Emails sent successfully');
-          }
-        } catch (emailError) {
-          console.error('Failed to send confirmation emails:', emailError);
+        if (emailResult.error) {
+          console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
+          await supabaseService.from('payment_logs').insert({
+            gateway: 'ABACATEPAY',
+            error_message: `Email sending failed after payment: ${emailResult.error.message}`,
+            order_id: order.id,
+            response_body: { emailError: emailResult.error }
+          });
         }
       } else if (customerData?.email && customerData?.password) {
         // Novo usuário - criar tudo do zero
@@ -195,9 +165,15 @@ serve(async (req) => {
         
         try {
           // 1. Criar usuário no Supabase Auth
+          const password = order.payment_data?.password;
+          if (!password) {
+            console.error('Password not found in payment_data');
+            throw new Error('Senha não encontrada nos dados do pedido');
+          }
+
           const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
             email: customerData.email,
-            password: customerData.password,
+            password: password,
             email_confirm: true,
             user_metadata: {
               name: customerData.name,
@@ -264,59 +240,18 @@ serve(async (req) => {
           }
 
           // Enviar e-mails de confirmação
-          try {
-            const { data: planDetails } = await supabaseService
-              .from('plans')
-              .select('name, price, pix_price')
-              .eq('id', order.plan_id)
-              .single();
+          const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
+            body: { orderId: order.id }
+          });
 
-            if (planDetails && newProfile) {
-              // Enviar confirmação ao usuário
-              await supabaseService.functions.invoke('send-payment-confirmation', {
-                body: {
-                  customerName: customerData.name,
-                  customerEmail: customerData.email,
-                  planName: planDetails.name,
-                  planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                  paymentMethod: 'PIX',
-                  gateway: 'ABACATEPAY'
-                }
-              });
-              
-              // Notificar administração
-              await supabaseService.functions.invoke('send-admin-notification', {
-                body: {
-                  customerName: customerData.name,
-                  customerEmail: customerData.email,
-                  planName: planDetails.name,
-                  planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                  paymentMethod: 'PIX',
-                  gateway: 'ABACATEPAY'
-                }
-              });
-              
-              // console.log('Emails sent successfully');
-            }
-          } catch (emailError) {
-            console.error('Failed to send confirmation emails:', emailError);
-          }
-
-            if (planDetails) {
-              await supabaseService.functions.invoke('send-payment-confirmation', {
-                body: {
-                  customerName: customerData.name,
-                  customerEmail: customerData.email,
-                  planName: planDetails.name,
-                  planPrice: (planDetails.pix_price || planDetails.price).toFixed(2),
-                  gateway: 'ABACATEPAY',
-                  paymentMethod: 'PIX'
-                }
-              });
-              // console.log('Confirmation emails sent successfully');
-            }
-          } catch (emailError) {
-            console.error('Failed to send confirmation emails:', emailError);
+          if (emailResult.error) {
+            console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: `Email sending failed after payment: ${emailResult.error.message}`,
+              order_id: order.id,
+              response_body: { emailError: emailResult.error }
+            });
           }
 
         } catch (error) {
