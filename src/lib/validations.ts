@@ -43,14 +43,10 @@ function isValidCPF(cpf: string): boolean {
 const phoneRegex = /^\(\d{2}\)\s?\d{4,5}-\d{4}$/;
 const phoneDigitsRegex = /^\d{10,11}$/;
 
-// Senha forte
+// Senha (mínimo 6 caracteres para checkout)
 const passwordSchema = z
   .string()
-  .min(8, 'Senha deve ter no mínimo 8 caracteres')
-  .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
-  .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
-  .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
-  .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Senha deve conter pelo menos um caractere especial');
+  .min(6, 'Senha deve ter no mínimo 6 caracteres');
 
 // Email
 const emailSchema = z
@@ -75,20 +71,23 @@ const phoneSchema = z
     message: 'Telefone inválido. Use o formato (XX) XXXXX-XXXX'
   });
 
-// Nome
+// Nome completo (com sobrenome)
 const nameSchema = z
   .string()
   .min(3, 'Nome deve ter no mínimo 3 caracteres')
   .max(100, 'Nome deve ter no máximo 100 caracteres')
-  .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras');
+  .regex(/^[a-zA-ZÀ-ÿ\s]+$/, 'Nome deve conter apenas letras')
+  .refine((val) => val.trim().split(/\s+/).length >= 2, {
+    message: 'Digite nome e sobrenome'
+  });
 
 // Esquema de Checkout
 export const checkoutSchema = z.object({
   name: nameSchema,
   email: emailSchema,
-  password: z.union([z.string().length(0), passwordSchema]), // Opcional ou forte
-  phone: phoneSchema.optional().or(z.literal('')),
-  cpf: cpfSchema.optional().or(z.literal('')),
+  password: passwordSchema,
+  phone: phoneSchema,
+  cpf: cpfSchema,
   paymentMethod: z.enum(['PIX', 'CARD']),
 });
 

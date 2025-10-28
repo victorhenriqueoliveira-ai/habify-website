@@ -12,7 +12,9 @@ import { toast } from 'sonner';
 import { usePlans } from '@/hooks/usePlans';
 import { usePayment } from '@/hooks/usePayment';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, CreditCard, QrCode, Info, CheckCircle } from 'lucide-react';
+import { formatCPF, formatPhone } from '@/lib/validations';
 
 export default function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
@@ -44,32 +46,56 @@ export default function CheckoutPage() {
 
     if (!plan) return;
 
-    // Validação de senha forte para novos usuários
-    if (!user && !formData.password) {
-      toast.error('Senha é obrigatória');
+    // Validação de nome completo
+    const nameParts = formData.name.trim().split(/\s+/);
+    if (nameParts.length < 2) {
+      toast.error('Digite nome e sobrenome');
       return;
     }
 
+    // Validação de email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    // Validação de CPF
+    const cpfDigits = formData.cpf.replace(/\D/g, '');
+    if (!cpfDigits || cpfDigits.length !== 11) {
+      toast.error('CPF inválido. Digite 11 dígitos');
+      return;
+    }
+
+    // Validação de telefone
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (!phoneDigits || phoneDigits.length < 10 || phoneDigits.length > 11) {
+      toast.error('Telefone inválido. Digite 10 ou 11 dígitos');
+      return;
+    }
+
+    // Validação de senha
+    if (!user && (!formData.password || formData.password.length < 6)) {
+      toast.error('Senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+
+    // Verificar unicidade de email, CPF e telefone
     if (!user) {
-      // Validar senha forte
-      if (formData.password.length < 8) {
-        toast.error('Senha deve ter no mínimo 8 caracteres');
-        return;
-      }
-      if (!/[A-Z]/.test(formData.password)) {
-        toast.error('Senha deve conter pelo menos uma letra maiúscula');
-        return;
-      }
-      if (!/[a-z]/.test(formData.password)) {
-        toast.error('Senha deve conter pelo menos uma letra minúscula');
-        return;
-      }
-      if (!/[0-9]/.test(formData.password)) {
-        toast.error('Senha deve conter pelo menos um número');
-        return;
-      }
-      if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
-        toast.error('Senha deve conter pelo menos um caractere especial');
+      try {
+        const { data: uniqueCheck } = await supabase.functions.invoke('check-unique-fields', {
+          body: {
+            email: formData.email,
+            cpf: cpfDigits,
+            phone: phoneDigits,
+          },
+        });
+
+        if (!uniqueCheck?.success) {
+          uniqueCheck?.errors?.forEach((error: string) => toast.error(error));
+          return;
+        }
+      } catch (error) {
+        toast.error('Erro ao validar dados. Tente novamente.');
         return;
       }
     }
@@ -276,7 +302,11 @@ export default function CheckoutPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    placeholder="João da Silva"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Nome e sobrenome são obrigatórios
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -288,6 +318,32 @@ export default function CheckoutPage() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                     disabled={!!user}
+                    placeholder="seu@email.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF *</Label>
+                  <Input
+                    id="cpf"
+                    value={formData.cpf}
+                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
+                    required
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                    required
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
                   />
                 </div>
 
@@ -300,34 +356,14 @@ export default function CheckoutPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
-                      minLength={8}
+                      minLength={6}
+                      placeholder="Mínimo 6 caracteres"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial
+                      Mínimo 6 caracteres
                     </p>
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone (opcional)</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF (opcional)</Label>
-                  <Input
-                    id="cpf"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                    placeholder="000.000.000-00"
-                  />
-                </div>
               </CardContent>
               <CardFooter>
                 <Button
