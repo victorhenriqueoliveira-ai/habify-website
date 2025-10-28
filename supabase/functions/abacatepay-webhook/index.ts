@@ -128,38 +128,62 @@ serve(async (req) => {
     if (isPaid && order) {
       const customerData = order.payment_data?.customerData;
       
-      // Se for compra de usuário já logado, adicionar créditos
-      if (order.payment_data?.isLoggedInPurchase && order.user_id) {
-        // console.log('Logged in user purchase - adding credits');
-        
-        // Adicionar plano ao perfil existente
-        const { error: planError } = await supabaseService.rpc('add_user_plan', {
-          _user_id: order.user_id,
-          _plan_id: order.plan_id,
-          _order_id: order.id
-        });
+        // Se for compra de usuário já logado, adicionar créditos
+        if (order.payment_data?.isLoggedInPurchase && order.user_id) {
+          console.log('Logged in user purchase - adding plan and credits');
+          
+          // Buscar plano para pegar credits_granted
+          const { data: planData } = await supabaseService
+            .from('plans')
+            .select('credits_granted')
+            .eq('id', order.plan_id)
+            .single();
 
-        if (planError) {
-          console.error('Failed to add plan:', planError);
-        } else {
-          // console.log(`Added plan to existing user ${order.user_id}`);
-        }
-
-        // Enviar e-mails de confirmação
-        const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
-          body: { orderId: order.id }
-        });
-
-        if (emailResult.error) {
-          console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
-          await supabaseService.from('payment_logs').insert({
-            gateway: 'ABACATEPAY',
-            error_message: `Email sending failed after payment: ${emailResult.error.message}`,
-            order_id: order.id,
-            response_body: { emailError: emailResult.error }
+          // Adicionar plano ao perfil existente
+          const { error: planError } = await supabaseService.rpc('add_user_plan', {
+            _user_id: order.user_id,
+            _plan_id: order.plan_id,
+            _order_id: order.id
           });
-        }
-      } else if (customerData?.email && customerData?.password) {
+
+          if (planError) {
+            console.error('Failed to add plan:', planError);
+          } else {
+            console.log(`Added plan to existing user ${order.user_id}`);
+          }
+
+          // Adicionar créditos se o plano tiver credits_granted
+          if (planData?.credits_granted && planData.credits_granted > 0) {
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: order.user_id,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Compra do plano via AbacatePay`,
+              _order_id: order.id
+            });
+
+            if (creditsError) {
+              console.error('Failed to add credits:', creditsError);
+            } else {
+              console.log(`Added ${planData.credits_granted} credits to user ${order.user_id}`);
+            }
+          }
+
+          // Enviar e-mails de confirmação
+          const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
+            body: { orderId: order.id }
+          });
+
+          if (emailResult.error) {
+            console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: `Email sending failed after payment: ${emailResult.error.message}`,
+              order_id: order.id,
+              response_body: { emailError: emailResult.error }
+            });
+          }
+        } else if (customerData?.email && order.payment_data?.password) {
         // Novo usuário - criar tudo do zero
         // console.log('New user purchase - creating auth user and profile');
         
@@ -226,7 +250,14 @@ serve(async (req) => {
             // console.log('Order linked to profile successfully');
           }
 
-          // 4. Adicionar plano ao usuário
+          // 4. Buscar plano para pegar credits_granted
+          const { data: planData } = await supabaseService
+            .from('plans')
+            .select('credits_granted')
+            .eq('id', order.plan_id)
+            .single();
+
+          // 5. Adicionar plano ao usuário
           const { error: planError } = await supabaseService.rpc('add_user_plan', {
             _user_id: newProfile.id,
             _plan_id: order.plan_id,
@@ -236,7 +267,24 @@ serve(async (req) => {
           if (planError) {
             console.error('Failed to add plan:', planError);
           } else {
-            // console.log(`Added plan to user ${newProfile.id}`);
+            console.log(`Added plan to user ${newProfile.id}`);
+          }
+
+          // 6. Adicionar créditos se o plano tiver credits_granted
+          if (planData?.credits_granted && planData.credits_granted > 0) {
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: newProfile.id,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Compra do plano via AbacatePay`,
+              _order_id: order.id
+            });
+
+            if (creditsError) {
+              console.error('Failed to add credits:', creditsError);
+            } else {
+              console.log(`Added ${planData.credits_granted} credits to new user ${newProfile.id}`);
+            }
           }
 
           // Enviar e-mails de confirmação

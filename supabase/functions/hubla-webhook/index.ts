@@ -176,19 +176,19 @@ serve(async (req) => {
     if (isPaid && updatedOrder) {
       const customerData = updatedOrder.payment_data?.customerData;
       
-      // Se for compra de usuário já logado, adicionar créditos
-      if (updatedOrder.payment_data?.isLoggedInPurchase && updatedOrder.user_id) {
-        // console.log('Logged in user purchase - adding credits');
-        
-        // Adicionar créditos ao perfil existente
-        const { data: planData } = await supabaseService
-          .from('plans')
-          .select('credits_granted')
-          .eq('id', updatedOrder.plan_id)
-          .single();
+        // Se for compra de usuário já logado, adicionar créditos
+        if (updatedOrder.payment_data?.isLoggedInPurchase && updatedOrder.user_id) {
+          console.log('Logged in user purchase - adding plan and credits');
+          
+          // Buscar plano para pegar credits_granted
+          const { data: planData } = await supabaseService
+            .from('plans')
+            .select('credits_granted')
+            .eq('id', updatedOrder.plan_id)
+            .single();
 
           // Adicionar plano ao usuário
-          const { data: userPlanId, error: planError } = await supabaseService.rpc('add_user_plan', {
+          const { error: planError } = await supabaseService.rpc('add_user_plan', {
             _user_id: updatedOrder.user_id,
             _plan_id: updatedOrder.plan_id,
             _order_id: updatedOrder.id
@@ -197,24 +197,41 @@ serve(async (req) => {
           if (planError) {
             console.error('Error adding user plan:', planError);
           } else {
-            // console.log('User plan added successfully:', userPlanId);
+            console.log('User plan added successfully');
+          }
+
+          // Adicionar créditos se o plano tiver credits_granted
+          if (planData?.credits_granted && planData.credits_granted > 0) {
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: updatedOrder.user_id,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Compra do plano via Hubla`,
+              _order_id: updatedOrder.id
+            });
+
+            if (creditsError) {
+              console.error('Failed to add credits:', creditsError);
+            } else {
+              console.log(`Added ${planData.credits_granted} credits to user ${updatedOrder.user_id}`);
+            }
           }
 
           // Enviar e-mails de confirmação para usuário logado
-        const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
-          body: { orderId: updatedOrder.id }
-        });
-
-        if (emailResult.error) {
-          console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
-          await supabaseService.from('payment_logs').insert({
-            gateway: 'HUBLA',
-            error_message: `Email sending failed after payment: ${emailResult.error.message}`,
-            order_id: updatedOrder.id,
-            response_body: { emailError: emailResult.error }
+          const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
+            body: { orderId: updatedOrder.id }
           });
-        }
-      } else if (customerData?.email && customerData?.password) {
+
+          if (emailResult.error) {
+            console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'HUBLA',
+              error_message: `Email sending failed after payment: ${emailResult.error.message}`,
+              order_id: updatedOrder.id,
+              response_body: { emailError: emailResult.error }
+            });
+          }
+        } else if (customerData?.email && updatedOrder.payment_data?.password) {
         // Novo usuário - criar tudo do zero
         // console.log('New user purchase - creating auth user and profile');
         
@@ -281,15 +298,15 @@ serve(async (req) => {
             // console.log('Order linked to profile successfully');
           }
 
-          // 4. Adicionar créditos ao usuário baseado no plano
+          // 4. Buscar plano para pegar credits_granted
           const { data: planData } = await supabaseService
             .from('plans')
             .select('credits_granted')
             .eq('id', updatedOrder.plan_id)
             .single();
 
-          // Adicionar plano ao usuário
-          const { data: userPlanId, error: planError } = await supabaseService.rpc('add_user_plan', {
+          // 5. Adicionar plano ao usuário
+          const { error: planError } = await supabaseService.rpc('add_user_plan', {
             _user_id: newProfile.id,
             _plan_id: updatedOrder.plan_id,
             _order_id: updatedOrder.id
@@ -298,7 +315,24 @@ serve(async (req) => {
           if (planError) {
             console.error('Error adding user plan:', planError);
           } else {
-            // console.log('User plan added successfully:', userPlanId);
+            console.log('User plan added successfully');
+          }
+
+          // 6. Adicionar créditos se o plano tiver credits_granted
+          if (planData?.credits_granted && planData.credits_granted > 0) {
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: newProfile.id,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Compra do plano via Hubla`,
+              _order_id: updatedOrder.id
+            });
+
+            if (creditsError) {
+              console.error('Failed to add credits:', creditsError);
+            } else {
+              console.log(`Added ${planData.credits_granted} credits to new user ${newProfile.id}`);
+            }
           }
 
           // Enviar e-mails de confirmação
