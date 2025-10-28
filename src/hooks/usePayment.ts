@@ -69,36 +69,23 @@ export const usePayment = () => {
     }
   };
 
-  const verifyPayment = async (paymentId: string) => {
+  const verifyPayment = async (idToVerify: string) => {
     try {
+      // Determinar se é orderId (UUID) ou paymentId (gateway ID)
+      const isOrderId = idToVerify.includes('-') && idToVerify.length === 36;
+      
       const { data, error } = await supabase.functions.invoke('verify-payment', {
-        body: { paymentId },
+        body: { 
+          orderId: isOrderId ? idToVerify : undefined,
+          paymentId: !isOrderId ? idToVerify : undefined
+        },
       });
 
       if (error) {
         return { success: false, error: error.message };
       }
 
-      // Check if payment was confirmed and order exists
-      if (data?.success && data?.order) {
-        // Check order status from our database
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('abacatepay_id', paymentId)
-          .single();
-
-        if (orderError) {
-          return { success: false, error: 'Erro ao buscar pedido' };
-        }
-
-        return {
-          success: true,
-          isPaid: orderData.status === 'paid',
-          order: orderData
-        };
-      }
-
+      // Return the data directly from verify-payment function
       return data;
     } catch (error) {
       return { success: false, error: 'Erro ao verificar pagamento' };

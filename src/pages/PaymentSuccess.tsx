@@ -43,12 +43,21 @@ const PaymentSuccess = () => {
   }, [autoRedirectSeconds, isProcessing, transactionData, navigate]);
 
   useEffect(() => {
-    // Get payment_id from URL and store it (supports both AbacatePay and Mercado Pago)
-    const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
-    if (paymentId) {
-      localStorage.setItem('paymentId', paymentId);
-    } else {
-      // Se não encontrar paymentId, marcar como erro
+    // 🔥 PRIORIDADE: Buscar orderId primeiro (mais confiável)
+    const orderId = localStorage.getItem('orderId');
+    
+    // Fallback: IDs do gateway (podem não vir na URL de retorno)
+    const paymentIdFromUrl = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
+    const paymentIdFromStorage = localStorage.getItem('paymentId');
+    
+    // Salvar paymentId se veio na URL
+    if (paymentIdFromUrl) {
+      localStorage.setItem('paymentId', paymentIdFromUrl);
+    }
+    
+    // Se não tiver NENHUM ID, marcar como erro
+    if (!orderId && !paymentIdFromUrl && !paymentIdFromStorage) {
+      console.error('Nenhum ID encontrado para verificar pagamento');
       setPaymentStatus('error');
     }
 
@@ -68,8 +77,8 @@ const PaymentSuccess = () => {
         console.error('Error parsing transaction data:', error);
         setPaymentStatus('error');
       }
-    } else if (paymentId) {
-      // Tem paymentId mas não tem dados de transação = ainda processando
+    } else if (orderId || paymentIdFromUrl || paymentIdFromStorage) {
+      // Tem ID mas não tem dados de transação = ainda processando
       setPaymentStatus('processing');
     }
   }, [searchParams]);

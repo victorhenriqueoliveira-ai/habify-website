@@ -13,12 +13,15 @@ serve(async (req) => {
   }
 
   try {
-    const { paymentId, abacatePayId } = await req.json();
+    const { paymentId, abacatePayId, orderId } = await req.json();
     
-    // Support both new paymentId and legacy abacatePayId
-    const id = paymentId || abacatePayId;
+    // Support multiple ID formats:
+    // 1. orderId (most reliable - our internal ID)
+    // 2. paymentId (gateway ID from URL params)
+    // 3. abacatePayId (legacy support)
+    const id = orderId || paymentId || abacatePayId;
     
-    // console.log('Verifying payment:', id);
+    console.log('Verifying payment:', { orderId, paymentId, abacatePayId, id });
 
     // Create Supabase service client
     const supabaseService = createClient(
@@ -26,19 +29,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
-
-    // console.log('Checking order status in database for paymentId:', id);
     
     if (!id) {
       throw new Error('ID de pagamento não fornecido');
     }
     
     // Check order status directly from database (webhook should have already updated it)
-    // Try to find by abacatepay_id, hubla_transaction_id or by id
+    // Try to find by:
+    // 1. orderId (our internal UUID)
+    // 2. abacatepay_id (gateway ID for PIX)
+    // 3. hubla_transaction_id (gateway ID for CARD)
     const { data: orders, error: orderError } = await supabaseService
       .from('orders')
       .select('*')
-      .or(`abacatepay_id.eq.${id},hubla_transaction_id.eq.${id},id.eq.${id}`)
+      .or(`id.eq.${id},abacatepay_id.eq.${id},hubla_transaction_id.eq.${id}`)
       .order('created_at', { ascending: false })
       .limit(1);
       

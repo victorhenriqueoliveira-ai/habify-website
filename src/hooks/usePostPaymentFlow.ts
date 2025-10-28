@@ -26,14 +26,28 @@ export const usePostPaymentFlow = () => {
         return;
       }
 
-      // Buscar ID do pagamento (suporta AbacatePay e Hubla)
+      // 🔥 PRIORIDADE: Buscar orderId primeiro (mais confiável)
+      const orderId = localStorage.getItem('orderId');
+      
+      // Fallback: IDs do gateway (podem não vir na URL de retorno)
       const paymentId = searchParams.get('abacate_pay_id') || 
                        searchParams.get('payment_id') ||
                        searchParams.get('transaction_id') ||
                        localStorage.getItem('paymentId');
 
-      if (!paymentId) {
-        console.error('ID de pagamento não encontrado');
+      // Precisa de pelo menos um ID para verificar
+      const idToVerify = orderId || paymentId;
+      
+      if (!idToVerify) {
+        console.error('Nenhum ID de pagamento encontrado', {
+          orderId,
+          paymentId,
+          searchParams: Object.fromEntries(searchParams.entries()),
+          localStorage: {
+            orderId: localStorage.getItem('orderId'),
+            paymentId: localStorage.getItem('paymentId')
+          }
+        });
         toast.error(ErrorMessages.PAYMENT_ID_MISSING);
         return;
       }
@@ -41,10 +55,10 @@ export const usePostPaymentFlow = () => {
       setIsProcessing(true);
 
       try {
-        // console.log('Verificando pagamento:', paymentId);
+        console.log('Verificando pagamento:', { orderId, paymentId, idToVerify });
         
         // Verificar status do pagamento
-        const result = await verifyPayment(paymentId);
+        const result = await verifyPayment(idToVerify);
 
         if (!result.success) {
           throw new Error(result.error || ErrorMessages.PAYMENT_VERIFICATION_ERROR);
@@ -61,7 +75,10 @@ export const usePostPaymentFlow = () => {
         // console.log('Pagamento confirmado pelo webhook');
 
         // Limpar dados temporários
+        localStorage.removeItem('orderId');
         localStorage.removeItem('paymentId');
+        localStorage.removeItem('gateway');
+        localStorage.removeItem('checkoutData');
         localStorage.removeItem('orderData');
         localStorage.removeItem('selectedPlanId');
         localStorage.removeItem('habify_order');

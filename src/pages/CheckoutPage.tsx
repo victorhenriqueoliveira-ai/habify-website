@@ -82,6 +82,25 @@ export default function CheckoutPage() {
       });
 
       if (response.success && response.paymentUrl) {
+        // 🔥 CRÍTICO: Salvar IDs antes de redirecionar
+        if (response.orderId) {
+          localStorage.setItem('orderId', response.orderId);
+        }
+        if (response.paymentId) {
+          localStorage.setItem('paymentId', response.paymentId);
+        }
+        localStorage.setItem('gateway', response.gateway || 'UNKNOWN');
+        
+        // Salvar dados do cliente para conferência posterior
+        localStorage.setItem('checkoutData', JSON.stringify({
+          email: formData.email,
+          name: formData.name,
+          planId: plan.id,
+          planName: plan.name,
+          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price),
+          timestamp: Date.now()
+        }));
+
         window.location.href = response.paymentUrl;
       } else {
         toast.error(response.error || 'Erro ao processar pagamento');
