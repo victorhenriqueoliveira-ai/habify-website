@@ -110,6 +110,18 @@ export default function CheckoutPage() {
       });
 
       if (response.success && response.paymentUrl) {
+        // Log estruturado para debug
+        console.log('🔥 Redirecionando para pagamento', {
+          orderId: response.orderId,
+          paymentId: response.paymentId,
+          gateway: response.gateway,
+          planId: plan.id,
+          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price),
+          paymentMethod,
+          isLoggedIn: !!user,
+          timestamp: new Date().toISOString()
+        });
+
         // 🔥 CRÍTICO: Salvar IDs antes de redirecionar
         if (response.orderId) {
           localStorage.setItem('orderId', response.orderId);

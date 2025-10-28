@@ -183,6 +183,18 @@ serve(async (req) => {
               response_body: { emailError: emailResult.error }
             });
           }
+
+          // Notificar admin sobre novo pagamento
+          await supabaseService.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_payment',
+              title: 'Novo pagamento confirmado (usuário logado)',
+              message: `Pagamento confirmado via AbacatePay para usuário existente: ${customerData.email}`,
+              orderId: order.id,
+              gateway: 'ABACATEPAY',
+              amount: order.amount
+            }
+          });
         } else if (customerData?.email && order.payment_data?.password) {
         // Novo usuário - criar tudo do zero
         console.log('New user purchase - creating auth user and profile');
@@ -364,6 +376,18 @@ serve(async (req) => {
               response_body: { emailError: emailResult.error }
             });
           }
+
+          // Notificar admin sobre novo pagamento
+          await supabaseService.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_payment',
+              title: 'Novo pagamento confirmado (novo usuário)',
+              message: `Novo usuário criado via AbacatePay: ${customerData.email}`,
+              orderId: order.id,
+              gateway: 'ABACATEPAY',
+              amount: order.amount
+            }
+          });
 
         } catch (error) {
           console.error('Error in user creation flow:', error);

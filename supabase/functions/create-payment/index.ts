@@ -161,7 +161,27 @@ serve(async (req) => {
         throw new Error('Você já tem um pedido pendente. Complete o pagamento anterior ou aguarde alguns minutos e tente novamente.');
       }
     } else {
-      // Novo usuário - perfil será criado no webhook após confirmação do pagamento
+      // Novo usuário - validar se não tem order pendente com mesmo email
+      const { data: recentOrders } = await supabaseService
+        .from('orders')
+        .select('id, created_at, payment_data')
+        .eq('status', 'pending')
+        .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString()); // Últimos 30 min
+      
+      const duplicateOrder = recentOrders?.find(o => 
+        o.payment_data?.customerData?.email === customerData.email
+      );
+      
+      if (duplicateOrder) {
+        console.error('Duplicate order attempt for email:', customerData.email);
+        await supabaseService.from('payment_logs').insert({
+          gateway: gateway,
+          error_message: 'Tentativa de criar pedido duplicado',
+          request_body: { email: customerData.email, existingOrderId: duplicateOrder.id }
+        });
+        throw new Error('Você já tem um pedido pendente. Complete o pagamento ou aguarde alguns minutos e tente novamente.');
+      }
+      
       // console.log('New user purchase - profile will be created after payment confirmation');
       profileId = null;
     }
