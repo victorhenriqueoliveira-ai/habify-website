@@ -286,7 +286,8 @@ serve(async (req) => {
               user_id: authData.user.id,
               name: customerData.name,
               email: customerData.email,
-              phone: customerData.phone || null,
+              phone: customerData.phone?.replace(/\D/g, '') || null,
+              cpf: customerData.cpf?.replace(/\D/g, '') || null,
               role: 'user',
               is_active: true
             })

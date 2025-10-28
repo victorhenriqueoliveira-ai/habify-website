@@ -352,8 +352,8 @@ serve(async (req) => {
           customerData: {
             name: customerData.name,
             email: customerData.email,
-            phone: customerData.phone,
-            cpf: customerData.cpf
+            phone: customerData.phone?.replace(/\D/g, '') || null,
+            cpf: customerData.cpf?.replace(/\D/g, '') || null
           },
           paymentId: paymentId,
           installments: customerData.installments,

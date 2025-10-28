@@ -445,6 +445,7 @@ export type Database = {
           auth_user_id: string | null
           avatar_url: string | null
           company: string | null
+          cpf: string | null
           created_at: string
           credits: number
           email: string | null
@@ -460,6 +461,7 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           company?: string | null
+          cpf?: string | null
           created_at?: string
           credits?: number
           email?: string | null
@@ -475,6 +477,7 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           company?: string | null
+          cpf?: string | null
           created_at?: string
           credits?: number
           email?: string | null

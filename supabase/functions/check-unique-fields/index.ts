@@ -44,16 +44,11 @@ serve(async (req) => {
     // Check CPF uniqueness (remove formatting)
     if (cpf) {
       const cpfDigits = cpf.replace(/\D/g, '');
-      const { data: cpfProfiles } = await supabase
+      const { data: cpfExists } = await supabase
         .from('profiles')
-        .select('phone')
-        .not('phone', 'is', null);
-
-      // Check if any profile has this CPF in their phone field or metadata
-      // Since CPF is stored in phone field sometimes, we need to check both
-      const cpfExists = cpfProfiles?.some(p => 
-        p.phone?.replace(/\D/g, '') === cpfDigits
-      );
+        .select('id')
+        .eq('cpf', cpfDigits)
+        .maybeSingle();
 
       if (cpfExists) {
         errors.push('Este CPF já está cadastrado');

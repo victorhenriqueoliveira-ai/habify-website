@@ -103,6 +103,8 @@ export default function CheckoutPage() {
     try {
       const response = await createPayment(plan.id, {
         ...formData,
+        cpf: cpfDigits,
+        phone: phoneDigits,
         paymentMethod,
         isLoggedInPurchase: !!user,
       });
