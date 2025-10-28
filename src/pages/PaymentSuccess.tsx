@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2, Coins } from 'lucide-react';
+import { CheckCircle, Loader2, Coins, AlertCircle, XCircle } from 'lucide-react';
 import { usePostPaymentFlow } from '@/hooks/usePostPaymentFlow';
 import { useCredits } from '@/hooks/useCredits';
 
@@ -13,6 +13,7 @@ const PaymentSuccess = () => {
   const { credits, fetchCredits } = useCredits();
   const [transactionData, setTransactionData] = useState<any>(null);
   const [autoRedirectSeconds, setAutoRedirectSeconds] = useState(5);
+  const [paymentStatus, setPaymentStatus] = useState<'processing' | 'confirmed' | 'pending' | 'error'>('processing');
 
   useEffect(() => {
     // Atualizar créditos quando a página carregar
@@ -46,17 +47,30 @@ const PaymentSuccess = () => {
     const paymentId = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
     if (paymentId) {
       localStorage.setItem('paymentId', paymentId);
-      // console.log('Stored paymentId from URL:', paymentId);
+    } else {
+      // Se não encontrar paymentId, marcar como erro
+      setPaymentStatus('error');
     }
 
     // Check if we have verified payment data
     const verifiedData = localStorage.getItem('transactionData');
     if (verifiedData) {
       try {
-        setTransactionData(JSON.parse(verifiedData));
+        const data = JSON.parse(verifiedData);
+        setTransactionData(data);
+        // Se temos dados de transação e o status é "paid", o pagamento foi confirmado
+        if (data.status === 'paid') {
+          setPaymentStatus('confirmed');
+        } else {
+          setPaymentStatus('pending');
+        }
       } catch (error) {
         console.error('Error parsing transaction data:', error);
+        setPaymentStatus('error');
       }
+    } else if (paymentId) {
+      // Tem paymentId mas não tem dados de transação = ainda processando
+      setPaymentStatus('processing');
     }
   }, [searchParams]);
 
@@ -84,6 +98,83 @@ const PaymentSuccess = () => {
     );
   }
 
+  // Renderização baseada no status
+  if (paymentStatus === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
+        <Card className="w-full max-w-lg">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <XCircle className="h-16 w-16 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl text-destructive">
+              Erro ao Processar Pagamento
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <div className="text-center space-y-2">
+              <p className="text-lg">
+                Não foi possível confirmar seu pagamento.
+              </p>
+              <p className="text-muted-foreground">
+                Por favor, entre em contato com nosso suporte.
+              </p>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button variant="outline" onClick={handleGoHome} className="flex-1">
+                Voltar ao início
+              </Button>
+            </div>
+
+            <div className="text-xs text-muted-foreground text-center">
+              Dúvidas? Entre em contato via WhatsApp: (11) 99999-9999
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (paymentStatus === 'pending') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
+        <Card className="w-full max-w-lg">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="h-16 w-16 text-warning" />
+            </div>
+            <CardTitle className="text-2xl text-warning">
+              Pagamento Pendente
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <div className="text-center space-y-2">
+              <p className="text-lg">
+                Seu pagamento ainda está sendo processado.
+              </p>
+              <p className="text-muted-foreground">
+                Você receberá um e-mail assim que for confirmado.
+              </p>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button variant="outline" onClick={handleGoHome} className="flex-1">
+                Voltar ao início
+              </Button>
+            </div>
+
+            <div className="text-xs text-muted-foreground text-center">
+              Dúvidas? Entre em contato via WhatsApp: (11) 99999-9999
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
       <Card className="w-full max-w-lg">
@@ -101,7 +192,7 @@ const PaymentSuccess = () => {
             <p className="text-lg">
               Parabéns! Seu pagamento foi processado com sucesso.
             </p>
-            {transactionData && (
+            {transactionData && paymentStatus === 'confirmed' && (
               <p className="text-muted-foreground">
                 {transactionData.payment_data?.isLoggedInPurchase 
                   ? `Redirecionando para o painel em ${autoRedirectSeconds} segundos...`

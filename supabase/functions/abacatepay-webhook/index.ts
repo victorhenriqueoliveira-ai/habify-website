@@ -185,10 +185,72 @@ serve(async (req) => {
           }
         } else if (customerData?.email && order.payment_data?.password) {
         // Novo usuário - criar tudo do zero
-        // console.log('New user purchase - creating auth user and profile');
+        console.log('New user purchase - creating auth user and profile');
         
         try {
-          // 1. Criar usuário no Supabase Auth
+          // 1. Verificar se o usuário já existe
+          const { data: existingProfile } = await supabaseService
+            .from('profiles')
+            .select('id, user_id')
+            .eq('email', customerData.email)
+            .single();
+
+          if (existingProfile) {
+            // Usuário já existe, apenas adicionar plano e créditos
+            console.log('User already exists, adding plan and credits:', existingProfile.id);
+
+            // Atualizar order com o profile_id existente
+            await supabaseService
+              .from('orders')
+              .update({ user_id: existingProfile.id })
+              .eq('id', order.id);
+
+            // Buscar plano para pegar credits_granted
+            const { data: planData } = await supabaseService
+              .from('plans')
+              .select('credits_granted')
+              .eq('id', order.plan_id)
+              .single();
+
+            // Adicionar plano
+            const { error: planError } = await supabaseService.rpc('add_user_plan', {
+              _user_id: existingProfile.id,
+              _plan_id: order.plan_id,
+              _order_id: order.id
+            });
+
+            if (planError) {
+              console.error('Failed to add plan:', planError);
+            } else {
+              console.log(`Added plan to existing user ${existingProfile.id}`);
+            }
+
+            // Adicionar créditos
+            if (planData?.credits_granted && planData.credits_granted > 0) {
+              const { error: creditsError } = await supabaseService.rpc('add_credits', {
+                _user_id: existingProfile.id,
+                _amount: planData.credits_granted,
+                _type: 'purchase',
+                _description: `Compra do plano via AbacatePay`,
+                _order_id: order.id
+              });
+
+              if (creditsError) {
+                console.error('Failed to add credits:', creditsError);
+              } else {
+                console.log(`Added ${planData.credits_granted} credits to existing user ${existingProfile.id}`);
+              }
+            }
+
+            // Enviar emails
+            await supabaseService.functions.invoke('send-payment-confirmation', {
+              body: { orderId: order.id }
+            });
+
+            return; // Sair da função
+          }
+
+          // Usuário não existe, criar novo
           const password = order.payment_data?.password;
           if (!password) {
             console.error('Password not found in payment_data');
@@ -214,7 +276,7 @@ serve(async (req) => {
             throw authError;
           }
 
-          // console.log('Auth user created:', authData.user?.id);
+          console.log('Auth user created:', authData.user?.id);
 
           // 2. Criar perfil ativo
           const { data: newProfile, error: profileError } = await supabaseService
