@@ -443,7 +443,6 @@ serve(async (req) => {
           console.error('❌ Missing email or password in order data');
         }
       }
-    }
 
     return new Response(
       JSON.stringify({ 
