@@ -15,16 +15,35 @@ import { ErrorMessages } from '@/lib/errorMessages';
  */
 export const usePostPaymentFlow = () => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasProcessed, setHasProcessed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { verifyPayment } = usePayment();
 
   useEffect(() => {
+    // ✅ GUARD: Prevenir re-execução infinita
+    if (hasProcessed) {
+      console.log('⚠️ Payment already processed, skipping');
+      return;
+    }
+
+    // Limite de tentativas
+    if (retryCount >= 3) {
+      console.error('❌ Max retry attempts reached');
+      toast.error(ErrorMessages.PAYMENT_VERIFICATION_ERROR);
+      setIsProcessing(false);
+      return;
+    }
+
     const handlePaymentVerification = async () => {
       // Apenas processar na página de sucesso
       if (!window.location.pathname.includes('payment-success')) {
         return;
       }
+
+      // Marcar como processando
+      setHasProcessed(true);
 
       // 🔥 PRIORIDADE: Buscar orderId primeiro (mais confiável)
       const orderId = localStorage.getItem('orderId');
@@ -54,11 +73,25 @@ export const usePostPaymentFlow = () => {
 
       setIsProcessing(true);
 
+      // ✅ Timeout de 30 segundos
+      const timeoutId = setTimeout(() => {
+        if (isProcessing) {
+          console.error('⏱️ Timeout ao verificar pagamento');
+          setIsProcessing(false);
+          setHasProcessed(false); // Permitir retry
+          setRetryCount(prev => prev + 1);
+          toast.error('Tempo esgotado ao verificar pagamento. Tente novamente.');
+        }
+      }, 30000);
+
       try {
-        console.log('Verificando pagamento:', { orderId, paymentId, idToVerify });
+        console.log('🔍 Verificando pagamento:', { orderId, paymentId, idToVerify, attempt: retryCount + 1 });
         
         // Verificar status do pagamento
         const result = await verifyPayment(idToVerify);
+
+        // Limpar timeout se sucesso
+        clearTimeout(timeoutId);
 
         if (!result.success) {
           throw new Error(result.error || ErrorMessages.PAYMENT_VERIFICATION_ERROR);
@@ -120,15 +153,20 @@ export const usePostPaymentFlow = () => {
         }
 
       } catch (error) {
-        console.error('Erro ao verificar pagamento:', error);
+        console.error('❌ Erro ao verificar pagamento:', error);
+        clearTimeout(timeoutId);
         toast.error(error instanceof Error ? error.message : ErrorMessages.PAYMENT_VERIFICATION_ERROR);
+        
+        // Permitir retry em caso de erro
+        setHasProcessed(false);
+        setRetryCount(prev => prev + 1);
       } finally {
         setIsProcessing(false);
       }
     };
 
     handlePaymentVerification();
-  }, [searchParams, verifyPayment, navigate]);
+  }, []); // ✅ Dependências vazias - executa apenas uma vez
 
   return {
     isProcessing

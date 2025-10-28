@@ -13,8 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    // console.log('AbacatePay webhook called - Method:', req.method);
-    // console.log('AbacatePay webhook headers:', Object.fromEntries(req.headers.entries()));
+    console.log('🔔 AbacatePay webhook received:', {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      headers: {
+        hasAuth: !!req.headers.get('authorization'),
+        hasSecret: !!req.headers.get('x-webhook-secret')
+      }
+    });
     
     // Validate webhook secret from query params or headers
     const url = new URL(req.url);
@@ -36,13 +42,18 @@ serve(async (req) => {
     // console.log('Webhook secret validated successfully');
     
     const webhookData = await req.json();
-    // console.log('AbacatePay webhook received:', JSON.stringify(webhookData, null, 2));
-
+    
     // Extract bill ID and status from webhook - try multiple formats
     let billId = webhookData.data?.billing?.id || webhookData.data?.id || webhookData.id || webhookData.bill?.id;
     const paymentStatus = webhookData.data?.billing?.status || webhookData.data?.status || webhookData.status || webhookData.bill?.status;
     
-    // console.log('Processing webhook for bill:', billId, 'status:', paymentStatus);
+    console.log('📦 Processing webhook:', {
+      billId,
+      status: paymentStatus,
+      email: webhookData.data?.customer?.email || webhookData.customer?.email,
+      hasData: !!webhookData.data,
+      dataKeys: Object.keys(webhookData.data || {})
+    });
 
     if (!billId) {
       console.error('No bill ID found in webhook data. Full webhook:', JSON.stringify(webhookData, null, 2));
@@ -77,6 +88,12 @@ serve(async (req) => {
       .select('payment_data')
       .eq('abacatepay_id', billId)
       .single();
+      
+    console.log('📋 Current order found:', {
+      hasOrder: !!currentOrder,
+      hasPaymentData: !!currentOrder?.payment_data,
+      hasCustomerData: !!currentOrder?.payment_data?.customerData
+    });
 
     // Update order in database
     const { data: order, error: updateError } = await supabaseService
@@ -122,11 +139,22 @@ serve(async (req) => {
       order_id: order.id
     });
 
-    // console.log('Order updated successfully via webhook:', order);
+    console.log('✅ Order updated via webhook:', {
+      orderId: order.id,
+      status: order.status,
+      isPaid,
+      hasUserId: !!order.user_id
+    });
 
     // If payment is completed, create user and profile
     if (isPaid && order) {
       const customerData = order.payment_data?.customerData;
+      console.log('💰 Payment completed, processing user creation:', {
+        hasCustomerData: !!customerData,
+        email: customerData?.email,
+        isLoggedInPurchase: !!order.payment_data?.isLoggedInPurchase,
+        hasUserId: !!order.user_id
+      });
       
         // Se for compra de usuário já logado, adicionar créditos
         if (order.payment_data?.isLoggedInPurchase && order.user_id) {
@@ -200,72 +228,126 @@ serve(async (req) => {
         console.log('New user purchase - creating auth user and profile');
         
         try {
-          // 1. Verificar se o usuário já existe
-          const { data: existingProfile } = await supabaseService
-            .from('profiles')
-            .select('id, user_id')
-            .eq('email', customerData.email)
-            .single();
+          // ✅ AÇÃO 2: Verificar se auth user já existe ANTES de criar
+          console.log('🔍 Checking if user already exists:', customerData.email);
+          
+          const { data: existingAuthUsers } = await supabaseService.auth.admin.listUsers();
+          const existingAuthUser = existingAuthUsers?.users.find(u => u.email === customerData.email);
+          
+          if (existingAuthUser) {
+            console.log('👤 Auth user already exists:', existingAuthUser.id);
+            
+            // Buscar ou criar profile
+            const { data: existingProfile, error: profileFindError } = await supabaseService
+              .from('profiles')
+              .select('id, auth_user_id, user_id')
+              .eq('email', customerData.email)
+              .maybeSingle();
 
-          if (existingProfile) {
-            // Usuário já existe, apenas adicionar plano e créditos
-            console.log('User already exists, adding plan and credits:', existingProfile.id);
-
-            // Atualizar order com o profile_id existente
-            await supabaseService
-              .from('orders')
-              .update({ user_id: existingProfile.id })
-              .eq('id', order.id);
-
-            // Buscar plano para pegar credits_granted
-            const { data: planData } = await supabaseService
-              .from('plans')
-              .select('credits_granted')
-              .eq('id', order.plan_id)
-              .single();
-
-            // Adicionar plano
-            const { error: planError } = await supabaseService.rpc('add_user_plan', {
-              _user_id: existingProfile.id,
-              _plan_id: order.plan_id,
-              _order_id: order.id
-            });
-
-            if (planError) {
-              console.error('Failed to add plan:', planError);
-            } else {
-              console.log(`Added plan to existing user ${existingProfile.id}`);
-            }
-
-            // Adicionar créditos
-            if (planData?.credits_granted && planData.credits_granted > 0) {
-              const { error: creditsError } = await supabaseService.rpc('add_credits', {
-                _user_id: existingProfile.id,
-                _amount: planData.credits_granted,
-                _type: 'purchase',
-                _description: `Compra do plano via AbacatePay`,
-                _order_id: order.id
-              });
-
-              if (creditsError) {
-                console.error('Failed to add credits:', creditsError);
-              } else {
-                console.log(`Added ${planData.credits_granted} credits to existing user ${existingProfile.id}`);
+            if (existingProfile) {
+              console.log('📝 Profile already exists:', existingProfile.id);
+              
+              // Atualizar profile com auth_user_id se estiver faltando
+              if (!existingProfile.auth_user_id) {
+                console.log('🔗 Linking profile to auth user');
+                await supabaseService
+                  .from('profiles')
+                  .update({ 
+                    auth_user_id: existingAuthUser.id,
+                    user_id: existingAuthUser.id 
+                  })
+                  .eq('id', existingProfile.id);
               }
             }
 
-            // Enviar emails
-            await supabaseService.functions.invoke('send-payment-confirmation', {
-              body: { orderId: order.id }
-            });
+              // Atualizar order com o profile_id existente
+              console.log('🔗 Linking order to existing profile');
+              await supabaseService
+                .from('orders')
+                .update({ user_id: existingProfile.id })
+                .eq('id', order.id);
 
-            return; // Sair da função
+              // Buscar plano para pegar credits_granted
+              const { data: planData } = await supabaseService
+                .from('plans')
+                .select('credits_granted')
+                .eq('id', order.plan_id)
+                .single();
+
+              // Adicionar plano
+              const { error: planError } = await supabaseService.rpc('add_user_plan', {
+                _user_id: existingProfile.id,
+                _plan_id: order.plan_id,
+                _order_id: order.id
+              });
+
+              if (planError) {
+                console.error('❌ Failed to add plan:', planError);
+                await supabaseService.from('payment_logs').insert({
+                  gateway: 'ABACATEPAY',
+                  error_message: `Failed to add plan: ${planError.message}`,
+                  order_id: order.id
+                });
+              } else {
+                console.log(`✅ Added plan to existing user ${existingProfile.id}`);
+              }
+
+              // Adicionar créditos
+              if (planData?.credits_granted && planData.credits_granted > 0) {
+                const { error: creditsError } = await supabaseService.rpc('add_credits', {
+                  _user_id: existingProfile.id,
+                  _amount: planData.credits_granted,
+                  _type: 'purchase',
+                  _description: `Compra do plano via AbacatePay`,
+                  _order_id: order.id
+                });
+
+                if (creditsError) {
+                  console.error('❌ Failed to add credits:', creditsError);
+                  await supabaseService.from('payment_logs').insert({
+                    gateway: 'ABACATEPAY',
+                    error_message: `Failed to add credits: ${creditsError.message}`,
+                    order_id: order.id
+                  });
+                } else {
+                  console.log(`✅ Added ${planData.credits_granted} credits to existing user ${existingProfile.id}`);
+                }
+              }
+
+              // Enviar emails
+              await supabaseService.functions.invoke('send-payment-confirmation', {
+                body: { orderId: order.id }
+              });
+              
+              await supabaseService.functions.invoke('send-admin-notification', {
+                body: {
+                  type: 'new_payment',
+                  title: 'Pagamento para usuário existente',
+                  message: `Pagamento via AbacatePay para: ${customerData.email}`,
+                  orderId: order.id,
+                  gateway: 'ABACATEPAY',
+                  amount: order.amount
+                }
+              });
+
+              console.log('✅ Existing user flow completed');
+              return; // Sair da função
+            }
           }
 
-          // Usuário não existe, criar novo
+          // ✅ Usuário não existe, criar novo
+          console.log('👤 Creating new auth user:', customerData.email);
+          
           const password = order.payment_data?.password;
           if (!password) {
-            console.error('Password not found in payment_data');
+            const errorMsg = 'Password not found in payment_data';
+            console.error('❌', errorMsg);
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: errorMsg,
+              order_id: order.id,
+              request_body: { hasPassword: false, email: customerData.email }
+            });
             throw new Error('Senha não encontrada nos dados do pedido');
           }
 
@@ -276,6 +358,7 @@ serve(async (req) => {
             user_metadata: {
               name: customerData.name,
               phone: customerData.phone || null,
+              cpf: customerData.cpf || null,
               payment_confirmed: true,
               payment_gateway: 'ABACATEPAY',
               activated_via_webhook: true,
@@ -284,34 +367,89 @@ serve(async (req) => {
           });
 
           if (authError) {
-            console.error('Failed to create auth user:', authError);
+            console.error('❌ Failed to create auth user:', {
+              error: authError,
+              email: customerData.email,
+              orderId: order.id
+            });
+            
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: `Auth creation failed: ${authError.message}`,
+              order_id: order.id,
+              request_body: { email: customerData.email, errorCode: authError.code }
+            });
+            
             throw authError;
           }
+          
+          // ✅ Validar que user foi criado
+          if (!authData.user || !authData.user.id) {
+            const errorMsg = 'User ID not returned from auth creation';
+            console.error('❌', errorMsg);
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: errorMsg,
+              order_id: order.id
+            });
+            throw new Error(errorMsg);
+          }
 
-          console.log('Auth user created:', authData.user?.id);
+          console.log('✅ Auth user created:', authData.user.id);
 
-          // 2. Criar perfil ativo
+          // 2. ✅ Criar perfil ativo com validação
+          console.log('📝 Creating profile for:', authData.user.id);
+          
           const { data: newProfile, error: profileError } = await supabaseService
             .from('profiles')
             .insert({
-              auth_user_id: authData.user.id,
-              user_id: authData.user.id,
+              auth_user_id: authData.user.id,  // ✅ ID do auth.users
+              user_id: authData.user.id,       // ✅ Compatibilidade
               name: customerData.name,
               email: customerData.email,
               phone: customerData.phone?.replace(/\D/g, '') || null,
               cpf: customerData.cpf?.replace(/\D/g, '') || null,
               role: 'user',
-              is_active: true
+              is_active: true,
+              credits: 0  // ✅ Inicializar com 0
             })
             .select()
             .single();
 
           if (profileError) {
-            console.error('Failed to create profile:', profileError);
+            console.error('❌ Failed to create profile:', {
+              error: profileError,
+              authUserId: authData.user.id,
+              email: customerData.email
+            });
+            
+            // ✅ ROLLBACK: Deletar auth user se profile falhou
+            console.log('🔄 Rolling back auth user creation');
+            await supabaseService.auth.admin.deleteUser(authData.user.id);
+            
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              error_message: `Profile creation failed: ${profileError.message}`,
+              order_id: order.id,
+              request_body: { authUserId: authData.user.id, email: customerData.email }
+            });
+            
             throw profileError;
           }
+          
+          // ✅ Validar que profile tem ID
+          if (!newProfile || !newProfile.id) {
+            const errorMsg = 'Profile ID not returned';
+            console.error('❌', errorMsg);
+            await supabaseService.auth.admin.deleteUser(authData.user.id);
+            throw new Error(errorMsg);
+          }
 
-          // console.log('Profile created:', newProfile.id);
+          console.log('✅ Profile created:', {
+            profileId: newProfile.id,
+            authUserId: authData.user.id,
+            email: newProfile.email
+          });
 
           // 3. Atualizar order com o profile_id
           const { error: orderUpdateError } = await supabaseService

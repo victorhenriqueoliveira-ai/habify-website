@@ -16,6 +16,20 @@ const PaymentSuccess = () => {
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'confirmed' | 'pending' | 'error'>('processing');
 
   useEffect(() => {
+    // 🎯 TELEMETRIA: Log de entrada
+    console.log('🎯 PaymentSuccess mounted:', {
+      pathname: window.location.pathname,
+      search: window.location.search,
+      searchParams: Object.fromEntries(searchParams.entries()),
+      localStorage: {
+        orderId: localStorage.getItem('orderId'),
+        paymentId: localStorage.getItem('paymentId'),
+        gateway: localStorage.getItem('gateway'),
+        transactionData: !!localStorage.getItem('transactionData')
+      },
+      timestamp: new Date().toISOString()
+    });
+
     // Atualizar créditos quando a página carregar
     fetchCredits();
   }, []);
@@ -50,15 +64,24 @@ const PaymentSuccess = () => {
     const paymentIdFromUrl = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
     const paymentIdFromStorage = localStorage.getItem('paymentId');
     
+    console.log('🔍 Checking payment IDs:', {
+      orderId,
+      paymentIdFromUrl,
+      paymentIdFromStorage,
+      hasAnyId: !!(orderId || paymentIdFromUrl || paymentIdFromStorage)
+    });
+    
     // Salvar paymentId se veio na URL
     if (paymentIdFromUrl) {
       localStorage.setItem('paymentId', paymentIdFromUrl);
+      console.log('💾 Saved paymentId from URL:', paymentIdFromUrl);
     }
     
     // Se não tiver NENHUM ID, marcar como erro
     if (!orderId && !paymentIdFromUrl && !paymentIdFromStorage) {
-      console.error('Nenhum ID encontrado para verificar pagamento');
+      console.error('❌ Nenhum ID encontrado para verificar pagamento');
       setPaymentStatus('error');
+      return;
     }
 
     // Check if we have verified payment data
@@ -66,6 +89,11 @@ const PaymentSuccess = () => {
     if (verifiedData) {
       try {
         const data = JSON.parse(verifiedData);
+        console.log('✅ Transaction data found:', {
+          status: data.status,
+          hasUserId: !!data.user_id,
+          orderId: data.id
+        });
         setTransactionData(data);
         // Se temos dados de transação e o status é "paid", o pagamento foi confirmado
         if (data.status === 'paid') {
@@ -74,14 +102,26 @@ const PaymentSuccess = () => {
           setPaymentStatus('pending');
         }
       } catch (error) {
-        console.error('Error parsing transaction data:', error);
+        console.error('❌ Error parsing transaction data:', error);
         setPaymentStatus('error');
       }
     } else if (orderId || paymentIdFromUrl || paymentIdFromStorage) {
       // Tem ID mas não tem dados de transação = ainda processando
+      console.log('⏳ Payment ID found but no transaction data - processing');
       setPaymentStatus('processing');
     }
   }, [searchParams]);
+
+  // TELEMETRIA: Log de mudanças de status
+  useEffect(() => {
+    console.log('📊 Payment status changed:', {
+      status: paymentStatus,
+      isProcessing,
+      hasTransactionData: !!transactionData,
+      transactionId: transactionData?.id,
+      timestamp: new Date().toISOString()
+    });
+  }, [paymentStatus, isProcessing, transactionData]);
 
   const handleGoToDashboard = () => {
     navigate('/admin/my-projects');

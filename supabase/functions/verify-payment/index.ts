@@ -61,11 +61,16 @@ serve(async (req) => {
     const order = orders[0];
 
     const isPaid = order.status === 'paid';
-    // console.log('Order status check:', { isPaid, status: order.status });
+    console.log('📦 Order status check:', { 
+      orderId: order.id, 
+      isPaid, 
+      status: order.status,
+      hasUserId: !!order.user_id 
+    });
 
-    // ✅ SECURITY: Webhook já criou o usuário, apenas verificar se está ativo
-    if (isPaid && order && order.user_id) {
-      // console.log('Payment confirmed, verifying user is active:', order.user_id);
+    // ✅ VALIDAÇÃO ADICIONAL: Verificar se profile existe e tem auth_user_id
+    if (isPaid && order.user_id) {
+      console.log('🔍 Payment confirmed, verifying user profile:', order.user_id);
       
       // Get profile data
       const { data: profile, error: profileError } = await supabaseService
@@ -75,14 +80,78 @@ serve(async (req) => {
         .maybeSingle();
 
       if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
-      } else if (!profile) {
-        console.error('Perfil não encontrado para pedido:', order.id);
-      } else if (!profile.is_active) {
-        console.error('ALERTA: Perfil existe mas não está ativo:', profile.id);
-      } else {
-        // console.log('Perfil ativo e pronto:', profile.id);
+        console.error('❌ Erro ao buscar perfil:', profileError);
+        throw new Error('Erro ao verificar perfil do usuário');
       }
+      
+      if (!profile) {
+        console.error('🚨 CRITICAL: Order paid but profile not found:', order.id);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            isPaid: false,
+            error: 'Usuário não encontrado. Contate o suporte com o ID: ' + order.id,
+            order
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+      
+      if (!profile.auth_user_id) {
+        console.error('🚨 CRITICAL: Profile without auth_user_id:', profile.id);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            isPaid: false,
+            error: 'Conta não ativada completamente. Contate o suporte com o ID: ' + profile.id,
+            order
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+      
+      if (!profile.is_active) {
+        console.error('⚠️ Profile exists but not active:', profile.id);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            isPaid: false,
+            error: 'Conta desativada. Contate o suporte.',
+            order
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      }
+      
+      console.log('✅ Profile validated:', { 
+        profileId: profile.id, 
+        authUserId: profile.auth_user_id,
+        isActive: profile.is_active 
+      });
+    } else if (isPaid && !order.user_id) {
+      // Pedido pago mas sem user_id = problema crítico
+      console.error('🚨 CRITICAL: Order paid but no user_id:', order.id);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          isPaid: false,
+          error: 'Pagamento confirmado mas usuário não criado. Contate o suporte urgente com o ID: ' + order.id,
+          order
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
     }
 
     return new Response(
