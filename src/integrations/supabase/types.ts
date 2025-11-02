@@ -797,6 +797,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       user_plans_detailed: {
@@ -875,11 +899,19 @@ export type Database = {
       }
       get_current_user_role: {
         Args: never
-        Returns: Database["public"]["Enums"]["user_role"]
+        Returns: Database["public"]["Enums"]["app_role"]
       }
       get_database_stats: { Args: never; Returns: Json }
       get_system_metrics: { Args: never; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin_or_dev: { Args: never; Returns: boolean }
+      is_admin_or_dev_v2: { Args: { _user_id: string }; Returns: boolean }
       link_user_transaction: {
         Args: { user_email: string }
         Returns: undefined
@@ -894,6 +926,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "dev" | "user" | "corretor"
       notification_type: "info" | "success" | "warning" | "error"
       plan_type:
         | "website_only"
@@ -1036,6 +1069,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "dev", "user", "corretor"],
       notification_type: ["info", "success", "warning", "error"],
       plan_type: [
         "website_only",
