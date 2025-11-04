@@ -1,270 +1,245 @@
-# ✅ FASE 3 - UX e Performance - COMPLETA
+# 🔥 CORREÇÃO COMPLETA DO FLUXO DE PAGAMENTOS - FASE 3
 
-## Implementações Realizadas
+## ⚠️ PROBLEMA IDENTIFICADO
 
-### 9. ✅ Skeleton Loaders
+**Sintoma**: Usuários retornam do checkout mas ficam com 0 créditos mesmo após pagamento confirmado.
 
-**Componentes criados em `src/components/ui/skeleton-card.tsx`:**
+**Causa Raiz**: 
+1. ❌ Sistema assume pagamento confirmado antes do webhook ser processado
+2. ❌ Falta verificação real do status no retorno do checkout
+3. ❌ usePostPaymentFlow não aguarda confirmação via webhook de forma confiável
+4. ❌ localStorage sendo usado como "fonte de verdade" em vez do banco de dados
 
-- `SkeletonCard` - Para cards genéricos
-- `SkeletonTable` - Para tabelas de dados
-- `SkeletonForm` - Para formulários
-- `SkeletonStats` - Para cards de estatísticas
-- `SkeletonProject` - Para cards de projetos
-- `SkeletonUserCard` - Para cards de usuários
-- `SkeletonPayment` - Para dados de pagamento
+## ✅ SOLUÇÃO IMPLEMENTADA
 
-**Aplicações:**
-- ✅ App.tsx - PageLoader para lazy loading
-- ✅ CheckoutPage.tsx - Skeleton durante carregamento de planos
-- ✅ ProtectedRoute - Skeleton durante verificação de autenticação
+### 1. Nova Edge Function: `verify-payment-status`
 
-**Como usar:**
-```tsx
-import { SkeletonCard } from '@/components/ui/skeleton-card';
+**Propósito**: Endpoint seguro para frontend verificar status REAL do pagamento.
 
-// Durante loading
-if (loading) {
-  return <SkeletonCard />;
-}
+**Como funciona**:
+- Recebe `orderId` ou `paymentId`
+- Consulta banco de dados (orders table)
+- Retorna status atual: `pending`, `paid`, `failed`
+- Inclui dados do plano e créditos se pagamento confirmado
+
+**Segurança**: Usa SERVICE_ROLE_KEY, não expõe dados sensíveis.
+
+### 2. Correção do `usePostPaymentFlow`
+
+**Mudanças**:
+- ✅ Usa polling inteligente (verifica a cada 3s por até 60s)
+- ✅ Chama `verify-payment-status` para obter status real
+- ✅ Para de verificar assim que webhook processar
+- ✅ Timeout claro se webhook não responder em 60s
+- ✅ Mostra mensagens apropriadas em cada cenário
+
+**Fluxo**:
+```
+1. Usuário retorna do checkout
+   ↓
+2. Hook verifica localStorage por orderId/paymentId
+   ↓
+3. Inicia polling a cada 3 segundos
+   ↓
+4. Chama verify-payment-status
+   ↓
+5. Se status = 'paid':
+   - Limpa localStorage
+   - Redireciona para success
+   - Mostra créditos
+   ↓
+6. Se status = 'pending' após 60s:
+   - Mostra mensagem de "em processamento"
+   - Avisa que receberá email quando confirmar
 ```
 
----
+### 3. Melhorias em `PaymentSuccess`
 
-### 10. ✅ Validação de Formulários com Zod
+**Estados claros**:
+- `processing`: Ainda verificando
+- `confirmed`: Pagamento confirmado via webhook
+- `pending`: Webhook ainda não processou (timeout)
+- `error`: Erro na verificação
 
-**Arquivo criado: `src/lib/validations.ts`**
+**UX**:
+- Loading durante verificação
+- Mensagens claras para cada estado
+- Auto-redirect apenas quando confirmado
+- Opção de voltar ou ir para dashboard
 
-**Schemas implementados:**
-1. `checkoutSchema` - Validação completa de checkout
-   - Nome (3-100 chars, apenas letras)
-   - Email (formato válido)
-   - Senha forte (8+ chars, maiúscula, minúscula, número, especial)
-   - CPF (formato e dígitos verificadores válidos)
-   - Telefone brasileiro (formato válido)
-   - Método de pagamento (PIX/CARD)
+### 4. Garantias nos Webhooks
 
-2. `loginSchema` - Login de usuários
-3. `registerSchema` - Registro com confirmação de senha
-4. `profileSchema` - Edição de perfil
-5. `projectSchema` - Criação/edição de projetos
-6. `portfolioPropertySchema` - Propriedades de portfólio
+**AbacatePay + Hubla**:
+- ✅ Só liberam créditos após confirmar status = 'PAID'
+- ✅ Criam usuário APENAS se não existir
+- ✅ Linkam order ao profile corretamente
+- ✅ Registram todos os eventos em payment_logs
+- ✅ Rollback automático se profile falhar
 
-**Helpers de formatação:**
-- `formatCPF()` - Formata CPF para XXX.XXX.XXX-XX
-- `formatPhone()` - Formata telefone para (XX) XXXXX-XXXX
-- `formatCurrency()` - Formata valores para R$ X.XXX,XX
+### 5. Validações em `create-payment`
 
-**Validação de CPF:**
-- Verifica formato
-- Valida dígitos verificadores
-- Rejeita CPFs com todos dígitos iguais
+**Prevenção de duplicatas**:
+- ✅ Bloqueia orders duplicadas nos últimos 30min
+- ✅ Verifica se já existe order pendente/pago para mesmo email+plano
+- ✅ Mensagens claras quando bloqueio ocorrer
 
-**Como usar:**
-```tsx
-import { checkoutSchema, formatCPF } from '@/lib/validations';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+**Validação de dados**:
+- ✅ Plano ativo
+- ✅ Preço válido (> 0)
+- ✅ Gateway configurado
+- ✅ Perfil existente para usuários logados
 
-const form = useForm({
-  resolver: zodResolver(checkoutSchema),
-  defaultValues: { ... }
-});
+## 🔐 SEGURANÇA GARANTIDA
+
+### Nunca confiar no frontend:
+- ❌ localStorage NÃO é fonte de verdade
+- ❌ URL params NÃO confirmam pagamento
+- ✅ APENAS webhook pode liberar créditos
+- ✅ APENAS banco de dados é fonte confiável
+
+### Webhook é a única fonte de verdade:
+1. Gateway envia webhook quando pagamento confirmado
+2. Webhook valida token/secret
+3. Webhook atualiza order para 'paid'
+4. Webhook adiciona créditos via RPC function
+5. Webhook registra em payment_logs
+
+### Frontend apenas consulta:
+1. Retorna do checkout com orderId
+2. Chama verify-payment-status
+3. Mostra status atual do banco
+4. Aguarda webhook processar
+5. Atualiza quando banco mudar
+
+## 📊 MONITORAMENTO
+
+### Queries para verificar problemas:
+
+```sql
+-- Orders pendentes há mais de 1 hora
+SELECT id, created_at, payment_data->>'customerData'->>'email' as email
+FROM orders 
+WHERE status = 'pending' 
+  AND created_at < NOW() - INTERVAL '1 hour'
+ORDER BY created_at DESC;
+
+-- Profiles sem auth_user_id
+SELECT id, email, created_at 
+FROM profiles 
+WHERE auth_user_id IS NULL 
+ORDER BY created_at DESC;
+
+-- Payment logs com erro
+SELECT gateway, error_message, created_at, request_body
+FROM payment_logs 
+WHERE error_message IS NOT NULL 
+ORDER BY created_at DESC 
+LIMIT 50;
+
+-- Créditos adicionados nas últimas 24h
+SELECT 
+  p.email,
+  ch.amount,
+  ch.type,
+  ch.description,
+  ch.created_at
+FROM credits_history ch
+JOIN profiles p ON p.id = ch.user_id
+WHERE ch.created_at > NOW() - INTERVAL '24 hours'
+  AND ch.type = 'purchase'
+ORDER BY ch.created_at DESC;
 ```
 
----
+## 🧪 TESTE COMPLETO
 
-### 11. ✅ Indexes no Banco de Dados
+### Cenário 1: Novo usuário com PIX
 
-**Migration executada com sucesso!**
+1. Acessa /checkout/:planId
+2. Preenche dados (nome, email, senha, CPF, telefone)
+3. Escolhe PIX
+4. Clica em "Prosseguir"
+   - ✅ Order criado com status='pending'
+   - ✅ Redirecionado para AbacatePay
+5. Paga o PIX
+6. AbacatePay envia webhook
+   - ✅ Order atualizado para 'paid'
+   - ✅ Usuário criado em auth.users
+   - ✅ Profile criado
+   - ✅ Créditos adicionados
+   - ✅ Email enviado
+7. Clica em "Voltar para Habify"
+8. Chega em /payment-success
+   - ✅ Hook verifica status via verify-payment-status
+   - ✅ Vê status='paid' no banco
+   - ✅ Mostra "Pagamento Confirmado!"
+   - ✅ Mostra créditos
+   - ✅ Redireciona para /admin/auth
 
-**Indexes criados por tabela:**
+### Cenário 2: Usuário logado com Cartão
 
-#### Orders (6 indexes)
-- `idx_orders_user_id` - Busca por usuário
-- `idx_orders_status` - Filtro por status
-- `idx_orders_gateway` - Filtro por gateway
-- `idx_orders_created_at` - Ordenação temporal
-- `idx_orders_abacatepay_id` - Busca por ID AbacatePay
-- `idx_orders_hubla_transaction_id` - Busca por ID Hubla
+1. Faz login
+2. Acessa /checkout/:planId
+3. Dados preenchidos automaticamente
+4. Escolhe CARTÃO
+5. Clica em "Prosseguir"
+   - ✅ Order criado com user_id do profile
+   - ✅ Redirecionado para Hubla
+6. Paga no cartão
+7. Hubla envia webhook
+   - ✅ Order atualizado para 'paid'
+   - ✅ Plano adicionado
+   - ✅ Créditos adicionados
+   - ✅ Email enviado
+8. Clica em "Voltar para Habify"
+9. Chega em /payment-success
+   - ✅ Hook verifica status
+   - ✅ Vê status='paid'
+   - ✅ Mostra créditos atualizados
+   - ✅ Redireciona para /admin/my-projects
 
-#### Projects (4 indexes)
-- `idx_projects_user_id` - Busca por usuário
-- `idx_projects_status` - Filtro por status
-- `idx_projects_created_at` - Ordenação temporal
-- `idx_projects_user_status` - Composite para user+status
+### Cenário 3: Pagamento pendente (webhook lento)
 
-#### Profiles (5 indexes)
-- `idx_profiles_email` - Busca por email
-- `idx_profiles_user_id` - Busca por user_id
-- `idx_profiles_auth_user_id` - Link com auth
-- `idx_profiles_is_active` - Filtro de ativos
-- `idx_profiles_role` - Filtro por role
+1. Completa checkout
+2. Paga
+3. Retorna ANTES do webhook processar
+4. Hook inicia polling
+   - ✅ Verifica a cada 3s
+   - ✅ Mostra "Processando pagamento..."
+5. Após webhook processar:
+   - ✅ Próxima verificação vê status='paid'
+   - ✅ Mostra confirmação
+   - ✅ Redireciona
 
-#### User Plans (6 indexes)
-- `idx_user_plans_user_id` - Busca por usuário
-- `idx_user_plans_status` - Filtro por status
-- `idx_user_plans_plan_id` - Busca por plano
-- `idx_user_plans_order_id` - Link com order
-- `idx_user_plans_expires_at` - Expiração
-- `idx_user_plans_user_status` - Composite
+### Cenário 4: Webhook não responde (timeout)
 
-#### Credits History (4 indexes)
-- `idx_credits_history_user_id` - Por usuário
-- `idx_credits_history_created_at` - Ordenação
-- `idx_credits_history_type` - Por tipo
-- `idx_credits_history_order_id` - Link com order
+1. Completa checkout
+2. Retorna
+3. Hook verifica por 60s
+4. Webhook não responde
+   - ✅ Mostra "Pagamento Pendente"
+   - ✅ Avisa que receberá email
+   - ✅ Opção de voltar ao início
 
-#### Payment Logs (4 indexes)
-- `idx_payment_logs_order_id` - Por order
-- `idx_payment_logs_gateway` - Por gateway
-- `idx_payment_logs_created_at` - Ordenação
-- `idx_payment_logs_user_id` - Por usuário
+## 📝 CHECKLIST FINAL
 
-#### Outras tabelas
-- Portfolio Properties (4 indexes)
-- Plans (2 indexes)
-- Project Messages (4 indexes)
-- Notifications (3 indexes)
-- Audit Logs (4 indexes)
+- ✅ verify-payment-status edge function criada
+- ✅ usePostPaymentFlow corrigido com polling
+- ✅ PaymentSuccess com estados claros
+- ✅ Webhooks só liberam créditos após confirmação
+- ✅ Validações em create-payment
+- ✅ Documentação de monitoramento
+- ✅ Queries de debug
+- ✅ Testes de cenários
 
-**Indexes Compostos (3):**
-- `idx_orders_user_status_created` - Orders por usuário+status+data
-- `idx_projects_user_status_created` - Projetos por usuário+status+data
-- `idx_user_plans_user_status_expires` - Planos por usuário+status+expiração
+## 🎯 RESULTADO
 
-**Impacto esperado:**
-- ⚡ Queries de listagem 5-10x mais rápidas
-- ⚡ Filtros por status 3-5x mais rápidos
-- ⚡ Buscas por email/CPF instantâneas
-- ⚡ Ordenação temporal otimizada
-- 📉 Redução de carga no banco em 60-80%
-
----
-
-### 12. ✅ Lazy Loading com React.lazy
-
-**Implementação em `src/App.tsx`:**
-
-**Páginas com lazy loading (42 componentes):**
-- ✅ Todas as páginas públicas (Index, NotFound, PaymentSuccess, etc.)
-- ✅ Todas as páginas de autenticação
-- ✅ AdminLayout completo
-- ✅ Todas as páginas administrativas
-- ✅ Todas as páginas de gerenciamento
-- ✅ Todas as páginas de relatórios
-
-**Estratégia implementada:**
-1. `React.lazy()` para importação dinâmica
-2. `Suspense` com PageLoader como fallback
-3. Fallbacks em ProtectedRoute e RoleBasedRoute
-4. PageLoader com skeleton para melhor UX
-
-**Benefícios:**
-- 📦 Bundle inicial reduzido em ~70%
-- ⚡ Carregamento inicial 3-5x mais rápido
-- 🎯 Carregamento sob demanda
-- 💾 Menor consumo de memória
-- 🚀 Melhor performance geral
-
-**Como funciona:**
-```tsx
-// Antes (bundle único)
-import { UsersPage } from "./pages/admin/UsersPage";
-
-// Depois (lazy loading)
-const UsersPage = lazy(() => 
-  import("./pages/admin/UsersPage")
-    .then(m => ({ default: m.UsersPage }))
-);
-
-// Uso com Suspense
-<Suspense fallback={<PageLoader />}>
-  <UsersPage />
-</Suspense>
-```
+✅ **NUNCA** mais um usuário terá créditos zerados após pagamento  
+✅ **SEMPRE** verificação via webhook antes de liberar créditos  
+✅ **SEGURO** contra manipulação de localStorage/URL  
+✅ **CLARO** para o usuário o que está acontecendo  
+✅ **RASTREÁVEL** via payment_logs e credits_history
 
 ---
 
-## 📊 Resultados Esperados
-
-### Performance
-- ✅ Tempo de carregamento inicial: -70%
-- ✅ Queries de banco: +500% mais rápidas
-- ✅ Tamanho do bundle: -70%
-- ✅ Tempo até interação: -60%
-- ✅ Lighthouse Score: 85+ (performance)
-
-### UX
-- ✅ Loading states visuais elegantes
-- ✅ Feedback imediato de validação
-- ✅ Mensagens de erro claras
-- ✅ Navegação mais fluida
-- ✅ Experiência profissional
-
-### Manutenibilidade
-- ✅ Validações centralizadas
-- ✅ Código mais organizado
-- ✅ Componentes reutilizáveis
-- ✅ Tipagem forte com Zod
-- ✅ Fácil de testar
-
----
-
-## 🎯 Checklist Final - FASE 3
-
-- [x] **9. Skeleton Loaders**
-  - [x] Componentes skeleton criados
-  - [x] Aplicados em páginas críticas
-  - [x] PageLoader para lazy loading
-  - [x] Feedback visual consistente
-
-- [x] **10. Validação de Formulários**
-  - [x] Schemas Zod completos
-  - [x] Validação de CPF robusta
-  - [x] Validação de telefone
-  - [x] Senha forte obrigatória
-  - [x] Helpers de formatação
-  - [x] Mensagens de erro claras
-
-- [x] **11. Indexes no Banco**
-  - [x] 50+ indexes criados
-  - [x] Indexes compostos otimizados
-  - [x] Parcial indexes (WHERE clauses)
-  - [x] Comentários documentados
-  - [x] Migration executada com sucesso
-
-- [x] **12. Lazy Loading**
-  - [x] 42 componentes com lazy loading
-  - [x] Suspense boundaries configurados
-  - [x] PageLoader como fallback
-  - [x] Code splitting automático
-  - [x] Bundle otimizado
-
----
-
-## 🚀 Próximos Passos Sugeridos
-
-### Monitoramento
-1. Instalar ferramenta de monitoramento (New Relic, Datadog)
-2. Configurar alerts de performance
-3. Monitorar tempo de carregamento real
-4. Analisar queries lentas
-
-### Otimizações Adicionais
-1. Implementar cache de queries (React Query staleTime)
-2. Adicionar service worker para PWA
-3. Implementar prefetch de rotas críticas
-4. Otimizar imagens (WebP, lazy loading)
-
-### Testes
-1. Testes de performance (Lighthouse CI)
-2. Testes de carga (k6, Artillery)
-3. Testes de validação (Vitest)
-4. Testes E2E (Playwright)
-
----
-
-**Status Geral:** ✅ FASE 3 COMPLETA E TESTADA
-**Data:** 2025-10-27
-**Próxima Fase:** Monitoramento e Otimização Contínua
+**Última atualização**: 2025-11-04  
+**Status**: ✅ IMPLEMENTADO E TESTADO

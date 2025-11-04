@@ -1,174 +1,200 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePayment } from './usePayment';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ErrorMessages } from '@/lib/errorMessages';
 
-/**
- * Hook simplificado para gerenciar o fluxo pós-pagamento
- * 
- * SEGURANÇA:
- * - Apenas verifica se o pagamento foi confirmado via webhook
- * - Não tenta criar usuários (isso é feito pelo webhook)
- * - Remove dependência de polling constante
- * - Apenas autentica usuários já criados
- */
 export const usePostPaymentFlow = () => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [hasProcessed, setHasProcessed] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { verifyPayment } = usePayment();
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [hasProcessed, setHasProcessed] = useState(false);
+  const pollingIntervalRef = useRef<number | null>(null);
+  const attemptCountRef = useRef(0);
+  const maxAttempts = 20; // 20 tentativas = 60 segundos (3s cada)
 
   useEffect(() => {
-    // ✅ GUARD: Prevenir re-execução infinita
+    // Prevenir execução múltipla
     if (hasProcessed) {
-      console.log('⚠️ Payment already processed, skipping');
+      console.log('✅ Already processed, skipping');
       return;
     }
 
-    // Limite de tentativas
-    if (retryCount >= 3) {
-      console.error('❌ Max retry attempts reached');
-      toast.error(ErrorMessages.PAYMENT_VERIFICATION_ERROR);
+    // Obter orderId ou paymentId
+    const orderId = localStorage.getItem('orderId');
+    const paymentId = searchParams.get('abacate_pay_id') || 
+                      searchParams.get('payment_id') || 
+                      localStorage.getItem('paymentId');
+
+    console.log('🔍 Payment flow started:', {
+      orderId,
+      paymentId,
+      hasAnyId: !!(orderId || paymentId),
+      searchParams: Object.fromEntries(searchParams.entries())
+    });
+
+    // Se não tiver ID algum, não tem o que verificar
+    if (!orderId && !paymentId) {
+      console.log('⚠️ No payment ID found - skipping verification');
       setIsProcessing(false);
       return;
     }
 
-    const handlePaymentVerification = async () => {
-      // Apenas processar na página de sucesso
-      if (!window.location.pathname.includes('payment-success')) {
-        return;
-      }
-
-      // Marcar como processando
-      setHasProcessed(true);
-
-      // 🔥 PRIORIDADE: Buscar orderId primeiro (mais confiável)
-      const orderId = localStorage.getItem('orderId');
-      
-      // Fallback: IDs do gateway (podem não vir na URL de retorno)
-      const paymentId = searchParams.get('abacate_pay_id') || 
-                       searchParams.get('payment_id') ||
-                       searchParams.get('transaction_id') ||
-                       localStorage.getItem('paymentId');
-
-      // Precisa de pelo menos um ID para verificar
-      const idToVerify = orderId || paymentId;
-      
-      if (!idToVerify) {
-        console.error('Nenhum ID de pagamento encontrado', {
-          orderId,
-          paymentId,
-          searchParams: Object.fromEntries(searchParams.entries()),
-          localStorage: {
-            orderId: localStorage.getItem('orderId'),
-            paymentId: localStorage.getItem('paymentId')
-          }
-        });
-        toast.error(ErrorMessages.PAYMENT_ID_MISSING);
-        return;
-      }
-
-      setIsProcessing(true);
-
-      // ✅ Timeout de 30 segundos
-      const timeoutId = setTimeout(() => {
-        if (isProcessing) {
-          console.error('⏱️ Timeout ao verificar pagamento');
-          setIsProcessing(false);
-          setHasProcessed(false); // Permitir retry
-          setRetryCount(prev => prev + 1);
-          toast.error('Tempo esgotado ao verificar pagamento. Tente novamente.');
-        }
-      }, 30000);
-
+    // Função para verificar status do pagamento
+    const verifyPaymentStatus = async () => {
       try {
-        console.log('🔍 Verificando pagamento:', { orderId, paymentId, idToVerify, attempt: retryCount + 1 });
-        
-        // Verificar status do pagamento
-        const result = await verifyPayment(idToVerify);
+        attemptCountRef.current += 1;
+        console.log(`🔄 Verification attempt ${attemptCountRef.current}/${maxAttempts}`);
 
-        // Limpar timeout se sucesso
-        clearTimeout(timeoutId);
+        const { data, error } = await supabase.functions.invoke('verify-payment-status', {
+          body: { orderId, paymentId }
+        });
 
-        if (!result.success) {
-          throw new Error(result.error || ErrorMessages.PAYMENT_VERIFICATION_ERROR);
+        if (error) {
+          console.error('❌ Error verifying payment:', error);
+          
+          // Se excedeu tentativas, parar
+          if (attemptCountRef.current >= maxAttempts) {
+            console.log('⏱️ Max attempts reached - showing pending state');
+            stopPolling();
+            setIsProcessing(false);
+            setHasProcessed(true);
+            toast.warning('Seu pagamento está sendo processado. Você receberá um email quando for confirmado.');
+            return;
+          }
+          return; // Continuar tentando
         }
 
-        if (!result.isPaid) {
-          // Pagamento ainda pendente
-          toast.info(ErrorMessages.INFO_PAYMENT_PROCESSING);
-          setIsProcessing(false);
+        if (!data?.success) {
+          console.log('⚠️ Payment verification failed:', data?.error);
+          
+          if (attemptCountRef.current >= maxAttempts) {
+            stopPolling();
+            setIsProcessing(false);
+            setHasProcessed(true);
+            toast.error('Não foi possível verificar o pagamento. Entre em contato com o suporte.');
+          }
           return;
         }
 
-        // ✅ Pagamento confirmado!
-        // console.log('Pagamento confirmado pelo webhook');
+        const orderData = data.order;
+        console.log('📦 Order status:', {
+          id: orderData.id,
+          status: orderData.status,
+          gateway: orderData.gateway,
+          credits: orderData.credits
+        });
 
-        // Limpar dados temporários
-        localStorage.removeItem('orderId');
-        localStorage.removeItem('paymentId');
-        localStorage.removeItem('gateway');
-        localStorage.removeItem('checkoutData');
-        localStorage.removeItem('orderData');
-        localStorage.removeItem('selectedPlanId');
-        localStorage.removeItem('habify_order');
-        localStorage.removeItem('abacatePayId');
-        localStorage.removeItem('paymentVerified');
-
-        // Salvar dados da transação para exibição
-        if (result.order) {
-          localStorage.setItem('transactionData', JSON.stringify(result.order));
+        // Se pagamento confirmado
+        if (orderData.status === 'paid') {
+          console.log('✅ Payment confirmed!');
+          
+          // Parar polling
+          stopPolling();
+          
+          // Salvar dados da transação
+          localStorage.setItem('transactionData', JSON.stringify({
+            id: orderData.id,
+            status: orderData.status,
+            amount: orderData.amount,
+            plan: orderData.plan,
+            payment_data: {
+              isLoggedInPurchase: orderData.isLoggedInPurchase,
+              customerData: {
+                email: orderData.customerEmail
+              }
+            },
+            user_id: orderData.isLoggedInPurchase ? 'existing' : null
+          }));
+          
+          // Limpar IDs de tracking
+          localStorage.removeItem('orderId');
+          localStorage.removeItem('paymentId');
+          localStorage.removeItem('gateway');
+          localStorage.removeItem('checkoutData');
+          
+          setIsProcessing(false);
+          setHasProcessed(true);
+          
+          // Dar tempo para UI processar os dados
+          setTimeout(() => {
+            // Não redirecionar aqui - deixar PaymentSuccess exibir dados
+            console.log('Payment flow completed successfully');
+          }, 500);
+          
+          return;
         }
 
-        toast.success(ErrorMessages.SUCCESS_PAYMENT_CONFIRMED);
-        
-        // Para novo usuário: ele precisará fazer login manualmente
-        // Para usuário logado: redirecionar para projetos
-        const isLoggedInPurchase = result.order?.payment_data?.isLoggedInPurchase;
-        
-        if (isLoggedInPurchase) {
-          // Usuário já estava logado, pode acessar projetos
-          setTimeout(() => {
-            navigate('/admin/my-projects', { 
-              state: { message: ErrorMessages.SUCCESS_CREDITS_ADDED }
-            });
-          }, 2000);
-        } else {
-          // Novo usuário: precisa fazer login
-          toast.info('Sua conta foi criada! Faça login para acessar.', {
-            duration: 5000
-          });
+        // Se pagamento falhou
+        if (orderData.status === 'failed') {
+          console.log('❌ Payment failed');
+          stopPolling();
+          setIsProcessing(false);
+          setHasProcessed(true);
           
-          setTimeout(() => {
-            navigate('/admin/auth', { 
-              state: { 
-                message: ErrorMessages.SUCCESS_ACCOUNT_CREATED,
-                email: result.order?.payment_data?.customerData?.email
+          toast.error('Pagamento não foi confirmado. Tente novamente.');
+          setTimeout(() => navigate('/payment-canceled'), 2000);
+          return;
+        }
+
+        // Se ainda pendente, continuar polling (a menos que tenha excedido tentativas)
+        if (orderData.status === 'pending') {
+          console.log('⏳ Payment still pending...');
+          
+          if (attemptCountRef.current >= maxAttempts) {
+            console.log('⏱️ Timeout - payment still pending');
+            stopPolling();
+            setIsProcessing(false);
+            setHasProcessed(true);
+            
+            // Salvar dados para mostrar estado pendente
+            localStorage.setItem('transactionData', JSON.stringify({
+              id: orderData.id,
+              status: 'pending',
+              payment_data: {
+                customerData: {
+                  email: orderData.customerEmail
+                }
               }
-            });
-          }, 3000);
+            }));
+            
+            toast.info('Seu pagamento está sendo processado. Você receberá um email quando for confirmado.');
+          }
         }
 
       } catch (error) {
-        console.error('❌ Erro ao verificar pagamento:', error);
-        clearTimeout(timeoutId);
-        toast.error(error instanceof Error ? error.message : ErrorMessages.PAYMENT_VERIFICATION_ERROR);
+        console.error('💥 Verification exception:', error);
         
-        // Permitir retry em caso de erro
-        setHasProcessed(false);
-        setRetryCount(prev => prev + 1);
-      } finally {
-        setIsProcessing(false);
+        if (attemptCountRef.current >= maxAttempts) {
+          stopPolling();
+          setIsProcessing(false);
+          setHasProcessed(true);
+          toast.error('Erro ao verificar pagamento. Entre em contato com o suporte.');
+        }
       }
     };
 
-    handlePaymentVerification();
-  }, []); // ✅ Dependências vazias - executa apenas uma vez
+    // Função para parar o polling
+    const stopPolling = () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        console.log('🛑 Polling stopped');
+      }
+    };
 
-  return {
-    isProcessing
-  };
+    // Iniciar primeira verificação imediatamente
+    verifyPaymentStatus();
+
+    // Iniciar polling a cada 3 segundos
+    pollingIntervalRef.current = window.setInterval(() => {
+      verifyPaymentStatus();
+    }, 3000);
+
+    // Cleanup ao desmontar
+    return () => {
+      stopPolling();
+    };
+  }, [searchParams, navigate, hasProcessed]);
+
+  return { isProcessing };
 };
