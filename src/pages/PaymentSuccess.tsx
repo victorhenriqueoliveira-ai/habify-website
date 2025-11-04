@@ -131,6 +131,27 @@ const PaymentSuccess = () => {
     navigate('/');
   };
 
+  const handleRetryCheckout = () => {
+    // Limpar dados antigos
+    localStorage.removeItem('orderId');
+    localStorage.removeItem('paymentId');
+    localStorage.removeItem('gateway');
+    localStorage.removeItem('transactionData');
+    
+    // Recuperar dados do checkout se existirem
+    const checkoutData = localStorage.getItem('checkoutData');
+    if (checkoutData) {
+      try {
+        const data = JSON.parse(checkoutData);
+        navigate(`/checkout/${data.planId}`);
+      } catch {
+        navigate('/');
+      }
+    } else {
+      navigate('/');
+    }
+  };
+
   if (isProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30">
@@ -175,6 +196,9 @@ const PaymentSuccess = () => {
               <Button variant="outline" onClick={handleGoHome} className="flex-1">
                 Voltar ao início
               </Button>
+              <Button onClick={handleRetryCheckout} className="flex-1">
+                Tentar Novamente
+              </Button>
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
@@ -212,6 +236,9 @@ const PaymentSuccess = () => {
             <div className="flex space-x-2 pt-4">
               <Button variant="outline" onClick={handleGoHome} className="flex-1">
                 Voltar ao início
+              </Button>
+              <Button onClick={handleRetryCheckout} className="flex-1">
+                Tentar Novamente
               </Button>
             </div>
 

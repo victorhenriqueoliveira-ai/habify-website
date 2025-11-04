@@ -101,6 +101,12 @@ export default function CheckoutPage() {
     }
 
     try {
+      // 🧹 Limpar localStorage de tentativas anteriores
+      localStorage.removeItem('orderId');
+      localStorage.removeItem('paymentId');
+      localStorage.removeItem('gateway');
+      localStorage.removeItem('transactionData');
+      
       const response = await createPayment(plan.id, {
         ...formData,
         cpf: cpfDigits,

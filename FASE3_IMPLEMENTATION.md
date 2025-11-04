@@ -243,3 +243,54 @@ ORDER BY ch.created_at DESC;
 
 **Última atualização**: 2025-11-04  
 **Status**: ✅ IMPLEMENTADO E TESTADO
+
+---
+
+## 📝 ATUALIZAÇÕES ADICIONAIS (2025-11-04)
+
+### 🔥 Correções Críticas do Fluxo de Pagamentos
+
+#### 1. **create-payment**: Retry Inteligente
+- ✅ Reduzido timeout de duplicatas de 30min → 15min
+- ✅ Agora **apenas bloqueia orders já PAGAS** (duplicatas reais)
+- ✅ **Permite retry** se order anterior é `pending` (usuário pode ter cancelado)
+- ✅ Mensagens de erro mais claras e específicas
+
+#### 2. **usePostPaymentFlow**: Limpeza Automática
+- ✅ Limpa localStorage quando pagamento falha
+- ✅ Timeout claro de 60 segundos (20 × 3s)
+- ✅ Mensagens específicas para cada estado
+
+#### 3. **PaymentSuccess**: Opção de Retry
+- ✅ Botão "Tentar Novamente" em erros/pendentes
+- ✅ Recupera dados do checkout para retry suave
+- ✅ Limpa localStorage antes de redirecionar
+
+#### 4. **CheckoutPage**: Prevenção de Conflitos
+- ✅ Limpa localStorage **antes** de iniciar novo pagamento
+- ✅ Evita confusão com dados de tentativas anteriores
+
+### 📊 Validações Confirmadas
+
+✅ **Sistema de Planos**: Já funcionando corretamente
+- Valida planos disponíveis
+- Chama `use_user_plan` corretamente
+- Faz rollback se falhar
+- Admin/Dev podem criar sem plano
+
+✅ **Webhooks**: Já funcionando corretamente  
+- Validam usuários existentes
+- Fazem rollback se profile falhar
+- Adicionam créditos via RPC
+- Registram logs detalhados
+
+### 🧪 Cenários Testados
+
+| Cenário | Status |
+|---------|--------|
+| Cancelar e tentar novamente | ✅ Permite retry |
+| Retornar sem pagar | ✅ Opção de retry |
+| Pagamento confirmado | ✅ Créditos liberados |
+| Duplicata real (já pago) | ✅ Bloqueado |
+
+**Referência detalhada**: Ver `PAYMENT_FLOW_FIXES.md`

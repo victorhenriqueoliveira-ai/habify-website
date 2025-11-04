@@ -162,57 +162,52 @@ serve(async (req) => {
       }
     } else {
       // Novo usuário - validar se não tem order pendente com mesmo email
-      // ✅ AÇÃO 6: Validação de duplicatas mais robusta
+      // ✅ Permitir retry se order anterior está pending há mais de 15 minutos
       console.log('🔍 Checking for duplicate orders:', customerData.email);
       
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       const { data: recentOrders } = await supabaseService
         .from('orders')
         .select('id, created_at, status, plan_id, payment_data')
-        .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+        .gte('created_at', fifteenMinutesAgo.toISOString())
         .order('created_at', { ascending: false });
 
       const duplicates = recentOrders?.filter(o => {
         const orderEmail = o.payment_data?.customerData?.email;
         const orderPlanId = o.plan_id;
         
+        // Bloquear apenas orders PAGAS ou PENDING recentes (menos de 15 min)
         return orderEmail === customerData.email && 
                orderPlanId === planId &&
-               (o.status === 'pending' || o.status === 'paid');
+               o.status === 'paid'; // Apenas bloquear se JÁ PAGO (duplicata real)
       });
 
       if (duplicates && duplicates.length > 0) {
         const lastOrder = duplicates[0];
-        const minutesAgo = Math.floor((Date.now() - new Date(lastOrder.created_at).getTime()) / 60000);
         
         const errorMessage = 
-          `Você já tem um pedido ${lastOrder.status === 'paid' ? 'confirmado' : 'pendente'} ` +
-          `criado há ${minutesAgo} minuto(s) para o mesmo plano. ` +
-          (lastOrder.status === 'pending' 
-            ? 'Complete o pagamento ou aguarde alguns minutos antes de criar outro pedido.' 
-            : 'Seu pagamento já foi confirmado. Verifique seu email ou contate o suporte.');
+          'Você já possui um pagamento confirmado para este plano. ' +
+          'Verifique seu email ou entre em contato com o suporte.';
         
-        console.error('⚠️ Duplicate order detected:', {
+        console.error('⚠️ Paid duplicate order detected:', {
           existingOrderId: lastOrder.id,
-          status: lastOrder.status,
-          minutesAgo,
           email: customerData.email
         });
         
         await supabaseService.from('payment_logs').insert({
           gateway: gateway,
-          error_message: 'Duplicate order attempt blocked',
+          error_message: 'Paid duplicate order blocked',
           request_body: { 
             email: customerData.email, 
             planId,
-            existingOrderId: lastOrder.id,
-            existingStatus: lastOrder.status
+            existingOrderId: lastOrder.id
           }
         });
         
         throw new Error(errorMessage);
       }
       
-      console.log('✅ No duplicate orders found');
+      console.log('✅ No paid duplicate orders - allowing purchase');
       
       // console.log('New user purchase - profile will be created after payment confirmation');
       profileId = null;

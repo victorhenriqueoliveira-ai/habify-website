@@ -131,7 +131,13 @@ export const usePostPaymentFlow = () => {
           setIsProcessing(false);
           setHasProcessed(true);
           
-          toast.error('Pagamento não foi confirmado. Tente novamente.');
+          // Limpar dados de pagamento
+          localStorage.removeItem('orderId');
+          localStorage.removeItem('paymentId');
+          localStorage.removeItem('gateway');
+          localStorage.removeItem('checkoutData');
+          
+          toast.error('Pagamento não foi confirmado.');
           setTimeout(() => navigate('/payment-canceled'), 2000);
           return;
         }
