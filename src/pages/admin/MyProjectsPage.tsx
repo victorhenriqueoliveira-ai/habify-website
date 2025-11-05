@@ -65,6 +65,7 @@ const propertyTypeLabels = {
 export const MyProjectsPage = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
+  const isRegularUser = hasRole(['user']);
   const { projects, loading } = useProjects();
   const { users } = useUsers();
   const { canCreateProject, activeProjectsCount } = useProjectLimits();
@@ -107,28 +108,36 @@ export const MyProjectsPage = () => {
               : 'Acompanhe o status e gerencie seus projetos'}
           </p>
         </div>
-        {canViewPlans ? (
-          canCreateProject ? (
+      <div className="flex gap-2">
+          {canViewPlans && isRegularUser ? (
+            <>
+              {/* Sempre mostrar botão "Criar Projeto" se houver planos disponíveis */}
+              {canCreateProject && (
+                <Button onClick={() => navigate('/admin/new-project')}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Projeto
+                </Button>
+              )}
+              {/* Botão secundário para adquirir mais planos */}
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/admin/new-project-purchase')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Adquirir Mais Planos
+              </Button>
+            </>
+          ) : (
             <Button onClick={() => navigate('/admin/new-project')}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Projeto
             </Button>
-          ) : (
-            <Button onClick={() => navigate('/admin/new-project-purchase')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Contratar Novo Projeto
-            </Button>
-          )
-        ) : (
-          <Button onClick={() => navigate('/admin/new-project')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Projeto
-          </Button>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Limit Alert */}
-      {canViewPlans && !canCreateProject && (
+      {/* Alert: Sem planos disponíveis */}
+      {canViewPlans && isRegularUser && !canCreateProject && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -137,9 +146,9 @@ export const MyProjectsPage = () => {
                   <span className="text-white text-xs font-bold">!</span>
                 </div>
                 <div>
-                  <h3 className="font-medium text-amber-800">Limite de Projetos Atingido</h3>
+                  <h3 className="font-medium text-amber-800">Nenhum Plano Disponível</h3>
                   <p className="text-sm text-amber-700">
-                    Você tem {activeProjectsCount} projeto(s) ativo(s). Para criar um novo, contrate um plano adicional.
+                    Você tem {activeProjectsCount} projeto(s) ativo(s). Adquira um novo plano para criar mais projetos.
                   </p>
                 </div>
               </div>
@@ -147,8 +156,27 @@ export const MyProjectsPage = () => {
                 size="sm" 
                 onClick={() => navigate('/admin/new-project-purchase')}
               >
-                Contratar Novo
+                Adquirir Plano
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info: Planos disponíveis */}
+      {canViewPlans && isRegularUser && canCreateProject && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-bold">✓</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-green-800">Você tem planos disponíveis!</h3>
+                <p className="text-sm text-green-700">
+                  Clique em "Criar Projeto" para usar um de seus planos ativos e criar uma nova landing page.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
