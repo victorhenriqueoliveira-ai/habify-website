@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { LayoutColorStep } from '@/components/wizard/LayoutColorStep';
 import { LogoStep } from '@/components/wizard/LogoStep';
 import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCredits } from '@/hooks/useCredits';
+import { useUserPlans } from '@/hooks/useUserPlans';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ import type { WizardData, LayoutType, ColorPalette, PaletteData } from '@/types/
 import type { PropertyData } from '@/hooks/useMultipleProjects';
 
 const steps = [
+  { id: 0, title: 'Selecionar Plano', description: 'Escolha o plano a usar' },
   { id: 1, title: 'Layout e Cores', description: 'Escolha o visual do seu site' },
   { id: 2, title: 'Logotipo', description: 'Upload ou criação de logo' },
   { id: 3, title: 'Imóveis', description: 'Portfólio de imóveis' },
@@ -28,10 +30,19 @@ const ProjectWizardPage = () => {
   const navigate = useNavigate();
   const { createProject } = useProjects();
   const { user } = useAuth();
-  const { credits, useCreditsForProject } = useCredits();
-  const [currentStep, setCurrentStep] = useState(1);
+  const { availablePlans, loading: plansLoading, usePlanForProject } = useUserPlans();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Redirect if no plans available
+  useEffect(() => {
+    if (!plansLoading && availablePlans.length === 0) {
+      toast.error('Você não tem planos disponíveis');
+      navigate('/admin/new-project-purchase');
+    }
+  }, [plansLoading, availablePlans, navigate]);
 
   const [wizardData, setWizardData] = useState<Partial<WizardData>>({
     hasLogo: false,
@@ -70,6 +81,13 @@ const ProjectWizardPage = () => {
 
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
+
+    if (currentStep === 0) {
+      if (!selectedPlanId) {
+        toast.error('Selecione um plano para continuar');
+        return false;
+      }
+    }
 
     if (currentStep === 1) {
       if (!wizardData.layoutChoice) {
@@ -167,7 +185,7 @@ const ProjectWizardPage = () => {
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
@@ -178,15 +196,8 @@ const ProjectWizardPage = () => {
       return;
     }
 
-    // Verificar se tem créditos antes de criar projeto
-    if (credits < 1) {
-      toast.error('Você não tem créditos suficientes para criar um site', {
-        description: 'Compre mais créditos para continuar',
-        action: {
-          label: 'Comprar Créditos',
-          onClick: () => navigate('/admin/new-project-purchase')
-        }
-      });
+    if (!selectedPlanId) {
+      toast.error('Selecione um plano antes de finalizar');
       return;
     }
 
@@ -339,11 +350,8 @@ const ProjectWizardPage = () => {
           }
         }
 
-        // Usar 1 crédito após criar o projeto com sucesso
-        const creditsUsed = await useCreditsForProject();
-        if (!creditsUsed) {
-          console.error('Failed to use credits after project creation');
-        }
+        // Use the selected plan for this project
+        await usePlanForProject(selectedPlanId, projectId);
 
         toast.success('Projeto criado com sucesso!', { id: loadingToast });
         navigate('/admin/my-projects');
@@ -359,7 +367,18 @@ const ProjectWizardPage = () => {
     }
   };
 
-  const progress = (currentStep / 4) * 100;
+  const progress = (currentStep / 5) * 100;
+
+  if (plansLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando planos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -386,7 +405,7 @@ const ProjectWizardPage = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               <div className="flex justify-between text-sm font-medium">
-                <span>Passo {currentStep} de 4</span>
+                <span>Passo {currentStep + 1} de 5</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -428,6 +447,48 @@ const ProjectWizardPage = () => {
 
         {/* Step Content */}
         <div>
+          {currentStep === 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Selecione um Plano</h2>
+                    <p className="text-muted-foreground">
+                      Escolha qual plano você deseja usar para criar este projeto
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {availablePlans.map((plan) => (
+                      <div
+                        key={plan.plan_id}
+                        onClick={() => setSelectedPlanId(plan.plan_id)}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          selectedPlanId === plan.plan_id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-lg">{plan.plan_name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">{plan.plan_description}</p>
+                            <Badge variant="secondary" className="mt-2">
+                              {plan.count} {plan.count === 1 ? 'disponível' : 'disponíveis'}
+                            </Badge>
+                          </div>
+                          {selectedPlanId === plan.plan_id && (
+                            <CheckCircle className="h-8 w-8 text-primary" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {currentStep === 1 && (
             <LayoutColorStep
               selectedLayout={wizardData.layoutChoice}

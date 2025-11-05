@@ -1,7 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MapPin, Loader2 } from 'lucide-react';
+import { useViaCep } from '@/hooks/useViaCep';
 import type { WizardData, ProfileType, CreciType } from '@/types/wizard';
 
 interface ProjectDataFormProps {
@@ -11,6 +14,22 @@ interface ProjectDataFormProps {
 }
 
 export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps) => {
+  const { searchCep, formatCep, loading: cepLoading } = useViaCep();
+
+  const handleCepSearch = async () => {
+    if (!data.addressCep) {
+      return;
+    }
+    
+    const address = await searchCep(data.addressCep);
+    if (address) {
+      onChange('addressStreet', address.logradouro || '');
+      onChange('addressNeighborhood', address.bairro || '');
+      onChange('addressCity', address.localidade || '');
+      onChange('addressState', address.uf || '');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -118,14 +137,28 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
 
           <div className="space-y-2">
             <Label htmlFor="addressCep">CEP *</Label>
-            <Input
-              id="addressCep"
-              value={data.addressCep || ''}
-              onChange={(e) => onChange('addressCep', e.target.value)}
-              placeholder="00000-000"
-              maxLength={9}
-              className={errors.addressCep ? 'border-destructive' : ''}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="addressCep"
+                value={formatCep(data.addressCep || '')}
+                onChange={(e) => onChange('addressCep', e.target.value)}
+                placeholder="00000-000"
+                maxLength={9}
+                className={errors.addressCep ? 'border-destructive' : ''}
+              />
+              <Button 
+                type="button" 
+                onClick={handleCepSearch}
+                disabled={cepLoading}
+                size="icon"
+              >
+                {cepLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MapPin className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             {errors.addressCep && (
               <p className="text-sm text-destructive">{errors.addressCep}</p>
             )}

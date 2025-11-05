@@ -37,7 +37,6 @@ const ProjectTypeSelectionPage = lazy(() => import("./pages/admin/ProjectTypeSel
 const CreateEmpreendimentoPage = lazy(() => import("./pages/admin/CreateEmpreendimentoPage"));
 const CreateCorretorPage = lazy(() => import("./pages/admin/CreateCorretorPage"));
 const ProjectWizardPage = lazy(() => import("./pages/admin/ProjectWizardPage"));
-const ProjectWizardWithPlans = lazy(() => import("./pages/admin/ProjectWizardWithPlans").then(m => ({ default: m.ProjectWizardWithPlans })));
 const ProfilePage = lazy(() => import("./pages/admin/ProfilePage").then(m => ({ default: m.ProfilePage })));
 const ReportsPage = lazy(() => import("./pages/admin/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import("./pages/admin/SettingsPage").then(m => ({ default: m.SettingsPage })));
@@ -242,7 +241,7 @@ const AppContent = () => {
               } />
               <Route path="project-wizard" element={
                 <RoleBasedRoute allowedRoles={['user', 'admin', 'dev']}>
-                  <ProjectWizardWithPlans />
+                  <ProjectWizardPage />
                 </RoleBasedRoute>
               } />
               <Route path="manage-projects" element={
