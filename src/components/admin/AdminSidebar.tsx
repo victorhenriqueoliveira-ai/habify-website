@@ -76,6 +76,12 @@ const menuItems = [
     roles: ['dev'],
   },
   {
+    title: 'Gateway de Pagamento',
+    url: '/admin/payment-settings',
+    icon: CreditCard,
+    roles: ['dev'],
+  },
+  {
     title: 'Meu Perfil',
     url: '/admin/profile',
     icon: User,

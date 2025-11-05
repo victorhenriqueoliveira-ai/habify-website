@@ -31,6 +31,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
+import { toast } from 'sonner';
 
 const statusColors = {
   pending: 'secondary',
@@ -184,15 +185,47 @@ export const ProjectDetailPage = () => {
                         src={photo} 
                         alt={`Foto ${index + 1} - ${project.title}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          console.error('Error loading image:', photo);
+                          e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EImagem não disponível%3C/text%3E%3C/svg%3E';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end p-2">
                         <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                           Foto {index + 1}
                         </span>
                       </div>
+                      {/* Dev Mode: Show full URL */}
+                      {hasRole(['dev']) && (
+                        <div className="absolute top-0 right-0 p-1">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(photo);
+                              toast.success('URL copiada!');
+                            }}
+                            className="bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Copiar URL
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+                
+                {/* Dev Mode: Show all photo URLs */}
+                {hasRole(['dev']) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Dev Info: URLs das Fotos</p>
+                    <div className="space-y-1">
+                      {project.photos.map((photo, index) => (
+                        <div key={index} className="text-xs bg-muted p-2 rounded font-mono break-all">
+                          <span className="text-muted-foreground">{index + 1}:</span> {photo}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -475,43 +508,70 @@ export const ProjectDetailPage = () => {
               </Card>
             )}
 
-            {/* Wizard Data */}
+            {/* Wizard Data - Complete Address Information */}
             {project.wizardData && Object.keys(project.wizardData).length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Dados do Wizard</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    Endereço Completo
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {Object.entries(project.wizardData).map(([key, value]) => {
-                      if (!value || key === 'hasLogo' || key === 'layoutChoice' || key === 'colorPalette') return null;
-                      
-                      const label = key
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/^./, str => str.toUpperCase())
-                        .trim();
-                      
-                      let displayValue: string;
-                      if (typeof value === 'boolean') {
-                        displayValue = value ? 'Sim' : 'Não';
-                      } else if (typeof value === 'object') {
-                        displayValue = JSON.stringify(value, null, 2);
-                      } else {
-                        displayValue = String(value);
-                      }
-                      
-                      return (
-                        <div key={key} className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">
-                            {label}
-                          </p>
-                          <p className="text-sm font-medium whitespace-pre-wrap">
-                            {displayValue}
-                          </p>
-                        </div>
-                      );
-                    })}
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {project.wizardData.cep && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">CEP</p>
+                        <p className="text-sm font-medium">{project.wizardData.cep}</p>
+                      </div>
+                    )}
+                    {project.wizardData.street && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Endereço</p>
+                        <p className="text-sm font-medium">{project.wizardData.street}</p>
+                      </div>
+                    )}
+                    {project.wizardData.number && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Número</p>
+                        <p className="text-sm font-medium">{project.wizardData.number}</p>
+                      </div>
+                    )}
+                    {project.wizardData.complement && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Complemento</p>
+                        <p className="text-sm font-medium">{project.wizardData.complement}</p>
+                      </div>
+                    )}
+                    {project.wizardData.neighborhood && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Bairro</p>
+                        <p className="text-sm font-medium">{project.wizardData.neighborhood}</p>
+                      </div>
+                    )}
+                    {project.wizardData.city && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Cidade</p>
+                        <p className="text-sm font-medium">{project.wizardData.city}</p>
+                      </div>
+                    )}
+                    {project.wizardData.state && (
+                      <div className="p-3 rounded-lg bg-muted/50 border">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Estado</p>
+                        <p className="text-sm font-medium">{project.wizardData.state}</p>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Dev Mode: Show all wizard data */}
+                  {hasRole(['dev']) && (
+                    <div className="mt-4 pt-4 border-t">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Dev Info: Dados Completos do Wizard</p>
+                      <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">
+                        {JSON.stringify(project.wizardData, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

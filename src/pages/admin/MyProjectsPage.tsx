@@ -38,6 +38,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
+import { useUserPlans } from '@/hooks/useUserPlans';
+import { ShoppingCart } from 'lucide-react';
 
 const statusColors = {
   pending: 'secondary',
@@ -70,11 +72,23 @@ export const MyProjectsPage = () => {
   const { users } = useUsers();
   const { canCreateProject, activeProjectsCount } = useProjectLimits();
   const { canViewPlans } = useCanViewPlans();
+  const { availablePlans } = useUserPlans();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   
   // Enable realtime updates
   useRealtimeProjects();
+
+  // Determine if user can create more projects
+  const canCreateMoreProjects = hasRole(['admin', 'dev']) || availablePlans.length > 0;
+
+  const handleNewProject = () => {
+    if (hasRole(['user']) && availablePlans.length > 0) {
+      navigate('/admin/project-wizard');
+    } else {
+      navigate('/admin/new-project');
+    }
+  };
 
   // Filter projects - dev/admin see all projects, users see only their own
   const userProjects = hasRole(['admin', 'dev']) 
@@ -108,36 +122,27 @@ export const MyProjectsPage = () => {
               : 'Acompanhe o status e gerencie seus projetos'}
           </p>
         </div>
-      <div className="flex gap-2">
-          {canViewPlans && isRegularUser ? (
-            <>
-              {/* Sempre mostrar botão "Criar Projeto" se houver planos disponíveis */}
-              {canCreateProject && (
-                <Button onClick={() => navigate('/admin/new-project')}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar Projeto
-                </Button>
-              )}
-              {/* Botão secundário para adquirir mais planos */}
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/admin/new-project-purchase')}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adquirir Mais Planos
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => navigate('/admin/new-project')}>
+      <div className="flex flex-col sm:flex-row gap-3">
+          {canCreateMoreProjects && (
+            <Button onClick={handleNewProject}>
               <Plus className="mr-2 h-4 w-4" />
-              Novo Projeto
+              Criar Novo Projeto
+            </Button>
+          )}
+          {isRegularUser && (
+            <Button 
+              onClick={() => navigate('/admin/new-project-purchase')}
+              variant={canCreateMoreProjects ? "outline" : "default"}
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Adquirir Mais Planos
             </Button>
           )}
         </div>
       </div>
 
       {/* Alert: Sem planos disponíveis */}
-      {canViewPlans && isRegularUser && !canCreateProject && (
+      {isRegularUser && !canCreateMoreProjects && (
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -148,7 +153,7 @@ export const MyProjectsPage = () => {
                 <div>
                   <h3 className="font-medium text-amber-800">Nenhum Plano Disponível</h3>
                   <p className="text-sm text-amber-700">
-                    Você tem {activeProjectsCount} projeto(s) ativo(s). Adquira um novo plano para criar mais projetos.
+                    Adquira um novo plano para criar projetos.
                   </p>
                 </div>
               </div>
@@ -164,7 +169,7 @@ export const MyProjectsPage = () => {
       )}
 
       {/* Info: Planos disponíveis */}
-      {canViewPlans && isRegularUser && canCreateProject && (
+      {isRegularUser && canCreateMoreProjects && availablePlans.length > 0 && (
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
@@ -172,9 +177,9 @@ export const MyProjectsPage = () => {
                 <span className="text-white text-xs font-bold">✓</span>
               </div>
               <div>
-                <h3 className="font-medium text-green-800">Você tem planos disponíveis!</h3>
+                <h3 className="font-medium text-green-800">Você tem {availablePlans.length} plano(s) disponível(is)!</h3>
                 <p className="text-sm text-green-700">
-                  Clique em "Criar Projeto" para usar um de seus planos ativos e criar uma nova landing page.
+                  Clique em "Criar Novo Projeto" para usar um de seus planos ativos e criar uma nova landing page.
                 </p>
               </div>
             </div>

@@ -13,7 +13,7 @@ interface SystemSetting {
 }
 
 export const useSystemSettings = () => {
-  const [settings, setSettings] = useState<Record<string, any>>({});
+  const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const { hasRole } = useAuth();
 
@@ -33,11 +33,7 @@ export const useSystemSettings = () => {
       if (error) throw error;
 
       if (data) {
-        const settingsMap: Record<string, any> = {};
-        data.forEach(setting => {
-          settingsMap[setting.key] = setting.value;
-        });
-        setSettings(settingsMap);
+        setSettings(data);
       }
     } catch (error) {
       // Silent error handling
@@ -62,10 +58,7 @@ export const useSystemSettings = () => {
 
       if (error) throw error;
 
-      setSettings(prev => ({
-        ...prev,
-        [key]: value
-      }));
+      await fetchSettings();
 
       return { success: true };
     } catch (error) {
@@ -74,7 +67,8 @@ export const useSystemSettings = () => {
   };
 
   const getSetting = (key: string, defaultValue: any = null) => {
-    return settings[key] || defaultValue;
+    const setting = settings.find(s => s.key === key);
+    return setting?.value || defaultValue;
   };
 
   const getEmailSettings = () => ({
