@@ -64,6 +64,21 @@ export const NewUserPage = () => {
 
       const selectedPlan = plans.find(p => p.id === formData.plan_id);
 
+      // Send welcome email
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            name: formData.full_name,
+            email: formData.email,
+            isAdmin: false,
+          },
+        });
+      } catch (emailError) {
+        console.error('Error sending welcome email:', emailError);
+        // Don't fail user creation if email fails
+      }
+
       toast({
         title: 'Usuário criado com sucesso',
         description: `${formData.full_name} foi criado com o plano ${selectedPlan?.name} e ${result.data?.credits || 0} crédito(s).`,

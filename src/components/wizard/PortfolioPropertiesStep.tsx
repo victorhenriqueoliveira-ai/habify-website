@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Upload, X } from 'lucide-react';
 import { useMultipleProjects, PropertyData } from '@/hooks/useMultipleProjects';
+import { formatCurrency } from '@/lib/validations';
 
 interface PortfolioPropertiesStepProps {
   projectType: 'corretor' | 'imobiliaria';
@@ -228,10 +229,13 @@ export const PortfolioPropertiesStep = ({
                   </Label>
                   <Input
                     id={`price-${index}`}
-                    type="number"
-                    value={property.price}
-                    onChange={(e) => updateProperty(index, 'price', e.target.value)}
-                    placeholder="Ex: 450000"
+                    type="text"
+                    value={property.price ? formatCurrency(parseFloat(property.price)) : ''}
+                    onChange={(e) => {
+                      const numbers = e.target.value.replace(/\D/g, '');
+                      updateProperty(index, 'price', numbers);
+                    }}
+                    placeholder="R$ 450.000,00"
                   />
                 </div>
               </div>

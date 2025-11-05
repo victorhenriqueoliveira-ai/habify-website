@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Loader2 } from 'lucide-react';
 import { useViaCep } from '@/hooks/useViaCep';
+import { formatPhone, formatCPF } from '@/lib/validations';
 import type { WizardData, ProfileType, CreciType } from '@/types/wizard';
 
 interface ProjectDataFormProps {
@@ -261,9 +262,10 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
               <Label htmlFor="contactPhone">Telefone</Label>
               <Input
                 id="contactPhone"
-                value={data.contactPhone || ''}
-                onChange={(e) => onChange('contactPhone', e.target.value)}
+                value={formatPhone(data.contactPhone || '')}
+                onChange={(e) => onChange('contactPhone', e.target.value.replace(/\D/g, ''))}
                 placeholder="(00) 0000-0000"
+                maxLength={15}
               />
             </div>
 
@@ -271,10 +273,11 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
               <Label htmlFor="contactMobile">Celular *</Label>
               <Input
                 id="contactMobile"
-                value={data.contactMobile || ''}
-                onChange={(e) => onChange('contactMobile', e.target.value)}
+                value={formatPhone(data.contactMobile || '')}
+                onChange={(e) => onChange('contactMobile', e.target.value.replace(/\D/g, ''))}
                 placeholder="(00) 00000-0000"
                 className={errors.contactMobile ? 'border-destructive' : ''}
+                maxLength={15}
               />
               {errors.contactMobile && (
                 <p className="text-sm text-destructive">{errors.contactMobile}</p>

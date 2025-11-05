@@ -78,6 +78,58 @@ export const useProjectMessages = (projectId?: string) => {
 
       if (error) throw error;
 
+      // Send email notification
+      try {
+        // Get project and recipient info
+        const { data: project } = await supabase
+          .from('projects')
+          .select('user_id, title, profiles:user_id(name, email)')
+          .eq('id', projectId)
+          .single();
+
+        const { data: sender } = await supabase
+          .from('profiles')
+          .select('name, role')
+          .eq('user_id', user.userId)
+          .single();
+
+        if (project && sender) {
+          const isUserOwner = project.user_id === user.userId;
+          
+          if (isUserOwner) {
+            // User sent message - notify admins
+            await supabase.functions.invoke('send-message-notification', {
+              body: {
+                recipientName: 'Equipe Habify',
+                recipientEmail: 'habifybr@gmail.com',
+                senderName: sender.name,
+                message: message.trim(),
+                projectTitle: project.title,
+                projectId: projectId,
+                isForAdmin: true,
+              },
+            });
+          } else {
+            // Admin sent message - notify project owner
+            const projectOwner = project.profiles as any;
+            await supabase.functions.invoke('send-message-notification', {
+              body: {
+                recipientName: projectOwner.name,
+                recipientEmail: projectOwner.email,
+                senderName: sender.name,
+                message: message.trim(),
+                projectTitle: project.title,
+                projectId: projectId,
+                isForAdmin: false,
+              },
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error('Error sending message notification email:', emailError);
+        // Don't fail message sending if email fails
+      }
+
       return { success: true, data };
     } catch (error) {
       return { success: false, error };

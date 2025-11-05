@@ -353,6 +353,25 @@ const ProjectWizardPage = () => {
         // Use the selected plan for this project
         await usePlanForProject(selectedPlanId, projectId);
 
+        // Send project confirmation email
+        try {
+          const selectedPlan = availablePlans.find(p => p.plan_id === selectedPlanId);
+          await supabase.functions.invoke('send-project-confirmation', {
+            body: {
+              userName: wizardData.ownerName,
+              userEmail: wizardData.contactEmail,
+              projectTitle: wizardData.companyName || 'Novo Projeto',
+              projectDescription: `Projeto ${wizardData.profileType === 'corretor' ? 'de Corretor' : 'de Imobiliária'}`,
+              projectLocation: fullAddress,
+              planName: selectedPlan?.plan_name || 'Plano',
+              projectId: projectId,
+            },
+          });
+        } catch (emailError) {
+          console.error('Error sending project confirmation email:', emailError);
+          // Don't fail the project creation if email fails
+        }
+
         toast.success('Projeto criado com sucesso!', { id: loadingToast });
         navigate('/admin/my-projects');
       } else {
