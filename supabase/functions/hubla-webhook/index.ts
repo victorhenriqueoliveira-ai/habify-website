@@ -215,397 +215,231 @@ serve(async (req) => {
       hasUserId: !!updatedOrder.user_id
     });
 
-    // If payment is completed, create user and profile
+    // ✅ FLUXO SIMPLIFICADO: Processar pagamento aprovado
     if (isPaid && updatedOrder) {
-      // ✅ Parse payment_data if it's a string
+      console.log('💰 Payment completed - starting user processing flow');
+      
+      // Parse payment_data
       let orderPaymentData = updatedOrder.payment_data;
       if (typeof orderPaymentData === 'string') {
         try {
           orderPaymentData = JSON.parse(orderPaymentData);
         } catch (e) {
-          console.error('❌ Failed to parse order payment_data:', e);
+          console.error('❌ Failed to parse payment_data:', e);
         }
       }
       
       const customerData = orderPaymentData?.customerData;
       const password = orderPaymentData?.password;
-      const isLoggedInPurchase = orderPaymentData?.isLoggedInPurchase;
       
-      console.log('💰 Payment completed, processing user creation:', {
+      console.log('📋 Order data:', {
+        orderId: updatedOrder.id,
+        hasUserId: !!updatedOrder.user_id,
         hasCustomerData: !!customerData,
         email: customerData?.email,
-        hasPassword: !!password,
-        isLoggedInPurchase: !!isLoggedInPurchase,
-        hasUserId: !!updatedOrder.user_id
+        hasPassword: !!password
       });
       
-      // ✅ Validação crítica: Verificar se temos dados necessários
+      // ✅ VALIDAÇÃO: Verificar dados obrigatórios
       if (!customerData?.email) {
-        console.error('❌ CRITICAL: No customer email found in payment_data');
+        console.error('❌ CRITICAL: No customer email in payment_data');
         await supabaseService.from('payment_logs').insert({
           gateway: 'HUBLA',
-          error_message: 'No customer email found in payment_data',
-          order_id: updatedOrder.id,
-          request_body: { payment_data: orderPaymentData }
+          error_message: 'No customer email found',
+          order_id: updatedOrder.id
         });
-        
         return new Response(JSON.stringify({ 
           success: true, 
-          warning: 'Payment recorded but user creation skipped - no email' 
+          warning: 'Payment recorded but missing email' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
         });
       }
       
-        // Se for compra de usuário já logado, adicionar créditos
-        if (isLoggedInPurchase && updatedOrder.user_id) {
-          console.log('Logged in user purchase - adding plan and credits');
-          
-          // Buscar plano para pegar credits_granted
-          const { data: planData } = await supabaseService
-            .from('plans')
-            .select('credits_granted')
-            .eq('id', updatedOrder.plan_id)
-            .single();
-
-          // Adicionar plano ao usuário
-          const { error: planError } = await supabaseService.rpc('add_user_plan', {
-            _user_id: updatedOrder.user_id,
-            _plan_id: updatedOrder.plan_id,
-            _order_id: updatedOrder.id
-          });
-
-          if (planError) {
-            console.error('Error adding user plan:', planError);
-          } else {
-            console.log('User plan added successfully');
-          }
-
-          // Adicionar créditos se o plano tiver credits_granted
-          if (planData?.credits_granted && planData.credits_granted > 0) {
-            const { error: creditsError } = await supabaseService.rpc('add_credits', {
-              _user_id: updatedOrder.user_id,
-              _amount: planData.credits_granted,
-              _type: 'purchase',
-              _description: `Compra do plano via Hubla`,
-              _order_id: updatedOrder.id
-            });
-
-            if (creditsError) {
-              console.error('Failed to add credits:', creditsError);
-            } else {
-              console.log(`Added ${planData.credits_granted} credits to user ${updatedOrder.user_id}`);
-            }
-          }
-
-          // Enviar e-mails de confirmação para usuário logado
-          const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
-            body: { orderId: updatedOrder.id }
-          });
-
-          if (emailResult.error) {
-            console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: `Email sending failed after payment: ${emailResult.error.message}`,
-              order_id: updatedOrder.id,
-              response_body: { emailError: emailResult.error }
-            });
-          }
-
-          // Notificar admin sobre novo pagamento
-          await supabaseService.functions.invoke('send-admin-notification', {
-            body: {
-              type: 'new_payment',
-              title: 'Novo pagamento confirmado (usuário logado)',
-              message: `Pagamento confirmado via Hubla para usuário existente: ${customerData.email}`,
-              orderId: updatedOrder.id,
-              gateway: 'HUBLA',
-              amount: updatedOrder.amount
-            }
-          });
-        } else if (customerData?.email) {
-        // Novo usuário - criar tudo do zero
-        console.log('🆕 New user purchase - creating auth user and profile');
+      try {
+        let profileId = updatedOrder.user_id;
         
-        try {
-          // ✅ AÇÃO 2: Verificar se auth user já existe ANTES de criar
-          console.log('🔍 Checking if user already exists:', customerData.email);
+        // ✅ ETAPA 1: Se order já tem user_id, usar esse profile
+        if (profileId) {
+          console.log('✅ Order already has user_id:', profileId);
+        } else {
+          // ✅ ETAPA 2: Buscar se já existe profile com esse email
+          console.log('🔍 Searching for existing profile:', customerData.email);
+          const { data: existingProfile } = await supabaseService
+            .from('profiles')
+            .select('id, user_id, auth_user_id')
+            .eq('email', customerData.email)
+            .maybeSingle();
           
-          const { data: existingAuthUsers } = await supabaseService.auth.admin.listUsers();
-          const existingAuthUser = existingAuthUsers?.users.find(u => u.email === customerData.email);
-          
-          if (existingAuthUser) {
-            console.log('👤 Auth user already exists:', existingAuthUser.id);
+          if (existingProfile) {
+            console.log('✅ Found existing profile:', existingProfile.id);
+            profileId = existingProfile.id;
             
-            // Buscar ou criar profile
-            const { data: existingProfile, error: profileFindError } = await supabaseService
-              .from('profiles')
-              .select('id, auth_user_id, user_id')
-              .eq('email', customerData.email)
-              .maybeSingle();
-
-            if (existingProfile) {
-              console.log('📝 Profile already exists:', existingProfile.id);
+            // Atualizar order com profile existente
+            await supabaseService
+              .from('orders')
+              .update({ user_id: profileId })
+              .eq('id', updatedOrder.id);
               
-              // Atualizar profile com auth_user_id se estiver faltando
-              if (!existingProfile.auth_user_id) {
-                console.log('🔗 Linking profile to auth user');
-                await supabaseService
-                  .from('profiles')
-                  .update({ 
-                    auth_user_id: existingAuthUser.id,
-                    user_id: existingAuthUser.id 
-                  })
-                  .eq('id', existingProfile.id);
+            console.log('✅ Order linked to existing profile');
+          } else {
+            // ✅ ETAPA 3: Verificar se existe auth user
+            console.log('🔍 Checking for existing auth user:', customerData.email);
+            const { data: authUsers } = await supabaseService.auth.admin.listUsers();
+            const existingAuthUser = authUsers?.users.find(u => u.email === customerData.email);
+            
+            let authUserId;
+            
+            if (existingAuthUser) {
+              console.log('✅ Found existing auth user:', existingAuthUser.id);
+              authUserId = existingAuthUser.id;
+            } else {
+              // ✅ ETAPA 4: Criar novo auth user
+              if (!password) {
+                throw new Error('Password required for new user');
               }
               
-              // Link order e adicionar plano/créditos
-              await supabaseService
-                .from('orders')
-                .update({ user_id: existingProfile.id })
-                .eq('id', updatedOrder.id);
-
-              const { data: planData } = await supabaseService
-                .from('plans')
-                .select('credits_granted')
-                .eq('id', updatedOrder.plan_id)
-                .single();
-
-              await supabaseService.rpc('add_user_plan', {
-                _user_id: existingProfile.id,
-                _plan_id: updatedOrder.plan_id,
-                _order_id: updatedOrder.id
-              });
-
-              if (planData?.credits_granted && planData.credits_granted > 0) {
-                await supabaseService.rpc('add_credits', {
-                  _user_id: existingProfile.id,
-                  _amount: planData.credits_granted,
-                  _type: 'purchase',
-                  _description: `Compra do plano via Hubla`,
-                  _order_id: updatedOrder.id
-                });
-              }
-
-              await supabaseService.functions.invoke('send-payment-confirmation', {
-                body: { orderId: updatedOrder.id }
-              });
-              
-              await supabaseService.functions.invoke('send-admin-notification', {
-                body: {
-                  type: 'new_payment',
-                  title: 'Pagamento para usuário existente',
-                  message: `Pagamento via Hubla para: ${customerData.email}`,
-                  orderId: updatedOrder.id,
-                  gateway: 'HUBLA',
-                  amount: updatedOrder.amount
+              console.log('👤 Creating new auth user:', customerData.email);
+              const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
+                email: customerData.email,
+                password: password,
+                email_confirm: true,
+                user_metadata: {
+                  name: customerData.name,
+                  phone: customerData.phone || null,
+                  cpf: customerData.cpf || null,
+                  created_via: 'HUBLA_WEBHOOK'
                 }
               });
-
-              console.log('✅ Existing user flow completed');
-              return;
+              
+              if (authError || !authData?.user?.id) {
+                throw new Error(`Auth user creation failed: ${authError?.message}`);
+              }
+              
+              authUserId = authData.user.id;
+              console.log('✅ Auth user created:', authUserId);
             }
-          }
-
-          // 1. ✅ Criar usuário no Supabase Auth com validação
-          console.log('👤 Creating new auth user:', customerData.email);
-          
-          if (!password) {
-            console.error('❌ CRITICAL: No password found for new user');
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: 'No password found for new user creation',
-              order_id: updatedOrder.id,
-              request_body: { email: customerData.email, hasPassword: false }
-            });
-            throw new Error('Senha não encontrada nos dados do pedido');
-          }
-
-          const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
-            email: customerData.email,
-            password: password,
-            email_confirm: true,
-            user_metadata: {
-              name: customerData.name,
-              phone: customerData.phone || null,
-              cpf: customerData.cpf || null,
-              payment_confirmed: true,
-              payment_gateway: 'HUBLA',
-              activated_via_webhook: true,
-              activated_at: new Date().toISOString()
+            
+            // ✅ ETAPA 5: Criar profile
+            console.log('📝 Creating profile for auth user:', authUserId);
+            const { data: newProfile, error: profileError } = await supabaseService
+              .from('profiles')
+              .insert({
+                auth_user_id: authUserId,
+                user_id: authUserId,
+                name: customerData.name,
+                email: customerData.email,
+                phone: customerData.phone?.replace(/\D/g, '') || null,
+                cpf: customerData.cpf?.replace(/\D/g, '') || null,
+                role: 'user',
+                is_active: true,
+                credits: 0
+              })
+              .select()
+              .single();
+            
+            if (profileError || !newProfile?.id) {
+              // Rollback: deletar auth user se profile falhou
+              if (!existingAuthUser) {
+                await supabaseService.auth.admin.deleteUser(authUserId);
+              }
+              throw new Error(`Profile creation failed: ${profileError?.message}`);
             }
-          });
-
-          if (authError) {
-            console.error('❌ Failed to create auth user:', {
-              error: authError,
-              email: customerData.email,
-              orderId: updatedOrder.id
-            });
             
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: `Auth creation failed: ${authError.message}`,
-              order_id: updatedOrder.id,
-              request_body: { email: customerData.email, errorCode: authError.code }
-            });
+            profileId = newProfile.id;
+            console.log('✅ Profile created:', profileId);
             
-            throw authError;
-          }
-          
-          // ✅ Validar que user foi criado
-          if (!authData.user || !authData.user.id) {
-            const errorMsg = 'User ID not returned from auth creation';
-            console.error('❌', errorMsg);
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: errorMsg,
-              order_id: updatedOrder.id
-            });
-            throw new Error(errorMsg);
-          }
-
-          console.log('✅ Auth user created:', authData.user.id);
-
-          // 2. ✅ Criar perfil ativo com validação
-          console.log('📝 Creating profile for:', authData.user.id);
-          
-          const { data: newProfile, error: profileError } = await supabaseService
-            .from('profiles')
-            .insert({
-              auth_user_id: authData.user.id,  // ✅ ID do auth.users
-              user_id: authData.user.id,       // ✅ Compatibilidade
-              name: customerData.name,
-              email: customerData.email,
-              phone: customerData.phone?.replace(/\D/g, '') || null,
-              cpf: customerData.cpf?.replace(/\D/g, '') || null,
-              role: 'user',
-              is_active: true,
-              credits: 0  // ✅ Inicializar com 0
-            })
-            .select()
-            .single();
-
-          if (profileError) {
-            console.error('❌ Failed to create profile:', {
-              error: profileError,
-              authUserId: authData.user.id,
-              email: customerData.email
-            });
+            // ✅ ETAPA 6: CRÍTICO - Atualizar order.user_id
+            console.log('🔗 Linking order to new profile:', profileId);
+            const { error: orderLinkError } = await supabaseService
+              .from('orders')
+              .update({ user_id: profileId })
+              .eq('id', updatedOrder.id);
             
-            // ✅ ROLLBACK: Deletar auth user se profile falhou
-            console.log('🔄 Rolling back auth user creation');
-            await supabaseService.auth.admin.deleteUser(authData.user.id);
+            if (orderLinkError) {
+              throw new Error(`Failed to link order to profile: ${orderLinkError.message}`);
+            }
             
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: `Profile creation failed: ${profileError.message}`,
-              order_id: updatedOrder.id,
-              request_body: { authUserId: authData.user.id, email: customerData.email }
-            });
-            
-            throw profileError;
+            console.log('✅ Order linked to profile successfully');
           }
-          
-          // ✅ Validar que profile tem ID
-          if (!newProfile || !newProfile.id) {
-            const errorMsg = 'Profile ID not returned';
-            console.error('❌', errorMsg);
-            await supabaseService.auth.admin.deleteUser(authData.user.id);
-            throw new Error(errorMsg);
-          }
-
-          console.log('✅ Profile created:', {
-            profileId: newProfile.id,
-            authUserId: authData.user.id,
-            email: newProfile.email
-          });
-
-          // 3. ✅ Atualizar order com o profile_id - CRÍTICO
-          console.log('🔗 Linking order to profile:', newProfile.id);
-          const { error: orderUpdateError } = await supabaseService
-            .from('orders')
-            .update({ user_id: newProfile.id })
-            .eq('id', updatedOrder.id);
-
-          if (orderUpdateError) {
-            console.error('❌ Failed to link order to profile:', orderUpdateError);
-            throw orderUpdateError;
-          }
-          
-          console.log('✅ Order linked to profile successfully');
-
-          // 4. Buscar plano para pegar credits_granted
-          const { data: planData } = await supabaseService
-            .from('plans')
-            .select('credits_granted')
-            .eq('id', updatedOrder.plan_id)
-            .single();
-
-          // 5. Adicionar plano ao usuário
-          const { error: planError } = await supabaseService.rpc('add_user_plan', {
-            _user_id: newProfile.id,
-            _plan_id: updatedOrder.plan_id,
+        }
+        
+        // ✅ ETAPA 7: Adicionar plano ao usuário
+        console.log('📦 Adding plan to user:', profileId);
+        const { data: planData } = await supabaseService
+          .from('plans')
+          .select('credits_granted')
+          .eq('id', updatedOrder.plan_id)
+          .single();
+        
+        const { error: planError } = await supabaseService.rpc('add_user_plan', {
+          _user_id: profileId,
+          _plan_id: updatedOrder.plan_id,
+          _order_id: updatedOrder.id
+        });
+        
+        if (planError) {
+          console.error('❌ Failed to add plan:', planError);
+        } else {
+          console.log('✅ Plan added successfully');
+        }
+        
+        // ✅ ETAPA 8: Adicionar créditos se o plano tiver
+        if (planData?.credits_granted && planData.credits_granted > 0) {
+          console.log(`💳 Adding ${planData.credits_granted} credits`);
+          const { error: creditsError } = await supabaseService.rpc('add_credits', {
+            _user_id: profileId,
+            _amount: planData.credits_granted,
+            _type: 'purchase',
+            _description: 'Compra via Hubla',
             _order_id: updatedOrder.id
           });
-
-          if (planError) {
-            console.error('Error adding user plan:', planError);
+          
+          if (creditsError) {
+            console.error('❌ Failed to add credits:', creditsError);
           } else {
-            console.log('User plan added successfully');
+            console.log('✅ Credits added successfully');
           }
-
-          // 6. Adicionar créditos se o plano tiver credits_granted
-          if (planData?.credits_granted && planData.credits_granted > 0) {
-            const { error: creditsError } = await supabaseService.rpc('add_credits', {
-              _user_id: newProfile.id,
-              _amount: planData.credits_granted,
-              _type: 'purchase',
-              _description: `Compra do plano via Hubla`,
-              _order_id: updatedOrder.id
-            });
-
-            if (creditsError) {
-              console.error('Failed to add credits:', creditsError);
-            } else {
-              console.log(`Added ${planData.credits_granted} credits to new user ${newProfile.id}`);
-            }
-          }
-
-          // Enviar e-mails de confirmação
-          const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
-            body: { orderId: updatedOrder.id }
-          });
-
-          if (emailResult.error) {
-            console.error('CRITICAL: Failed to send confirmation emails:', emailResult.error);
-            await supabaseService.from('payment_logs').insert({
-              gateway: 'HUBLA',
-              error_message: `Email sending failed after payment: ${emailResult.error.message}`,
-              order_id: updatedOrder.id,
-              response_body: { emailError: emailResult.error }
-            });
-          }
-
-          // Notificar admin sobre novo pagamento
-          await supabaseService.functions.invoke('send-admin-notification', {
-            body: {
-              type: 'new_payment',
-              title: 'Novo pagamento confirmado (novo usuário)',
-              message: `Novo usuário criado via Hubla: ${customerData.email}`,
-              orderId: updatedOrder.id,
-              gateway: 'HUBLA',
-              amount: updatedOrder.amount
-            }
-          });
-
-        } catch (error) {
-          console.error('Error in user creation flow:', error);
         }
-      } else {
-        console.error('Missing email or password in order data');
+        
+        // ✅ ETAPA 9: Enviar emails de confirmação
+        console.log('📧 Sending confirmation emails');
+        const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
+          body: { orderId: updatedOrder.id }
+        });
+        
+        if (emailResult.error) {
+          console.error('⚠️ Email sending failed:', emailResult.error);
+        } else {
+          console.log('✅ Confirmation emails sent');
+        }
+        
+        // ✅ ETAPA 10: Notificar admin
+        await supabaseService.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'new_payment',
+            title: 'Novo pagamento confirmado',
+            message: `Pagamento via Hubla: ${customerData.email}`,
+            orderId: updatedOrder.id,
+            gateway: 'HUBLA',
+            amount: updatedOrder.amount
+          }
+        });
+        
+        console.log('✅ ✅ ✅ COMPLETE FLOW FINISHED SUCCESSFULLY ✅ ✅ ✅');
+        
+      } catch (error) {
+        console.error('❌ Error in user processing flow:', error);
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'HUBLA',
+          error_message: error instanceof Error ? error.message : String(error),
+          order_id: updatedOrder.id,
+          request_body: { 
+            customerEmail: orderPaymentData?.customerData?.email,
+            hasPassword: !!orderPaymentData?.password
+          }
+        });
       }
     }
 
