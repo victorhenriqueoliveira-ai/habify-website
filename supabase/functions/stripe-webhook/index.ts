@@ -75,9 +75,18 @@ serve(async (req) => {
       }
 
       // Find order with matching session ID in payment_data
-      const order = orders?.find((o: any) => 
-        o.payment_data?.paymentId === sessionId
-      );
+      const order = orders?.find((o: any) => {
+        // ✅ Parse payment_data if it's a string
+        let paymentData = o.payment_data;
+        if (typeof paymentData === 'string') {
+          try {
+            paymentData = JSON.parse(paymentData);
+          } catch (e) {
+            return false;
+          }
+        }
+        return paymentData?.paymentId === sessionId;
+      });
 
       if (!order) {
         console.error('Order not found for session:', sessionId);
@@ -117,13 +126,23 @@ serve(async (req) => {
 
       // If paid, handle user registration (if not logged in purchase)
       if (paymentStatus === 'paid') {
-        const isLoggedInPurchase = order.payment_data?.isLoggedInPurchase;
+        // ✅ Parse payment_data if it's a string
+        let orderPaymentData = order.payment_data;
+        if (typeof orderPaymentData === 'string') {
+          try {
+            orderPaymentData = JSON.parse(orderPaymentData);
+          } catch (e) {
+            console.error('❌ Failed to parse order payment_data:', e);
+          }
+        }
+        
+        const isLoggedInPurchase = orderPaymentData?.isLoggedInPurchase;
         
         if (!isLoggedInPurchase) {
           // Create user in Supabase Auth
-          const customerEmail = order.payment_data?.customerData?.email || metadata?.customerEmail;
-          const customerName = order.payment_data?.customerData?.name || metadata?.customerName;
-          const customerPassword = order.payment_data?.customerData?.password || metadata?.customerPassword;
+          const customerEmail = orderPaymentData?.customerData?.email || metadata?.customerEmail;
+          const customerName = orderPaymentData?.customerData?.name || metadata?.customerName;
+          const customerPassword = orderPaymentData?.customerData?.password || metadata?.customerPassword;
 
           if (customerEmail && customerPassword) {
             // console.log('Creating auth user for:', customerEmail);

@@ -103,7 +103,17 @@ serve(async (req) => {
 
     if (orderByTransactionId) {
       order = orderByTransactionId;
-      // console.log('Found order by Hubla transaction ID:', order.id);
+      console.log('✅ Found order by Hubla transaction ID:', order.id);
+      
+      // ✅ Parse payment_data if it's a string
+      if (typeof order.payment_data === 'string') {
+        try {
+          order.payment_data = JSON.parse(order.payment_data);
+          console.log('⚠️ Converted payment_data from string to object');
+        } catch (e) {
+          console.error('❌ Failed to parse payment_data string:', e);
+        }
+      }
     } else if (customerEmail) {
       // Try to find by customer email in payment_data
       const { data: allOrders } = await supabaseService
@@ -113,12 +123,30 @@ serve(async (req) => {
         .eq('status', 'pending');
 
       if (allOrders && allOrders.length > 0) {
-        order = allOrders.find(o => 
-          o.payment_data?.customerData?.email === customerEmail
-        );
+        order = allOrders.find(o => {
+          // ✅ Parse payment_data if it's a string
+          let paymentData = o.payment_data;
+          if (typeof paymentData === 'string') {
+            try {
+              paymentData = JSON.parse(paymentData);
+            } catch (e) {
+              return false;
+            }
+          }
+          return paymentData?.customerData?.email === customerEmail;
+        });
         
         if (order) {
-          // console.log('Found order by customer email:', order.id);
+          // ✅ Ensure payment_data is parsed
+          if (typeof order.payment_data === 'string') {
+            try {
+              order.payment_data = JSON.parse(order.payment_data);
+            } catch (e) {
+              console.error('❌ Failed to parse order payment_data:', e);
+            }
+          }
+          
+          console.log('✅ Found order by customer email:', order.id);
           // Update with transaction ID for future lookups
           await supabaseService
             .from('orders')
@@ -189,16 +217,49 @@ serve(async (req) => {
 
     // If payment is completed, create user and profile
     if (isPaid && updatedOrder) {
-      const customerData = updatedOrder.payment_data?.customerData;
+      // ✅ Parse payment_data if it's a string
+      let orderPaymentData = updatedOrder.payment_data;
+      if (typeof orderPaymentData === 'string') {
+        try {
+          orderPaymentData = JSON.parse(orderPaymentData);
+        } catch (e) {
+          console.error('❌ Failed to parse order payment_data:', e);
+        }
+      }
+      
+      const customerData = orderPaymentData?.customerData;
+      const password = orderPaymentData?.password;
+      const isLoggedInPurchase = orderPaymentData?.isLoggedInPurchase;
+      
       console.log('💰 Payment completed, processing user creation:', {
         hasCustomerData: !!customerData,
         email: customerData?.email,
-        isLoggedInPurchase: !!updatedOrder.payment_data?.isLoggedInPurchase,
+        hasPassword: !!password,
+        isLoggedInPurchase: !!isLoggedInPurchase,
         hasUserId: !!updatedOrder.user_id
       });
       
+      // ✅ Validação crítica: Verificar se temos dados necessários
+      if (!customerData?.email) {
+        console.error('❌ CRITICAL: No customer email found in payment_data');
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'HUBLA',
+          error_message: 'No customer email found in payment_data',
+          order_id: updatedOrder.id,
+          request_body: { payment_data: orderPaymentData }
+        });
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          warning: 'Payment recorded but user creation skipped - no email' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+      
         // Se for compra de usuário já logado, adicionar créditos
-        if (updatedOrder.payment_data?.isLoggedInPurchase && updatedOrder.user_id) {
+        if (isLoggedInPurchase && updatedOrder.user_id) {
           console.log('Logged in user purchase - adding plan and credits');
           
           // Buscar plano para pegar credits_granted
@@ -264,7 +325,7 @@ serve(async (req) => {
               amount: updatedOrder.amount
             }
           });
-        } else if (customerData?.email && updatedOrder.payment_data?.password) {
+        } else if (customerData?.email) {
         // Novo usuário - criar tudo do zero
         console.log('🆕 New user purchase - creating auth user and profile');
         
@@ -351,15 +412,13 @@ serve(async (req) => {
           // 1. ✅ Criar usuário no Supabase Auth com validação
           console.log('👤 Creating new auth user:', customerData.email);
           
-          const password = updatedOrder.payment_data?.password;
           if (!password) {
-            const errorMsg = 'Password not found in payment_data';
-            console.error('❌', errorMsg);
+            console.error('❌ CRITICAL: No password found for new user');
             await supabaseService.from('payment_logs').insert({
               gateway: 'HUBLA',
-              error_message: errorMsg,
+              error_message: 'No password found for new user creation',
               order_id: updatedOrder.id,
-              request_body: { hasPassword: false, email: customerData.email }
+              request_body: { email: customerData.email, hasPassword: false }
             });
             throw new Error('Senha não encontrada nos dados do pedido');
           }
@@ -464,17 +523,19 @@ serve(async (req) => {
             email: newProfile.email
           });
 
-          // 3. Atualizar order com o profile_id
+          // 3. ✅ Atualizar order com o profile_id - CRÍTICO
+          console.log('🔗 Linking order to profile:', newProfile.id);
           const { error: orderUpdateError } = await supabaseService
             .from('orders')
             .update({ user_id: newProfile.id })
             .eq('id', updatedOrder.id);
 
           if (orderUpdateError) {
-            console.error('Failed to link order to profile:', orderUpdateError);
-          } else {
-            // console.log('Order linked to profile successfully');
+            console.error('❌ Failed to link order to profile:', orderUpdateError);
+            throw orderUpdateError;
           }
+          
+          console.log('✅ Order linked to profile successfully');
 
           // 4. Buscar plano para pegar credits_granted
           const { data: planData } = await supabaseService

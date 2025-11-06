@@ -88,11 +88,23 @@ serve(async (req) => {
       .select('payment_data')
       .eq('abacatepay_id', billId)
       .single();
+    
+    // ✅ CORREÇÃO: Converter payment_data de string JSON para objeto se necessário
+    let paymentData = currentOrder?.payment_data;
+    if (typeof paymentData === 'string') {
+      try {
+        paymentData = JSON.parse(paymentData);
+        console.log('⚠️ Converted payment_data from string to object');
+      } catch (e) {
+        console.error('❌ Failed to parse payment_data string:', e);
+      }
+    }
       
     console.log('📋 Current order found:', {
       hasOrder: !!currentOrder,
-      hasPaymentData: !!currentOrder?.payment_data,
-      hasCustomerData: !!currentOrder?.payment_data?.customerData
+      hasPaymentData: !!paymentData,
+      hasCustomerData: !!paymentData?.customerData,
+      customerEmail: paymentData?.customerData?.email
     });
 
     // Update order in database
@@ -103,7 +115,7 @@ serve(async (req) => {
         paid_at: isPaid ? new Date().toISOString() : null,
         payment_method: webhookData.data?.payment?.method || webhookData.data?.payment_method || webhookData.payment_method || null,
         payment_data: {
-          ...currentOrder?.payment_data, // Preserve original customerData
+          ...paymentData, // Use parsed payment_data
           webhook_data: webhookData,
           updated_via_webhook: true,
           updated_at: new Date().toISOString()
@@ -148,16 +160,49 @@ serve(async (req) => {
 
     // If payment is completed, create user and profile
     if (isPaid && order) {
-      const customerData = order.payment_data?.customerData;
+      // ✅ Parse payment_data if it's a string
+      let orderPaymentData = order.payment_data;
+      if (typeof orderPaymentData === 'string') {
+        try {
+          orderPaymentData = JSON.parse(orderPaymentData);
+        } catch (e) {
+          console.error('❌ Failed to parse order payment_data:', e);
+        }
+      }
+      
+      const customerData = orderPaymentData?.customerData;
+      const password = orderPaymentData?.password;
+      const isLoggedInPurchase = orderPaymentData?.isLoggedInPurchase;
+      
       console.log('💰 Payment completed, processing user creation:', {
         hasCustomerData: !!customerData,
         email: customerData?.email,
-        isLoggedInPurchase: !!order.payment_data?.isLoggedInPurchase,
+        hasPassword: !!password,
+        isLoggedInPurchase: !!isLoggedInPurchase,
         hasUserId: !!order.user_id
       });
       
+      // ✅ Validação crítica: Verificar se temos dados necessários
+      if (!customerData?.email) {
+        console.error('❌ CRITICAL: No customer email found in payment_data');
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          error_message: 'No customer email found in payment_data',
+          order_id: order.id,
+          request_body: { payment_data: orderPaymentData }
+        });
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          warning: 'Payment recorded but user creation skipped - no email' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+      
         // Se for compra de usuário já logado, adicionar créditos
-        if (order.payment_data?.isLoggedInPurchase && order.user_id) {
+        if (isLoggedInPurchase && order.user_id) {
           console.log('Logged in user purchase - adding plan and credits');
           
           // Buscar plano para pegar credits_granted
@@ -223,7 +268,7 @@ serve(async (req) => {
               amount: order.amount
             }
           });
-        } else if (customerData?.email && order.payment_data?.password) {
+        } else if (customerData?.email) {
           // Novo usuário - criar tudo do zero
           console.log('🆕 New user purchase - creating auth user and profile');
           
@@ -326,8 +371,14 @@ serve(async (req) => {
               // ✅ Usuário não existe, criar novo
               console.log('👤 Creating new auth user:', customerData.email);
               
-              const password = order.payment_data?.password;
               if (!password) {
+                console.error('❌ CRITICAL: No password found for new user');
+                await supabaseService.from('payment_logs').insert({
+                  gateway: 'ABACATEPAY',
+                  error_message: 'No password found for new user creation',
+                  order_id: order.id,
+                  request_body: { email: customerData.email, hasPassword: false }
+                });
                 throw new Error('Senha não encontrada nos dados do pedido');
               }
 
@@ -381,11 +432,19 @@ serve(async (req) => {
 
               console.log('✅ Profile created:', newProfile.id);
 
-              // 3. Atualizar order com o profile_id
-              await supabaseService
+              // 3. ✅ Atualizar order com o profile_id - CRÍTICO
+              console.log('🔗 Linking order to profile:', newProfile.id);
+              const { error: orderLinkError } = await supabaseService
                 .from('orders')
                 .update({ user_id: newProfile.id })
                 .eq('id', order.id);
+              
+              if (orderLinkError) {
+                console.error('❌ Failed to link order to profile:', orderLinkError);
+                throw orderLinkError;
+              }
+              
+              console.log('✅ Order linked to profile successfully');
 
               // 4. Buscar plano para pegar credits_granted
               const { data: planData } = await supabaseService
