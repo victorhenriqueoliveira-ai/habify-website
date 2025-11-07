@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-
+import Logo from '../../../public/logotipo_habify.png';
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,13 +62,13 @@ export const LoginPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+              <img src={Logo} alt="HabiFy Logo" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">HabiFy Admin</CardTitle>
+          <CardTitle className="text-2xl font-bold">HabiFy Studio</CardTitle>
           <CardDescription>
-            Faça login para acessar o painel administrativo
+            Faça login para gerenciar seus projetos 
           </CardDescription>
         </CardHeader>
         <CardContent>
