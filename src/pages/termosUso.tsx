@@ -160,6 +160,7 @@ export default function TermosDeUso(): JSX.Element {
           >
             Imprimir
           </button>
+          
         </div>
       </div>
     </main>
