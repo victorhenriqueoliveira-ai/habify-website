@@ -284,7 +284,7 @@ export const ProjectDetailPage = () => {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Finalidade</p>
-                          <p className="font-medium capitalize">{property.purpose}</p>
+                          <p className="font-medium capitalize">{property.purpose === 'sale' ? 'Venda' : 'Aluguel'}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Área</p>
@@ -313,6 +313,34 @@ export const ProjectDetailPage = () => {
                           <div>
                             <p className="text-xs text-muted-foreground">Vagas</p>
                             <p className="font-medium">{property.parkingSpaces}</p>
+                          </div>
+                        )}
+                        {property.constructionYear && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Ano de Construção</p>
+                            <p className="font-medium">{property.constructionYear}</p>
+                          </div>
+                        )}
+                        {property.floorNumber && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Andar</p>
+                            <p className="font-medium">{property.floorNumber}º</p>
+                          </div>
+                        )}
+                        {property.condominiumFee && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Condomínio</p>
+                            <p className="font-medium">
+                              R$ {property.condominiumFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        )}
+                        {property.iptu && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">IPTU</p>
+                            <p className="font-medium">
+                              R$ {property.iptu.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
                           </div>
                         )}
                       </div>
