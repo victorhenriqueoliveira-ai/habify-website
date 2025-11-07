@@ -1,7 +1,7 @@
 export type LayoutType = 'classic' | 'modern' | 'minimalist' | 'vibrant';
 export type ColorPalette = 'blue' | 'orange' | 'green' | 'purple' | 'neutral';
 export type ProfileType = 'corretor' | 'imobiliaria';
-export type CreciType = 'individual' | 'juridico';
+export type CreciType = 'Pessoa Fisica' | 'Pessoa Juridica';
 
 export interface WizardData {
   // Step 1: Layout & Colors

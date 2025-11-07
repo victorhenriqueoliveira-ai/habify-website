@@ -28,7 +28,7 @@ const testimonials: TestimonialProps[] = [{
   gradient: "from-purple-800 via-pink-700 to-red-500",
   backgroundImage: "/background-section3.png"
 }, {
-  content: "Simples demais! Mandei as fotos pelo sistema e em 3 dias estava online. Agora não preciso mais brigar por leads nos portais caros.",
+  content: "Simples demais! Mandei as fotos pelo sistema e em 3 dias úteis estava online. Agora não preciso mais brigar por leads nos portais caros.",
   author: "Ana Paula",
   role: "Imobiliária Pequena, Curitiba",
   gradient: "from-orange-600 via-red-500 to-purple-600",

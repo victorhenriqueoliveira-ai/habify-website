@@ -52,7 +52,7 @@ const DetailsSection = () => {
               border: "1px solid #ECECEC"
             }}>
               <h3 className="text-lg sm:text-xl font-display mb-6 sm:mb-8">
-                Resultados comprovados em mais de 500 projetos
+                Resultados comprovados
               </h3>
 
               <div className="space-y-4 sm:space-y-6">
@@ -64,7 +64,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Conversão:</span> 8x maior que portais tradicionais
+                      <span className="font-semibold text-base">Conversão:</span> Maiores que portais tradicionais
                     </div>
                   </div>
                 </div>
@@ -77,7 +77,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Economia:</span> R$ 1.200/mês vs portais premium
+                      <span className="font-semibold text-base">Economia:</span> Grande diferença de custos vs portais premium
                     </div>
                   </div>
                 </div>
@@ -90,7 +90,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Velocidade:</span> Leads em 15min após ir ao ar
+                      <span className="font-semibold text-base">Velocidade:</span> Leads mais rápidos que anúncios tradicionais
                     </div>
                   </div>
                 </div>
@@ -103,7 +103,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">Qualidade:</span> 85% dos leads já pré-aprovados
+                      <span className="font-semibold text-base">Qualidade:</span> Leads já pré-aprovados
                     </div>
                   </div>
                 </div>
@@ -116,7 +116,7 @@ const DetailsSection = () => {
                   </div>
                   <div className="flex-1">
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <span className="font-semibold text-base">ROI:</span> 650% de retorno médio comprovado
+                      <span className="font-semibold text-base">ROI:</span> Retorno médio comprovado
                     </div>
                   </div>
                 </div>

@@ -37,7 +37,7 @@ const Newsletter = () => {
           <h2 className="text-5xl font-display font-bold mb-4 text-left">Comece hoje mesmo</h2>
           <p className="text-xl text-gray-700 mb-10 text-left">
             Não perca mais leads para a concorrência. Sua landing page profissional 
-            pode estar pronta em 3 dias e trabalhando para você 24 horas por dia.
+            pode estar pronta em 3 dias úteis e trabalhando para você 24 horas por dia.
           </p>
           
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-start md:items-center">

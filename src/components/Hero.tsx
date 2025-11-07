@@ -111,14 +111,14 @@ const Hero = () => {
               className="section-title text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-tight opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.3s" }}
             >
-              Venda mais imóveis com um site pronto em até 3 dias!
+              Venda mais imóveis com um site pronto em até 3 dias úteis!
             </h1>
             
             <p 
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle mt-3 sm:mt-6 mb-4 sm:mb-8 leading-relaxed opacity-0 animate-fade-in text-gray-950 font-normal text-base sm:text-lg text-left"
             >
-              Não perca clientes por não estar online — crie sua presença digital agora.. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp em 72 horas.
+              Não perca clientes por não estar online — crie sua presença digital agora.. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp em 72 horas úteis.
             </p>
             
             <div 

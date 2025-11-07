@@ -33,10 +33,14 @@ class Logger {
   private isDevelopment = import.meta.env.DEV;
 
   private formatLog(entry: LogEntry): string {
-    return JSON.stringify({
-      ...entry,
-      environment: this.isDevelopment ? 'development' : 'production',
-    }, null, this.isDevelopment ? 2 : 0);
+    return JSON.stringify(
+      {
+        ...entry,
+        environment: this.isDevelopment ? 'development' : 'production',
+      },
+      null,
+      this.isDevelopment ? 2 : 0
+    );
   }
 
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error) {
@@ -57,31 +61,32 @@ class Logger {
 
     const formattedLog = this.formatLog(entry);
 
-    // Console output
-    switch (level) {
-      case LogLevel.DEBUG:
-        console.debug(formattedLog);
-        break;
-      case LogLevel.INFO:
-        console.info(formattedLog);
-        break;
-      case LogLevel.WARN:
-        console.warn(formattedLog);
-        break;
-      case LogLevel.ERROR:
-        console.error(formattedLog);
-        break;
+    // ✅ Só exibe logs no console em ambiente de desenvolvimento
+    if (this.isDevelopment) {
+      switch (level) {
+        case LogLevel.DEBUG:
+          console.debug(formattedLog);
+          break;
+        case LogLevel.INFO:
+          console.info(formattedLog);
+          break;
+        case LogLevel.WARN:
+          console.warn(formattedLog);
+          break;
+        case LogLevel.ERROR:
+          console.error(formattedLog);
+          break;
+      }
     }
 
-    // In production, you could send logs to external service here
+    // ✅ Em produção, envia apenas logs de erro para serviço externo
     if (!this.isDevelopment && level === LogLevel.ERROR) {
       this.sendToExternalService(entry);
     }
   }
 
   private async sendToExternalService(entry: LogEntry) {
-    // Placeholder for external logging service integration
-    // Examples: Sentry, LogRocket, Datadog, etc.
+    // ⚙️ Integração futura com Sentry, Datadog, LogRocket, etc.
     try {
       // await fetch('https://your-logging-service.com/api/logs', {
       //   method: 'POST',
@@ -89,10 +94,13 @@ class Logger {
       //   body: JSON.stringify(entry),
       // });
     } catch (error) {
-      console.error('Failed to send log to external service:', error);
+      if (this.isDevelopment) {
+        console.error('Failed to send log to external service:', error);
+      }
     }
   }
 
+  // Public logging methods
   debug(message: string, context?: LogContext) {
     this.log(LogLevel.DEBUG, message, context);
   }
@@ -109,24 +117,17 @@ class Logger {
     this.log(LogLevel.ERROR, message, context, error);
   }
 
-  // Convenience methods for common scenarios
+  // 🚀 Conveniências específicas
   apiError(endpoint: string, error: Error, context?: LogContext) {
-    this.error(`API Error: ${endpoint}`, {
-      ...context,
-      endpoint,
-      action: 'api_call',
-    }, error);
+    this.error(`API Error: ${endpoint}`, { ...context, endpoint, action: 'api_call' }, error);
   }
 
   userAction(action: string, context?: LogContext) {
-    this.info(`User Action: ${action}`, {
-      ...context,
-      action,
-    });
+    this.info(`User Action: ${action}`, { ...context, action });
   }
 
   performanceWarning(operation: string, duration: number, context?: LogContext) {
-    if (duration > 1000) { // More than 1 second
+    if (duration > 1000) {
       this.warn(`Slow Operation: ${operation} took ${duration}ms`, {
         ...context,
         operation,
@@ -138,20 +139,21 @@ class Logger {
 
 export const logger = new Logger();
 
-// Utility function to measure performance
+/**
+ * Utility para medir performance de funções assíncronas
+ */
 export const measurePerformance = async <T>(
   operation: string,
   fn: () => Promise<T>,
   context?: LogContext
 ): Promise<T> => {
   const startTime = performance.now();
-  
+
   try {
     const result = await fn();
     const duration = performance.now() - startTime;
-    
+
     logger.performanceWarning(operation, duration, context);
-    
     return result;
   } catch (error) {
     const duration = performance.now() - startTime;
