@@ -202,7 +202,7 @@ const PaymentSuccess = () => {
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-              Dúvidas? Entre em contato via WhatsApp: (11) 99999-9999
+              Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
             </div>
           </CardContent>
         </Card>
@@ -279,7 +279,7 @@ const PaymentSuccess = () => {
           </div>
 
           {/* Display Credits */}
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 text-center">
+          {/* <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Coins className="h-6 w-6 text-primary" />
               <h3 className="text-2xl font-bold">{credits} Crédito{credits !== 1 ? 's' : ''}</h3>
@@ -287,7 +287,7 @@ const PaymentSuccess = () => {
             <p className="text-sm text-muted-foreground">
               Você pode criar {credits} site{credits !== 1 ? 's' : ''} com seus créditos
             </p>
-          </div>
+          </div> */}
 
           {transactionData && (
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
@@ -330,7 +330,7 @@ const PaymentSuccess = () => {
               )}
               <div className="flex items-start space-x-2">
                 <span className="bg-muted text-muted-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
-                <span>Nossa equipe começará a desenvolver seu site</span>
+                <span>Criar seu primeiro site</span>
               </div>
             </div>
           </div>
@@ -345,7 +345,7 @@ const PaymentSuccess = () => {
           </div>
 
           <div className="text-xs text-muted-foreground text-center">
-            Dúvidas? Entre em contato via WhatsApp: (11) 99999-9999
+            Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
           </div>
         </CardContent>
       </Card>
