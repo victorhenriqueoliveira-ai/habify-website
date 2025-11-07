@@ -170,7 +170,6 @@ export const UsersPage = () => {
                 <TableHead>Usuário</TableHead>
                     <TableHead>Perfil</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Último Login</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -206,11 +205,6 @@ export const UsersPage = () => {
                         <Badge variant={user.isActive ? 'default' : 'secondary'}>
                           {user.isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}
-                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>

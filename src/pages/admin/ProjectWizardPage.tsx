@@ -550,7 +550,7 @@ const ProjectWizardPage = () => {
             <div className="flex justify-between">
               <Button
                 variant="outline"
-                onClick={handleBack}
+                onClick={() => navigate('/admin/my-projects')}
                 disabled={currentStep === 1 || loading}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />

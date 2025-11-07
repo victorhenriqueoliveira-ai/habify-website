@@ -15,7 +15,7 @@ export const usePostPaymentFlow = () => {
   useEffect(() => {
     // Prevenir execução múltipla
     if (hasProcessed) {
-      console.log('✅ Already processed, skipping');
+      // console.log('✅ Already processed, skipping');
       return;
     }
 
@@ -25,16 +25,16 @@ export const usePostPaymentFlow = () => {
                       searchParams.get('payment_id') || 
                       localStorage.getItem('paymentId');
 
-    console.log('🔍 Payment flow started:', {
-      orderId,
-      paymentId,
-      hasAnyId: !!(orderId || paymentId),
-      searchParams: Object.fromEntries(searchParams.entries())
-    });
+    // console.log('🔍 Payment flow started:', {
+    //   orderId,
+    //   paymentId,
+    //   hasAnyId: !!(orderId || paymentId),
+    //   searchParams: Object.fromEntries(searchParams.entries())
+    // });
 
     // Se não tiver ID algum, não tem o que verificar
     if (!orderId && !paymentId) {
-      console.log('⚠️ No payment ID found - skipping verification');
+      // console.log('⚠️ No payment ID found - skipping verification');
       setIsProcessing(false);
       return;
     }
@@ -43,7 +43,7 @@ export const usePostPaymentFlow = () => {
     const verifyPaymentStatus = async () => {
       try {
         attemptCountRef.current += 1;
-        console.log(`🔄 Verification attempt ${attemptCountRef.current}/${maxAttempts}`);
+        // console.log(`🔄 Verification attempt ${attemptCountRef.current}/${maxAttempts}`);
 
         const { data, error } = await supabase.functions.invoke('verify-payment-status', {
           body: { orderId, paymentId }
@@ -54,7 +54,7 @@ export const usePostPaymentFlow = () => {
           
           // Se excedeu tentativas, parar
           if (attemptCountRef.current >= maxAttempts) {
-            console.log('⏱️ Max attempts reached - showing pending state');
+            // console.log('⏱️ Max attempts reached - showing pending state');
             stopPolling();
             setIsProcessing(false);
             setHasProcessed(true);
@@ -65,7 +65,7 @@ export const usePostPaymentFlow = () => {
         }
 
         if (!data?.success) {
-          console.log('⚠️ Payment verification failed:', data?.error);
+          // console.log('⚠️ Payment verification failed:', data?.error);
           
           if (attemptCountRef.current >= maxAttempts) {
             stopPolling();
@@ -77,16 +77,16 @@ export const usePostPaymentFlow = () => {
         }
 
         const orderData = data.order;
-        console.log('📦 Order status:', {
-          id: orderData.id,
-          status: orderData.status,
-          gateway: orderData.gateway,
-          credits: orderData.credits
-        });
+        // console.log('📦 Order status:', {
+        //   id: orderData.id,
+        //   status: orderData.status,
+        //   gateway: orderData.gateway,
+        //   credits: orderData.credits
+        // });
 
         // Se pagamento confirmado
         if (orderData.status === 'paid') {
-          console.log('✅ Payment confirmed!');
+          // console.log('✅ Payment confirmed!');
           
           // Parar polling
           stopPolling();
@@ -118,7 +118,7 @@ export const usePostPaymentFlow = () => {
           // Dar tempo para UI processar os dados
           setTimeout(() => {
             // Não redirecionar aqui - deixar PaymentSuccess exibir dados
-            console.log('Payment flow completed successfully');
+            // console.log('Payment flow completed successfully');
           }, 500);
           
           return;
@@ -126,7 +126,7 @@ export const usePostPaymentFlow = () => {
 
         // Se pagamento falhou
         if (orderData.status === 'failed') {
-          console.log('❌ Payment failed');
+          // console.log('❌ Payment failed');
           stopPolling();
           setIsProcessing(false);
           setHasProcessed(true);
@@ -144,10 +144,10 @@ export const usePostPaymentFlow = () => {
 
         // Se ainda pendente, continuar polling (a menos que tenha excedido tentativas)
         if (orderData.status === 'pending') {
-          console.log('⏳ Payment still pending...');
+          // console.log('⏳ Payment still pending...');
           
           if (attemptCountRef.current >= maxAttempts) {
-            console.log('⏱️ Timeout - payment still pending');
+            // console.log('⏱️ Timeout - payment still pending');
             stopPolling();
             setIsProcessing(false);
             setHasProcessed(true);
@@ -184,7 +184,7 @@ export const usePostPaymentFlow = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
-        console.log('🛑 Polling stopped');
+        // console.log('🛑 Polling stopped');
       }
     };
 

@@ -68,11 +68,11 @@ export const MyProjectsPage = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const isRegularUser = hasRole(['user']);
-  const { projects, loading } = useProjects();
+  const { projects } = useProjects();
   const { users } = useUsers();
   const { canCreateProject, activeProjectsCount } = useProjectLimits();
   const { canViewPlans } = useCanViewPlans();
-  const { availablePlans } = useUserPlans();
+  const { availablePlans , loading} = useUserPlans();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
   
@@ -108,13 +108,24 @@ export const MyProjectsPage = () => {
     return user?.name || 'Cliente não encontrado';
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Carregando suas assinaturas...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between md:flex-row flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'}
+            {hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'} 
           </h1>
           <p className="text-muted-foreground">
             {hasRole(['admin', 'dev']) 
@@ -122,7 +133,7 @@ export const MyProjectsPage = () => {
               : 'Acompanhe o status e gerencie seus projetos'}
           </p>
         </div>
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col md:flex-row gap-3">
           {canCreateMoreProjects && (
             <Button onClick={handleNewProject}>
               <Plus className="mr-2 h-4 w-4" />

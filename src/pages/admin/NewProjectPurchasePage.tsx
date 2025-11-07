@@ -52,25 +52,6 @@ const NewProjectPurchasePage = () => {
           </div>
         </div>
       </div>
-
-      {/* Alert Info */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardContent className="pt-6">
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-white text-sm font-bold">!</span>
-            </div>
-            <div>
-              <h3 className="font-medium text-amber-800">Limite de Projetos Atingido</h3>
-              <p className="text-sm text-amber-700 mt-1">
-                Cada usuário pode ter apenas 1 projeto ativo por vez. Para criar um novo projeto, 
-                você precisa contratar um dos nossos planos abaixo.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Plans Grid */}
       <div className="grid md:grid-cols-3 gap-6">
         {plans.map((plan, index) => (

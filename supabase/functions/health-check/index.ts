@@ -70,7 +70,7 @@ serve(async (req) => {
       version: '1.0.0',
     };
 
-    console.log('Health check completed:', response);
+    // console.log('Health check completed:', response);
 
     return new Response(
       JSON.stringify(response),

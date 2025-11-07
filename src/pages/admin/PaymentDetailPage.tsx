@@ -116,7 +116,7 @@ export default function PaymentDetailPage() {
                   <CardDescription>ID: {order.id}</CardDescription>
                 </div>
                 <Badge className={getStatusColor(order.status)}>
-                  {order.status}
+                  {order.status === 'paid' ? 'Pago' : order.status === 'pending' ? 'Pendente' : order.status === 'failed' ? 'Falhou' : order.status === 'cancelled' ? 'Cancelado' : 'Desconhecido'}
                 </Badge>
               </div>
             </CardHeader>

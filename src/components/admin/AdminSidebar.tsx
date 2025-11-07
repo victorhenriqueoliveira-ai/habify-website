@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import Logo from '../../../public/logotipo_habify.png';
 
 const menuItems = [
   {
@@ -111,8 +112,8 @@ export const AdminSidebar = () => {
         {/* Logo */}
         <div className="p-4 border-b">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src={Logo} alt="HabiFy Logo" className="w-6 h-6" />
             </div>
             {!isCollapsed && (
               <div>

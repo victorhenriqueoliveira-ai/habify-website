@@ -90,43 +90,9 @@ export const ProfilePage = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Profile Card */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Foto do Perfil</CardTitle>
-            <CardDescription>
-              Sua imagem de perfil será exibida no sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <Avatar className="w-32 h-32">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="text-2xl">
-                {user.name.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            <Button variant="outline" size="sm">
-              <Camera className="mr-2 h-4 w-4" />
-              Alterar Foto
-            </Button>
-            <div className="text-center">
-              <Badge variant={roleColors[user.role]} className="mb-2">
-                <Shield className="mr-1 h-3 w-3" />
-                {roleLabels[user.role]}
-              </Badge>
-              <p className="text-sm text-muted-foreground">
-                Membro desde {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Último login: {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 lg:grid-cols-3 w-full">
         {/* Information Card */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle>Informações Pessoais</CardTitle>
