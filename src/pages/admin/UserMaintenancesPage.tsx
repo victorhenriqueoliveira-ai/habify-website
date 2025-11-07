@@ -3,7 +3,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMaintenances } from '@/hooks/useMaintenances';
 import { useProjects } from '@/hooks/useProjects';
 import { usePayment } from '@/hooks/usePayment';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -96,17 +95,14 @@ const UserMaintenancesPage = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Carregando manutenções...</div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Carregando manutenções...</div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Minhas Manutenções</h1>
           <p className="text-muted-foreground">
@@ -267,7 +263,6 @@ const UserMaintenancesPage = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 };
 
