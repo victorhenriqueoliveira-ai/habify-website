@@ -62,6 +62,7 @@ class Logger {
     const formattedLog = this.formatLog(entry);
 
     // ✅ Só exibe logs no console em ambiente de desenvolvimento
+    // ⚠️ NUNCA loga dados sensíveis como senhas, tokens, ou PII
     if (this.isDevelopment) {
       switch (level) {
         case LogLevel.DEBUG:

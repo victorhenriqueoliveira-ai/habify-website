@@ -145,7 +145,6 @@ serve(async (req) => {
           const customerPassword = orderPaymentData?.customerData?.password || metadata?.customerPassword;
 
           if (customerEmail && customerPassword) {
-            // console.log('Creating auth user for:', customerEmail);
 
             const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
               email: customerEmail,
@@ -157,9 +156,8 @@ serve(async (req) => {
             });
 
             if (authError) {
-              console.error('Error creating auth user:', authError);
+              console.error('Error creating auth user');
             } else {
-              // console.log('Auth user created:', authData.user.id);
 
               // Update profile with auth user ID and activate
               const { error: profileUpdateError } = await supabaseService
@@ -171,9 +169,7 @@ serve(async (req) => {
                 .eq('id', order.user_id);
 
               if (profileUpdateError) {
-                console.error('Error updating profile:', profileUpdateError);
-              } else {
-                // console.log('Profile activated for user:', authData.user.id);
+                console.error('Error updating profile');
               }
             }
           }
@@ -185,9 +181,7 @@ serve(async (req) => {
             .eq('id', order.user_id);
 
           if (profileActivateError) {
-            console.error('Error activating profile:', profileActivateError);
-          } else {
-            // console.log('Profile activated');
+            console.error('Error activating profile');
           }
         }
       }

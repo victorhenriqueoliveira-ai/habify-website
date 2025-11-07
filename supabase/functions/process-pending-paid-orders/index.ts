@@ -55,13 +55,11 @@ serve(async (req) => {
 
     for (const order of paidOrders || []) {
       try {
-        console.log(`Processing order ${order.id}`);
-        
         const customerData = order.payment_data?.customerData;
         const password = order.payment_data?.password;
 
         if (!customerData?.email) {
-          console.error(`Order ${order.id} missing email in payment_data`);
+          console.error('Order missing email in payment_data');
           results.push({ orderId: order.id, success: false, error: 'Missing email' });
           continue;
         }

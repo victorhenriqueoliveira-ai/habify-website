@@ -138,10 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('[SEND-PASSWORD-RESET] Function invoked');
-    
     const { email, redirectUrl }: ResetPasswordRequest = await req.json();
-    console.log('[SEND-PASSWORD-RESET] Email:', email);
 
     if (!email || !redirectUrl) {
       throw new Error("Email e redirectUrl são obrigatórios");
@@ -152,15 +149,13 @@ const handler = async (req: Request): Promise<Response> => {
     if (!emailRegex.test(email)) {
       throw new Error("Email inválido");
     }
-    console.log('[SEND-PASSWORD-RESET] Email válido');
 
     // Verificar se RESEND_API_KEY está configurada
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
-      console.error('[SEND-PASSWORD-RESET] RESEND_API_KEY não configurada');
+      console.error('RESEND_API_KEY não configurada');
       throw new Error('RESEND_API_KEY não está configurada');
     }
-    console.log('[SEND-PASSWORD-RESET] RESEND_API_KEY verificada');
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -169,7 +164,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Verificar se o usuário existe
-    console.log('[SEND-PASSWORD-RESET] Verificando se usuário existe...');
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("name, user_id")
@@ -177,7 +171,6 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (profileError || !profileData) {
-      console.log('[SEND-PASSWORD-RESET] Usuário não encontrado');
       // Por segurança, não informar que o usuário não existe
       return new Response(
         JSON.stringify({ 
@@ -190,10 +183,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-    console.log('[SEND-PASSWORD-RESET] Usuário encontrado:', profileData.name);
 
     // Gerar link de recuperação de senha
-    console.log('[SEND-PASSWORD-RESET] Gerando link de recuperação...');
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
@@ -214,7 +205,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Enviar email
-    console.log('[SEND-PASSWORD-RESET] Enviando email...');
     const emailResponse = await resend.emails.send({
       from: "Habify Segurança <onboarding@resend.dev>",
       to: [email],
@@ -226,8 +216,6 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('[SEND-PASSWORD-RESET] Erro ao enviar email:', emailResponse.error);
       throw new Error(`Falha ao enviar email: ${emailResponse.error.message}`);
     }
-
-    console.log('[SEND-PASSWORD-RESET] Email enviado com sucesso:', emailResponse.data?.id);
 
     return new Response(
       JSON.stringify({
