@@ -10,7 +10,8 @@ import {
   BarChart3,
   Shield,
   CreditCard,
-  Package
+  Package,
+  Wrench
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +42,12 @@ const menuItems = [
     roles: ['user'],
   },
   {
+    title: 'Manutenções',
+    url: '/admin/my-maintenances',
+    icon: Wrench,
+    roles: ['user', 'corretor'],
+  },
+  {
     title: 'Usuários',
     url: '/admin',
     icon: Users,
@@ -56,6 +63,12 @@ const menuItems = [
     title: 'Pagamentos',
     url: '/admin/payments',
     icon: CreditCard,
+    roles: ['admin', 'dev'],
+  },
+  {
+    title: 'Manutenções Admin',
+    url: '/admin/maintenances',
+    icon: Wrench,
     roles: ['admin', 'dev'],
   },
   {

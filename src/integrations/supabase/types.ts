@@ -162,6 +162,88 @@ export type Database = {
           },
         ]
       }
+      maintenances: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          completed_at: string | null
+          contracted_at: string
+          created_at: string
+          description: string | null
+          expires_at: string
+          id: string
+          payment_data: Json | null
+          payment_gateway: string | null
+          payment_id: string | null
+          project_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["maintenance_status"]
+          updated_at: string
+          user_id: string
+          user_plan_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          completed_at?: string | null
+          contracted_at?: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string
+          id?: string
+          payment_data?: Json | null
+          payment_gateway?: string | null
+          payment_id?: string | null
+          project_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          updated_at?: string
+          user_id: string
+          user_plan_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          completed_at?: string | null
+          contracted_at?: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string
+          id?: string
+          payment_data?: Json | null
+          payment_gateway?: string | null
+          payment_id?: string | null
+          project_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+          updated_at?: string
+          user_id?: string
+          user_plan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenances_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenances_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenances_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -642,6 +724,53 @@ export type Database = {
           },
         ]
       }
+      social_metrics: {
+        Row: {
+          account_id: string
+          created_at: string
+          engagement: number
+          followers: number
+          growth_since_last: number | null
+          id: string
+          platform: string
+          timestamp: string
+          user_id: string | null
+          views: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          engagement?: number
+          followers?: number
+          growth_since_last?: number | null
+          id?: string
+          platform: string
+          timestamp?: string
+          user_id?: string | null
+          views?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          engagement?: number
+          followers?: number
+          growth_since_last?: number | null
+          id?: string
+          platform?: string
+          timestamp?: string
+          user_id?: string | null
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           category: string
@@ -927,6 +1056,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "dev" | "user" | "corretor"
+      maintenance_status: "pending" | "in_progress" | "completed" | "cancelled"
       notification_type: "info" | "success" | "warning" | "error"
       plan_type:
         | "website_only"
@@ -1070,6 +1200,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "dev", "user", "corretor"],
+      maintenance_status: ["pending", "in_progress", "completed", "cancelled"],
       notification_type: ["info", "success", "warning", "error"],
       plan_type: [
         "website_only",

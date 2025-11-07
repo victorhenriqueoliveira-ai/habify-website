@@ -45,6 +45,8 @@ const LogsPage = lazy(() => import("./pages/admin/LogsPage").then(m => ({ defaul
 const NewUserPage = lazy(() => import("./pages/admin/NewUserPage").then(m => ({ default: m.NewUserPage })));
 const SubscriptionsUserPage = lazy(() => import("./pages/admin/subscriptionsUser").then(m => ({ default: m.SubscriptionsUserPage })));
 const UserSubscriptionsPage = lazy(() => import("./pages/admin/UserSubscriptionsPage").then(m => ({ default: m.UserSubscriptionsPage })));
+const MaintenancesPage = lazy(() => import("./pages/admin/MaintenancesPage"));
+const UserMaintenancesPage = lazy(() => import("./pages/admin/UserMaintenancesPage"));
 const ProjectDetailPage = lazy(() => import("./pages/admin/ProjectDetailPage").then(m => ({ default: m.ProjectDetailPage })));
 const ProjectEditPage = lazy(() => import("./pages/admin/ProjectEditPage").then(m => ({ default: m.ProjectEditPage })));
 const UserEditPage = lazy(() => import("./pages/admin/UserEditPage").then(m => ({ default: m.UserEditPage })));
@@ -199,6 +201,16 @@ const AppContent = () => {
               <Route path="users/:userId/subscriptions" element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
                   <UserSubscriptionsPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="maintenances" element={
+                <RoleBasedRoute allowedRoles={['admin', 'dev']}>
+                  <MaintenancesPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="my-maintenances" element={
+                <RoleBasedRoute allowedRoles={['user', 'corretor']}>
+                  <UserMaintenancesPage />
                 </RoleBasedRoute>
               } />
               
