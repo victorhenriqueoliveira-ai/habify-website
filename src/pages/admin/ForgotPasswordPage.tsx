@@ -157,7 +157,7 @@ export const ForgotPasswordPage = () => {
           
           <div className="flex items-center justify-center pt-4 border-t">
             <Link 
-              to="/admin/login" 
+              to="/login" 
               className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

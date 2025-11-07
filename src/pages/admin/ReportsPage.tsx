@@ -23,6 +23,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useSystemMetrics } from '@/hooks/useSystemMetrics';
+import { usePayments } from '@/hooks/usePayments';
 
 const StatCard = ({ 
   title, 
@@ -63,6 +64,7 @@ export const ReportsPage = () => {
   const { projects, loading: projectsLoading } = useProjects();
   const { users, loading: usersLoading } = useUsers();
   const { metrics, loading: metricsLoading } = useSystemMetrics();
+  const { orders, error, fetchOrders, getTotalRevenue, getOrdersByStatus } = usePayments();
   
   const loading = statsLoading || projectsLoading || usersLoading || metricsLoading;
   
@@ -75,7 +77,8 @@ export const ReportsPage = () => {
   }
   
   // Calculate metrics using real data from database functions
-  const totalRevenue = metrics?.totalRevenue || 0;
+  const totalRevenue = getTotalRevenue();
+  
   const completedProjects = metrics?.completedProjects || 0;
   const totalProjects = metrics?.totalProjects || 0;
   const activeUsers = metrics?.activeUsers || 0;
@@ -98,7 +101,7 @@ export const ReportsPage = () => {
 
   const usersByRole = [
     { role: 'Corretores', count: users.filter(u => u.role === 'user').length, color: 'bg-primary' },
-    { role: 'Admins', count: users.filter(u => u.role === 'admin').length, color: 'bg-secondary' },
+    { role: 'Admins', count: users.filter(u => u.role === 'admin').length, color: 'bg-black' },
     { role: 'Devs', count: users.filter(u => u.role === 'dev').length, color: 'bg-destructive' },
   ];
 
@@ -135,7 +138,7 @@ export const ReportsPage = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Receita Total"
-          value={totalRevenue > 0 ? `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
+          value={`R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           trend={monthlyGrowth}
           icon={DollarSign}
           description="receita acumulada"

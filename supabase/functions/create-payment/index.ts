@@ -163,7 +163,7 @@ serve(async (req) => {
     } else {
       // Novo usuário - validar se não tem order pendente com mesmo email
       // ✅ Permitir retry se order anterior está pending há mais de 15 minutos
-      console.log('🔍 Checking for duplicate orders:', customerData.email);
+      // console.log('🔍 Checking for duplicate orders:', customerData.email);
       
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       const { data: recentOrders } = await supabaseService
@@ -207,7 +207,7 @@ serve(async (req) => {
         throw new Error(errorMessage);
       }
       
-      console.log('✅ No paid duplicate orders - allowing purchase');
+      // console.log('✅ No paid duplicate orders - allowing purchase');
       
       // console.log('New user purchase - profile will be created after payment confirmation');
       profileId = null;

@@ -13,14 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔔 AbacatePay webhook received:', {
-      method: req.method,
-      timestamp: new Date().toISOString(),
-      headers: {
-        hasAuth: !!req.headers.get('authorization'),
-        hasSecret: !!req.headers.get('x-webhook-secret')
-      }
-    });
+    // console.log('🔔 AbacatePay webhook received:', {
+    //   method: req.method,
+    //   timestamp: new Date().toISOString(),
+    //   headers: {
+    //     hasAuth: !!req.headers.get('authorization'),
+    //     hasSecret: !!req.headers.get('x-webhook-secret')
+    //   }
+    // });
     
     // Validate webhook secret from query params or headers
     const url = new URL(req.url);
@@ -47,13 +47,13 @@ serve(async (req) => {
     let billId = webhookData.data?.billing?.id || webhookData.data?.id || webhookData.id || webhookData.bill?.id;
     const paymentStatus = webhookData.data?.billing?.status || webhookData.data?.status || webhookData.status || webhookData.bill?.status;
     
-    console.log('📦 Processing webhook:', {
-      billId,
-      status: paymentStatus,
-      email: webhookData.data?.customer?.email || webhookData.customer?.email,
-      hasData: !!webhookData.data,
-      dataKeys: Object.keys(webhookData.data || {})
-    });
+    // console.log('📦 Processing webhook:', {
+    //   billId,
+    //   status: paymentStatus,
+    //   email: webhookData.data?.customer?.email || webhookData.customer?.email,
+    //   hasData: !!webhookData.data,
+    //   dataKeys: Object.keys(webhookData.data || {})
+    // });
 
     if (!billId) {
       console.error('No bill ID found in webhook data. Full webhook:', JSON.stringify(webhookData, null, 2));
@@ -94,18 +94,18 @@ serve(async (req) => {
     if (typeof paymentData === 'string') {
       try {
         paymentData = JSON.parse(paymentData);
-        console.log('⚠️ Converted payment_data from string to object');
+        // console.log('⚠️ Converted payment_data from string to object');
       } catch (e) {
         console.error('❌ Failed to parse payment_data string:', e);
       }
     }
       
-    console.log('📋 Current order found:', {
-      hasOrder: !!currentOrder,
-      hasPaymentData: !!paymentData,
-      hasCustomerData: !!paymentData?.customerData,
-      customerEmail: paymentData?.customerData?.email
-    });
+    // console.log('📋 Current order found:', {
+    //   hasOrder: !!currentOrder,
+    //   hasPaymentData: !!paymentData,
+    //   hasCustomerData: !!paymentData?.customerData,
+    //   customerEmail: paymentData?.customerData?.email
+    // });
 
     // Update order in database
     const { data: order, error: updateError } = await supabaseService
@@ -151,16 +151,16 @@ serve(async (req) => {
       order_id: order.id
     });
 
-    console.log('✅ Order updated via webhook:', {
-      orderId: order.id,
-      status: order.status,
-      isPaid,
-      hasUserId: !!order.user_id
-    });
+    // console.log('✅ Order updated via webhook:', {
+    //   orderId: order.id,
+    //   status: order.status,
+    //   isPaid,
+    //   hasUserId: !!order.user_id
+    // });
 
     // ✅ FLUXO COMPLETO: Processar pagamento aprovado
     if (isPaid && order) {
-      console.log('💰 Payment completed - starting user processing flow');
+      // console.log('💰 Payment completed - starting user processing flow');
       
       // Parse payment_data
       let orderPaymentData = order.payment_data;
@@ -175,13 +175,13 @@ serve(async (req) => {
       const customerData = orderPaymentData?.customerData;
       const password = orderPaymentData?.password;
       
-      console.log('📋 Order data:', {
-        orderId: order.id,
-        hasUserId: !!order.user_id,
-        hasCustomerData: !!customerData,
-        email: customerData?.email,
-        hasPassword: !!password
-      });
+      // console.log('📋 Order data:', {
+      //   orderId: order.id,
+      //   hasUserId: !!order.user_id,
+      //   hasCustomerData: !!customerData,
+      //   email: customerData?.email,
+      //   hasPassword: !!password
+      // });
       
       // ✅ VALIDAÇÃO: Verificar dados obrigatórios
       if (!customerData?.email) {
@@ -205,7 +205,7 @@ serve(async (req) => {
         
         // ✅ ETAPA 1: Se order já tem user_id, validar que profile existe
         if (profileId) {
-          console.log('🔍 Order has user_id, validating profile:', profileId);
+          // console.log('🔍 Order has user_id, validating profile:', profileId);
           const { data: existingProfile } = await supabaseService
             .from('profiles')
             .select('id')
@@ -213,7 +213,7 @@ serve(async (req) => {
             .maybeSingle();
           
           if (existingProfile) {
-            console.log('✅ Profile validated:', profileId);
+            // console.log('✅ Profile validated:', profileId);
           } else {
             console.warn('⚠️ Order has user_id but profile not found, will search by email');
             profileId = null; // Forçar busca por email
@@ -222,7 +222,7 @@ serve(async (req) => {
         
         // ✅ ETAPA 2: Se não tem profileId válido, buscar por email
         if (!profileId) {
-          console.log('🔍 Searching for profile by email:', customerData.email);
+          // console.log('🔍 Searching for profile by email:', customerData.email);
           const { data: profileByEmail } = await supabaseService
             .from('profiles')
             .select('id, user_id, auth_user_id')
@@ -230,7 +230,7 @@ serve(async (req) => {
             .maybeSingle();
           
           if (profileByEmail) {
-            console.log('✅ Found existing profile by email:', profileByEmail.id);
+            // console.log('✅ Found existing profile by email:', profileByEmail.id);
             profileId = profileByEmail.id;
             
             // Atualizar order com profile encontrado
@@ -242,14 +242,14 @@ serve(async (req) => {
             if (linkError) {
               console.error('❌ Failed to link order:', linkError);
             } else {
-              console.log('✅ Order linked to existing profile');
+              // console.log('✅ Order linked to existing profile');
             }
           }
         }
         
         // ✅ ETAPA 3: Se ainda não tem profile, criar auth user + profile
         if (!profileId) {
-          console.log('👤 No existing profile, creating new user');
+          // console.log('👤 No existing profile, creating new user');
           
           // Verificar se já existe auth user
           const { data: authUsers } = await supabaseService.auth.admin.listUsers();
@@ -259,7 +259,7 @@ serve(async (req) => {
           let isNewAuthUser = false;
           
           if (existingAuthUser) {
-            console.log('✅ Found existing auth user:', existingAuthUser.id);
+            // console.log('✅ Found existing auth user:', existingAuthUser.id);
             authUserId = existingAuthUser.id;
           } else {
             // Validar senha para novo usuário
@@ -267,7 +267,7 @@ serve(async (req) => {
               throw new Error('Password required for new user');
             }
             
-            console.log('🆕 Creating new auth user:', customerData.email);
+            // console.log('🆕 Creating new auth user:', customerData.email);
             const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
               email: customerData.email,
               password: password,
@@ -286,17 +286,17 @@ serve(async (req) => {
             
             authUserId = authData.user.id;
             isNewAuthUser = true;
-            console.log('✅ Auth user created:', authUserId);
+            // console.log('✅ Auth user created:', authUserId);
           }
           
           // Aguardar trigger criar profile (se for novo auth user)
           if (isNewAuthUser) {
-            console.log('⏳ Waiting for trigger to create profile...');
+            // console.log('⏳ Waiting for trigger to create profile...');
             await new Promise(resolve => setTimeout(resolve, 2000));
           }
           
           // Buscar profile criado pelo trigger
-          console.log('🔍 Fetching profile for auth user:', authUserId);
+          // console.log('🔍 Fetching profile for auth user:', authUserId);
           const { data: userProfile, error: profileError } = await supabaseService
             .from('profiles')
             .select('*')
@@ -313,7 +313,7 @@ serve(async (req) => {
           }
           
           profileId = userProfile.id;
-          console.log('✅ Profile found:', profileId);
+          // console.log('✅ Profile found:', profileId);
           
           // Atualizar profile com dados adicionais
           const { error: updateError } = await supabaseService
@@ -329,7 +329,7 @@ serve(async (req) => {
           }
           
           // ✅ CRÍTICO: Atualizar order.user_id
-          console.log('🔗 Linking order to profile:', profileId);
+          // console.log('🔗 Linking order to profile:', profileId);
           const { error: orderLinkError } = await supabaseService
             .from('orders')
             .update({ user_id: profileId })
@@ -338,12 +338,12 @@ serve(async (req) => {
           if (orderLinkError) {
             console.error('❌ Failed to link order:', orderLinkError);
           } else {
-            console.log('✅ Order linked to profile');
+            // console.log('✅ Order linked to profile');
           }
         }
         
         // ✅ ETAPA 4: Adicionar plano ao usuário
-        console.log('📦 Adding plan to user:', profileId);
+        // console.log('📦 Adding plan to user:', profileId);
         const { data: planData } = await supabaseService
           .from('plans')
           .select('credits_granted, name')
@@ -359,12 +359,12 @@ serve(async (req) => {
         if (planError) {
           console.error('❌ Failed to add plan:', planError);
         } else {
-          console.log('✅ Plan added successfully');
+          // console.log('✅ Plan added successfully');
         }
         
         // ✅ ETAPA 5: Adicionar créditos
         if (planData?.credits_granted && planData.credits_granted > 0) {
-          console.log(`💳 Adding ${planData.credits_granted} credits to user ${profileId}`);
+          // console.log(`💳 Adding ${planData.credits_granted} credits to user ${profileId}`);
           const { error: creditsError } = await supabaseService.rpc('add_credits', {
             _user_id: profileId,
             _amount: planData.credits_granted,
@@ -376,14 +376,14 @@ serve(async (req) => {
           if (creditsError) {
             console.error('❌ Failed to add credits:', creditsError);
           } else {
-            console.log('✅ Credits added successfully');
+            // console.log('✅ Credits added successfully');
           }
         } else {
-          console.log('⚠️ No credits to add - plan has 0 credits_granted');
+          // console.log('⚠️ No credits to add - plan has 0 credits_granted');
         }
         
         // ✅ ETAPA 6: Enviar email de boas-vindas ao cliente
-        console.log('📧 Sending welcome email to customer');
+        // console.log('📧 Sending welcome email to customer');
         const emailResult = await supabaseService.functions.invoke('send-payment-confirmation', {
           body: { orderId: order.id }
         });
@@ -391,11 +391,11 @@ serve(async (req) => {
         if (emailResult.error) {
           console.error('⚠️ Email sending failed:', emailResult.error);
         } else {
-          console.log('✅ Welcome email sent');
+          // console.log('✅ Welcome email sent');
         }
         
         // ✅ ETAPA 7: Notificar administradores
-        console.log('📧 Sending admin notification');
+        // console.log('📧 Sending admin notification');
         const adminResult = await supabaseService.functions.invoke('send-admin-notification', {
           body: {
             customerName: customerData.name,
@@ -410,17 +410,17 @@ serve(async (req) => {
         if (adminResult.error) {
           console.error('⚠️ Admin notification failed:', adminResult.error);
         } else {
-          console.log('✅ Admin notified');
+          // console.log('✅ Admin notified');
         }
         
-        console.log('🎉 ✅ ✅ ✅ COMPLETE FLOW FINISHED SUCCESSFULLY ✅ ✅ ✅');
-        console.log('📊 Final status:', {
-          profileId,
-          orderId: order.id,
-          creditsAdded: planData?.credits_granted || 0,
-          emailSent: !emailResult.error,
-          adminNotified: !adminResult.error
-        });
+        // console.log('🎉 ✅ ✅ ✅ COMPLETE FLOW FINISHED SUCCESSFULLY ✅ ✅ ✅');
+        // console.log('📊 Final status:', {
+        //   profileId,
+        //   orderId: order.id,
+        //   creditsAdded: planData?.credits_granted || 0,
+        //   emailSent: !emailResult.error,
+        //   adminNotified: !adminResult.error
+        // });
         
       } catch (error) {
         console.error('❌ ❌ ❌ CRITICAL ERROR IN USER PROCESSING:', error);

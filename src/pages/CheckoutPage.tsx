@@ -322,6 +322,7 @@ export default function CheckoutPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    disabled={!!user}
                     placeholder="João da Silva"
                   />
                   <p className="text-xs text-muted-foreground">

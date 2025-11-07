@@ -37,14 +37,7 @@ export const AdminTopbar = () => {
   return (
     <header className="h-16 border-b bg-background flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center space-x-4">
-        <SidebarTrigger className="lg:hidden" />
-        <div className="hidden lg:block">
-          <h2 className="text-lg font-semibold">
-            Bem-vindo, {user.name.split(' ')[0]}!
-          </h2>
-        </div>
       </div>
-
       <div className="flex items-center space-x-4">     
         {/* Notifications */}
         <DropdownMenu>
@@ -106,12 +99,15 @@ export const AdminTopbar = () => {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-full">
             <div className="flex items-center justify-start gap-2 p-2">
               <div className="flex flex-col space-y-1 leading-none">
                 <p className="font-medium">{user.name}</p>
-                <p className="w-[200px] truncate text-sm text-muted-foreground">
+                <p className="w-[300px] truncate text-sm text-muted-foreground">
                   {user.email}
+                </p>
+                <p className="w-[300px] truncate text-sm text-muted-foreground">
+                 Painel: {user.role === 'admin' ? 'Administrador' : user.role === 'dev' ? 'Desenvolvedor' : 'Usuário'}
                 </p>
               </div>
             </div>

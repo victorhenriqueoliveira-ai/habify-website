@@ -127,10 +127,12 @@ export const ProjectsPage = () => {
               : 'Acompanhe o status dos seus projetos'}
           </p>
         </div>
+        {hasRole(['user']) && (
         <Button onClick={() => navigate('/admin/new-project')}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Projeto
         </Button>
+        )}
       </div>
 
       {/* Stats Cards */}

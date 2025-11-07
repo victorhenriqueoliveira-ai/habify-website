@@ -5,30 +5,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2, Coins, AlertCircle, XCircle } from 'lucide-react';
 import { usePostPaymentFlow } from '@/hooks/usePostPaymentFlow';
 import { useCredits } from '@/hooks/useCredits';
+import { useAuth } from '@/hooks/useAuth';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isProcessing } = usePostPaymentFlow();
   const { credits, fetchCredits } = useCredits();
+  const { user } = useAuth();
   const [transactionData, setTransactionData] = useState<any>(null);
   const [autoRedirectSeconds, setAutoRedirectSeconds] = useState(5);
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'confirmed' | 'pending' | 'error'>('processing');
 
   useEffect(() => {
     // 🎯 TELEMETRIA: Log de entrada
-    console.log('🎯 PaymentSuccess mounted:', {
-      pathname: window.location.pathname,
-      search: window.location.search,
-      searchParams: Object.fromEntries(searchParams.entries()),
-      localStorage: {
-        orderId: localStorage.getItem('orderId'),
-        paymentId: localStorage.getItem('paymentId'),
-        gateway: localStorage.getItem('gateway'),
-        transactionData: !!localStorage.getItem('transactionData')
-      },
-      timestamp: new Date().toISOString()
-    });
+    // console.log('🎯 PaymentSuccess mounted:', {
+    //   pathname: window.location.pathname,
+    //   search: window.location.search,
+    //   searchParams: Object.fromEntries(searchParams.entries()),
+    //   localStorage: {
+    //     orderId: localStorage.getItem('orderId'),
+    //     paymentId: localStorage.getItem('paymentId'),
+    //     gateway: localStorage.getItem('gateway'),
+    //     transactionData: !!localStorage.getItem('transactionData')
+    //   },
+    //   timestamp: new Date().toISOString()
+    // });
 
     // Atualizar créditos quando a página carregar
     fetchCredits();
@@ -64,17 +66,17 @@ const PaymentSuccess = () => {
     const paymentIdFromUrl = searchParams.get('abacate_pay_id') || searchParams.get('payment_id');
     const paymentIdFromStorage = localStorage.getItem('paymentId');
     
-    console.log('🔍 Checking payment IDs:', {
-      orderId,
-      paymentIdFromUrl,
-      paymentIdFromStorage,
-      hasAnyId: !!(orderId || paymentIdFromUrl || paymentIdFromStorage)
-    });
+    // console.log('🔍 Checking payment IDs:', {
+    //   orderId,
+    //   paymentIdFromUrl,
+    //   paymentIdFromStorage,
+    //   hasAnyId: !!(orderId || paymentIdFromUrl || paymentIdFromStorage)
+    // });
     
     // Salvar paymentId se veio na URL
     if (paymentIdFromUrl) {
       localStorage.setItem('paymentId', paymentIdFromUrl);
-      console.log('💾 Saved paymentId from URL:', paymentIdFromUrl);
+      // console.log('💾 Saved paymentId from URL:', paymentIdFromUrl);
     }
     
     // Se não tiver NENHUM ID, marcar como erro
@@ -89,11 +91,11 @@ const PaymentSuccess = () => {
     if (verifiedData) {
       try {
         const data = JSON.parse(verifiedData);
-        console.log('✅ Transaction data found:', {
-          status: data.status,
-          hasUserId: !!data.user_id,
-          orderId: data.id
-        });
+        // console.log('✅ Transaction data found:', {
+        //   status: data.status,
+        //   hasUserId: !!data.user_id,
+        //   orderId: data.id
+        // });
         setTransactionData(data);
         // Se temos dados de transação e o status é "paid", o pagamento foi confirmado
         if (data.status === 'paid') {
@@ -107,20 +109,20 @@ const PaymentSuccess = () => {
       }
     } else if (orderId || paymentIdFromUrl || paymentIdFromStorage) {
       // Tem ID mas não tem dados de transação = ainda processando
-      console.log('⏳ Payment ID found but no transaction data - processing');
+      // console.log('⏳ Payment ID found but no transaction data - processing');
       setPaymentStatus('processing');
     }
   }, [searchParams]);
 
   // TELEMETRIA: Log de mudanças de status
   useEffect(() => {
-    console.log('📊 Payment status changed:', {
-      status: paymentStatus,
-      isProcessing,
-      hasTransactionData: !!transactionData,
-      transactionId: transactionData?.id,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('📊 Payment status changed:', {
+    //   status: paymentStatus,
+    //   isProcessing,
+    //   hasTransactionData: !!transactionData,
+    //   transactionId: transactionData?.id,
+    //   timestamp: new Date().toISOString()
+    // });
   }, [paymentStatus, isProcessing, transactionData]);
 
   const handleGoToDashboard = () => {
@@ -159,9 +161,16 @@ const PaymentSuccess = () => {
           <CardContent className="flex flex-col items-center space-y-4 p-8">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <h1 className="text-xl font-semibold">Processando pagamento...</h1>
+            {!user &&
             <p className="text-muted-foreground text-center">
               Verificando pagamento e criando sua conta automaticamente
             </p>
+            } 
+            {user &&
+            <p className="text-muted-foreground text-center">
+              Verificando pagamento e adicionando créditos à sua conta
+            </p>
+            }
           </CardContent>
         </Card>
       </div>

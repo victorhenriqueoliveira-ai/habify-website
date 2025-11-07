@@ -59,21 +59,13 @@ const NotFound = () => {
             <Home className="mr-2 h-5 w-5" />
             Voltar para Home
           </Button>
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outline"
-            size="lg"
-            className="w-full sm:w-auto"
-          >
-            Voltar à página anterior
-          </Button>
         </div>
 
         {/* Help text */}
         <p className="mt-8 text-sm text-muted-foreground">
           Precisa de ajuda? Entre em contato com o{" "}
           <a 
-            href="mailto:suporte@habify.com" 
+            href="mailto:contato@habify.com.br" 
             className="text-primary hover:underline"
           >
             suporte
