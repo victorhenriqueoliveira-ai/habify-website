@@ -71,7 +71,7 @@ export const ResetPasswordPage = () => {
       });
 
       setTimeout(() => {
-        navigate('/admin/login');
+        navigate('/login');
       }, 2000);
     } catch (error: any) {
       console.error('Error resetting password:', error);

@@ -12,6 +12,7 @@ import { useRouteTracking } from "@/hooks/useAnalytics";
 
 // ✅ FASE 3 - Item 12: Lazy Loading para páginas pesadas
 const Index = lazy(() => import("./pages/Index"));
+const TermosDeUso = lazy(() => import("./pages/termosUso"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
@@ -129,6 +130,7 @@ const AppContent = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
+              <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-canceled" element={<PaymentCanceled />} />
               <Route path="/checkout/:planId" element={<CheckoutPage />} />
