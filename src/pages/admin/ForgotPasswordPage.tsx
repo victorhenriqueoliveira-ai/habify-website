@@ -45,7 +45,7 @@ export const ForgotPasswordPage = () => {
       const { error } = await supabase.functions.invoke('send-password-reset', {
         body: { 
           email,
-          redirectUrl: `${window.location.origin}/reset-password`
+          redirectUrl: 'https://habify.com.br/admin/reset-password'
         },
       });
 

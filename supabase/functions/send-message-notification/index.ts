@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
     const truncatedMessage = message.length > 150 ? message.substring(0, 150) + '...' : message;
 
     const emailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: isForAdmin ? ["habifybr@gmail.com"] : [recipientEmail],
       subject: `💬 Nova mensagem de ${senderName} - ${projectTitle}`,
       html: `
@@ -47,13 +47,13 @@ const handler = async (req: Request): Promise<Response> => {
         <html>
           <head>
             <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-              .message-box { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #8b5cf6; }
-              .project-info { background: #faf5ff; padding: 15px; border-radius: 5px; margin: 15px 0; }
-              .button { background: #8b5cf6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+              .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
+              .message-box { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #F97316; }
+              .project-info { background: #fff7ed; padding: 15px; border-radius: 5px; margin: 15px 0; }
+              .button { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
               .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
             </style>
           </head>
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <a href="https://habify.com.br/admin/projects/${projectId}?tab=chat" class="button">Ver Mensagem Completa</a>
                 </div>
 
-                <p style="background: #e0f2fe; padding: 15px; border-radius: 5px; border-left: 4px solid #0284c7; margin-top: 20px;">
+                <p style="background: #fff7ed; padding: 15px; border-radius: 5px; border-left: 4px solid #F97316; margin-top: 20px;">
                   💡 <strong>Dica:</strong> Responda rapidamente para manter uma boa comunicação com ${isForAdmin ? 'seu cliente' : 'nossa equipe'}!
                 </p>
               </div>

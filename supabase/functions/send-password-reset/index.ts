@@ -22,20 +22,20 @@ const createEmailTemplate = (userName: string, resetLink: string): string => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redefinir Senha - Habify</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           
-          <!-- Header com gradiente -->
+          <!-- Header com cores Habify -->
           <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); padding: 40px 30px; text-align: center;">
               <img src="https://jsttoajuszshrivmgnmc.supabase.co/storage/v1/object/public/project-photos/logotipo_habify.png" alt="Habify" style="height: 50px; margin-bottom: 20px;">
-              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                 🔐 Redefinir Senha
               </h1>
-              <p style="color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 10px 0 0 0;">
+              <p style="color: rgba(255, 255, 255, 0.95); font-size: 16px; margin: 10px 0 0 0;">
                 Solicitação de nova senha
               </p>
             </td>
@@ -54,10 +54,10 @@ const createEmailTemplate = (userName: string, resetLink: string): string => `
               </p>
               
               <!-- Alerta de segurança -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff7ed; border-left: 4px solid #F97316; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <p style="color: #92400e; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <p style="color: #7c2d12; font-size: 14px; line-height: 1.6; margin: 0;">
                       <strong>⚠️ Importante:</strong><br>
                       Este link é válido por <strong>1 hora</strong> e pode ser usado apenas uma vez.
                     </p>
@@ -69,7 +69,7 @@ const createEmailTemplate = (userName: string, resetLink: string): string => `
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
                 <tr>
                   <td align="center">
-                    <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
+                    <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(249, 115, 22, 0.4);">
                       Redefinir Minha Senha →
                     </a>
                   </td>
@@ -77,13 +77,13 @@ const createEmailTemplate = (userName: string, resetLink: string): string => `
               </table>
               
               <!-- Link alternativo -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fafafa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <p style="color: #64748b; font-size: 13px; line-height: 1.6; margin: 0 0 10px 0;">
+                    <p style="color: #525252; font-size: 13px; line-height: 1.6; margin: 0 0 10px 0;">
                       Se o botão não funcionar, copie e cole este link no seu navegador:
                     </p>
-                    <p style="color: #3b82f6; font-size: 12px; word-break: break-all; margin: 0; font-family: monospace;">
+                    <p style="color: #F97316; font-size: 12px; word-break: break-all; margin: 0; font-family: monospace;">
                       ${resetLink}
                     </p>
                   </td>
@@ -103,9 +103,9 @@ const createEmailTemplate = (userName: string, resetLink: string): string => `
               </table>
               
               <!-- Suporte -->
-              <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0;">
+              <p style="color: #525252; font-size: 14px; line-height: 1.6; margin: 0;">
                 Em caso de dúvidas, entre em contato conosco através do email 
-                <a href="mailto:suporte@habify.com" style="color: #667eea; text-decoration: underline;">suporte@habify.com</a>
+                <a href="mailto:contato@habify.com.br" style="color: #F97316; text-decoration: underline;">contato@habify.com.br</a>
               </p>
               
             </td>
@@ -184,12 +184,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Gerar link de recuperação de senha
+    // Gerar link de recuperação de senha com domínio correto
     const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectUrl,
+        redirectTo: 'https://habify.com.br/admin/reset-password',
       }
     });
 
@@ -206,7 +206,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Enviar email
     const emailResponse = await resend.emails.send({
-      from: "Habify Segurança <onboarding@resend.dev>",
+      from: "Habify Segurança <contato@habify.com.br>",
       to: [email],
       subject: "🔐 Redefinir Senha - Habify",
       html: createEmailTemplate(profileData.name, resetLink),

@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Email para o usuário
     const userEmailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: [userEmail],
       subject: `✅ Projeto "${projectTitle}" Criado com Sucesso!`,
       html: `
@@ -46,14 +46,14 @@ const handler = async (req: Request): Promise<Response> => {
         <html>
           <head>
             <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
               .project-box { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-              .info-item { margin: 15px 0; padding: 15px; background: #f0fdf4; border-radius: 5px; }
-              .label { font-weight: bold; color: #059669; display: block; margin-bottom: 5px; }
-              .button { background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+              .info-item { margin: 15px 0; padding: 15px; background: #fff7ed; border-radius: 5px; }
+              .label { font-weight: bold; color: #F97316; display: block; margin-bottom: 5px; }
+              .button { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
               .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
             </style>
           </head>
@@ -67,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p>Seu projeto foi criado com sucesso e já está disponível em nossa plataforma.</p>
 
                 <div class="project-box">
-                  <h2 style="color: #059669; margin-top: 0;">📋 Detalhes do Projeto</h2>
+                  <h2 style="color: #F97316; margin-top: 0;">📋 Detalhes do Projeto</h2>
                   
                   <div class="info-item">
                     <span class="label">Nome do Projeto:</span>
@@ -105,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
                   </div>
                 </div>
 
-                <h3 style="color: #059669;">🎯 Próximos Passos:</h3>
+                <h3 style="color: #F97316;">🎯 Próximos Passos:</h3>
                 <ul style="line-height: 2;">
                   <li>Nossa equipe está revisando seu projeto</li>
                   <li>Em breve você receberá atualizações sobre o desenvolvimento</li>
@@ -117,9 +117,9 @@ const handler = async (req: Request): Promise<Response> => {
                   <a href="https://habify.com.br/admin/projects/${projectId}" class="button">Ver Projeto</a>
                 </div>
 
-                <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; border-left: 4px solid #0284c7; margin-top: 20px;">
-                  <h4 style="margin-top: 0; color: #0284c7;">💬 Precisa de ajuda?</h4>
-                  <p style="margin-bottom: 0;">Entre em contato pelo WhatsApp: <strong>+55 11 96176-9504</strong></p>
+                <div style="background: #fff7ed; padding: 20px; border-radius: 8px; border-left: 4px solid #F97316; margin-top: 20px;">
+                  <h4 style="margin-top: 0; color: #F97316;">💬 Precisa de ajuda?</h4>
+                  <p style="margin-bottom: 0;">Entre em contato pelo email: <strong>contato@habify.com.br</strong></p>
                 </div>
               </div>
               <div class="footer">
@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Email para admin
     const adminEmailResponse = await resend.emails.send({
-      from: "Habify Sistema <onboarding@resend.dev>",
+      from: "Habify Sistema <contato@habify.com.br>",
       to: ["habifybr@gmail.com"],
       subject: `🆕 Novo Projeto Criado: ${projectTitle}`,
       html: `
@@ -141,14 +141,14 @@ const handler = async (req: Request): Promise<Response> => {
         <html>
           <head>
             <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-              .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+              .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
+              .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F97316; }
               .info-item { margin: 10px 0; }
-              .label { font-weight: bold; color: #3b82f6; }
-              .button { background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+              .label { font-weight: bold; color: #F97316; }
+              .button { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
               .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
             </style>
           </head>

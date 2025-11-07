@@ -139,6 +139,7 @@ const AppContent = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/admin/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth" element={<AuthPage />} />
             
             <Route path="/admin" element={

@@ -33,12 +33,12 @@ const createEmailTemplate = (data: {
           
           <!-- Header com gradiente -->
           <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); padding: 40px 30px; text-align: center;">
               <img src="https://jsttoajuszshrivmgnmc.supabase.co/storage/v1/object/public/project-photos/logotipo_habify.png" alt="Habify" style="height: 50px; margin-bottom: 20px;">
-              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                 🎉 Pagamento Confirmado!
               </h1>
-              <p style="color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 10px 0 0 0;">
+              <p style="color: rgba(255, 255, 255, 0.95); font-size: 16px; margin: 10px 0 0 0;">
                 Bem-vindo à Habify
               </p>
             </td>
@@ -131,7 +131,7 @@ const createEmailTemplate = (data: {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
                 <tr>
                   <td align="center">
-                    <a href="https://habify.app/admin/login" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3); transition: all 0.3s;">
+                    <a href="https://habify.app/admin/login" style="display: inline-block; background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(249, 115, 22, 0.4); transition: all 0.3s;">
                       Acessar Minha Conta →
                     </a>
                   </td>
@@ -139,13 +139,13 @@ const createEmailTemplate = (data: {
               </table>
               
               <!-- Suporte -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fff7ed; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
                 <tr>
                   <td>
-                    <p style="color: #92400e; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <p style="color: #7c2d12; font-size: 14px; line-height: 1.6; margin: 0;">
                       <strong>💬 Precisa de Ajuda?</strong><br>
                       Nossa equipe está disponível para te ajudar! Entre em contato através do email 
-                      <a href="mailto:suporte@habify.com" style="color: #92400e; text-decoration: underline;">suporte@habify.com</a>
+                      <a href="mailto:contato@habify.com.br" style="color: #7c2d12; text-decoration: underline;">contato@habify.com.br</a>
                     </p>
                   </td>
                 </tr>
@@ -211,7 +211,7 @@ const createAdminEmailTemplate = (data: {
               <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0;">
                 💰 Nova Venda Confirmada!
               </h1>
-              <p style="color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 10px 0 0 0;">
+              <p style="color: rgba(255, 255, 255, 0.95); font-size: 16px; margin: 10px 0 0 0;">
                 Pagamento aprovado e cliente ativado
               </p>
             </td>
@@ -405,7 +405,7 @@ serve(async (req) => {
 
     // Email para o cliente com template profissional
     const customerEmailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: [customerData.email],
       subject: `✅ Pagamento Confirmado - ${planName} | Habify`,
       html: createEmailTemplate({
@@ -431,7 +431,7 @@ serve(async (req) => {
     console.log('[SEND-PAYMENT-CONFIRMATION] Enviando email para admin:', adminEmail);
     
     const adminEmailResponse = await resend.emails.send({
-      from: "Habify Sistema <onboarding@resend.dev>",
+      from: "Habify Sistema <contato@habify.com.br>",
       to: [adminEmail],
       subject: `💰 Nova Venda - ${planName} - ${customerData.name}`,
       html: createAdminEmailTemplate({

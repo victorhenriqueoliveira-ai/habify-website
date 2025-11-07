@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (isAdmin) {
       // Email para admin sobre novo cliente
       const adminEmailResponse = await resend.emails.send({
-        from: "Habify Sistema <onboarding@resend.dev>",
+        from: "Habify Sistema <contato@habify.com.br>",
         to: ["habifybr@gmail.com"],
         subject: "🎉 Novo Cliente Registrado - Habify",
         html: `
@@ -35,13 +35,13 @@ const handler = async (req: Request): Promise<Response> => {
           <html>
             <head>
               <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
                 .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+                .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F97316; }
                 .info-item { margin: 10px 0; }
-                .label { font-weight: bold; color: #667eea; }
+                .label { font-weight: bold; color: #F97316; }
                 .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
               </style>
             </head>
@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Email de boas-vindas para o usuário
     const userEmailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: [email],
       subject: "🎉 Bem-vindo à Habify!",
       html: `
@@ -95,16 +95,16 @@ const handler = async (req: Request): Promise<Response> => {
         <html>
           <head>
             <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
               .welcome-box { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-              .step { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #667eea; }
-              .step-number { background: #667eea; color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
-              .button { background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+              .step { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #F97316; }
+              .step-number { background: #F97316; color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
+              .button { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
               .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-              .highlight { color: #667eea; font-weight: bold; }
+              .highlight { color: #F97316; font-weight: bold; }
             </style>
           </head>
           <body>
@@ -115,18 +115,18 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="content">
                 <div class="welcome-box">
-                  <h2 style="color: #667eea; margin-top: 0;">Sua conta foi criada com sucesso! 🚀</h2>
+                  <h2 style="color: #F97316; margin-top: 0;">Sua conta foi criada com sucesso! 🚀</h2>
                   <p>Estamos muito felizes em tê-lo(a) conosco. A Habify é a plataforma completa para criar landing pages profissionais para seus imóveis de forma rápida e fácil.</p>
                 </div>
 
-                <h3 style="color: #667eea;">Como usar a plataforma:</h3>
+                <h3 style="color: #F97316;">Como usar a plataforma:</h3>
 
                 <div class="step">
                   <div style="display: flex; align-items: center;">
                     <span class="step-number">1</span>
                     <div>
                       <strong>Acesse sua conta</strong>
-                      <p style="margin: 5px 0 0 0;">Entre com seu email e senha em <a href="https://habify.com.br/admin/auth" style="color: #667eea;">habify.com.br/admin/auth</a></p>
+                      <p style="margin: 5px 0 0 0;">Entre com seu email e senha em <a href="https://habify.com.br/admin/auth" style="color: #F97316;">habify.com.br/admin/auth</a></p>
                     </div>
                   </div>
                 </div>
@@ -165,9 +165,9 @@ const handler = async (req: Request): Promise<Response> => {
                   <a href="https://habify.com.br/admin/auth" class="button">Acessar Minha Conta</a>
                 </div>
 
-                <div class="welcome-box" style="background: #f0f4ff; border-left: 4px solid #667eea;">
-                  <h4 style="margin-top: 0; color: #667eea;">💬 Precisa de ajuda?</h4>
-                  <p style="margin-bottom: 0;">Nossa equipe está pronta para ajudar! Entre em contato pelo WhatsApp: <strong>+55 11 96176-9504</strong></p>
+                <div class="welcome-box" style="background: #fff7ed; border-left: 4px solid #F97316;">
+                  <h4 style="margin-top: 0; color: #F97316;">💬 Precisa de ajuda?</h4>
+                  <p style="margin-bottom: 0;">Nossa equipe está pronta para ajudar! Entre em contato pelo email: <strong>contato@habify.com.br</strong></p>
                 </div>
               </div>
               <div class="footer">
