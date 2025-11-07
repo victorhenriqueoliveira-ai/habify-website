@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    const headers = Object.fromEntries(req.headers.entries());
     console.log('🔔 Hubla webhook received:', {
       method: req.method,
       timestamp: new Date().toISOString(),
@@ -23,7 +24,7 @@ serve(async (req) => {
     });
     
     // Validate webhook token from headers
-    const webhookToken = req.headers.get('authorization') || req.headers.get('x-webhook-token');
+    const webhookToken = headers["x-hubla-token"] || headers["x-webhook-token"] || headers["authorization"];
     const expectedToken = Deno.env.get('HUBLA_WEBHOOK_TOKEN');
     
     // console.log('Webhook token received:', webhookToken ? 'Present' : 'Missing');
