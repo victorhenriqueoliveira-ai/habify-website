@@ -50,7 +50,6 @@ const Footer = () => {
               <li><a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Depoimentos</a></li>
             </ul>
           </div>
-
           {/* Contact info */}
           <div className="space-y-6">
             <h4 className="text-xl font-semibold">Contato</h4>
