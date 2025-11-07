@@ -321,34 +321,42 @@ serve(async (req) => {
               console.log('✅ Auth user created:', authUserId);
             }
             
-            // ✅ ETAPA 5: Criar profile
-            console.log('📝 Creating profile for auth user:', authUserId);
+            // ✅ ETAPA 5: Aguardar profile criado pelo trigger handle_new_user
+            console.log('⏳ Waiting for profile creation by trigger...');
+            
+            // Aguardar um momento para o trigger executar
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Buscar profile criado pelo trigger
             const { data: newProfile, error: profileError } = await supabaseService
               .from('profiles')
-              .insert({
-                auth_user_id: authUserId,
-                user_id: authUserId,
-                name: customerData.name,
-                email: customerData.email,
-                phone: customerData.phone?.replace(/\D/g, '') || null,
-                cpf: customerData.cpf?.replace(/\D/g, '') || null,
-                role: 'user',
-                is_active: true,
-                credits: 0
-              })
-              .select()
+              .select('*')
+              .eq('user_id', authUserId)
               .single();
             
             if (profileError || !newProfile?.id) {
-              // Rollback: deletar auth user se profile falhou
+              // Rollback: deletar auth user se profile não foi criado
               if (!existingAuthUser) {
                 await supabaseService.auth.admin.deleteUser(authUserId);
               }
-              throw new Error(`Profile creation failed: ${profileError?.message}`);
+              throw new Error(`Profile not found after creation: ${profileError?.message}`);
             }
             
             profileId = newProfile.id;
-            console.log('✅ Profile created:', profileId);
+            console.log('✅ Profile found:', profileId);
+            
+            // Atualizar profile com dados adicionais se necessário
+            const { error: updateError } = await supabaseService
+              .from('profiles')
+              .update({
+                phone: customerData.phone?.replace(/\D/g, '') || null,
+                cpf: customerData.cpf?.replace(/\D/g, '') || null
+              })
+              .eq('id', profileId);
+            
+            if (updateError) {
+              console.warn('⚠️ Failed to update profile with additional data:', updateError);
+            }
             
             // ✅ ETAPA 6: CRÍTICO - Atualizar order.user_id
             console.log('🔗 Linking order to new profile:', profileId);
