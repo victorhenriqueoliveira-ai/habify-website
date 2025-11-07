@@ -642,53 +642,6 @@ export type Database = {
           },
         ]
       }
-      social_metrics: {
-        Row: {
-          account_id: string
-          created_at: string
-          engagement: number
-          followers: number
-          growth_since_last: number | null
-          id: string
-          platform: string
-          timestamp: string
-          user_id: string | null
-          views: number
-        }
-        Insert: {
-          account_id: string
-          created_at?: string
-          engagement?: number
-          followers?: number
-          growth_since_last?: number | null
-          id?: string
-          platform: string
-          timestamp?: string
-          user_id?: string | null
-          views?: number
-        }
-        Update: {
-          account_id?: string
-          created_at?: string
-          engagement?: number
-          followers?: number
-          growth_since_last?: number | null
-          id?: string
-          platform?: string
-          timestamp?: string
-          user_id?: string | null
-          views?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "social_metrics_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       system_settings: {
         Row: {
           category: string
