@@ -54,6 +54,12 @@ const menuItems = [
     roles: ['admin', 'dev'],
   },
   {
+    title: 'Criar Admin/Dev',
+    url: '/admin/users/create-admin',
+    icon: Shield,
+    roles: ['admin', 'dev'],
+  },
+  {
     title: 'Projetos',
     url: '/admin/projects',
     icon: Building2,
@@ -69,6 +75,12 @@ const menuItems = [
     title: 'Manutenções Admin',
     url: '/admin/maintenances',
     icon: Wrench,
+    roles: ['admin', 'dev'],
+  },
+  {
+    title: 'Dashboard Manutenções',
+    url: '/admin/maintenances-dashboard',
+    icon: BarChart3,
     roles: ['admin', 'dev'],
   },
   {

@@ -372,6 +372,29 @@ serve(async (req) => {
             console.error('❌ Failed to create maintenance:', maintenanceError);
           } else {
             // console.log('✅ Maintenance record created successfully');
+            
+            // Enviar emails de confirmação
+            try {
+              // Email para cliente
+              const clientEmailResult = await supabaseService.functions.invoke('send-maintenance-confirmation', {
+                body: { maintenanceId: maintenance.id }
+              });
+              
+              if (clientEmailResult.error) {
+                console.error('⚠️ Failed to send client email:', clientEmailResult.error);
+              }
+              
+              // Email para admin
+              const adminEmailResult = await supabaseService.functions.invoke('send-maintenance-admin-notification', {
+                body: { maintenanceId: maintenance.id }
+              });
+              
+              if (adminEmailResult.error) {
+                console.error('⚠️ Failed to send admin email:', adminEmailResult.error);
+              }
+            } catch (emailError) {
+              console.error('⚠️ Error sending maintenance emails:', emailError);
+            }
           }
         } else {
           // console.log('📦 Adding plan to user:', profileId);

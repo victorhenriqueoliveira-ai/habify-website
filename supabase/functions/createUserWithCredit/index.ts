@@ -8,11 +8,16 @@ const corsHeaders = {
 interface CreateUserRequest {
   email: string;
   password: string;
-  full_name: string;
-  plan_id: string;
-  gateway: 'abacatepay' | 'hubla' | 'manual';
-  creation_type: 'pago' | 'permuta';
-  created_by: string;
+  name?: string;
+  full_name?: string;
+  cpf?: string;
+  phone?: string;
+  plan_id?: string;
+  gateway?: 'abacatepay' | 'hubla' | 'manual';
+  creation_type?: 'pago' | 'permuta';
+  created_by?: string;
+  role?: 'user' | 'admin' | 'dev';
+  credits?: number;
 }
 
 Deno.serve(async (req) => {
@@ -88,34 +93,55 @@ Deno.serve(async (req) => {
     }
 
     const body: CreateUserRequest = await req.json();
-    const { email, password, full_name, plan_id, gateway, creation_type, created_by } = body;
+    const { 
+      email, 
+      password, 
+      name,
+      full_name, 
+      cpf,
+      phone,
+      plan_id, 
+      gateway, 
+      creation_type, 
+      created_by,
+      role = 'user',
+      credits: customCredits
+    } = body;
 
-    // console.log('Creating user with plan:', { email, plan_id, gateway, creation_type });
+    const userName = name || full_name || email;
+    const isAdminCreation = role === 'admin' || role === 'dev';
 
-    // Buscar detalhes do plano
-    const { data: plan, error: planError } = await supabaseAdmin
-      .from('plans')
-      .select('*')
-      .eq('id', plan_id)
-      .single();
+    // console.log('Creating user:', { email, role, isAdminCreation });
 
-    if (planError || !plan) {
-      console.error('Plan not found:', planError);
-      throw new Error('Plano não encontrado');
-    }
-
-    // console.log('Plan found:', plan);
-
-    // Determinar o valor e créditos baseado no tipo de criação e gateway
+    // Buscar detalhes do plano (somente se não for criação de admin/dev)
+    let plan = null;
     let amount = 0;
-    const credits = plan.credits_granted || 1;
+    let creditsToGrant = customCredits || 0;
 
-    if (creation_type === 'pago') {
-      amount = gateway === 'abacatepay' 
-        ? Number(plan.pix_price || plan.price)
-        : Number(plan.stripe_price || plan.price);
+    if (!isAdminCreation && plan_id) {
+      const { data: planData, error: planError } = await supabaseAdmin
+        .from('plans')
+        .select('*')
+        .eq('id', plan_id)
+        .single();
+
+      if (planError || !planData) {
+        console.error('Plan not found:', planError);
+        throw new Error('Plano não encontrado');
+      }
+
+      plan = planData;
+      creditsToGrant = plan.credits_granted || 1;
+
+      // Determinar o valor baseado no tipo de criação e gateway
+      if (creation_type === 'pago') {
+        amount = gateway === 'abacatepay' 
+          ? Number(plan.pix_price || plan.price)
+          : Number(plan.stripe_price || plan.price);
+      }
     }
-    // Se for permuta, amount permanece 0
+
+    // console.log('Plan details:', { plan: plan?.name, credits: creditsToGrant, isAdminCreation });
 
     // 1. Criar usuário no Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -123,8 +149,10 @@ Deno.serve(async (req) => {
       password,
       email_confirm: true,
       user_metadata: {
-        name: full_name,
-        role: 'user'
+        name: userName,
+        cpf: cpf || null,
+        phone: phone || null,
+        role: role
       }
     });
 
@@ -136,9 +164,9 @@ Deno.serve(async (req) => {
     // console.log('Auth user created:', authData.user.id);
 
     // 2. Aguardar trigger criar o perfil
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 3. Buscar perfil criado
+    // 3. Buscar perfil criado pelo trigger
     const { data: createdProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('id')
@@ -146,66 +174,107 @@ Deno.serve(async (req) => {
       .single();
 
     if (profileFetchError || !createdProfile) {
-      console.error('Profile not found:', profileFetchError);
-      throw new Error('Perfil não foi criado automaticamente');
+      console.error('Profile not found after trigger:', profileFetchError);
+      throw new Error('Perfil não foi criado automaticamente pelo trigger');
     }
 
     // console.log('Profile found:', createdProfile.id);
 
-    // 4. Adicionar créditos usando a função RPC
-    const creditDescription = creation_type === 'permuta'
-      ? `Créditos iniciais - ${plan.name} (Permuta)`
-      : `Créditos iniciais - ${plan.name} via ${gateway}`;
+    // 4. Atualizar profile com dados adicionais (CPF, phone) e role no profiles
+    const { error: updateProfileError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        cpf: cpf?.replace(/\D/g, '') || null,
+        phone: phone?.replace(/\D/g, '') || null,
+        role: role as any // Atualizar role no profiles também
+      })
+      .eq('id', createdProfile.id);
 
-    const { error: creditsError } = await supabaseAdmin.rpc('add_credits', {
-      _user_id: createdProfile.id,
-      _amount: credits,
-      _type: creation_type === 'permuta' ? 'admin_grant' : 'purchase',
-      _description: creditDescription
-    });
-
-    if (creditsError) {
-      console.error('Credits error:', creditsError);
-    } else {
-      // console.log(`Added ${credits} credits to user ${createdProfile.id}`);
+    if (updateProfileError) {
+      console.error('Error updating profile:', updateProfileError);
     }
 
-    // 5. Criar log de crédito
-    const { error: logError } = await supabaseAdmin
-      .from('credit_logs')
-      .insert({
-        user_id: createdProfile.id,
-        plan_id: plan_id,
-        gateway: gateway,
-        amount: amount,
-        credits_granted: credits,
-        created_by: created_by
+    // 5. Se for admin ou dev, adicionar role na tabela user_roles
+    if (isAdminCreation) {
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role: role as any,
+          created_by: profile.id
+        });
+
+      if (roleError) {
+        console.error('Error adding user role:', roleError);
+        throw new Error(`Erro ao adicionar role: ${roleError.message}`);
+      }
+
+      // console.log(`Role ${role} added to user ${authData.user.id}`);
+    }
+
+    // 6. Adicionar créditos (se houver)
+    if (creditsToGrant > 0) {
+      const creditDescription = isAdminCreation
+        ? `Créditos iniciais - Criação de ${role}`
+        : creation_type === 'permuta'
+          ? `Créditos iniciais - ${plan?.name} (Permuta)`
+          : `Créditos iniciais - ${plan?.name} via ${gateway}`;
+
+      const { error: creditsError } = await supabaseAdmin.rpc('add_credits', {
+        _user_id: createdProfile.id,
+        _amount: creditsToGrant,
+        _type: isAdminCreation ? 'admin_grant' : (creation_type === 'permuta' ? 'admin_grant' : 'purchase'),
+        _description: creditDescription
       });
 
-    if (logError) {
-      console.error('Credit log error:', logError);
+      if (creditsError) {
+        console.error('Credits error:', creditsError);
+      } else {
+        // console.log(`Added ${creditsToGrant} credits to user ${createdProfile.id}`);
+      }
     }
 
-    // 6. Criar registro em payment_logs para auditoria
+    // 7. Criar log de crédito (somente se não for admin/dev)
+    if (!isAdminCreation && plan_id) {
+      const { error: logError } = await supabaseAdmin
+        .from('credit_logs')
+        .insert({
+          user_id: createdProfile.id,
+          plan_id: plan_id,
+          gateway: gateway || 'manual',
+          amount: amount,
+          credits_granted: creditsToGrant,
+          created_by: created_by || profile.id
+        });
+
+      if (logError) {
+        console.error('Credit log error:', logError);
+      }
+    }
+
+    // 8. Criar registro em payment_logs para auditoria
     const { error: paymentLogError } = await supabaseAdmin
       .from('payment_logs')
       .insert({
-        gateway: creation_type === 'permuta' ? 'admin_create_manual' : `admin_create_${gateway}`,
+        gateway: isAdminCreation 
+          ? `admin_create_${role}` 
+          : (creation_type === 'permuta' ? 'admin_create_manual' : `admin_create_${gateway}`),
         status_code: 200,
         request_body: {
           email,
-          plan_id,
+          role,
+          plan_id: plan_id || null,
           created_by: profile.id,
-          full_name,
-          creation_type,
+          name: userName,
+          creation_type: creation_type || 'manual',
           gateway: gateway || 'manual'
         },
         response_body: {
           user_id: authData.user.id,
           profile_id: createdProfile.id,
-          credits,
+          credits: creditsToGrant,
           amount,
-          creation_type
+          role
         },
         user_id: createdProfile.id,
         order_id: null
@@ -218,8 +287,9 @@ Deno.serve(async (req) => {
     // console.log('User created successfully:', {
     //   user_id: authData.user.id,
     //   profile_id: createdProfile.id,
-    //   credits,
-    //   plan: plan.name
+    //   role,
+    //   credits: creditsToGrant,
+    //   plan: plan?.name || 'N/A'
     // });
 
     return new Response(
@@ -227,9 +297,10 @@ Deno.serve(async (req) => {
         success: true,
         user_id: authData.user.id,
         profile_id: createdProfile.id,
-        credits: credits,
+        role: role,
+        credits: creditsToGrant,
         amount: amount,
-        plan_name: plan.name
+        plan_name: plan?.name || 'N/A'
       }),
       { 
         status: 200,
