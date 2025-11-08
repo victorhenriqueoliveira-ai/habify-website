@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
         .insert({
           user_id: authData.user.id,
           role: role as any,
-          created_by: profile.id
+          created_by: user.id
         });
 
       if (roleError) {
