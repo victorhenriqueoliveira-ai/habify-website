@@ -51,14 +51,14 @@ export default function MaintenanceCheckoutPage() {
       // Criar pagamento com identificador especial de manutenção
       // Incluir projectId para o webhook processar
       const response = await createPayment('maintenance-monthly', {
-        name: (user as any).raw_user_meta_data?.name || user.email || '',
+        name: (user as any).name || user.email || '',
         email: user.email || '',
-        phone: (user as any).raw_user_meta_data?.phone || '',
-        cpf: (user as any).raw_user_meta_data?.cpf || '',
+        phone: (user as any).phone || '',
+        cpf: (user as any).cpf || '',
         password: '',
         paymentMethod,
         isLoggedInPurchase: true,
-        userId: user.id,
+        userId: (user as any).userId, // Usar userId (auth.users.id) ao invés de id (profile.id)
         projectId: project.id, // Incluir projectId para criar manutenção
       } as any);
 
