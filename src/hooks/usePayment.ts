@@ -12,6 +12,7 @@ interface CustomerData {
   installments?: number;
   isLoggedInPurchase?: boolean;
   userId?: string;
+  projectId?: string; // Para manutenções
 }
 
 interface PaymentResponse {

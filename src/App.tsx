@@ -47,6 +47,7 @@ const SubscriptionsUserPage = lazy(() => import("./pages/admin/subscriptionsUser
 const UserSubscriptionsPage = lazy(() => import("./pages/admin/UserSubscriptionsPage").then(m => ({ default: m.UserSubscriptionsPage })));
 const MaintenancesPage = lazy(() => import("./pages/admin/MaintenancesPage"));
 const UserMaintenancesPage = lazy(() => import("./pages/admin/UserMaintenancesPage"));
+const MaintenanceCheckoutPage = lazy(() => import("./pages/admin/MaintenanceCheckoutPage"));
 const ProjectDetailPage = lazy(() => import("./pages/admin/ProjectDetailPage").then(m => ({ default: m.ProjectDetailPage })));
 const ProjectEditPage = lazy(() => import("./pages/admin/ProjectEditPage").then(m => ({ default: m.ProjectEditPage })));
 const UserEditPage = lazy(() => import("./pages/admin/UserEditPage").then(m => ({ default: m.UserEditPage })));
@@ -211,6 +212,11 @@ const AppContent = () => {
               <Route path="my-maintenances" element={
                 <RoleBasedRoute allowedRoles={['user', 'corretor']}>
                   <UserMaintenancesPage />
+                </RoleBasedRoute>
+              } />
+              <Route path="maintenance-checkout/:projectId" element={
+                <RoleBasedRoute allowedRoles={['user', 'corretor']}>
+                  <MaintenanceCheckoutPage />
                 </RoleBasedRoute>
               } />
               

@@ -342,44 +342,76 @@ serve(async (req) => {
           }
         }
         
-        // ✅ ETAPA 4: Adicionar plano ao usuário
-        // console.log('📦 Adding plan to user:', profileId);
-        const { data: planData } = await supabaseService
-          .from('plans')
-          .select('credits_granted, name')
-          .eq('id', order.plan_id)
-          .single();
+        // ✅ ETAPA 4: Adicionar plano ao usuário (somente se não for manutenção)
+        const isMaintenance = orderPaymentData?.isMaintenance;
+        const projectId = orderPaymentData?.projectId;
         
-        const { error: planError } = await supabaseService.rpc('add_user_plan', {
-          _user_id: profileId,
-          _plan_id: order.plan_id,
-          _order_id: order.id
-        });
-        
-        if (planError) {
-          console.error('❌ Failed to add plan:', planError);
+        if (isMaintenance && projectId) {
+          // console.log('🔧 Creating maintenance record for project:', projectId);
+          
+          // Criar registro de manutenção ao invés de adicionar plano
+          const { error: maintenanceError } = await supabaseService
+            .from('maintenances')
+            .insert({
+              user_id: profileId,
+              project_id: projectId,
+              amount: Number(order.amount),
+              status: 'pending',
+              payment_gateway: 'ABACATEPAY',
+              payment_id: billId,
+              payment_data: {
+                order_id: order.id,
+                paid_at: new Date().toISOString(),
+                webhook_data: webhookData
+              },
+              contracted_at: new Date().toISOString(),
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dias
+            });
+          
+          if (maintenanceError) {
+            console.error('❌ Failed to create maintenance:', maintenanceError);
+          } else {
+            // console.log('✅ Maintenance record created successfully');
+          }
         } else {
-          // console.log('✅ Plan added successfully');
-        }
-        
-        // ✅ ETAPA 5: Adicionar créditos
-        if (planData?.credits_granted && planData.credits_granted > 0) {
-          // console.log(`💳 Adding ${planData.credits_granted} credits to user ${profileId}`);
-          const { error: creditsError } = await supabaseService.rpc('add_credits', {
+          // console.log('📦 Adding plan to user:', profileId);
+          const { data: planData } = await supabaseService
+            .from('plans')
+            .select('credits_granted, name')
+            .eq('id', order.plan_id)
+            .single();
+          
+          const { error: planError } = await supabaseService.rpc('add_user_plan', {
             _user_id: profileId,
-            _amount: planData.credits_granted,
-            _type: 'purchase',
-            _description: `Compra via AbacatePay - Plano ${planData.name}`,
+            _plan_id: order.plan_id,
             _order_id: order.id
           });
           
-          if (creditsError) {
-            console.error('❌ Failed to add credits:', creditsError);
+          if (planError) {
+            console.error('❌ Failed to add plan:', planError);
           } else {
-            // console.log('✅ Credits added successfully');
+            // console.log('✅ Plan added successfully');
           }
-        } else {
-          // console.log('⚠️ No credits to add - plan has 0 credits_granted');
+          
+          // ✅ ETAPA 5: Adicionar créditos (somente se plano tiver créditos)
+          if (planData?.credits_granted && planData.credits_granted > 0) {
+            // console.log(`💳 Adding ${planData.credits_granted} credits to user ${profileId}`);
+            const { error: creditsError } = await supabaseService.rpc('add_credits', {
+              _user_id: profileId,
+              _amount: planData.credits_granted,
+              _type: 'purchase',
+              _description: `Compra via AbacatePay - Plano ${planData.name}`,
+              _order_id: order.id
+            });
+            
+            if (creditsError) {
+              console.error('❌ Failed to add credits:', creditsError);
+            } else {
+              // console.log('✅ Credits added successfully');
+            }
+          } else {
+            // console.log('⚠️ No credits to add - plan has 0 credits_granted');
+          }
         }
         
         // ✅ ETAPA 6: Enviar email de boas-vindas ao cliente

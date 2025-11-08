@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMaintenances } from '@/hooks/useMaintenances';
 import { useProjects } from '@/hooks/useProjects';
-import { usePayment } from '@/hooks/usePayment';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Wrench, Clock, CheckCircle, XCircle, Plus, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,11 +21,9 @@ import { toast } from 'sonner';
 
 const UserMaintenancesPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { maintenances, loading, getActiveMaintenances } = useMaintenances(user?.id);
   const { projects } = useProjects();
-  const { createPayment, loading: paymentLoading } = usePayment();
-  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
@@ -55,39 +45,7 @@ const UserMaintenancesPage = () => {
   };
 
   const handlePurchaseMaintenance = (project: any) => {
-    setSelectedProject(project);
-    setShowPurchaseDialog(true);
-  };
-
-  const handleConfirmPurchase = async () => {
-    if (!selectedProject || !user) return;
-
-    try {
-      // Aqui integramos com o sistema de pagamento existente
-      // Criando um "plano" de manutenção temporário
-      const maintenancePlanId = 'maintenance-monthly'; // ID especial para manutenções
-
-      const response = await createPayment(maintenancePlanId, {
-        name: (user as any).raw_user_meta_data?.name || user.email || '',
-        email: user.email || '',
-        phone: (user as any).raw_user_meta_data?.phone,
-        cpf: (user as any).raw_user_meta_data?.cpf,
-        password: '', // Não precisa para usuário logado
-        isLoggedInPurchase: true,
-        userId: user.id,
-      });
-
-      if (response.success && response.paymentUrl) {
-        window.open(response.paymentUrl, '_blank');
-        toast.success('Redirecionando para o pagamento...');
-        setShowPurchaseDialog(false);
-      } else {
-        toast.error(response.error || 'Erro ao processar pagamento');
-      }
-    } catch (error) {
-      console.error('Error processing maintenance payment:', error);
-      toast.error('Erro ao processar pagamento');
-    }
+    navigate(`/admin/maintenance-checkout/${project.id}`);
   };
 
   const activeMaintenances = getActiveMaintenances();
@@ -212,56 +170,6 @@ const UserMaintenancesPage = () => {
           </Table>
         </Card>
 
-        {/* Purchase Dialog */}
-        <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Contratar Manutenção Mensal</DialogTitle>
-              <DialogDescription>
-                Você está contratando manutenção para o projeto: {selectedProject?.title}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <Card className="p-4 bg-muted">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Projeto:</span>
-                    <span className="font-medium">{selectedProject?.title}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Valor:</span>
-                    <span className="font-bold text-lg">R$ 79,90</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duração:</span>
-                    <span className="font-medium">30 dias</span>
-                  </div>
-                </div>
-              </Card>
-
-              <div className="text-sm text-muted-foreground">
-                <p>A manutenção inclui:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Atualizações de conteúdo</li>
-                  <li>Correções de bugs</li>
-                  <li>Suporte técnico</li>
-                  <li>Backup regular</li>
-                </ul>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowPurchaseDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleConfirmPurchase} disabled={paymentLoading}>
-                <CreditCard className="h-4 w-4 mr-2" />
-                {paymentLoading ? 'Processando...' : 'Ir para Pagamento'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
   );
 };

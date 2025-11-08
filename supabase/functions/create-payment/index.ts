@@ -64,32 +64,57 @@ serve(async (req) => {
     }
 
     // Get plan details
-    const { data: plan, error: planError } = await supabaseClient
-      .from('plans')
-      .select('*')
-      .eq('id', planId)
-      .single();
+    let planData;
+    let isMaintenance = false;
+    
+    // Check if it's a maintenance purchase (special plan ID)
+    if (planId === 'maintenance-monthly') {
+      isMaintenance = true;
+      // Use fixed maintenance data
+      planData = {
+        id: 'maintenance-monthly',
+        name: 'Manutenção Mensal',
+        description: 'Manutenção mensal do projeto',
+        price: 79.90,
+        pix_price: 79.90,
+        stripe_price: 79.90,
+        credits_granted: 0,
+        is_active: true,
+        type: 'website_maintenance_1m'
+      };
+      
+      console.log('Processing maintenance payment:', planData);
+    } else {
+      // Get regular plan from database
+      const { data: plan, error: planError } = await supabaseClient
+        .from('plans')
+        .select('*')
+        .eq('id', planId)
+        .single();
 
-    // console.log('Plan query result:', { plan, planError });
+      // console.log('Plan query result:', { plan, planError });
 
-    if (planError || !plan) {
-      console.error('Plan not found:', planError);
-      throw new Error('Plano não encontrado. Tente novamente.');
-    }
+      if (planError || !plan) {
+        console.error('Plan not found:', planError);
+        throw new Error('Plano não encontrado. Tente novamente.');
+      }
 
-    // Validar se plano está ativo
-    if (!plan.is_active) {
-      console.error('Plan is inactive:', planId);
-      await supabaseService.from('payment_logs').insert({
-        gateway: 'UNKNOWN',
-        error_message: 'Tentativa de comprar plano inativo',
-        request_body: { planId, plan }
-      });
-      throw new Error('Este plano não está mais disponível para compra. Entre em contato com o suporte.');
+      // Validar se plano está ativo
+      if (!plan.is_active) {
+        console.error('Plan is inactive:', planId);
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'UNKNOWN',
+          error_message: 'Tentativa de comprar plano inativo',
+          request_body: { planId, plan }
+        });
+        throw new Error('Este plano não está mais disponível para compra. Entre em contato com o suporte.');
+      }
+      
+      planData = plan;
     }
 
     // Get the correct price based on gateway
-    const planPrice = useAbacatePay ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price);
+    const planPrice = useAbacatePay ? (planData.pix_price || planData.price) : (planData.stripe_price || planData.price);
     
     // Validar preço mínimo
     if (planPrice <= 0) {
@@ -98,7 +123,7 @@ serve(async (req) => {
     }
     
     let gateway = useAbacatePay ? 'ABACATEPAY' : 'HUBLA';
-    // console.log('Creating payment for plan:', plan.name, 'gateway:', gateway, 'price:', planPrice);
+    // console.log('Creating payment for plan:', planData.name, 'gateway:', gateway, 'price:', planPrice, 'isMaintenance:', isMaintenance);
 
     // Create Supabase service client for database operations
     const supabaseService = createClient(
@@ -266,8 +291,8 @@ serve(async (req) => {
         methods: ['PIX'],
         products: [{
           externalId: planId,
-          name: plan.name,
-          description: plan.description || plan.name,
+          name: planData.name,
+          description: planData.description || planData.name,
           quantity: 1,
           price: Math.round(planPrice * 100),
         }],
@@ -384,31 +409,35 @@ serve(async (req) => {
     }
 
     // Create order record - sem user_id se for novo usuário (será linkado no webhook)
+    const orderInsertData: any = {
+      user_id: profileId, // null para novos usuários
+      plan_id: isMaintenance ? null : planId, // null para manutenções
+      abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
+      hubla_transaction_id: gateway === 'HUBLA' ? paymentId : null,
+      amount: planPrice,
+      status: 'pending',
+      payment_method: customerData.paymentMethod || 'PIX',
+      gateway: gateway,
+      payment_data: {
+        customerData: {
+          name: customerData.name,
+          email: customerData.email,
+          phone: customerData.phone?.replace(/\D/g, '') || null,
+          cpf: customerData.cpf?.replace(/\D/g, '') || null
+        },
+        paymentId: paymentId,
+        installments: customerData.installments,
+        isLoggedInPurchase: customerData.isLoggedInPurchase,
+        isNewUser: !customerData.isLoggedInPurchase,
+        isMaintenance: isMaintenance,
+        projectId: customerData.projectId, // Para manutenções
+        password: customerData.isLoggedInPurchase ? undefined : customerData.password
+      }
+    };
+    
     const { data: order, error: orderError } = await supabaseService
       .from('orders')
-      .insert({
-        user_id: profileId, // null para novos usuários
-        plan_id: planId,
-        abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
-        hubla_transaction_id: gateway === 'HUBLA' ? paymentId : null,
-        amount: planPrice,
-        status: 'pending',
-        payment_method: customerData.paymentMethod || 'PIX',
-        gateway: gateway,
-        payment_data: {
-          customerData: {
-            name: customerData.name,
-            email: customerData.email,
-            phone: customerData.phone?.replace(/\D/g, '') || null,
-            cpf: customerData.cpf?.replace(/\D/g, '') || null
-          },
-          paymentId: paymentId,
-          installments: customerData.installments,
-          isLoggedInPurchase: customerData.isLoggedInPurchase,
-          isNewUser: !customerData.isLoggedInPurchase,
-          password: customerData.isLoggedInPurchase ? undefined : customerData.password
-        }
-      })
+      .insert(orderInsertData)
       .select()
       .single();
 
