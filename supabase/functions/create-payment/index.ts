@@ -138,11 +138,11 @@ serve(async (req) => {
     if (customerData.isLoggedInPurchase && customerData.userId) {
       // console.log('Using existing profile for logged in user:', customerData.userId);
       
-      // Buscar profile usando auth_user_id
+      // Buscar profile usando user_id
       const { data: existingProfile, error: profileFetchError } = await supabaseService
         .from('profiles')
         .select('id')
-        .eq('auth_user_id', customerData.userId)
+        .eq('user_id', customerData.userId)
         .maybeSingle();
 
       if (profileFetchError) {
