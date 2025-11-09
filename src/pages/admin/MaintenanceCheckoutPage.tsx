@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePayment } from '@/hooks/usePayment';
 import { useProjects } from '@/hooks/useProjects';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, QrCode, CheckCircle } from 'lucide-react';
 
 export default function MaintenanceCheckoutPage() {
@@ -42,6 +43,33 @@ export default function MaintenanceCheckoutPage() {
     if (!project || !user) return;
 
     try {
+      // Buscar dados completos do profile incluindo CPF
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('cpf, phone, name')
+        .eq('user_id', (user as any).userId)
+        .single();
+
+      if (profileError) {
+        console.error('Erro ao buscar dados do perfil:', profileError);
+        toast.error('Erro ao buscar dados do perfil. Tente novamente.');
+        return;
+      }
+
+      // Validar CPF
+      const cpf = profileData?.cpf?.replace(/\D/g, '') || '';
+      if (!cpf || cpf.length !== 11) {
+        toast.error('CPF não encontrado ou inválido no seu perfil. Por favor, atualize seus dados cadastrais antes de contratar a manutenção.');
+        return;
+      }
+
+      // Validar telefone
+      const phone = profileData?.phone?.replace(/\D/g, '') || '';
+      if (!phone || phone.length < 10) {
+        toast.error('Telefone não encontrado ou inválido no seu perfil. Por favor, atualize seus dados cadastrais antes de contratar a manutenção.');
+        return;
+      }
+
       // Limpar localStorage de tentativas anteriores
       localStorage.removeItem('orderId');
       localStorage.removeItem('paymentId');
@@ -49,17 +77,16 @@ export default function MaintenanceCheckoutPage() {
       localStorage.removeItem('maintenanceData');
       
       // Criar pagamento com identificador especial de manutenção
-      // Incluir projectId para o webhook processar
       const response = await createPayment('maintenance-monthly', {
-        name: (user as any).name || user.email || '',
+        name: profileData?.name || user.email || '',
         email: user.email || '',
-        phone: (user as any).phone || '',
-        cpf: (user as any).cpf || '',
+        phone: phone,
+        cpf: cpf,
         password: '',
         paymentMethod,
         isLoggedInPurchase: true,
-        userId: (user as any).userId, // Usar userId (auth.users.id) ao invés de id (profile.id)
-        projectId: project.id, // Incluir projectId para criar manutenção
+        userId: (user as any).userId,
+        projectId: project.id,
       } as any);
 
       if (response.success && response.paymentUrl) {
