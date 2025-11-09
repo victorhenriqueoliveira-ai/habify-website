@@ -36,17 +36,19 @@ export const useUserPlans = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar profile_id
+      // Buscar profile e role do usuário
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, role')
         .eq('user_id', user.id)
         .single();
 
       if (!profile) return;
 
-      // Buscar todos os planos do usuário
-      const { data: userPlansData, error: plansError } = await supabase
+      const isAdminOrDev = profile.role === 'admin' || profile.role === 'dev';
+
+      // Buscar planos - admin/dev veem todos, usuários veem apenas os seus
+      let query = supabase
         .from('user_plans_detailed')
         .select(`
           id,
@@ -58,12 +60,21 @@ export const useUserPlans = () => {
           notes,
           expires_at,
           used_for_project_id,
+          user_id,
+          user_name,
+          user_email,
           plans:plan_id (
             name,
             type
           )
-        `)
-        .eq('user_id', profile.id)
+        `);
+
+      // Admin/Dev veem todos os planos, usuários veem apenas os seus
+      if (!isAdminOrDev) {
+        query = query.eq('user_id', profile.id);
+      }
+
+      const { data: userPlansData, error: plansError } = await query
         .order('created_at', { ascending: false });
 
       if (plansError) throw plansError;
@@ -84,24 +95,29 @@ export const useUserPlans = () => {
 
       setPlans(formattedPlans);
 
-      // Buscar planos disponíveis usando a função RPC
-      const { data: availableData, error: availableError } = await supabase
-        .rpc('get_available_user_plans', { _user_id: profile.id });
+      // Buscar planos disponíveis - apenas para usuários regulares
+      // Admin/Dev não precisam de planos disponíveis
+      if (!isAdminOrDev) {
+        const { data: availableData, error: availableError } = await supabase
+          .rpc('get_available_user_plans', { _user_id: profile.id });
 
-      if (availableError) {
-        console.error('Error fetching available plans:', availableError);
-        setAvailablePlans([]);
+        if (availableError) {
+          console.error('Error fetching available plans:', availableError);
+          setAvailablePlans([]);
+        } else {
+          const formattedAvailable: AvailablePlan[] = (availableData || []).map((plan: any) => ({
+            plan_id: plan.plan_id,
+            plan_name: plan.plan_name,
+            plan_type: plan.plan_type,
+            plan_description: plan.plan_description,
+            plan_features: plan.plan_features,
+            count: Number(plan.count),
+            expires_at: plan.expires_at,
+          }));
+          setAvailablePlans(formattedAvailable);
+        }
       } else {
-        const formattedAvailable: AvailablePlan[] = (availableData || []).map((plan: any) => ({
-          plan_id: plan.plan_id,
-          plan_name: plan.plan_name,
-          plan_type: plan.plan_type,
-          plan_description: plan.plan_description,
-          plan_features: plan.plan_features,
-          count: Number(plan.count),
-          expires_at: plan.expires_at,
-        }));
-        setAvailablePlans(formattedAvailable);
+        setAvailablePlans([]);
       }
     } catch (error) {
       console.error('Error fetching user plans:', error);

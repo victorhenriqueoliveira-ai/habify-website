@@ -40,6 +40,20 @@ export const useMaintenances = (userId?: string, projectId?: string) => {
       setLoading(true);
       setError(null);
 
+      // Verificar se o usuário atual é admin/dev
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      let isAdminOrDev = false;
+
+      if (currentUser) {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', currentUser.id)
+          .single();
+        
+        isAdminOrDev = currentProfile?.role === 'admin' || currentProfile?.role === 'dev';
+      }
+
       let query = supabase
         .from('maintenances')
         .select(`
@@ -48,8 +62,9 @@ export const useMaintenances = (userId?: string, projectId?: string) => {
         `)
         .order('contracted_at', { ascending: false });
 
+      // Se userId foi passado explicitamente, filtrar por ele
+      // Se não foi passado e não é admin/dev, filtrar pelo usuário atual
       if (userId) {
-        // Buscar maintenances do usuário através do profile_id
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
@@ -59,7 +74,19 @@ export const useMaintenances = (userId?: string, projectId?: string) => {
         if (profile) {
           query = query.eq('user_id', profile.id);
         }
+      } else if (!isAdminOrDev && currentUser) {
+        // Usuário regular vê apenas suas manutenções
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        if (profile) {
+          query = query.eq('user_id', profile.id);
+        }
       }
+      // Admin/Dev sem userId específico veem todas as manutenções
 
       if (projectId) {
         query = query.eq('project_id', projectId);

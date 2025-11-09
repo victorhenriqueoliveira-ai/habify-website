@@ -9,14 +9,35 @@ export const useNotifications = (userId?: string) => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
+
+      // Verificar se o usuário atual é admin/dev
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      let isAdminOrDev = false;
+
+      if (currentUser) {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', currentUser.id)
+          .single();
+        
+        isAdminOrDev = currentProfile?.role === 'admin' || currentProfile?.role === 'dev';
+      }
+
       let query = supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Se userId foi passado explicitamente, filtrar por ele
+      // Se não foi passado e não é admin/dev, filtrar pelo usuário atual
       if (userId) {
         query = query.eq('user_id', userId);
+      } else if (!isAdminOrDev && currentUser) {
+        // Usuário regular vê apenas suas notificações
+        query = query.eq('user_id', currentUser.id);
       }
+      // Admin/Dev sem userId específico veem todas as notificações
 
       const { data, error } = await query;
 
