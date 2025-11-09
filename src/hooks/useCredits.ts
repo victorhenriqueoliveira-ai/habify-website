@@ -37,26 +37,39 @@ export const useCredits = () => {
     }
   };
 
-  const fetchHistory = async () => {
+  const fetchHistory = async (specificUserId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar profile_id primeiro
-      const { data: profile } = await supabase
+      // Buscar profile e role do usuário atual
+      const { data: currentProfile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, role')
         .eq('user_id', user.id)
         .single();
 
-      if (!profile) return;
+      if (!currentProfile) return;
 
-      const { data, error } = await supabase
+      const isAdminOrDev = currentProfile.role === 'admin' || currentProfile.role === 'dev';
+
+      let query = supabase
         .from('credits_history')
         .select('*')
-        .eq('user_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(50);
+
+      // Se for admin/dev e não foi especificado um usuário, busca tudo
+      // Se foi especificado um usuário, busca apenas dele
+      // Se não for admin/dev, busca apenas do usuário atual
+      if (specificUserId) {
+        query = query.eq('user_id', specificUserId);
+      } else if (!isAdminOrDev) {
+        query = query.eq('user_id', currentProfile.id);
+      }
+      // Admin/Dev sem specificUserId veem todo o histórico
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setHistory((data || []) as CreditsHistory[]);
