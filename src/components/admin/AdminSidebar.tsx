@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
   Users,
   Building2,
   User,
@@ -13,17 +12,7 @@ import {
   Package,
   Wrench
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import Logo from '../../../public/logotipo_habify.png';
@@ -115,85 +104,185 @@ const menuItems = [
   },
 ];
 
-export const AdminSidebar = () => {
-  const { state } = useSidebar();
+interface AdminSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
+  const [isHovered, setIsHovered] = useState(false);
   const location = useLocation();
   const { user, hasRole } = useAuth();
-  const isCollapsed = state === 'collapsed';
 
   const filteredItems = menuItems.filter(item => hasRole(item.roles));
+  
+  const isExpanded = isHovered || isOpen;
+  
+  const sidebarVariants = {
+    collapsed: { width: '64px' },
+    expanded: { width: '240px' }
+  };
 
-  const getNavCls = (isActive: boolean) =>
-    cn(
-      'transition-colors duration-200',
-      isActive 
-        ? 'bg-primary text-primary-foreground font-medium' 
-        : 'hover:bg-accent hover:text-accent-foreground'
-    );
+  const handleNavClick = () => {
+    if (isOpen) {
+      onClose();
+    }
+  };
 
   return (
-    <Sidebar className={cn('border-r bg-background', isCollapsed ? 'w-16' : 'w-56 sm:w-64')} collapsible="icon">
-      <SidebarContent className="flex flex-col h-full">
+    <>
+      {/* Desktop Sidebar */}
+      <motion.aside
+        className={cn(
+          "hidden lg:flex flex-col bg-background border-r border-border shadow-sm transition-all duration-300 ease-in-out",
+          "fixed left-0 top-0 bottom-0 z-30"
+        )}
+        initial="collapsed"
+        animate={isExpanded ? "expanded" : "collapsed"}
+        variants={sidebarVariants}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {/* Logo */}
-        <div className="p-3 sm:p-4 border-b flex-shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-              <img src={Logo} alt="HabiFy Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <h1 className="font-bold text-base sm:text-lg truncate">HabiFy</h1>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  {hasRole(['admin']) && "Admin"} {hasRole(['dev']) && "Dev"} {hasRole(['user']) && "Usuário"} Painel
-                </p>
-              </div>
+        <div className="h-16 flex items-center justify-center border-b border-border px-4">
+          <motion.div 
+            className="flex items-center gap-3 overflow-hidden"
+            animate={{ opacity: isExpanded ? 1 : 0 }}
+          >
+            <img src={Logo} alt="HabiFy" className="w-8 h-8 flex-shrink-0 object-contain" />
+            {isExpanded && (
+              <motion.h1 
+                className="font-bold text-lg whitespace-nowrap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                HabiFy
+              </motion.h1>
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Navigation */}
-        <SidebarGroup className="flex-1 overflow-y-auto">
-          {!isCollapsed && <SidebarGroupLabel className="text-xs">Menu</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {filteredItems.map((item) => {
-                const isActive = location.pathname === item.url || 
-                  (item.url === '/admin' && location.pathname === '/admin/');
-                
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild className="h-10">
-                      <NavLink 
-                        to={item.url} 
-                        end
-                        className={getNavCls(isActive)}
-                      >
-                        <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                        {!isCollapsed && <span className="text-sm truncate">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <nav className="flex-1 overflow-y-auto py-4 px-2">
+          <div className="space-y-1">
+            {filteredItems.map((item) => {
+              const isActive = location.pathname === item.url || 
+                (item.url === '/admin' && location.pathname === '/admin/');
+              
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  end
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                    "hover:bg-accent/50",
+                    isActive 
+                      ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {isExpanded && (
+                    <motion.span 
+                      className="text-sm whitespace-nowrap"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.05 }}
+                    >
+                      {item.title}
+                    </motion.span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        </nav>
 
         {/* User Info */}
-        {!isCollapsed && user && (
-          <div className="mt-auto p-3 sm:p-4 border-t flex-shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-primary" />
+        {user && isExpanded && (
+          <motion.div 
+            className="p-4 border-t border-border"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium truncate">{user.name}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground capitalize truncate">{user.role}</p>
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize truncate">{user.role}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </motion.aside>
+
+      {/* Mobile Sidebar */}
+      <motion.aside
+        className={cn(
+          "lg:hidden fixed left-0 top-0 bottom-0 z-50 bg-background shadow-2xl w-64"
+        )}
+        initial={{ x: '-100%' }}
+        animate={{ x: isOpen ? 0 : '-100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      >
+        {/* Logo */}
+        <div className="h-16 flex items-center px-6 border-b border-border">
+          <img src={Logo} alt="HabiFy" className="w-8 h-8 object-contain" />
+          <h1 className="font-bold text-lg ml-3">HabiFy</h1>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <div className="space-y-1">
+            {filteredItems.map((item) => {
+              const isActive = location.pathname === item.url || 
+                (item.url === '/admin' && location.pathname === '/admin/');
+              
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  end
+                  onClick={handleNavClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                    "hover:bg-accent/50",
+                    isActive 
+                      ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">{item.title}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User Info */}
+        {user && (
+          <div className="p-4 border-t border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground capitalize truncate">{user.role}</p>
               </div>
             </div>
           </div>
         )}
-      </SidebarContent>
-    </Sidebar>
+      </motion.aside>
+
+      {/* Spacer for desktop to push content */}
+      <div className="hidden lg:block w-16 flex-shrink-0" />
+    </>
   );
 };
