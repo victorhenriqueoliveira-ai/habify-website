@@ -132,42 +132,44 @@ export const AdminSidebar = () => {
     );
 
   return (
-    <Sidebar className={cn('border-r', isCollapsed ? 'w-16' : 'w-64')} collapsible="icon">
-      <SidebarContent>
+    <Sidebar className={cn('border-r bg-background', isCollapsed ? 'w-16' : 'w-56 sm:w-64')} collapsible="icon">
+      <SidebarContent className="flex flex-col h-full">
         {/* Logo */}
-        <div className="p-4 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 flex items-center justify-center">
-              <img src={Logo} alt="HabiFy Logo" className="w-6 h-6" />
+        <div className="p-3 sm:p-4 border-b flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+              <img src={Logo} alt="HabiFy Logo" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
             </div>
             {!isCollapsed && (
-              <div>
-                <h1 className="font-bold text-lg">HabiFy</h1>
-                <p className="text-xs text-muted-foreground"> {hasRole(['admin']) && "Admin"} {hasRole(['dev']) && "Dev"} {hasRole(['user']) && "Usuário"} Painel</p>
+              <div className="min-w-0">
+                <h1 className="font-bold text-base sm:text-lg truncate">HabiFy</h1>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  {hasRole(['admin']) && "Admin"} {hasRole(['dev']) && "Dev"} {hasRole(['user']) && "Usuário"} Painel
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+        <SidebarGroup className="flex-1 overflow-y-auto">
+          {!isCollapsed && <SidebarGroupLabel className="text-xs">Menu</SidebarGroupLabel>}
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {filteredItems.map((item) => {
                 const isActive = location.pathname === item.url || 
                   (item.url === '/admin' && location.pathname === '/admin/');
                 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton asChild className="h-10">
                       <NavLink 
                         to={item.url} 
                         end
                         className={getNavCls(isActive)}
                       >
-                        <item.icon className="w-5 h-5" />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        <item.icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        {!isCollapsed && <span className="text-sm truncate">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -179,14 +181,14 @@ export const AdminSidebar = () => {
 
         {/* User Info */}
         {!isCollapsed && user && (
-          <div className="mt-auto p-4 border-t">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                <User className="w-4 h-4" />
+          <div className="mt-auto p-3 sm:p-4 border-t flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                <p className="text-xs sm:text-sm font-medium truncate">{user.name}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground capitalize truncate">{user.role}</p>
               </div>
             </div>
           </div>

@@ -9,13 +9,9 @@ export const AdminLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <div className="flex items-center gap-2 border-b p-2 lg:hidden">
-            <SidebarTrigger className="h-10 w-10" />
-            <span className="font-semibold">Menu</span>
-          </div>
+        <div className="flex-1 flex flex-col w-full overflow-hidden">
           <AdminTopbar />
-          <main className="flex-1 p-4 lg:p-6">
+          <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto">
             <Outlet />
           </main>
         </div>
