@@ -15,7 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import Logo from '../../../public/logotipo_habify.png';
+import Logo from '/logotipo_habify.png';
 
 const menuItems = [
   {
@@ -134,8 +134,8 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
       {/* Desktop Sidebar */}
       <motion.aside
         className={cn(
-          "hidden lg:flex flex-col bg-background border-r border-border shadow-sm transition-all duration-300 ease-in-out",
-          "fixed left-0 top-0 bottom-0 z-30"
+          "hidden lg:flex flex-col bg-background border-r border-border shadow-sm transition-all duration-300",
+          "fixed left-0 top-0 bottom-0 z-20"
         )}
         initial="collapsed"
         animate={isExpanded ? "expanded" : "collapsed"}
@@ -144,22 +144,11 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-center border-b border-border px-4">
+        <div className="h-16 flex items-center justify-center border-border px-4">
           <motion.div 
             className="flex items-center gap-3 overflow-hidden"
             animate={{ opacity: isExpanded ? 1 : 0 }}
           >
-            <img src={Logo} alt="HabiFy" className="w-8 h-8 flex-shrink-0 object-contain" />
-            {isExpanded && (
-              <motion.h1 
-                className="font-bold text-lg whitespace-nowrap"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                HabiFy
-              </motion.h1>
-            )}
           </motion.div>
         </div>
 
@@ -179,7 +168,7 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                     "hover:bg-accent/50",
                     isActive 
-                      ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 font-semibold font-medium shadow-sm" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >

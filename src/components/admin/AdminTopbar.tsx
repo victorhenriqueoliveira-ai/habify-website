@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import Logo from '../../../public/logotipo_habify.png';
+import Logo from '/logotipo_habify.png';
 
 interface AdminTopbarProps {
   onMenuClick: () => void;
@@ -74,7 +74,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background shadow-sm">
+    <header className="sticky top-0 z-40 w-full bg-background shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
         {/* Left side - Menu, Logo & Breadcrumbs */}
         <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -110,17 +110,6 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
 
         {/* Right side - Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* CTA Button - Hidden on small screens */}
-          {hasRole(['user']) && (
-            <Button
-              onClick={() => navigate('/admin/my-projects')}
-              className="hidden lg:flex items-center gap-2 bg-primary hover:bg-primary/90"
-              size="sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Novo Projeto</span>
-            </Button>
-          )}
 
           {/* Role Badge */}
           <div className="hidden md:flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">

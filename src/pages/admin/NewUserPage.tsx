@@ -105,17 +105,9 @@ export const NewUserPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/admin/users')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Novo Usuário</h1>
           <p className="text-muted-foreground">
@@ -235,7 +227,7 @@ export const NewUserPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex space-x-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
