@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import Logo from '../../../public/logotipo_habify.png';
+import Logo from '/logotipo_habify.png';
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

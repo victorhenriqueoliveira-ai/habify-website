@@ -101,17 +101,7 @@ export default function CreateAdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/admin/users')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
-
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold">Criar Novo Administrador</h1>
         <p className="text-muted-foreground">Cadastre um novo usuário Admin ou Dev</p>

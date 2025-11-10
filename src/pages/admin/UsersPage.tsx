@@ -93,7 +93,7 @@ export const UsersPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex md:justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
           <p className="text-muted-foreground">
@@ -105,6 +105,7 @@ export const UsersPage = () => {
           Novo Usuário
         </Button>
       </div>
+      
 
       {/* Filters */}
       <Card>
