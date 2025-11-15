@@ -257,6 +257,16 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@supports (padding: env(safe-area-inset-right)) {
+  .safe-area-inset-right {
+    padding-right: env(safe-area-inset-right);
+  }
 }
 
 /* Touch-friendly minimum sizes */
@@ -324,5 +334,34 @@ html {
 @media (prefers-color-scheme: dark) {
   .mobile-high-contrast {
     /* Higher contrast for mobile readability */
+  }
+}
+
+/* Mobile menu optimizations */
+@media (max-width: 767px) {
+  /* Prevent body scroll when mobile menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+  
+  /* Optimize touch scrolling for mobile menu */
+  .mobile-menu-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Improve tap targets on mobile */
+  .mobile-tap-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Landscape mode optimizations for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .mobile-menu-landscape {
+    max-height: 100vh;
   }
 }
