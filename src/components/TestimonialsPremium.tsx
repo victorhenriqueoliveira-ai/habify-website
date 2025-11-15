@@ -51,7 +51,7 @@ const TestimonialsPremium: React.FC = () => {
               Depoimentos Reais
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Corretores que <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Transformaram suas Vendas</span>
+              Corretores que <span className="bg-gradient-to-r from-primary bg-clip-text text-primary">Transformaram suas Vendas</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Veja como profissionais do mercado imobiliário estão gerando mais leads e vendendo mais com a HabiFy
@@ -75,7 +75,7 @@ const TestimonialsPremium: React.FC = () => {
         </div>
 
         {/* Rating Summary */}
-        <ScrollReveal>
+        {/* <ScrollReveal>
           <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-2xl p-8 border border-primary/20">
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="text-center md:text-left">
@@ -87,7 +87,7 @@ const TestimonialsPremium: React.FC = () => {
                   </div>
                   <span className="text-3xl font-bold text-foreground">4.9</span>
                 </div>
-                <p className="text-muted-foreground">Baseado em 500+ avaliações verificadas</p>
+                <p className="text-muted-foreground">Baseado em 100+ avaliações verificadas</p>
               </div>
 
               <div className="flex items-center gap-8">
@@ -96,7 +96,7 @@ const TestimonialsPremium: React.FC = () => {
                   <div className="text-sm text-muted-foreground">Satisfação</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-accent mb-1">500+</div>
+                  <div className="text-3xl font-bold text-primary mb-1">100+</div>
                   <div className="text-sm text-muted-foreground">Clientes</div>
                 </div>
                 <div className="text-center">
@@ -106,7 +106,7 @@ const TestimonialsPremium: React.FC = () => {
               </div>
             </div>
           </div>
-        </ScrollReveal>
+        </ScrollReveal> */}
 
         {/* CTA */}
         <ScrollReveal>

@@ -91,10 +91,9 @@ const Index = () => {
       <AdvancedSchema />
       <StructuredData />
       <Navbar />
-      <FloatingWhatsAppButton />
+      {/* <FloatingWhatsAppButton /> */}
       <StickyCTABar showAfterScroll={300} />
       <StickyDesktopCTA showAfterScroll={800} />
-      <ExitIntentPopup />
       <main className="space-y-0">
         <Hero />
         <FeaturesAnimated />
@@ -107,7 +106,7 @@ const Index = () => {
         <TrafficExplainer />
         <PricingSection />
         <FAQSection />
-        <TestimonialsPremium />
+        {/* <TestimonialsPremium /> */}
       </main>
       <Footer />
     </div>

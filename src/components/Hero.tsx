@@ -117,7 +117,7 @@ const Hero = () => {
             </p>
 
             {/* Animated Stats Counter */}
-            <div 
+            {/* <div 
               ref={statsRef}
               className="grid grid-cols-3 gap-4 sm:gap-6 py-6 opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.6s" }}
@@ -140,7 +140,7 @@ const Hero = () => {
                 </div>
                 <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">Aumento Médio</div>
               </div>
-            </div>
+            </div> */}
             
             {/* Premium CTAs with Magnetic Effect */}
             <div 
@@ -178,16 +178,16 @@ const Hero = () => {
             {/* Trust Indicators Below CTAs */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground opacity-0 animate-fade-in" style={{ animationDelay: "0.8s" }}>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-pulse-500" />
-                <span>Sem cartão de crédito</span>
+                <CheckCircle className="w-4 h-4 text-white" />
+                <span className="text-white">Qualidade 100% garantida</span>
               </div>
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-pulse-500" />
-                <span>Dados 100% seguros</span>
+                <Shield className="w-4 h-4 text-white" />
+                <span className="text-white">Dados 100% seguros</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-pulse-500" />
-                <span>Resposta em até 1h</span>
+                <Clock className="w-4 h-4 text-white" />
+                <span className="text-white">Resposta em até 1h</span>
               </div>
             </div>
           </div>
