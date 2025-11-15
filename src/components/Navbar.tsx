@@ -62,18 +62,18 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="md:flex items-center space-x-6 lg:space-x-8">
-          <button onClick={scrollToTop} className="nav-link font-medium hover:text-primary transition-colors">
+          <button onClick={scrollToTop} className="hidden md:inline-block nav-link font-medium hover:text-primary transition-colors">
             Início
           </button>
           <button 
             onClick={() => scrollToSection('#portfolio')} 
-            className="nav-link font-medium hover:text-primary transition-colors"
+            className="hidden md:inline-block nav-link font-medium hover:text-primary transition-colors"
           >
             Portfólio
           </button>
           <button 
             onClick={() => scrollToSection('#plans')} 
-            className="nav-link font-medium hover:text-primary transition-colors"
+            className="hidden md:inline-block nav-link font-medium hover:text-primary transition-colors"
           >
             Planos
           </button>
