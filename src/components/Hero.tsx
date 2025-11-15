@@ -5,6 +5,8 @@ import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
 import LottieAnimation from "./LottieAnimation";
 import OptimizedImage from "./OptimizedImage";
+import MagneticButton from "./animations/MagneticButton";
+import ParallaxLayer from "./animations/ParallaxLayer";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,11 +60,17 @@ const Hero = () => {
         padding: isMobile ? '120px 16px 60px' : '140px 20px 80px'
       }}
     >
-      {/* Animated Background Gradients */}
+      {/* Animated Background Gradients with Parallax */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-br from-pulse-500/30 via-pulse-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-gradient-to-tr from-pulse-600/20 via-pulse-500/10 to-transparent rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-gradient-to-r from-pulse-400/10 to-pulse-600/10 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        <ParallaxLayer speed={0.3} className="absolute inset-0">
+          <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-br from-pulse-500/30 via-pulse-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.5} className="absolute inset-0">
+          <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-gradient-to-tr from-pulse-600/20 via-pulse-500/10 to-transparent rounded-full blur-3xl animate-float"></div>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.4} className="absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-gradient-to-r from-pulse-400/10 to-pulse-600/10 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        </ParallaxLayer>
       </div>
       
       <div className="container px-4 sm:px-6 lg:px-8 relative z-10" ref={containerRef}>
@@ -133,31 +141,31 @@ const Hero = () => {
               </div>
             </div>
             
-            {/* Premium CTAs */}
+            {/* Premium CTAs with Magnetic Effect */}
             <div 
               className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.7s" }}
             >
-              <a 
-                href="#plans"
+              <MagneticButton 
                 className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-8 py-4 text-base sm:text-lg shadow-2xl shadow-pulse-500/50 hover:shadow-pulse-500/80 transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50"
+                onClick={() => window.location.href = '#plans'}
+                strength={0.4}
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Criar meu site agora
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              </a>
+              </MagneticButton>
               
-              <a 
-                href="https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
-                target="_blank"
-                rel="noopener noreferrer"
+              <MagneticButton
                 className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-background/80 backdrop-blur-sm text-[#25D366] px-8 py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white hover:shadow-2xl hover:shadow-[#25D366]/30 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/50"
+                onClick={() => window.open('https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy', '_blank')}
+                strength={0.4}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Falar com Especialista
-              </a>
+              </MagneticButton>
             </div>
 
             {/* Trust Indicators Below CTAs */}
