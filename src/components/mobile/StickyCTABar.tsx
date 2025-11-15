@@ -49,7 +49,7 @@ const StickyCTABar: React.FC<StickyCTABarProps> = ({ showAfterScroll = 500 }) =>
                     });
                   }
                 }}
-                className="flex-1 flex items-center justify-center gap-2 py-4 px-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-shadow touch-manipulation min-h-[48px]"
+                className="flex-1 flex items-center justify-center gap-2 py-4 px-4 bg-primary from-primary text-primary-foreground rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-shadow touch-manipulation min-h-[48px]"
               >
                 <span>Criar Site</span>
                 <ArrowRight className="w-4 h-4" />

@@ -90,7 +90,7 @@ const PortfolioShowcasePremium: React.FC = () => {
             Portfólio Premium
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Projetos que <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Transformaram Negócios</span>
+            Projetos que <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">Transformaram Negócios</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Cada site é criado com design premium, performance excepcional e foco total em conversão de leads
@@ -200,7 +200,7 @@ const PortfolioShowcasePremium: React.FC = () => {
         >
           <a
             href="#plans"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary text-primary-foreground rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:scale-105"
           >
             Quero Meu Site Premium
             <TrendingUp className="w-5 h-5" />

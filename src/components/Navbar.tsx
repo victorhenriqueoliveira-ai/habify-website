@@ -85,7 +85,7 @@ const Navbar = () => {
           </button>
           <a 
             href="/login" 
-            className="px-6 py-2.5 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
+            className="px-6 py-2.5 bg-primary from-primary text-primary-foreground rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
           >
             Login
           </a>

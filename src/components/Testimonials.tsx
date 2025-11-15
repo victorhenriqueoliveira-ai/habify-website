@@ -62,7 +62,7 @@ const Testimonials = () => {
         <div className="flex items-center gap-4 mb-8 sm:mb-16">
           <div className="flex-1 h-[1px] bg-gray-300"></div>
         </div>        
-        <h2 className="text-5xl font-display font-bold mb-12 text-left">Corretores que já transformaram suas vendas</h2>
+        <h2 className="text-5xl font-bold mb-12 text-left">Corretores que já transformaram suas vendas</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {testimonials.map((testimonial, index) => <TestimonialCard key={index} content={testimonial.content} author={testimonial.author} role={testimonial.role} gradient={testimonial.gradient} backgroundImage={testimonial.backgroundImage} />)}
