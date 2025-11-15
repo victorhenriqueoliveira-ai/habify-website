@@ -5,6 +5,7 @@ import Hero from "@/components/Hero";
 import SEO from "@/components/SEO";
 import StructuredData from "@/components/StructuredData";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
+import StickyCTABar from "@/components/mobile/StickyCTABar";
 import PortfolioShowcasePremium from "@/components/PortfolioShowcasePremium";
 import TechnologyExplainer from "@/components/TechnologyExplainer";
 import LeadCaptureFlow from "@/components/LeadCaptureFlow";
@@ -80,6 +81,7 @@ const Index = () => {
       <StructuredData />
       <Navbar />
       <FloatingWhatsAppButton />
+      <StickyCTABar showAfterScroll={300} />
       <main className="space-y-0">
         <Hero />
         <FeaturesAnimated />
