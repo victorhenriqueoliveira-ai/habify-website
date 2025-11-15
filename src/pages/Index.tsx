@@ -7,6 +7,7 @@ import PortfolioShowcase from "@/components/PortfolioShowcase";
 import TechnologyExplainer from "@/components/TechnologyExplainer";
 import LeadCaptureFlow from "@/components/LeadCaptureFlow";
 import TrafficExplainer from "@/components/TrafficExplainer";
+import ProjectTypesExplainer from "@/components/ProjectTypesExplainer";
 import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
@@ -74,6 +75,7 @@ const Index = () => {
         <TechnologyExplainer />
         <LeadCaptureFlow />
         <TrafficExplainer />
+        <ProjectTypesExplainer />
         <ProblemsSection />
         <SpecsSection />
         <DetailsSection />
