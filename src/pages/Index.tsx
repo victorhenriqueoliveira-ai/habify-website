@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
@@ -62,6 +63,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
+      <FloatingWhatsAppButton />
       <main className="space-y-4 sm:space-y-8"> {/* Reduced space on mobile */}
         <Hero />
         <ProblemsSection />
