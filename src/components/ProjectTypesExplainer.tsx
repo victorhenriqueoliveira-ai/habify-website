@@ -54,13 +54,13 @@ const ProjectTypesExplainer = () => {
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">
-                  <strong>1 projeto/imóvel</strong> destacado
+                  <strong>1 imóvel/empreendimento</strong> destacado
                 </span>
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">
-                  Portfólio com <strong>até 5 fotos</strong> profissionais
+                  Galeria com <strong>fotos profissionais</strong> do imóvel
                 </span>
               </div>
               <div className="flex items-start gap-3">
@@ -130,13 +130,13 @@ const ProjectTypesExplainer = () => {
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">
-                  <strong>Múltiplos projetos</strong> no mesmo site
+                  <strong>Múltiplos imóveis</strong> no mesmo site
                 </span>
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">
-                  Até <strong>20+ imóveis listados</strong> com fotos e detalhes
+                  Até <strong>5 imóveis listados</strong> com fotos e detalhes
                 </span>
               </div>
               <div className="flex items-start gap-3">
@@ -148,7 +148,7 @@ const ProjectTypesExplainer = () => {
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">
-                  Perfeito para <strong>estoque variado</strong> de propriedades
+                  Perfeito para <strong>carteira compacta</strong> de propriedades
                 </span>
               </div>
             </div>

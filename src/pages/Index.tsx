@@ -74,17 +74,17 @@ const Index = () => {
       <StructuredData />
       <Navbar />
       <FloatingWhatsAppButton />
-      <main className="space-y-4 sm:space-y-8"> {/* Reduced space on mobile */}
+      <main className="space-y-0">
         <Hero />
+        <Features />
         <PortfolioShowcase />
-        <TechnologyExplainer />
-        <LeadCaptureFlow />
-        <TrafficExplainer />
-        <ProjectTypesExplainer />
         <ProblemsSection />
         <SpecsSection />
         <DetailsSection />
-        <Features />
+        <LeadCaptureFlow />
+        <TechnologyExplainer />
+        <ProjectTypesExplainer />
+        <TrafficExplainer />
         <PricingSection />
         <FAQSection />
         <Testimonials />
