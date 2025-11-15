@@ -9,8 +9,8 @@ const features = [
   },
   {
     icon: Palette,
-    title: "Edição Fácil, Sem Código",
-    description: "Painel intuitivo para editar preços, fotos, descrições e conteúdo. Sem necessidade de conhecimento técnico ou programação."
+    title: "Manutenção Rápida e Eficiente",
+    description: "Precisa atualizar preços, fotos ou descrições? Solicite alterações e receba em até 72h. Clientes com plano de manutenção têm edições ilimitadas."
   },
   {
     icon: Shield,

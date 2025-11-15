@@ -19,15 +19,15 @@ const steps = [
   {
     icon: MousePointerClick,
     number: "3",
-    title: "Clica em 'Tenho Interesse'",
-    description: "Formulário rápido e simples: nome, telefone e email. Sem complicação, sem burocacia, conversão otimizada.",
+    title: "Clica no Botão de CTA",
+    description: "Botões estratégicos de WhatsApp posicionados em pontos-chave da página. Um clique e o cliente inicia conversa direta com você.",
     color: "from-orange-500 to-orange-600"
   },
   {
     icon: MessageCircle,
     number: "4",
-    title: "Lead Chega no Seu WhatsApp",
-    description: "Notificação instantânea com todos os dados do cliente interessado, pronto para você entrar em contato.",
+    title: "Conversa Direta no WhatsApp",
+    description: "O cliente é direcionado automaticamente para seu WhatsApp, já demonstrando interesse. Pronto para você fechar negócio!",
     color: "from-green-500 to-green-600"
   }
 ];

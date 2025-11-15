@@ -64,6 +64,7 @@ const Navbar = () => {
               Home
             </a>
             <a href="#features" className="nav-link">About</a>
+            <a href="#faq" className="nav-link">FAQ</a>
             <a href="/termos-de-uso" className="nav-link">Termos de Uso</a>
             <a href="/login" className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
               Login
@@ -109,7 +110,14 @@ const Navbar = () => {
             About
           </a>
           <a
-            href="#termos-de-uso"
+            href="#faq"
+            onClick={() => setIsMenuOpen(false)}
+            className="text-xl font-medium py-3 px-6 w-full text-center rounded-lg hover:bg-gray-100"
+          >
+            FAQ
+          </a>
+          <a
+            href="/termos-de-uso"
             onClick={() => setIsMenuOpen(false)}
             className="text-xl font-medium py-3 px-6 w-full text-center rounded-lg hover:bg-gray-100"
           >

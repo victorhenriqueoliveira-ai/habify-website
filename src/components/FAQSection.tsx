@@ -26,17 +26,17 @@ const faqs = [
   {
     id: "faq-4",
     question: "Posso editar o site depois de pronto?",
-    answer: "Sim! Você terá acesso a um painel administrativo intuitivo e fácil de usar, onde pode editar preços, fotos, descrições e todo o conteúdo do site. Não precisa de conhecimento técnico ou programação. É tão simples quanto usar redes sociais."
+    answer: "Sim! Após solicitação, fazemos as edições em até 72 horas úteis. Para ter acesso a edições ilimitadas, você pode contratar um plano de manutenção. Alternativamente, podemos enviar o código-fonte do site para você, já que o site é 100% seu e você tem total propriedade."
   },
   {
     id: "faq-5",
     question: "Posso colocar vários imóveis no mesmo site?",
-    answer: "Sim! Oferecemos dois formatos: Site para Projeto Único (ideal para 1 empreendimento específico com até 5 fotos) e Portfólio Completo (até 20+ imóveis listados com sistema de filtros). Escolha o que melhor atende suas necessidades e tipo de negócio."
+    answer: "Sim! Oferecemos dois formatos: Site para Projeto Único (ideal para 1 empreendimento/imóvel específico) e Portfólio com Múltiplos Imóveis (até 5 imóveis listados com sistema de filtros). Escolha o formato que melhor atende suas necessidades e tipo de negócio."
   },
   {
     id: "faq-6",
     question: "Como funciona a captação de leads 24/7?",
-    answer: "Seu site possui formulários inteligentes e otimizados que capturam dados de clientes interessados a qualquer hora do dia ou da noite. Sempre que alguém preencher o formulário, você recebe notificação instantânea no WhatsApp com todos os dados do lead. Funciona mesmo enquanto você dorme!"
+    answer: "Seu site possui botões de CTA estrategicamente posicionados que direcionam clientes interessados diretamente para o seu WhatsApp a qualquer hora do dia ou da noite. Os visitantes clicam no botão e iniciam uma conversa direta com você. Simples, direto e eficiente para não perder nenhuma oportunidade!"
   },
   {
     id: "faq-7",

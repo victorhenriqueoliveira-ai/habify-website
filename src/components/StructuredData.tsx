@@ -129,7 +129,7 @@ const StructuredData = () => {
         "name": "Posso editar o site depois de pronto?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! Você terá acesso a um painel administrativo intuitivo onde pode editar preços, fotos, descrições e todo o conteúdo do site sem necessidade de conhecimento técnico."
+          "text": "Sim! Após solicitação, fazemos as edições em até 72 horas úteis. Para ter acesso a edições ilimitadas, você pode contratar um plano de manutenção. Alternativamente, podemos enviar o código-fonte do site para você, já que o site é 100% seu."
         }
       },
       {
@@ -137,7 +137,7 @@ const StructuredData = () => {
         "name": "Posso colocar vários imóveis no mesmo site?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! Temos planos para site único (1 projeto específico) e portfólio completo (até 20+ imóveis). Escolha o que melhor atende suas necessidades."
+          "text": "Sim! Oferecemos dois formatos: Site para Projeto Único (ideal para 1 empreendimento/imóvel específico) e Portfólio com Múltiplos Imóveis (até 5 imóveis listados com sistema de filtros)."
         }
       },
       {
@@ -145,7 +145,7 @@ const StructuredData = () => {
         "name": "Como funciona a captação de leads 24/7?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Seu site possui formulários inteligentes que capturam dados de clientes interessados a qualquer hora do dia. Você recebe notificação instantânea no WhatsApp sempre que alguém preencher o formulário."
+          "text": "Seu site possui botões de CTA estrategicamente posicionados que direcionam clientes interessados diretamente para o seu WhatsApp a qualquer hora do dia ou da noite. Os visitantes clicam no botão e iniciam uma conversa direta com você."
         }
       },
       {
