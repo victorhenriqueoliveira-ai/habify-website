@@ -1,0 +1,42 @@
+# robots.txt for HabiFy
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /payment-success/
+Disallow: /payment-canceled/
+
+# Sitemap location
+Sitemap: https://habify.com/sitemap.xml
+
+# Crawl-delay (optional, in seconds)
+Crawl-delay: 1
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+
+# Block AI scrapers (optional)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
