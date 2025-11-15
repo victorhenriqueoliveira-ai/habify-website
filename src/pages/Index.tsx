@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import SEO from "@/components/SEO";
+import StructuredData from "@/components/StructuredData";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import PortfolioShowcase from "@/components/PortfolioShowcase";
 import TechnologyExplainer from "@/components/TechnologyExplainer";
@@ -67,6 +69,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO />
+      <StructuredData />
       <Navbar />
       <FloatingWhatsAppButton />
       <main className="space-y-4 sm:space-y-8"> {/* Reduced space on mobile */}
