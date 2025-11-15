@@ -2,10 +2,13 @@
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import SEO from "@/components/SEO";
+import AdvancedSEO from "@/components/seo/AdvancedSEO";
+import AdvancedSchema from "@/components/seo/AdvancedSchema";
 import StructuredData from "@/components/StructuredData";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import StickyCTABar from "@/components/mobile/StickyCTABar";
+import StickyDesktopCTA from "@/components/conversion/StickyDesktopCTA";
+import ExitIntentPopup from "@/components/conversion/ExitIntentPopup";
 import PortfolioShowcasePremium from "@/components/PortfolioShowcasePremium";
 import TechnologyExplainer from "@/components/TechnologyExplainer";
 import LeadCaptureFlow from "@/components/LeadCaptureFlow";
@@ -23,11 +26,18 @@ import Newsletter from "@/components/Newsletter";
 import MadeByHumans from "@/components/MadeByHumans";
 import Footer from "@/components/Footer";
 import { preloadCriticalImages } from "@/utils/preloadImages";
+import { setupScrollTracking } from "@/utils/analytics";
 
 const Index = () => {
   // Preload critical images on mount
   useEffect(() => {
     preloadCriticalImages();
+  }, []);
+
+  // Setup scroll depth tracking
+  useEffect(() => {
+    const cleanup = setupScrollTracking();
+    return cleanup;
   }, []);
 
   // Initialize intersection observer to detect when elements enter viewport
@@ -77,11 +87,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <SEO />
+      <AdvancedSEO />
+      <AdvancedSchema />
       <StructuredData />
       <Navbar />
       <FloatingWhatsAppButton />
       <StickyCTABar showAfterScroll={300} />
+      <StickyDesktopCTA showAfterScroll={800} />
+      <ExitIntentPopup />
       <main className="space-y-0">
         <Hero />
         <FeaturesAnimated />

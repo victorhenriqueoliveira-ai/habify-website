@@ -7,6 +7,7 @@ import LottieAnimation from "./LottieAnimation";
 import OptimizedImage from "./OptimizedImage";
 import MagneticButton from "./animations/MagneticButton";
 import ParallaxLayer from "./animations/ParallaxLayer";
+import { trackCTAClick, trackWhatsAppClick } from "@/utils/analytics";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -148,7 +149,10 @@ const Hero = () => {
             >
               <MagneticButton 
                 className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-8 py-4 text-base sm:text-lg shadow-2xl shadow-pulse-500/50 hover:shadow-pulse-500/80 transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50"
-                onClick={() => window.location.href = '#plans'}
+                onClick={() => {
+                  trackCTAClick('Criar meu site agora', 'hero-section');
+                  window.location.href = '#plans';
+                }}
                 strength={0.4}
               >
                 <span className="relative z-10 flex items-center gap-2">
@@ -160,7 +164,10 @@ const Hero = () => {
               
               <MagneticButton
                 className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-background/80 backdrop-blur-sm text-[#25D366] px-8 py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white hover:shadow-2xl hover:shadow-[#25D366]/30 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/50"
-                onClick={() => window.open('https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy', '_blank')}
+                onClick={() => {
+                  trackWhatsAppClick('hero-cta');
+                  window.open('https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy', '_blank');
+                }}
                 strength={0.4}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
