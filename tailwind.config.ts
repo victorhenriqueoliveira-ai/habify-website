@@ -133,6 +133,14 @@ export default {
 				'shimmer': {
 					'0%': { transform: 'translateX(-100%)' },
 					'100%': { transform: 'translateX(100%)' }
+				},
+				'gradient-shift': {
+					'0%, 100%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' }
+				},
+				'glow-pulse': {
+					'0%, 100%': { opacity: '0.5', boxShadow: '0 0 20px rgba(249, 115, 22, 0.5)' },
+					'50%': { opacity: '1', boxShadow: '0 0 40px rgba(249, 115, 22, 0.8)' }
 				}
 			},
 			animation: {
@@ -143,7 +151,9 @@ export default {
 				'fade-in-left': 'fade-in-left 0.7s ease-out forwards',
 				'pulse-slow': 'pulse-slow 3s infinite',
 				'float': 'float 6s ease-in-out infinite',
-				'shimmer': 'shimmer 2s infinite'
+				'shimmer': 'shimmer 2s infinite',
+				'gradient-shift': 'gradient-shift 3s linear infinite',
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
 			},
 			backgroundImage: {
 				'hero-gradient': 'linear-gradient(90deg, hsla(24, 100%, 83%, 1) 0%, hsla(341, 91%, 68%, 1) 100%)',
