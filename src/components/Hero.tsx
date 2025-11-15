@@ -141,31 +141,35 @@ const Hero = () => {
               </div>
             </div>
             
-            {/* Premium CTAs */}
+            {/* Premium CTAs with Magnetic Effect */}
             <div 
               className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.7s" }}
             >
-              <a 
+              <MagneticButton
+                as="a"
                 href="#plans"
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-8 py-4 text-base sm:text-lg shadow-2xl shadow-pulse-500/50 hover:shadow-pulse-500/80 transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50"
+                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-8 py-4 text-base sm:text-lg shadow-2xl shadow-pulse-500/50 hover:shadow-pulse-500/80 transition-all duration-300 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-glow-pulse"
+                magneticStrength={0.25}
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Criar meu site agora
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-              </a>
+              </MagneticButton>
               
-              <a 
+              <MagneticButton
+                as="a"
                 href="https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-background/80 backdrop-blur-sm text-[#25D366] px-8 py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white hover:shadow-2xl hover:shadow-[#25D366]/30 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/50"
+                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-background/80 backdrop-blur-sm text-[#25D366] px-8 py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white hover:shadow-2xl hover:shadow-[#25D366]/30 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/50"
+                magneticStrength={0.25}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Falar com Especialista
-              </a>
+              </MagneticButton>
             </div>
 
             {/* Trust Indicators Below CTAs */}

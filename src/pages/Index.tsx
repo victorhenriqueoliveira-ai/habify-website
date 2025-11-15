@@ -15,7 +15,7 @@ import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
 import ImageShowcaseSection from "@/components/ImageShowcaseSection";
-import Features from "@/components/Features";
+import FeaturesAnimated from "@/components/FeaturesAnimated";
 import PricingSection from "@/components/PricingSection";
 import Testimonials from "@/components/Testimonials";
 import Newsletter from "@/components/Newsletter";
@@ -82,7 +82,7 @@ const Index = () => {
       <FloatingWhatsAppButton />
       <main className="space-y-0">
         <Hero />
-        <Features />
+        <FeaturesAnimated />
         <PortfolioShowcase />
         <ProblemsSection />
         {/* <SpecsSection /> */}
