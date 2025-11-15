@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Menu, Home, Briefcase, DollarSign, HelpCircle, MessageCircle } from 'lucide-react';
+import { X, Menu, Home, Briefcase, DollarSign, HelpCircle, MessageCircle, LogIn } from 'lucide-react';
 import { trackCTAClick, trackWhatsAppClick } from '@/utils/analytics';
 
 interface MobileMenuProps {
@@ -14,6 +14,7 @@ const menuItems = [
   { icon: DollarSign, label: 'Planos', href: '#plans' },
   { icon: HelpCircle, label: 'FAQ', href: '#faq' },
   { icon: MessageCircle, label: 'Depoimentos', href: '#testimonials' },
+  { icon: LogIn, label: 'Login', href: '/admin/login' },
 ];
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
@@ -40,9 +41,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     onClose();
     
     setTimeout(() => {
-      if (href === '#') {
+      if (href.startsWith('/')) {
+        // Navegação para rota absoluta (ex: /admin/login)
+        window.location.href = href;
+      } else if (href === '#') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
+        // Scroll para seção âncora
         const element = document.querySelector(href);
         if (element) {
           const offset = 80;
