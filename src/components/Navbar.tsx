@@ -58,6 +58,7 @@ const Navbar = () => {
             style={{ maxWidth: "160px" }}
             draggable={false}
           />
+          <span className="text-primary font-bold text-lg sm:text-2xl md:text-3xl">Habify</span>
         </a>
 
         {/* Desktop Navigation */}
