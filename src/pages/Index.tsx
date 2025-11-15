@@ -5,7 +5,7 @@ import Hero from "@/components/Hero";
 import SEO from "@/components/SEO";
 import StructuredData from "@/components/StructuredData";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
-import PortfolioShowcase from "@/components/PortfolioShowcase";
+import PortfolioShowcasePremium from "@/components/PortfolioShowcasePremium";
 import TechnologyExplainer from "@/components/TechnologyExplainer";
 import LeadCaptureFlow from "@/components/LeadCaptureFlow";
 import TrafficExplainer from "@/components/TrafficExplainer";
@@ -15,9 +15,9 @@ import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
 import ImageShowcaseSection from "@/components/ImageShowcaseSection";
-import FeaturesAnimated from "@/components/FeaturesAnimated";
 import PricingSection from "@/components/PricingSection";
-import Testimonials from "@/components/Testimonials";
+import TestimonialsPremium from "@/components/TestimonialsPremium";
+import FeaturesAnimated from "@/components/FeaturesAnimated";
 import Newsletter from "@/components/Newsletter";
 import MadeByHumans from "@/components/MadeByHumans";
 import Footer from "@/components/Footer";
@@ -83,7 +83,7 @@ const Index = () => {
       <main className="space-y-0">
         <Hero />
         <FeaturesAnimated />
-        <PortfolioShowcase />
+        <PortfolioShowcasePremium />
         <ProblemsSection />
         {/* <SpecsSection /> */}
         <LeadCaptureFlow />
@@ -92,7 +92,7 @@ const Index = () => {
         <TrafficExplainer />
         <PricingSection />
         <FAQSection />
-        <Testimonials />
+        <TestimonialsPremium />
       </main>
       <Footer />
     </div>
