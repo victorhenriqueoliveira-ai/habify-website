@@ -10,6 +10,7 @@ import TechnologyExplainer from "@/components/TechnologyExplainer";
 import LeadCaptureFlow from "@/components/LeadCaptureFlow";
 import TrafficExplainer from "@/components/TrafficExplainer";
 import ProjectTypesExplainer from "@/components/ProjectTypesExplainer";
+import FAQSection from "@/components/FAQSection";
 import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
@@ -85,6 +86,7 @@ const Index = () => {
         <DetailsSection />
         <Features />
         <PricingSection />
+        <FAQSection />
         <Testimonials />
       </main>
       <Footer />
