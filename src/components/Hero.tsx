@@ -5,6 +5,8 @@ import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
 import LottieAnimation from "./LottieAnimation";
 import OptimizedImage from "./OptimizedImage";
+import { MagneticButton } from "./ui/magnetic-button";
+import { ParallaxLayer } from "./animations/ParallaxSection";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,11 +60,17 @@ const Hero = () => {
         padding: isMobile ? '120px 16px 60px' : '140px 20px 80px'
       }}
     >
-      {/* Animated Background Gradients */}
+      {/* Animated Background Gradients with Parallax */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-br from-pulse-500/30 via-pulse-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-gradient-to-tr from-pulse-600/20 via-pulse-500/10 to-transparent rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-gradient-to-r from-pulse-400/10 to-pulse-600/10 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        <ParallaxLayer speed={0.3}>
+          <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-br from-pulse-500/30 via-pulse-400/20 to-transparent rounded-full blur-3xl animate-pulse-slow"></div>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.5}>
+          <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-gradient-to-tr from-pulse-600/20 via-pulse-500/10 to-transparent rounded-full blur-3xl animate-float"></div>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.2}>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-gradient-to-r from-pulse-400/10 to-pulse-600/10 rounded-full blur-2xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        </ParallaxLayer>
       </div>
       
       <div className="container px-4 sm:px-6 lg:px-8 relative z-10" ref={containerRef}>
