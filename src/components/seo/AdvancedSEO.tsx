@@ -10,7 +10,7 @@ interface AdvancedSEOProps {
 }
 
 const AdvancedSEO: React.FC<AdvancedSEOProps> = ({
-  title = 'Site para Corretor de Imóveis | Criar Site Profissional | HabiFy',
+  title = 'Habify - Criar Site para Corretor de Imóveis | Site Profissional',
   description = 'Crie seu site profissional para corretor de imóveis em 72h. Landing page otimizada, captação automática de leads no WhatsApp e SEO para Google. Site para corretor que vende 24/7.',
   canonical = 'https://habify.com.br',
   ogImage = 'https://habify.com.br/new-og-image.png',
