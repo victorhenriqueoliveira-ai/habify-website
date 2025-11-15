@@ -4,6 +4,8 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import PortfolioShowcase from "@/components/PortfolioShowcase";
+import TechnologyExplainer from "@/components/TechnologyExplainer";
+import LeadCaptureFlow from "@/components/LeadCaptureFlow";
 import ProblemsSection from "@/components/HumanoidSection";
 import SpecsSection from "@/components/SpecsSection";
 import DetailsSection from "@/components/DetailsSection";
@@ -68,6 +70,8 @@ const Index = () => {
       <main className="space-y-4 sm:space-y-8"> {/* Reduced space on mobile */}
         <Hero />
         <PortfolioShowcase />
+        <TechnologyExplainer />
+        <LeadCaptureFlow />
         <ProblemsSection />
         <SpecsSection />
         <DetailsSection />
