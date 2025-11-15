@@ -4,10 +4,10 @@ import { ArrowRight, MessageCircle, Zap, Trophy, TrendingUp, CheckCircle, Shield
 import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
 import LottieAnimation from "./LottieAnimation";
+import OptimizedImage from "./OptimizedImage";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
   const [lottieData, setLottieData] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
   const { ref: statsRef, inView: statsInView } = useInView({ triggerOnce: true, threshold: 0.3 });
@@ -31,44 +31,6 @@ const Hero = () => {
 
   useEffect(() => {
     // Skip effect on mobile
-    if (isMobile) return;
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current || !imageRef.current) return;
-      
-      const {
-        left,
-        top,
-        width,
-        height
-      } = containerRef.current.getBoundingClientRect();
-      const x = (e.clientX - left) / width - 0.5;
-      const y = (e.clientY - top) / height - 0.5;
-
-      imageRef.current.style.transform = `perspective(1000px) rotateY(${x * 2.5}deg) rotateX(${-y * 2.5}deg) scale3d(1.02, 1.02, 1.02)`;
-    };
-    
-    const handleMouseLeave = () => {
-      if (!imageRef.current) return;
-      imageRef.current.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)`;
-    };
-    
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove);
-      container.addEventListener("mouseleave", handleMouseLeave);
-    }
-    
-    return () => {
-      if (container) {
-        container.removeEventListener("mousemove", handleMouseMove);
-        container.removeEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-  }, [isMobile]);
-  
-  useEffect(() => {
-    // Skip parallax on mobile
     if (isMobile) return;
     
     const handleScroll = () => {
@@ -238,13 +200,13 @@ const Hero = () => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-pulse-500/50 via-pulse-600/50 to-pulse-500/50 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
                   <div className="relative">
-                    <img 
-                      ref={imageRef} 
+                    <OptimizedImage
                       src="/Foto1.png" 
                       alt="Landing Page Profissional para Corretores - HabiFy" 
-                      className="w-full h-auto object-cover transition-transform duration-500 ease-out group-hover:scale-105" 
+                      className="w-full h-auto transition-transform duration-500 ease-out group-hover:scale-105" 
                       style={{ transformStyle: 'preserve-3d' }} 
-                      loading="eager"
+                      priority
+                      objectFit="cover"
                     />
                     {/* Overlay gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent pointer-events-none"></div>

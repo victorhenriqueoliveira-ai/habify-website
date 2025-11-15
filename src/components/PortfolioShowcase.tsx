@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ExternalLink, TrendingUp, Award } from "lucide-react";
 import { motion } from "framer-motion";
+import OptimizedImage from "./OptimizedImage";
 
 interface Project {
   id: string;
@@ -107,10 +108,11 @@ const PortfolioShowcase = () => {
                   <div className="bg-card rounded-2xl shadow-xl overflow-hidden border border-border/50 hover:shadow-2xl transition-all duration-300 group">
                     {/* Image Container */}
                     <div className="relative overflow-hidden bg-muted aspect-video">
-                      <img
+                      <OptimizedImage
                         src={project.image}
                         alt={`Site ${project.name}`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        objectFit="cover"
                       />
                       
                       {/* Badge */}

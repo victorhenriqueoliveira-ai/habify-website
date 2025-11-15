@@ -21,8 +21,14 @@ import Testimonials from "@/components/Testimonials";
 import Newsletter from "@/components/Newsletter";
 import MadeByHumans from "@/components/MadeByHumans";
 import Footer from "@/components/Footer";
+import { preloadCriticalImages } from "@/utils/preloadImages";
 
 const Index = () => {
+  // Preload critical images on mount
+  useEffect(() => {
+    preloadCriticalImages();
+  }, []);
+
   // Initialize intersection observer to detect when elements enter viewport
   useEffect(() => {
     const observer = new IntersectionObserver(
