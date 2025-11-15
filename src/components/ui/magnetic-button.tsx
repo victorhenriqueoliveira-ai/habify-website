@@ -36,13 +36,12 @@ export const MagneticButton = React.forwardRef<HTMLButtonElement | HTMLAnchorEle
     };
 
     const Component = as === 'a' ? motion.a : motion.button;
-    const componentProps = as === 'a' 
-      ? { href, target, rel, ref: ref as React.Ref<HTMLAnchorElement> }
-      : { ref: ref as React.Ref<HTMLButtonElement>, ...props };
 
     return (
       <Component
-        {...componentProps}
+        {...(as === 'a' 
+          ? { href, target, rel } as any
+          : props as any)}
         ref={buttonRef as any}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}

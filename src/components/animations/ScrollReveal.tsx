@@ -39,7 +39,7 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
       transition: {
         duration,
         delay,
-        ease: [0.25, 0.4, 0.25, 1],
+        ease: "easeOut" as const,
       },
     },
   };
@@ -107,7 +107,7 @@ export const StaggerItem: React.FC<{ children: React.ReactNode; className?: stri
       y: 0,
       transition: {
         duration: 0.5,
-        ease: [0.25, 0.4, 0.25, 1],
+        ease: "easeOut" as const,
       },
     },
   };
