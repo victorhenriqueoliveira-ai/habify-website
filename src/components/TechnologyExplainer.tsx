@@ -39,6 +39,9 @@ const TechnologyExplainer = () => {
   return (
     <section className="py-16 sm:py-24 bg-background" id="technology">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 mb-8 sm:mb-16">
+          <div className="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
         {/* Header */}
         <motion.div 
           className="text-center mb-12 sm:mb-16"

@@ -43,17 +43,15 @@ const faqs = [
     question: "O que está incluído na hospedagem?",
     answer: "Está tudo incluído no valor do plano: hospedagem profissional em servidor de alta performance, certificado SSL (cadeado de segurança), domínio personalizado (ex: seunome.com.br) e garantia de uptime 99.9%. Você não precisa contratar nada separado."
   },
-  {
-    id: "faq-8",
-    question: "Como integrar com Google Meu Negócio?",
-    answer: "Após a criação do site, enviamos um tutorial completo e ilustrado passo-a-passo de como conectar seu perfil do Google Meu Negócio. O processo é simples e leva menos de 5 minutos para configurar. Isso ajuda seu site a aparecer melhor no Google Maps e em buscas locais."
-  }
 ];
 
 const FAQSection = () => {
   return (
     <section className="py-16 sm:py-24 bg-gradient-to-b from-background to-muted/30" id="faq">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 mb-8 sm:mb-16">
+          <div className="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
         {/* Header */}
         <motion.div 
           className="text-center mb-12 sm:mb-16"

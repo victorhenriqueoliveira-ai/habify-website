@@ -7,10 +7,6 @@ const ProblemsSection = () => {
     <section className="py-6 sm:py-10 bg-white relative" id="problems" ref={sectionRef}>
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex items-center gap-4 mb-8 sm:mb-16">
-          <div className="pulse-chip">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-pulse-500 text-white mr-2">02</span>
-            <span>Problemas</span>
-          </div>
           <div className="flex-1 h-[1px] bg-gray-300"></div>
         </div>
         

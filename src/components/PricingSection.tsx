@@ -86,6 +86,9 @@ const PricingSection = () => {
     <>
       <section id="plans" className="py-20 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-8 sm:mb-16">
+            <div className="flex-1 h-[1px] bg-gray-300"></div>
+          </div>
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Escolha seu plano ideal
