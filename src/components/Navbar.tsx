@@ -61,7 +61,7 @@ const Navbar = () => {
         </a>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
+        <nav className="md:flex items-center space-x-6 lg:space-x-8">
           <button onClick={scrollToTop} className="nav-link font-medium hover:text-primary transition-colors">
             Início
           </button>
@@ -79,7 +79,7 @@ const Navbar = () => {
           </button>
           <button 
             onClick={() => scrollToSection('#faq')} 
-            className="nav-link font-medium hover:text-primary transition-colors"
+            className="hidden md:inline-block nav-link font-medium hover:text-primary transition-colors"
           >
             FAQ
           </button>
@@ -90,9 +90,6 @@ const Navbar = () => {
             Login
           </a>
         </nav>
-
-        {/* Mobile Menu Trigger */}
-        <MobileMenuTrigger />
       </div>
     </header>
   );
