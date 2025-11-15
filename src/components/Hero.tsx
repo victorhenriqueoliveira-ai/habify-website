@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import LottieAnimation from "./LottieAnimation";
 
 const Hero = () => {
@@ -111,14 +111,14 @@ const Hero = () => {
               className="section-title text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-tight opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.3s" }}
             >
-              Venda mais imóveis com um site pronto em até 3 dias úteis!
+              Sua Máquina de Vendas 24/7: Site Profissional + Captação Automática de Leads em 72 Horas
             </h1>
             
             <p 
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle mt-3 sm:mt-6 mb-4 sm:mb-8 leading-relaxed opacity-0 animate-fade-in text-gray-950 font-normal text-base sm:text-lg text-left"
             >
-              Não perca clientes por não estar online — crie sua presença digital agora.. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp em 72 horas úteis.
+              <strong>Sem WordPress. Sem complicação.</strong> Plataforma própria 100% otimizada para conversão e SEO. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp automaticamente.
             </p>
             
             <div 
@@ -127,15 +127,30 @@ const Hero = () => {
             >
               <a 
                 href="#plans"
-                className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border border-[#FE5C02] bg-[#fff] text-[#FE5C02] px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#FE5C02] hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FE5C02] focus:ring-offset-2"
+                className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border border-[#FE5C02] bg-[#FE5C02] text-white px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#E54D00] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FE5C02] focus:ring-offset-2"
                 style={{
                   boxSizing: 'border-box',
                   cursor: 'pointer',
                   lineHeight: '20px',
                 }}
               >
-                Criar meu site
+                Criar meu site agora
                 <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </a>
+              
+              <a 
+                href="https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center group w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-white text-[#25D366] px-6 py-4 sm:px-8 sm:py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
+                style={{
+                  boxSizing: 'border-box',
+                  cursor: 'pointer',
+                  lineHeight: '20px',
+                }}
+              >
+                <MessageCircle className="mr-2 w-5 h-5" />
+                Falar com Especialista
               </a>
             </div>
           </div>
