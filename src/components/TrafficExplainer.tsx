@@ -5,6 +5,9 @@ const TrafficExplainer = () => {
   return (
     <section className="py-16 sm:py-24 bg-background" id="traffic">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 mb-8 sm:mb-16">
+          <div className="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
         {/* Header */}
         <motion.div 
           className="text-center mb-12 sm:mb-16"
@@ -230,7 +233,7 @@ const TrafficExplainer = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">Captação automática de leads 24/7 via formulários</span>
+                    <span className="text-gray-700">Captação automática de leads 24/7 via CTA para WhatsApp</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />

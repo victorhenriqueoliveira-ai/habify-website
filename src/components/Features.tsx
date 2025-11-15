@@ -89,13 +89,9 @@ const Features = () => {
   return (
     <section className="py-12 sm:py-16 md:py-20 pb-0 relative bg-gray-50" id="features" ref={sectionRef}>
       <div className="section-container">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="pulse-chip">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-pulse-500 text-white mr-2">04</span>
-            <span>Benefícios</span>
-          </div>
+        <div className="flex items-center gap-4 mb-8 sm:mb-16">
+          <div className="flex-1 h-[1px] bg-gray-300"></div>
         </div>
-        
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold mb-8 sm:mb-12 text-left">Por que HabiFy é a escolha certa para seu negócio</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-stretch">

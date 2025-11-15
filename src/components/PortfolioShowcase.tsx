@@ -18,7 +18,7 @@ const projects: Project[] = [
     id: "1",
     name: "Ralph Santos Imóveis",
     url: "https://ralphsantos.com.br",
-    image: "/lovable-uploads/dc13e94f-beeb-4671-8a22-0968498cdb4c.png",
+    image: "/fotos/site_ralphsantos.png",
     type: "Portfólio Completo",
     results: "Leads qualificados diariamente",
     badge: "Premium"
@@ -27,7 +27,7 @@ const projects: Project[] = [
     id: "2",
     name: "MAC São Paulo",
     url: "https://macsaopaulo.com.br",
-    image: "/lovable-uploads/af412c03-21e4-4856-82ff-d1a975dc84a9.png",
+    image: "fotos/site_macsaopaulo.png",
     type: "Landing Page Comercial",
     results: "Conversão otimizada para vendas",
     badge: "Corporativo"
@@ -67,6 +67,9 @@ const PortfolioShowcase = () => {
   return (
     <section className="py-16 sm:py-24 bg-gradient-to-b from-background to-muted/20 overflow-hidden" id="portfolio">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 mb-8 sm:mb-16">
+          <div className="flex-1 h-[1px] bg-gray-300"></div>
+        </div>
         {/* Header */}
         <motion.div 
           className="text-center mb-12 sm:mb-16"
