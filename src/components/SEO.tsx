@@ -11,9 +11,9 @@ interface SEOProps {
 
 const SEO = ({
   title = "HabiFy - Crie Sites para Imóveis que Vendem | Landing Page Profissional",
-  description = "Plataforma completa para corretores criarem sites profissionais em 72h. Captação automática de leads 24/7. SEO otimizado. Sem WordPress. A partir de R$ 997.",
+  description = "Plataforma completa para corretores criarem sites profissionais em 72h. Captação automática de leads 24/7. SEO otimizado. Sem WordPress. A partir de R$ 597.",
   keywords = "site para corretor, landing page imóveis, site imobiliário, captação de leads, marketing imobiliário, site para imobiliária, site profissional corretor, página de vendas imóveis, website para corretor de imóveis",
-  image = "https://habify.com/og-image-update.png",
+  image = "https://habify.com/fotos/site_habify.png",
   url = "https://habify.com",
   type = "website"
 }: SEOProps) => {
@@ -37,11 +37,11 @@ const SEO = ({
       <meta property="og:locale" content="pt_BR" />
       
       {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
+      {/* <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={url} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={image} /> */}
       
       {/* Additional Meta Tags */}
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
