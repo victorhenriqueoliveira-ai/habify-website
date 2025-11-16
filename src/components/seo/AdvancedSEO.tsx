@@ -13,7 +13,7 @@ const AdvancedSEO: React.FC<AdvancedSEOProps> = ({
   title = 'Habify - Criar Site para Corretor de Imóveis | Site Profissional',
   description = 'Crie seu site profissional para corretor de imóveis em 72h. Landing page otimizada, captação automática de leads no WhatsApp e SEO para Google. Site para corretor que vende 24/7.',
   canonical = 'https://habify.com.br',
-  ogImage = 'https://habify.com.br/new-og-image.png',
+  ogImage = 'https://habify.com.br/fotos/site_habify.png',
   keywords = [
     'site para corretor',
     'criar site para corretor',
@@ -66,12 +66,12 @@ const AdvancedSEO: React.FC<AdvancedSEOProps> = ({
       <meta property="og:site_name" content="HabiFy" />
       
       {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
+      {/* <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={canonical} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
-      <meta name="twitter:image:alt" content="HabiFy - Site para Corretor de Imóveis" />
+      <meta name="twitter:image:alt" content="HabiFy - Site para Corretor de Imóveis" /> */}
       
       {/* Apple Meta Tags */}
       <meta name="apple-mobile-web-app-capable" content="yes" />
