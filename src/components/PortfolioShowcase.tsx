@@ -19,8 +19,8 @@ const projects: Project[] = [
     id: "1",
     name: "Ralph Santos Imóveis",
     url: "https://ralphsantos.com.br",
-    image: "/fotos/site_ralphsantos.png",
-    type: "Portfólio Completo",
+    image: "/fotos/site_ralphsantos1.png",
+    type: "Portfólio Completo de Empreendimentos",
     results: "Leads qualificados diariamente",
     badge: "Premium"
   },
@@ -29,7 +29,7 @@ const projects: Project[] = [
     name: "MAC São Paulo",
     url: "https://macsaopaulo.com.br",
     image: "fotos/site_macsaopaulo.png",
-    type: "Landing Page Comercial",
+    type: "Landing Page Empreendimento",
     results: "Conversão otimizada para vendas",
     badge: "Corporativo"
   }

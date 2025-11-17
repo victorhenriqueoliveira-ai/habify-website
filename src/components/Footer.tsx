@@ -35,7 +35,6 @@ const Footer = () => {
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   HabiFy
                 </h3>
-                <p className="text-xs text-muted-foreground">Tech Real Estate</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -103,15 +102,6 @@ const Footer = () => {
                   Termos de Uso
                 </a>
               </li>
-              <li>
-                <a 
-                  href="/politica-privacidade" 
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-                >
-                  <Lock className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                  Política de Privacidade
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -172,7 +162,7 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Powered by</span>
               <span className="text-xs font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                HabiFy Tech
+                HabiFy
               </span>
             </div>
           </div>

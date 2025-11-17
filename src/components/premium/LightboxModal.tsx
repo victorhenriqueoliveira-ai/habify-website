@@ -100,12 +100,12 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ isOpen, onClose, project 
                             </div>
                             <div className="text-2xl font-bold text-primary">{project.metrics.leads}</div>
                           </div>
-                          <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl p-4 border border-accent/20">
+                          <div className="bg-gray-200 rounded-xl p-4 border border-accent/20">
                             <div className="flex items-center gap-2 mb-1">
-                              <Users className="w-4 h-4 text-accent" />
+                              <Users className="w-4 h-4 text-primary" />
                               <span className="text-sm text-muted-foreground">Tráfego</span>
                             </div>
-                            <div className="text-2xl font-bold text-accent">{project.metrics.traffic}</div>
+                            <div className="text-2xl font-bold text-primary">{project.metrics.traffic}</div>
                           </div>
                         </div>
                       </div>
