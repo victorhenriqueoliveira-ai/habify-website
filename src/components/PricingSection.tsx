@@ -37,6 +37,19 @@ const PricingSection = () => {
     }
   };
 
+  const getInstallmentValue = (type: Plan['type']) => {
+    switch (type) {
+      case 'website_only':
+        return '98,77';
+      case 'website_maintenance_1m':
+        return '136,30';
+      case 'website_maintenance_6m':
+        return '198,73';
+      default:
+        return '0,00';
+    }
+  };
+
   if (loading) {
     return (
       <section className="py-20 px-4">
@@ -123,22 +136,29 @@ const PricingSection = () => {
                   </div>
                   <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                   
-                  {/* Preço PIX */}
-                  <div className='flex flex-row items-center justify-center gap-3'>
-                    <div className="text-1xl font-bold text-primary">
-                      R$ {(plan.pix_price || plan.price).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                  {/* Preço em destaque: 12x Cartão */}
+                  <div className="mt-4 space-y-2">
+                    <div className="text-3xl font-bold text-primary">
+                      12x R$ {getInstallmentValue(plan.type)}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      via PIX
+                    <p className="text-sm font-medium text-muted-foreground">
+                      no cartão de crédito via Hubla
                     </p>
+                    
+                    {/* Preço PIX embaixo */}
+                    <div className="pt-2 border-t border-border/50 mt-3">
+                      <p className="text-sm text-muted-foreground">
+                        ou <span className="font-semibold text-foreground">R$ {(plan.pix_price || plan.price).toFixed(2)}</span> no PIX à vista
+                      </p>
+                    </div>
                   </div>
                   
                   {monthlyMaintenanceNote && (
-                    <p className="text-sm text-muted-foreground font-medium">
+                    <p className="text-xs text-primary mt-3 font-medium">
                       {monthlyMaintenanceNote}
                     </p>
                   )}
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-2">
                     {plan.description}
                   </p>
                 </CardHeader>

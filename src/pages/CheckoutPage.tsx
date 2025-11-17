@@ -35,6 +35,19 @@ export default function CheckoutPage() {
   const plan = plans.find(p => p.id === planId);
   const isSpecificPlan = planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9';
 
+  const getInstallmentValue = (planId: string) => {
+    switch (planId) {
+      case '9fb31f78-ed65-44e7-a67d-271a0cad8eb9': // Apenas o site
+        return '98,77';
+      case 'fd32cbd6-84d1-4f0e-9ece-5fccb911eeb8': // Site + Manutenção 1 Mês
+        return '136,30';
+      case '377030c9-efe1-461d-9bca-9fc6717d99ed': // Site + Manutenção 6 Meses
+        return '198,73';
+      default:
+        return '0,00';
+    }
+  };
+
   // Google Tag para plano específico - inserção direta no head
   useEffect(() => {
     if (isSpecificPlan && !document.querySelector('script[src*="googletagmanager.com/gtag/js?id=AW-17736187305"]')) {
@@ -253,23 +266,30 @@ export default function CheckoutPage() {
 
               <Separator />
 
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Total:</span>
-                <span className="text-primary">
-                  {paymentMethod === 'PIX' ? (
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">
-                        R$ {(plan.pix_price || plan.price).toFixed(2)}
-                      </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total:</span>
+                </div>
+                {paymentMethod === 'PIX' ? (
+                  <div className="text-right space-y-1">
+                    <div className="text-3xl font-bold text-primary">
+                      R$ {(plan.pix_price || plan.price).toFixed(2)}
                     </div>
-                  ) : (
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">
-                        R$ {plan.price.toFixed(2)}
-                      </div>
+                    <p className="text-sm text-muted-foreground">à vista no PIX</p>
+                  </div>
+                ) : (
+                  <div className="text-right space-y-1">
+                    <div className="text-3xl font-bold text-primary">
+                      12x R$ {getInstallmentValue(plan.id)}
                     </div>
-                  )}
-                </span>
+                    <p className="text-sm text-muted-foreground">no cartão via Hubla</p>
+                    <div className="pt-2 border-t mt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Total: R$ {(parseFloat(getInstallmentValue(plan.id).replace(',', '.')) * 12).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -296,10 +316,13 @@ export default function CheckoutPage() {
                       <RadioGroupItem value="PIX" id="pix" />
                       <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
                         <QrCode className="h-5 w-5 mr-3" />
-                        <div>
+                        <div className="flex-1">
                           <div className="font-medium">PIX</div>
                           <div className="text-sm text-muted-foreground">
-                            Pagamento instantâneo - R$ {(plan.pix_price || plan.price).toFixed(2)}
+                            Pagamento instantâneo
+                          </div>
+                          <div className="text-lg font-bold text-primary mt-1">
+                            R$ {(plan.pix_price || plan.price).toFixed(2)}
                           </div>
                         </div>
                       </Label>
@@ -309,10 +332,13 @@ export default function CheckoutPage() {
                       <RadioGroupItem value="CARD" id="card" />
                       <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
                         <CreditCard className="h-5 w-5 mr-3" />
-                        <div>
+                        <div className="flex-1">
                           <div className="font-medium">Cartão de Crédito</div>
                           <div className="text-sm text-muted-foreground">
-                            Via Hubla - R$ {plan.price.toFixed(2)}
+                            Via Hubla
+                          </div>
+                          <div className="text-lg font-bold text-primary mt-1">
+                            12x R$ {getInstallmentValue(plan.id)}
                           </div>
                         </div>
                       </Label>
