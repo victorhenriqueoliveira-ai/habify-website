@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +34,27 @@ export default function CheckoutPage() {
 
   const plan = plans.find(p => p.id === planId);
   const isSpecificPlan = planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9';
+
+  // Google Tag para plano específico - inserção direta no head
+  useEffect(() => {
+    if (isSpecificPlan && !document.querySelector('script[src*="googletagmanager.com/gtag/js?id=AW-17736187305"]')) {
+      // Script externo
+      const gtagScript = document.createElement('script');
+      gtagScript.async = true;
+      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17736187305';
+      document.head.appendChild(gtagScript);
+
+      // Script de configuração
+      const configScript = document.createElement('script');
+      configScript.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'AW-17736187305');
+      `;
+      document.head.appendChild(configScript);
+    }
+  }, [isSpecificPlan]);
 
   useEffect(() => {
     if (!plansLoading && !plan) {
@@ -193,21 +213,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <>
-      {isSpecificPlan && (
-        <Helmet>
-          <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17736187305"></script>
-          <script>
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){ dataLayer.push(arguments); }
-              gtag('js', new Date());
-              gtag('config', 'AW-17736187305');
-            `}
-          </script>
-        </Helmet>
-      )}
-      <div className="min-h-screen bg-background py-12 px-4">
+    <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
@@ -423,6 +429,5 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
-    </>
   );
 }
