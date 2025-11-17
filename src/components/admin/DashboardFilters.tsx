@@ -61,11 +61,8 @@ export const DashboardFilters = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Gateways</SelectItem>
-            <SelectItem value="STRIPE">Stripe</SelectItem>
-            <SelectItem value="HUBLA">Hubla</SelectItem>
             <SelectItem value="ABACATEPAY">AbacatePay</SelectItem>
-            <SelectItem value="KIWIFY">Kiwify</SelectItem>
-            <SelectItem value="MERCADOPAGO">Mercado Pago</SelectItem>
+            <SelectItem value="HUBLA">Hubla</SelectItem>
           </SelectContent>
         </Select>
       )}

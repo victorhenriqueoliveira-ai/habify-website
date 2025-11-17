@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,7 +76,6 @@ serve(async (req) => {
         description: 'Manutenção mensal do projeto',
         price: 79.90,
         pix_price: 79.90,
-        stripe_price: 79.90,
         credits_granted: 0,
         is_active: true,
         type: 'website_maintenance_1m'
@@ -114,7 +112,9 @@ serve(async (req) => {
     }
 
     // Get the correct price based on gateway
-    const planPrice = useAbacatePay ? (planData.pix_price || planData.price) : (planData.stripe_price || planData.price);
+    const planPrice = useAbacatePay 
+      ? (planData.pix_price || planData.price) 
+      : (planData.price);
     
     // Validar preço mínimo
     if (planPrice <= 0) {

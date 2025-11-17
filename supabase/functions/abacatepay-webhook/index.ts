@@ -27,7 +27,15 @@ serve(async (req) => {
     const webhookSecretFromQuery = url.searchParams.get('webhookSecret');
     const webhookSecretFromHeader = req.headers.get('x-webhook-secret') || req.headers.get('webhook-secret');
     const webhookSecret = webhookSecretFromQuery || webhookSecretFromHeader;
-    const expectedSecret = 'VictorOliveira@123';
+    const expectedSecret = Deno.env.get('ABACATEPAY_WEBHOOK_SECRET');
+    
+    if (!expectedSecret) {
+      console.error('ABACATEPAY_WEBHOOK_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Configuration error' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
     
     // console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing', 'From:', webhookSecretFromQuery ? 'query' : webhookSecretFromHeader ? 'header' : 'none');
     

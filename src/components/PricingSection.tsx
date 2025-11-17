@@ -123,34 +123,6 @@ const PricingSection = () => {
                   </div>
                   <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
                   
-                  {/* Preço Cartão (Stripe) */}
-                  {plan.stripe_price && (
-                    <>
-                      <div className='flex flex-row items-center justify-center gap-3'>
-                        <div className="text-1xl font-bold text-primary">
-                          12x de
-                        </div>
-                        <div className="text-3xl font-bold text-primary">
-                          R$ {(plan.stripe_price / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          via cartão
-                        </p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Total: R$ {plan.stripe_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-blue-600 italic">
-                        Parcelamento disponível no checkout*
-                      </p>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          ou
-                        </p>
-                      </div>
-                    </>
-                  )}
-                  
                   {/* Preço PIX */}
                   <div className='flex flex-row items-center justify-center gap-3'>
                     <div className="text-1xl font-bold text-primary">
