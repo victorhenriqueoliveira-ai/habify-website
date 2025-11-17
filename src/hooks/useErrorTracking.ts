@@ -26,6 +26,24 @@ export const useErrorTracking = () => {
 
   const logErrorToDatabase = async (report: ErrorReport) => {
     try {
+      // ✅ SÓ logar se user_id existir
+      if (!report.user_id) {
+        console.warn('⚠️ Error log skipped: no user_id');
+        return;
+      }
+      
+      // ✅ Verificar se user existe antes de inserir
+      const { data: profileExists } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', report.user_id)
+        .maybeSingle();
+      
+      if (!profileExists) {
+        console.warn('⚠️ Error log skipped: user not found in profiles');
+        return;
+      }
+      
       // Log to audit_logs table
       await supabase.from('audit_logs').insert({
         action: 'error_occurred',
@@ -42,7 +60,7 @@ export const useErrorTracking = () => {
       });
     } catch (error) {
       // Fallback to console if database logging fails
-      console.error('Failed to log error to database:', error);
+      console.error('❌ Failed to log error to database:', error);
     }
   };
 

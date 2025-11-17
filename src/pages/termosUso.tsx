@@ -26,7 +26,7 @@ export default function TermosDeUso(): JSX.Element {
     {
       icon: Scale,
       title: "4. Planos e Pagamentos",
-      content: "Os planos de serviço estão descritos na plataforma com seus respectivos preços e funcionalidades. Pagamentos são processados por gateways de pagamento integrados (AbacatePay, Hubla, Mercado Pago, etc.). Os créditos e funcionalidades ficam vinculados ao plano contratado. Políticas de cancelamento e reembolso seguem as regras descritas no momento da compra. Para contestar cobranças, entre em contato com nosso suporte."
+      content: "Os planos de serviço estão descritos na plataforma com seus respectivos preços e funcionalidades. Pagamentos são processados por gateways de pagamento integrados (AbacatePay para PIX e Hubla para Cartão de Crédito). Os créditos e funcionalidades ficam vinculados ao plano contratado. Políticas de cancelamento e reembolso seguem as regras descritas no momento da compra. Para contestar cobranças, entre em contato com nosso suporte."
     },
   ];
 

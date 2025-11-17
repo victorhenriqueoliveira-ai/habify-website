@@ -156,7 +156,7 @@ export default function CheckoutPage() {
           paymentId: response.paymentId,
           gateway: response.gateway,
           planId: plan.id,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price),
+          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
           paymentMethod,
           isLoggedIn: !!user,
           timestamp: new Date().toISOString()
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
           name: formData.name,
           planId: plan.id,
           planName: plan.name,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : (plan.stripe_price || plan.price),
+          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
           timestamp: Date.now()
         }));
 
@@ -276,11 +276,8 @@ export default function CheckoutPage() {
                     </div>
                   ) : (
                     <div className="text-right">
-                      <div className="text-lg font-bold">
-                        R$ {((plan.stripe_price || plan.price) / 12).toFixed(2)}/mês
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Total: R$ {(plan.stripe_price || plan.price).toFixed(2)}
+                      <div className="text-2xl font-bold">
+                        R$ {plan.price.toFixed(2)}
                       </div>
                     </div>
                   )}
@@ -327,7 +324,7 @@ export default function CheckoutPage() {
                         <div>
                           <div className="font-medium">Cartão de Crédito</div>
                           <div className="text-sm text-muted-foreground">
-                            Parcelamento em até 12x - R$ {((plan.stripe_price || plan.price) / 12).toFixed(2)}/mês
+                            Via Hubla - R$ {plan.price.toFixed(2)}
                           </div>
                         </div>
                       </Label>
