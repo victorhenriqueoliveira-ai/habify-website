@@ -1,78 +1,188 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, MapPin, Phone, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Mail, MapPin, Phone, Instagram, ExternalLink, FileText, Lock } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="relative w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-full h-full opacity-20" 
-             style={{
-               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-             }}>
-        </div>
+    <footer className="relative w-full bg-gradient-to-b from-background via-muted/20 to-muted/40 border-t border-border/50">
+      {/* Tech Grid Background */}
+      <div className="absolute inset-0 opacity-[0.02]">
+        <div 
+          className="w-full h-full" 
+          style={{
+            backgroundImage: `linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+                            linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px'
+          }}
+        />
       </div>
       
       <div className="relative section-container py-16">
-        {/* Main footer content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand section */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+          
+          {/* Brand Section */}
+          <div className="space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center">
-                <img src="/logotipo_habify.png" alt="HabiFy" className="h-8 w-auto filter brightness-0 invert" />
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <img 
+                  src="/logotipo_habify.png" 
+                  alt="HabiFy" 
+                  className="h-8 w-auto brightness-0 invert" 
+                />
               </div>
               <div>
-                <h3 className="text-2xl font-bold">HabiFy</h3>
-                <p className="text-slate-300 text-sm">Transformando imóveis em vendas</p>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  HabiFy
+                </h3>
+                <p className="text-xs text-muted-foreground">Tech Real Estate</p>
               </div>
             </div>
-            <p className="text-slate-300 text-lg leading-relaxed max-w-md">
-              Enquanto outros corretores brigam por leads em portais caros, você terá sua própria máquina de vendas. 
-              <span className="text-white font-medium"> HabiFy transforma qualquer imóvel em uma landing page que converte.</span>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Plataforma tecnológica para criação de landing pages profissionais para o mercado imobiliário.
             </p>
-            <div className="flex space-x-4">
-              <Button onClick={() => {window.open('https://www.instagram.com/habify.br/', '_blank')}} size="icon" >
-                <Instagram className="h-5 w-5" />
-              </Button>
-            </div>
           </div>
 
-          {/* Quick links */}
-          <div className="space-y-6">
-            <h4 className="text-xl font-semibold">Links Rápidos</h4>
+          {/* Links Rápidos */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
+              Navegação
+            </h4>
             <ul className="space-y-3">
-              <li><a href="#hero" className="text-slate-300 hover:text-white transition-colors">Home</a></li>
-              <li><a href="#features" className="text-slate-300 hover:text-white transition-colors">About</a></li>
-              <li><a href="#plans" className="text-slate-300 hover:text-white transition-colors">Planos</a></li>
-              <li><a href="#testimonials" className="text-slate-300 hover:text-white transition-colors">Depoimentos</a></li>
+              <li>
+                <a 
+                  href="#hero" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground group-hover:bg-primary transition-colors" />
+                  Início
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#portfolio" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground group-hover:bg-primary transition-colors" />
+                  Portfólio
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#plans" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground group-hover:bg-primary transition-colors" />
+                  Planos
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="#testimonials" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground group-hover:bg-primary transition-colors" />
+                  Depoimentos
+                </a>
+              </li>
             </ul>
           </div>
-          {/* Contact info */}
-          <div className="space-y-6">
-            <h4 className="text-xl font-semibold">Contato</h4>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Mail className="h-5 w-5 text-primary" />
+
+          {/* Legal */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
+              Legal
+            </h4>
+            <ul className="space-y-3">
+              <li>
+                <a 
+                  href="/termos-de-uso" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <FileText className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                  Termos de Uso
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="/politica-privacidade" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <Lock className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                  Política de Privacidade
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contato */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
+              Contato
+            </h4>
+            <div className="space-y-3">
+              <a 
+                href="mailto:contato@habify.com.br"
+                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
+                <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">contato@habify.com.br</p>
-                  <p className="text-slate-300 text-sm">Suporte e vendas</p>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="font-medium">contato@habify.com.br</p>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Phone className="h-5 w-5 text-primary" />
+              </a>
+              
+              <a 
+                href="https://wa.me/5511961769504"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
+                <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <Phone className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">(11) 96176-9504</p>
-                  <p className="text-slate-300 text-sm">WhatsApp Business</p>
+                  <p className="text-xs text-muted-foreground">WhatsApp</p>
+                  <p className="font-medium">(11) 96176-9504</p>
                 </div>
+              </a>
+
+              <div className="pt-2">
+                <Button 
+                  onClick={() => window.open('https://www.instagram.com/habify.br/', '_blank')}
+                  size="icon"
+                  variant="outline"
+                  className="rounded-lg"
+                >
+                  <Instagram className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex items-center space-x-3">
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-border/50 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-muted-foreground text-center md:text-left">
+              © {new Date().getFullYear()} HabiFy. Todos os direitos reservados.
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Powered by</span>
+              <span className="text-xs font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                HabiFy Tech
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
                 <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>

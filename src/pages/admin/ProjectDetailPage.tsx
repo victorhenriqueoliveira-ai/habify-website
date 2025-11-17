@@ -22,6 +22,8 @@ import {
   Palette,
   Layout,
   Image,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
@@ -366,6 +368,114 @@ export const ProjectDetailPage = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Wizard Data - Complete Information */}
+          {project.wizardData && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Dados Completos do Projeto
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Profile Info */}
+                {project.wizardData.profileType && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Tipo de Perfil</p>
+                      <Badge variant="outline">
+                        {project.wizardData.profileType === 'corretor' ? 'Corretor' : 'Imobiliária'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Responsável</p>
+                      <p className="font-medium">{project.wizardData.ownerName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Nome da Empresa</p>
+                      <p className="font-medium">{project.wizardData.companyName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">CRECI</p>
+                      <p className="font-medium">
+                        {project.wizardData.creciNumber} ({project.wizardData.creciType})
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Address */}
+                {project.wizardData.addressStreet && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Endereço Completo</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Rua: </span>
+                        <span className="font-medium">{project.wizardData.addressStreet}, {project.wizardData.addressNumber}</span>
+                      </div>
+                      {project.wizardData.addressComplement && (
+                        <div>
+                          <span className="text-muted-foreground">Complemento: </span>
+                          <span className="font-medium">{project.wizardData.addressComplement}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Bairro: </span>
+                        <span className="font-medium">{project.wizardData.addressNeighborhood}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Cidade/UF: </span>
+                        <span className="font-medium">{project.wizardData.addressCity}/{project.wizardData.addressState}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">CEP: </span>
+                        <span className="font-medium">{project.wizardData.addressCep}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Contact Info */}
+                {project.wizardData.contactEmail && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Informações de Contato</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Email</p>
+                          <p className="text-sm font-medium">{project.wizardData.contactEmail}</p>
+                        </div>
+                      </div>
+                      {project.wizardData.contactMobile && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Celular</p>
+                            <p className="text-sm font-medium">{project.wizardData.contactMobile}</p>
+                          </div>
+                        </div>
+                      )}
+                      {project.wizardData.contactPhone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Telefone</p>
+                            <p className="text-sm font-medium">{project.wizardData.contactPhone}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

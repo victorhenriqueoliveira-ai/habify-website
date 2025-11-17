@@ -20,11 +20,11 @@ const ProjectTypeSelectionPage = () => {
   }
 
   const handleEmpreendimentoChoice = () => {
-    navigate('/admin/project-wizard');
+    navigate('/admin/project-wizard', { state: { projectType: 'single_property' } });
   };
 
   const handleCorretorChoice = () => {
-    navigate('/admin/project-wizard');
+    navigate('/admin/project-wizard', { state: { projectType: 'realtor_multiple' } });
   };
 
   return (
