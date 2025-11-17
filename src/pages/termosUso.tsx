@@ -1,166 +1,233 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, FileText, Shield, AlertCircle, Scale, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function TermosDeUso(): JSX.Element {
+  const navigate = useNavigate();
+
+  const sections = [
+    {
+      icon: FileText,
+      title: "1. Aceitação dos Termos",
+      content: "Ao acessar ou utilizar a plataforma Habify, você concorda integralmente com estes Termos de Uso e com nossa Política de Privacidade. Se você não concordar com qualquer parte destes termos, não utilize o serviço."
+    },
+    {
+      icon: Shield,
+      title: "2. Descrição do Serviço",
+      content: "A Habify é uma plataforma tecnológica que fornece ferramentas para criação de landing pages e sites profissionais voltados para o mercado imobiliário, incluindo corretores e imobiliárias. Os serviços incluem: hospedagem básica, integração com meios de pagamento, área administrativa, templates personalizáveis, e serviços complementares de manutenção e suporte técnico."
+    },
+    {
+      icon: AlertCircle,
+      title: "3. Cadastro e Responsabilidades",
+      content: "Para contratar planos ou criar projetos, é necessário realizar cadastro fornecendo dados verdadeiros, atualizados e completos. Você é responsável por manter a confidencialidade da sua senha e por todas as atividades realizadas em sua conta. A Habify pode suspender contas com informações inválidas ou em caso de suspeita de fraude ou uso inadequado."
+    },
+    {
+      icon: Scale,
+      title: "4. Planos e Pagamentos",
+      content: "Os planos de serviço estão descritos na plataforma com seus respectivos preços e funcionalidades. Pagamentos são processados por gateways de pagamento integrados (AbacatePay, Hubla, Mercado Pago, etc.). Os créditos e funcionalidades ficam vinculados ao plano contratado. Políticas de cancelamento e reembolso seguem as regras descritas no momento da compra. Para contestar cobranças, entre em contato com nosso suporte."
+    },
+  ];
+
+  const additionalSections = [
+    {
+      title: "5. Criação e Gestão de Projetos",
+      items: [
+        "Cada plano define quantos projetos você pode criar",
+        "Projetos podem ser de empreendimento único ou portfólio de múltiplos imóveis",
+        "Você é responsável pelo conteúdo enviado (textos, imagens, dados)",
+        "A Habify não se responsabiliza por conteúdo inadequado ou que viole direitos de terceiros"
+      ]
+    },
+    {
+      title: "6. Uso Permitido e Proibições",
+      items: [
+        "Você pode usar a plataforma para criar e gerenciar páginas dentro das funcionalidades oferecidas",
+        "É proibido usar o serviço para fins ilegais, enviar spam ou conteúdo discriminatório",
+        "É proibido infringir direitos autorais, marcas ou direitos de terceiros",
+        "É proibido disponibilizar conteúdo pornográfico ilegal, violento ou que incite crimes"
+      ]
+    },
+    {
+      title: "7. Propriedade Intelectual",
+      items: [
+        "O software, design, código e documentação da Habify são de propriedade exclusiva da Habify",
+        "Você recebe uma licença não exclusiva para uso do serviço conforme contratado",
+        "Conteúdos criados por você pertencem a você",
+        "A Habify pode armazenar e exibir seu conteúdo para prestação do serviço"
+      ]
+    },
+    {
+      title: "8. Disponibilidade e Limitações",
+      items: [
+        "Nos esforçamos para manter o serviço disponível, mas não garantimos 100% de uptime",
+        "Não nos responsabilizamos por perdas indiretas, lucros cessantes ou interrupções causadas por terceiros",
+        "Nossa responsabilidade máxima é limitada ao valor pago pelo usuário nos últimos 12 meses",
+        "Manutenções programadas serão comunicadas previamente quando possível"
+      ]
+    }
+  ];
+
   return (
-    <main id="termos-de-uso" className="min-h-screen bg-gray-50 text-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <div className="rounded-lg shadow p-6 bg-white border-l-4 border-orange-500">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Termos de Uso — Habify</h1>
-            <p className="mt-2 text-sm text-gray-600">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
-          </div>
-        </header>
-
-        <article className="prose prose-lg max-w-none bg-white rounded-lg shadow p-6">
-          <section>
-            <h2>1. Aceitação dos Termos</h2>
-            <p>
-              Bem‑vindo à Habify. Ao acessar ou utilizar a plataforma Habify ("Serviço"), você concorda com estes Termos de Uso
-              e com a nossa Política de Privacidade. Caso não concorde, não utilize o Serviço.
-            </p>
-          </section>
-
-          <section>
-            <h2>2. Descrição do Serviço</h2>
-            <p>
-              A Habify fornece ferramentas para criação de landing pages e sites para corretores e imobiliárias, hospedagem
-              básica associada aos projetos, integração com meios de pagamento, área administrativa e serviços complementares
-              (manutenção, templates, suporte). A Habify pode alterar, suspender ou descontinuar funcionalidades sem aviso
-              prévio, preservadas as obrigações já contratadas.
-            </p>
-          </section>
-
-          <section>
-            <h2>3. Cadastro e Conta</h2>
-            <p>
-              Para contratar planos ou criar projetos, é necessário cadastrar-se. Você concorda em fornecer dados verdadeiros,
-              atualizados e completos. É de sua responsabilidade manter a confidencialidade da sua senha. A Habify pode
-              suspender contas com informações inválidas ou em caso de suspeita de fraude.
-            </p>
-          </section>
-
-          <section>
-            <h2>4. Planos, Pagamentos e Créditos</h2>
-            <p>
-              Os planos de serviço são descritos na plataforma. Pagamentos feitos via gateways (por exemplo: AbacatePay, Hubla,
-              Mercado Pago) são processados pelos próprios gateways; a Habify registra o evento quando o webhook confirma o
-              pagamento. Créditos e disponibilidades ficam vinculados ao plano contratado: cada compra concede um plano/credito
-              conforme descrito na oferta. A Habify não é responsável por falhas do gateway; contudo, compensaremos usuários quando
-              comprovada falha da nossa integração.
-            </p>
-            <p>
-              Cancelamentos, reembolsos e políticas específicas sobre cobranças seguem as regras descritas na página do plano ou
-              no contrato complementar. Para contestar uma cobrança, contate o suporte informando pedido/ID e evidências.
-            </p>
-          </section>
-
-          <section>
-            <h2>5. Uso Permitido e Proibições</h2>
-            <p>
-              Você pode usar a plataforma para criar, gerenciar e publicar páginas dentro das funcionalidades oferecidas. É
-              proibido utilizar o serviço para fins ilegais, enviar spam, infringir direitos de terceiros (direitos autorais,
-              marcas) ou disponibilizar conteúdo discriminatório, pornográfico ilegal, violento ou que incite crimes.
-            </p>
-          </section>
-
-          <section>
-            <h2>6. Conteúdo do Usuário e Responsabilidade</h2>
-            <p>
-              O conteúdo que você enviar (textos, imagens, logos, documentos) permanece de sua responsabilidade. Você garante
-              que possui direitos sobre esse conteúdo e autoriza a Habify a armazená‑lo e exibi‑lo para prestação do serviço.
-              A Habify pode remover conteúdo que viole estes Termos ou a legislação aplicável.
-            </p>
-          </section>
-
-          <section>
-            <h2>7. Propriedade Intelectual</h2>
-            <p>
-              O software, design, logos, marcas, código e documentação da Habify são de propriedade da Habify. O usuário recebe
-              uma licença não exclusiva para uso do serviço conforme contratado. Conteúdos criados pelo usuário pertencem ao
-              usuário, salvo acordo em contrário.
-            </p>
-          </section>
-
-          <section>
-            <h2>8. Disponibilidade e Limitação de Responsabilidade</h2>
-            <p>
-              A Habify se esforça para manter o serviço disponível, mas não garante 100% de uptime. Não nos responsabilizamos por
-              perdas indiretas, lucros cessantes, perda de dados ou interrupções causadas por terceiros (provedores de pagamento,
-              provedores de hospedagem, integrações externas). Nossa responsabilidade máxima por qualquer dano será limitada ao
-              valor efetivamente pago pelo usuário à Habify nos últimos 12 meses, salvo disposição legal em contrário.
-            </p>
-          </section>
-
-          <section>
-            <h2>9. Segurança e Proteção de Dados</h2>
-            <p>
-              Tratamos os dados pessoais conforme nossa Política de Privacidade (link no rodapé). Utilizamos medidas técnicas e
-              administrativas razoáveis para proteger os dados, mas nenhum sistema é infalível. Em caso de incidente de segurança
-              relevante, comunicaremos os titulares e as autoridades competentes quando exigido por lei.
-            </p>
-          </section>
-
-          <section>
-            <h2>10. Suporte e Comunicação</h2>
-            <p>
-              O suporte é realizado pelos canais oficiais indicados na plataforma (e‑mail e WhatsApp). Mensagens, notificações e
-              comunicações administrativas poderão ser enviadas por e‑mail e/ou por WhatsApp. É responsabilidade do usuário
-              manter seus contatos atualizados.
-            </p>
-          </section>
-
-          <section>
-            <h2>11. Alterações nos Termos</h2>
-            <p>
-              A Habify pode alterar estes Termos periodicamente. Publicaremos a nova versão com a data de atualização. Caso o
-              usuário não concorde com a mudança, deverá cessar o uso do Serviço; o uso continuado implicará concordância.
-            </p>
-          </section>
-
-          <section>
-            <h2>12. Rescisão</h2>
-            <p>
-              A Habify pode suspender ou encerrar contas que violem estes Termos, sujeitas a análises e possíveis medidas corretivas.
-              O usuário pode encerrar sua conta seguindo o fluxo na plataforma; obrigações financeiras pendentes poderão subsistir.
-            </p>
-          </section>
-
-          <section>
-            <h2>13. Legislação Aplicável e Foro</h2>
-            <p>
-              Estes Termos serão regidos pelas leis brasileiras. Para dirimir controvérsias, fica eleito o foro da comarca de São
-              Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que seja.
-            </p>
-          </section>
-
-          <section>
-            <h2>14. Contato</h2>
-            <p>
-              Em caso de dúvidas sobre estes Termos ou sobre seus dados pessoais, entre em contato: <br />
-              <strong>Email:</strong> <a href="mailto:contato@habify.com.br" className="text-orange-600">contato@habify.com.br</a><br />
-            </p>
-          </section>
-
-          <footer className="mt-6">
-            <p className="text-sm text-gray-600">Ao utilizar a plataforma Habify você concorda com estes Termos de Uso.</p>
-          </footer>
-        </article>
-
-        <div className="mt-6 flex gap-3">
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+    <main className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-muted/40">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b border-border/50">
+        <div className="section-container py-12">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="mb-6"
           >
-            Voltar
-          </a>
-
-          <button
-            onClick={() => window.print()}
-            className="ml-auto inline-flex items-center justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600"
-          >
-            Imprimir
-          </button>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Home
+          </Button>
           
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                <FileText className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Termos de Uso
+                </h1>
+                <p className="text-muted-foreground">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+            <p className="text-lg text-muted-foreground mt-4">
+              Ao utilizar a plataforma Habify, você concorda com estes termos e condições.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="section-container py-12">
+        <div className="max-w-4xl mx-auto space-y-6">
+          
+          {/* Main Sections */}
+          {sections.map((section, index) => (
+            <Card key={index} className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <section.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  {section.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {section.content}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Additional Sections with Lists */}
+          {additionalSections.map((section, index) => (
+            <Card key={index} className="border-border/50">
+              <CardHeader>
+                <CardTitle>{section.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {section.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                      <span className="text-muted-foreground leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Security & Privacy */}
+          <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-primary" />
+                9. Segurança e Proteção de Dados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground leading-relaxed">
+                Tratamos os dados pessoais conforme nossa Política de Privacidade, utilizando medidas técnicas e administrativas 
+                para proteger suas informações. Em caso de incidente de segurança relevante, comunicaremos os titulares e 
+                autoridades competentes conforme exigido por lei.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Final Sections */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle>10. Alterações nos Termos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                A Habify pode alterar estes Termos periodicamente. Publicaremos a nova versão com a data de atualização. 
+                O uso continuado do serviço após alterações implica em concordância com os novos termos.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle>11. Legislação Aplicável</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                Estes Termos são regidos pelas leis brasileiras. Para dirimir controvérsias, fica eleito o foro da 
+                comarca de São Paulo/SP, com renúncia a qualquer outro.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Contact Card */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-primary" />
+                12. Contato
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Em caso de dúvidas sobre estes Termos ou sobre seus dados pessoais:
+              </p>
+              <div className="space-y-2">
+                <a 
+                  href="mailto:contato@habify.com.br"
+                  className="flex items-center gap-2 text-primary hover:underline font-medium"
+                >
+                  <Mail className="h-4 w-4" />
+                  contato@habify.com.br
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/')}
+              className="flex-1"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Home
+            </Button>
+            <Button
+              onClick={() => window.print()}
+              className="flex-1"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Imprimir Termos
+            </Button>
+          </div>
         </div>
       </div>
     </main>

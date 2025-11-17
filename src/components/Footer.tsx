@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, MapPin, Phone, Instagram, ExternalLink, FileText, Lock } from "lucide-react";
+import { Mail, Phone, Instagram, FileText, Lock } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -178,36 +178,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
-};
-
-export default Footer;
-                <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-white font-medium">São Paulo, SP</p>
-                  <p className="text-slate-300 text-sm">Brasil</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-slate-700">
-          <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
-            <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-slate-300">
-              <span>© 2025 HabiFy. Todos os direitos reservados.</span>
-              <span className="hidden sm:inline text-slate-500">•</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Subtle gradient overlay at top */}
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
     </footer>
   );
 };
