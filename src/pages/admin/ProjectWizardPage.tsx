@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +28,7 @@ const steps = [
 
 const ProjectWizardPage = () => {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { createProject } = useProjects();
   const { user } = useAuth();
   const { availablePlans, loading: plansLoading, usePlanForProject } = useUserPlans();
@@ -35,6 +36,9 @@ const ProjectWizardPage = () => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Get project type from navigation state
+  const projectType = (state as any)?.projectType || 'single_property';
 
   // Redirect if no plans available
   useEffect(() => {
@@ -261,7 +265,7 @@ const ProjectWizardPage = () => {
         status: 'pending',
         location: fullAddress,
         photos: projectPhotos,
-        projectType: 'realtor_multiple',
+        projectType: projectType, // Use the correct project type from navigation state
         layoutChoice: wizardData.layoutChoice,
         colorPalette: wizardData.colorPalette,
         logoUrl: wizardData.logoUrl,

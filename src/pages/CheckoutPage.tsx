@@ -34,6 +34,40 @@ export default function CheckoutPage() {
 
   const plan = plans.find(p => p.id === planId);
 
+  // Google Tag Manager para o plano específico
+  useEffect(() => {
+    if (planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9') {
+      // Verificar se já foi adicionado
+      if (!document.getElementById('gtag-script')) {
+        const script1 = document.createElement('script');
+        script1.id = 'gtag-script';
+        script1.async = true;
+        script1.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17736187305';
+        document.head.appendChild(script1);
+
+        const script2 = document.createElement('script');
+        script2.id = 'gtag-config';
+        script2.innerHTML = `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){ dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', 'AW-17736187305');
+        `;
+        document.head.appendChild(script2);
+      }
+    }
+
+    // Cleanup ao desmontar
+    return () => {
+      if (planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9') {
+        const script1 = document.getElementById('gtag-script');
+        const script2 = document.getElementById('gtag-config');
+        if (script1) script1.remove();
+        if (script2) script2.remove();
+      }
+    };
+  }, [planId]);
+
   useEffect(() => {
     if (!plansLoading && !plan) {
       toast.error('Plano não encontrado');
