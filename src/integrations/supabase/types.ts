@@ -402,8 +402,6 @@ export type Database = {
           name: string
           pix_price: number | null
           price: number
-          stripe_price: number | null
-          stripe_price_id: string | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
         }
@@ -420,8 +418,6 @@ export type Database = {
           name: string
           pix_price?: number | null
           price: number
-          stripe_price?: number | null
-          stripe_price_id?: string | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
         }
@@ -438,8 +434,6 @@ export type Database = {
           name?: string
           pix_price?: number | null
           price?: number
-          stripe_price?: number | null
-          stripe_price_id?: string | null
           type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
         }
