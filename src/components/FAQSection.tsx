@@ -157,20 +157,12 @@ const FAQSection = () => {
           transition={{ delay: 0.5 }}
         >
           <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
-            <span className="text-2xl">✅</span>
-            <span className="text-sm font-semibold text-foreground">200+ Sites Entregues</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
             <span className="text-2xl">⚡</span>
             <span className="text-sm font-semibold text-foreground">Entrega em 72h</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
             <span className="text-2xl">🔒</span>
             <span className="text-sm font-semibold text-foreground">100% Seguro</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
-            <span className="text-2xl">⭐</span>
-            <span className="text-sm font-semibold text-foreground">4.9/5 Avaliação</span>
           </div>
         </motion.div>
       </div>

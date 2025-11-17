@@ -29,8 +29,8 @@ const projects: Project[] = [
     id: '1',
     name: 'Ralph Santos Imóveis',
     url: 'https://ralphsantos.com.br',
-    image: '/fotos/site_ralphsantos.png',
-    type: 'Portfólio Completo',
+    image: '/fotos/site_ralphsantos1.png',
+    type: 'Portfólio Completo de Empreendimentos',
     description: 'Site completo com portfólio de imóveis, integração WhatsApp e SEO otimizado. Solução premium para corretor de alto padrão.',
     metrics: {
       leads: '+145%',
@@ -51,7 +51,7 @@ const projects: Project[] = [
     name: 'MAC São Paulo',
     url: 'https://macsaopaulo.com.br',
     image: '/fotos/site_macsaopaulo.png',
-    type: 'Landing Page Comercial',
+    type: 'Landing Page Empreendimento',
     description: 'Landing page focada em conversão para empreendimento comercial. CTAs estratégicos e design moderno.',
     metrics: {
       leads: '+98%',
@@ -151,20 +151,7 @@ const PortfolioShowcasePremium: React.FC = () => {
                         </div>
                         <h3 className="text-2xl font-bold text-white mb-2">{project.name}</h3>
                         <p className="text-white/80 mb-4">{project.type}</p>
-                        
-                        <div className="flex flex-wrap gap-3 mb-4">
-                          <div className="flex items-center gap-1 text-green-400">
-                            <TrendingUp className="w-4 h-4" />
-                            <span className="font-semibold">{project.metrics.leads}</span>
-                            <span className="text-xs">leads</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-blue-400">
-                            <TrendingUp className="w-4 h-4" />
-                            <span className="font-semibold">{project.metrics.traffic}</span>
-                            <span className="text-xs">tráfego</span>
-                          </div>
-                        </div>
-
+                      
                         <button className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg font-semibold hover:bg-white/90 transition-colors">
                           <span>Ver Detalhes</span>
                           <ExternalLink className="w-4 h-4" />
