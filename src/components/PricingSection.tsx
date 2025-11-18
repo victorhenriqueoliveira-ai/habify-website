@@ -58,7 +58,7 @@ const PricingSection = () => {
             <div className="h-8 bg-muted rounded w-64 mx-auto mb-4 animate-pulse"></div>
             <div className="h-4 bg-muted rounded w-96 mx-auto animate-pulse"></div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="animate-pulse">
                 <CardHeader>
@@ -111,7 +111,7 @@ const PricingSection = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             {plans.map((plan) => {
               const isPopular = plan.type === 'website_maintenance_1m';
               const monthlyMaintenanceNote = plan.type === 'website_maintenance_6m' ? 
@@ -178,6 +178,7 @@ const PricingSection = () => {
                       onClick={() => handleSelectPlan(plan.id)}
                       className="w-full"
                       variant={isPopular ? "default" : "outline"}
+                      size="lg"
                     >
                       Escolher Plano
                     </Button>
@@ -186,6 +187,83 @@ const PricingSection = () => {
               </Card>
               );
             })}
+            
+            {/* Plano Interphase */}
+            <Card className="relative border-2 border-purple-500 shadow-xl flex flex-col justify-between h-full">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1 whitespace-nowrap">
+                  Para Grandes Corretores
+                </Badge>
+              </div>
+              <CardHeader className="text-center pt-10">
+                <div className="flex items-center justify-center mb-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                </div>
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                  Plano Interphase
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Solução personalizada para imobiliárias e grandes corretores
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6 flex-1 flex flex-col">
+                <div className="text-center">
+                  <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                    Sob Consulta
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Plano customizado de acordo com suas necessidades
+                  </p>
+                </div>
+
+                <div className="space-y-3 flex-1">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Check className="h-4 w-4 text-purple-600" />
+                    Benefícios Exclusivos
+                  </h4>
+                  <ul className="space-y-2 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Múltiplos empreendimentos ilimitados</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Formulários de captura personalizados</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Integração completa com seu CRM</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Relatórios e analytics avançados</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Suporte prioritário e consultoria dedicada</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <span>Manutenção e atualizações ilimitadas</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Button
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-auto"
+                  onClick={() => {
+                    const whatsappNumber = "5511961769504";
+                    const message = encodeURIComponent(
+                      "Olá! Vim do site e gostaria de saber mais sobre o Plano Interphase da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
+                    );
+                    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+                  }}
+                >
+                  Falar com Especialista
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="text-center mt-12 space-y-3">
