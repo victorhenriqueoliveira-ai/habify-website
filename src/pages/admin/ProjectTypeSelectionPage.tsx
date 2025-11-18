@@ -68,10 +68,6 @@ const ProjectTypeSelectionPage = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Formulário de contato integrado</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
                 <span className="text-sm">Localização e mapas</span>
               </div>
               <div className="flex items-center space-x-2">

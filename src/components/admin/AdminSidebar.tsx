@@ -38,7 +38,7 @@ const menuItems = [
   },
   {
     title: 'Usuários',
-    url: '/admin',
+    url: '/admin/users',
     icon: Users,
     roles: ['admin', 'dev'],
   },

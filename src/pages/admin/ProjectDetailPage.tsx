@@ -73,6 +73,22 @@ export const ProjectDetailPage = () => {
   const [activeTab, setActiveTab] = useState('details');
 
   const project = projects.find(p => p.id === id);
+  const [showRawJson, setShowRawJson] = useState(false);
+  // normalize wizard address keys (support both variants: addressStreet / addressStreet and short keys like street/cep)
+  const wizard = project?.wizardData || {};
+  const address = {
+    cep: wizard.addressCep || wizard.cep || wizard.address_cep || '',
+    street: wizard.addressStreet || wizard.street || wizard.address_street || '',
+    number: wizard.addressNumber || wizard.number || wizard.address_number || '',
+    complement: wizard.addressComplement || wizard.complement || wizard.address_complement || '',
+    neighborhood: wizard.addressNeighborhood || wizard.neighborhood || wizard.address_neighborhood || '',
+    city: wizard.addressCity || wizard.city || wizard.address_city || '',
+    state: wizard.addressState || wizard.state || wizard.address_state || '',
+  };
+  // Prefer project.photos but fallback to portfolio properties photos when project has none
+  const visiblePhotos = (project?.photos && project.photos.length > 0)
+    ? project.photos
+    : (portfolioProperties ? portfolioProperties.flatMap(p => p.photos || []) : []);
 
   const getUserName = (userId: string) => {
     const user = users.find(u => u.userId === userId);
@@ -141,7 +157,34 @@ export const ProjectDetailPage = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details" className="space-y-6">
+        <TabsContent value="details" className="flex flex-col gap-6">
+            {/* Debug: mostrar JSON bruto para admins/devs */}
+            {hasRole(['admin', 'dev']) && (
+              <Card>
+                <CardContent className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground mt-6">Ferramenta de debug</div>
+                  <div>
+                    <Button variant="outline" size="sm" onClick={() => setShowRawJson(!showRawJson)} className='mt-6'>
+                      {showRawJson ? 'Ocultar JSON' : 'Mostrar JSON'}
+                    </Button>
+                  </div>
+                </CardContent>
+                {showRawJson && (
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Project object</p>
+                        <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{JSON.stringify(project, null, 2)}</pre>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Portfolio properties</p>
+                        <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{JSON.stringify(portfolioProperties, null, 2)}</pre>
+                      </div>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            )}
           {/* Project Type Badge */}
           {project.projectType && (
             <Card>
@@ -165,20 +208,20 @@ export const ProjectDetailPage = () => {
           )}
 
           {/* Photos - Main Project Photos */}
-          {project.photos && project.photos.length > 0 && (
+          {visiblePhotos && visiblePhotos.length > 0 && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Image className="h-5 w-5" />
-                    Fotos do Projeto
+                    Fotos
                   </CardTitle>
-                  <Badge variant="outline">{project.photos.length} fotos</Badge>
+                  <Badge variant="outline">{visiblePhotos.length} fotos</Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                  {project.photos.map((photo, index) => (
+                  {visiblePhotos.map((photo, index) => (
                     <div 
                       key={index} 
                       className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors group"
@@ -220,11 +263,11 @@ export const ProjectDetailPage = () => {
                   <div className="mt-4 pt-4 border-t">
                     <p className="text-xs font-medium text-muted-foreground mb-2">Dev Info: URLs das Fotos</p>
                     <div className="space-y-1">
-                      {project.photos.map((photo, index) => (
-                        <div key={index} className="text-xs bg-muted p-2 rounded font-mono break-all">
-                          <span className="text-muted-foreground">{index + 1}:</span> {photo}
-                        </div>
-                      ))}
+                      {visiblePhotos.map((photo, index) => (
+                          <div key={index} className="text-xs bg-muted p-2 rounded font-mono break-all">
+                            <span className="text-muted-foreground">{index + 1}:</span> {photo}
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
@@ -647,7 +690,7 @@ export const ProjectDetailPage = () => {
             )}
 
             {/* Wizard Data - Complete Address Information */}
-            {project.wizardData && Object.keys(project.wizardData).length > 0 && (
+              {project.wizardData && (Object.keys(project.wizardData).length > 0 || address.street || address.cep) && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -657,48 +700,48 @@ export const ProjectDetailPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-3 md:grid-cols-2">
-                    {project.wizardData.cep && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">CEP</p>
-                        <p className="text-sm font-medium">{project.wizardData.cep}</p>
-                      </div>
-                    )}
-                    {project.wizardData.street && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Endereço</p>
-                        <p className="text-sm font-medium">{project.wizardData.street}</p>
-                      </div>
-                    )}
-                    {project.wizardData.number && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Número</p>
-                        <p className="text-sm font-medium">{project.wizardData.number}</p>
-                      </div>
-                    )}
-                    {project.wizardData.complement && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Complemento</p>
-                        <p className="text-sm font-medium">{project.wizardData.complement}</p>
-                      </div>
-                    )}
-                    {project.wizardData.neighborhood && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Bairro</p>
-                        <p className="text-sm font-medium">{project.wizardData.neighborhood}</p>
-                      </div>
-                    )}
-                    {project.wizardData.city && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Cidade</p>
-                        <p className="text-sm font-medium">{project.wizardData.city}</p>
-                      </div>
-                    )}
-                    {project.wizardData.state && (
-                      <div className="p-3 rounded-lg bg-muted/50 border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Estado</p>
-                        <p className="text-sm font-medium">{project.wizardData.state}</p>
-                      </div>
-                    )}
+                      {address.cep && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">CEP</p>
+                          <p className="text-sm font-medium">{address.cep}</p>
+                        </div>
+                      )}
+                      {address.street && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Endereço</p>
+                          <p className="text-sm font-medium">{address.street}</p>
+                        </div>
+                      )}
+                      {address.number && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Número</p>
+                          <p className="text-sm font-medium">{address.number}</p>
+                        </div>
+                      )}
+                      {address.complement && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Complemento</p>
+                          <p className="text-sm font-medium">{address.complement}</p>
+                        </div>
+                      )}
+                      {address.neighborhood && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Bairro</p>
+                          <p className="text-sm font-medium">{address.neighborhood}</p>
+                        </div>
+                      )}
+                      {address.city && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Cidade</p>
+                          <p className="text-sm font-medium">{address.city}</p>
+                        </div>
+                      )}
+                      {address.state && (
+                        <div className="p-3 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Estado</p>
+                          <p className="text-sm font-medium">{address.state}</p>
+                        </div>
+                      )}
                   </div>
                   
                   {/* Dev Mode: Show all wizard data */}

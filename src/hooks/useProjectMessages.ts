@@ -41,7 +41,65 @@ export const useProjectMessages = (projectId?: string) => {
 
       if (error) throw error;
 
-      const formattedMessages: ProjectMessage[] = data?.map((msg: any) => ({
+  // If some rows didn't come with the joined profile (profiles may be null),
+      // fetch missing profile names in one query to avoid showing 'Usuário desconhecido'.
+      // Collect sender_ids where we don't have a usable name from the join
+      const missingSenderIds = Array.from(new Set((data || [])
+        .filter((m: any) => {
+          // include if profiles is missing or profiles.name is falsy/empty
+          return (!m.profiles || !m.profiles?.name) && m.sender_id;
+        })
+        .map((m: any) => m.sender_id)));
+
+      let missingProfilesMap: Record<string, string> = {};
+
+      // Dev-only diagnostics to help debug why profiles may be missing (RLS, schema mismatch, etc.)
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev && missingSenderIds.length > 0) {
+        // eslint-disable-next-line no-console
+      }
+
+      if (missingSenderIds.length > 0) {
+        try {
+          // Try to fetch profiles by user_id first
+          const { data: profilesByUserId } = await supabase
+            .from('profiles')
+            .select('user_id, id, name')
+            .in('user_id', missingSenderIds);
+
+          (profilesByUserId || []).forEach((p: any) => {
+            const key = p.user_id || p.id;
+            if (key) missingProfilesMap[key] = p.name;
+          });
+
+          // Also try by profile id (in case sender_id stores profile.id instead of user_id)
+          const stillMissing = missingSenderIds.filter(id => !missingProfilesMap[id]);
+          if (stillMissing.length > 0) {
+            const { data: profilesById } = await supabase
+              .from('profiles')
+              .select('user_id, id, name')
+              .in('id', stillMissing);
+
+            (profilesById || []).forEach((p: any) => {
+              const key = p.user_id || p.id;
+              if (key) missingProfilesMap[key] = p.name;
+            });
+          }
+
+          if (isDev) {
+            // eslint-disable-next-line no-console
+            
+          }
+        } catch (err) {
+          if (isDev) {
+            // eslint-disable-next-line no-console
+            console.debug('[useProjectMessages] error fetching missing profiles:', err);
+          }
+          // ignore, we'll fallback to default name
+        }
+      }
+
+      const formattedMessages: ProjectMessage[] = (data || []).map((msg: any) => ({
         id: msg.id,
         projectId: msg.project_id,
         senderId: msg.sender_id,
@@ -50,7 +108,7 @@ export const useProjectMessages = (projectId?: string) => {
         createdAt: msg.created_at,
         updatedAt: msg.updated_at,
         isRead: msg.is_read,
-        senderName: msg.profiles?.name || 'Usuário desconhecido',
+  senderName: msg.sender_name || msg.profiles?.name || missingProfilesMap[msg.sender_id] || 'Usuário desconhecido',
       })) || [];
 
       setMessages(formattedMessages);
@@ -65,16 +123,47 @@ export const useProjectMessages = (projectId?: string) => {
     if (!projectId || !user?.userId) return { success: false, error: 'Missing data' };
 
     try {
-      const { data, error } = await supabase
-        .from('project_messages')
-        .insert({
-          project_id: projectId,
-          sender_id: user.userId,
-          message: message.trim(),
-          attachment_url: attachmentUrl,
-        })
-        .select()
-        .single();
+      // Try to include sender_name on insert to avoid relying on client-side joins (helps when RLS
+      // prevents the recipient from reading the profiles table). We'll attempt insert with
+      // sender_name, and if the column doesn't exist we'll fallback to inserting without it.
+      // First, try to read the sender name from profiles (best-effort).
+      let senderName: string | undefined = undefined;
+      try {
+        const { data: senderProfile } = await supabase
+          .from('profiles')
+          .select('name, user_id, id')
+          .eq('user_id', user.userId)
+          .limit(1)
+          .single();
+        if (senderProfile?.name) senderName = senderProfile.name;
+      } catch (err) {
+        // ignore - we'll try insert with/without sender_name
+      }
+
+      let insertPayload: any = {
+        project_id: projectId,
+        sender_id: user.userId,
+        message: message.trim(),
+        attachment_url: attachmentUrl,
+      };
+
+      if (senderName) insertPayload.sender_name = senderName;
+
+      let insertResult: any;
+      try {
+        insertResult = await supabase.from('project_messages').insert(insertPayload).select().single();
+      } catch (err) {
+        // If insert with sender_name failed (column missing), retry without sender_name
+        if (insertPayload.sender_name) {
+          const { sender_name, ...withoutName } = insertPayload;
+          insertResult = await supabase.from('project_messages').insert(withoutName).select().single();
+        } else {
+          throw err;
+        }
+      }
+
+      const { data, error } = insertResult || {};
+      if (error) throw error;
 
       if (error) throw error;
 
@@ -87,11 +176,11 @@ export const useProjectMessages = (projectId?: string) => {
           .eq('id', projectId)
           .single();
 
-        const { data: sender } = await supabase
-          .from('profiles')
-          .select('name, role')
-          .eq('user_id', user.userId)
-          .single();
+          const { data: sender } = await supabase
+            .from('profiles')
+            .select('name, role')
+            .eq('user_id', user.userId)
+            .single();
 
         if (project && sender) {
           const isUserOwner = project.user_id === user.userId;

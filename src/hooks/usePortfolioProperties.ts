@@ -44,6 +44,19 @@ export const usePortfolioProperties = (projectId?: string) => {
 
       if (error) throw error;
 
+      const toPublicUrl = (path: string) => {
+        if (!path) return path;
+        if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:'))) {
+          return path;
+        }
+        try {
+          const { data: urlData } = supabase.storage.from('project-photos').getPublicUrl(path);
+          return urlData.publicUrl || path;
+        } catch (err) {
+          return path;
+        }
+      };
+
       const formattedProperties: PortfolioProperty[] = data?.map((prop) => ({
         id: prop.id,
         projectId: prop.project_id,
@@ -62,7 +75,7 @@ export const usePortfolioProperties = (projectId?: string) => {
         iptu: prop.iptu ? Number(prop.iptu) : undefined,
         description: prop.description || undefined,
         amenities: prop.amenities || [],
-        photos: prop.photos || [],
+        photos: (prop.photos || []).map((p: string) => toPublicUrl(p)),
         createdAt: prop.created_at,
         updatedAt: prop.updated_at,
       })) || [];
