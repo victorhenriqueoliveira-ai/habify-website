@@ -532,7 +532,7 @@ const ProjectWizardPage = () => {
 
           {currentStep === 3 && (
             <PortfolioPropertiesStep
-              projectType={wizardData.profileType || 'corretor'}
+              projectType={projectType === 'realtor_multiple' ? 'corretor' : 'imobiliaria'}
               properties={portfolioProperties}
               onPropertiesChange={setPortfolioProperties}
               errors={errors}
