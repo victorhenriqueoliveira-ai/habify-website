@@ -236,10 +236,10 @@ export const PortfolioPropertiesStep = ({
                   <div className="flex gap-2">
                     <Input
                       id={`location-cep-${index}`}
-                      value={property.location}
+                      value={property.cep || ''}
                       onChange={(e) => {
                         const formatted = formatCep(e.target.value);
-                        updateProperty(index, 'location', formatted);
+                        updateProperty(index, 'cep', formatted);
                       }}
                       placeholder="00000-000"
                       maxLength={9}
@@ -249,7 +249,7 @@ export const PortfolioPropertiesStep = ({
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => handleCepSearch(index, property.location)}
+                      onClick={() => handleCepSearch(index, property.cep || '')}
                       disabled={cepLoading}
                     >
                       {cepLoading ? (

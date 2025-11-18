@@ -16,7 +16,7 @@ export const LoginPage = () => {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    if (hasRole(['dev'])) {
+    if (hasRole(['admin', 'dev'])) {
       return <Navigate to="/admin/users" replace />;
     }
     return <Navigate to="/admin/my-projects" replace />;
@@ -42,10 +42,10 @@ export const LoginPage = () => {
         description: 'Login realizado com sucesso',
       });
       // Redirect based on user role
-      if (hasRole(['dev'])) {
+      if (hasRole(['admin', 'dev'])) {
         navigate('/admin/users');
       } else {
-        navigate('/admin');
+        navigate('/admin/my-projects');
       }
     } else {
       toast({

@@ -84,7 +84,7 @@ export const MyProjectsPage = () => {
 
   const handleNewProject = () => {
     if (hasRole(['user']) && availablePlans.length > 0) {
-      navigate('/admin/project-type-selection');
+      navigate('/admin/new-project');
     } else {
       navigate('/admin/new-project');
     }
