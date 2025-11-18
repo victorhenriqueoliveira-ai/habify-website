@@ -223,20 +223,40 @@ export const PortfolioPropertiesStep = ({
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor={`price-${index}`}>
-                    Preço (R$) <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id={`price-${index}`}
-                    type="text"
-                    value={property.price ? formatCurrency(parseFloat(property.price)) : ''}
-                    onChange={(e) => {
-                      const numbers = e.target.value.replace(/\D/g, '');
-                      updateProperty(index, 'price', numbers);
-                    }}
-                    placeholder="R$ 450.000,00"
-                  />
+               <div>
+                  <Label htmlFor={`price-${index}`}>Valor *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      id={`price-${index}`}
+                      value={property.price}
+                      onChange={(e) => {
+                        // Remove tudo que não é número
+                        const cleanValue = e.target.value.replace(/\D/g, '');
+                        
+                        if (!cleanValue) {
+                          updateProperty(index, 'price', '');
+                          return;
+                        }
+                        
+                        // Converte para número dividindo por 100 (centavos)
+                        const numberValue = parseFloat(cleanValue) / 100;
+                        
+                        // Formata para moeda brasileira
+                        const formatted = numberValue.toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        });
+                        
+                        updateProperty(index, 'price', formatted);
+                      }}
+                      placeholder="0,00"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 

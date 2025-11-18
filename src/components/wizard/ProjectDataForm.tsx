@@ -22,12 +22,15 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
       return;
     }
     
-    const address = await searchCep(data.addressCep);
-    if (address) {
-      onChange('addressStreet', address.logradouro || '');
-      onChange('addressNeighborhood', address.bairro || '');
-      onChange('addressCity', address.localidade || '');
-      onChange('addressState', address.uf || '');
+    const cleanCep = data.addressCep.replace(/\D/g, '');
+    if (cleanCep.length === 8) {
+      const address = await searchCep(cleanCep);
+      if (address) {
+        onChange('addressStreet', address.logradouro || '');
+        onChange('addressNeighborhood', address.bairro || '');
+        onChange('addressCity', address.localidade || '');
+        onChange('addressState', address.uf || '');
+      }
     }
   };
 
