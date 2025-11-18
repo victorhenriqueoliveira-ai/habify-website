@@ -29,6 +29,7 @@ const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then(m =
 
 // Admin pages
 const UsersPage = lazy(() => import("./pages/admin/UsersPage").then(m => ({ default: m.UsersPage })));
+const UsersDashboard = lazy(() => import("./pages/admin/UsersDashboard").then(m => ({ default: m.UsersDashboard })));
 const ProjectsPage = lazy(() => import("./pages/admin/ProjectsPage").then(m => ({ default: m.ProjectsPage })));
 const PaymentsPage = lazy(() => import("./pages/admin/PaymentsPage").then(m => ({ default: m.PaymentsPage })));
 const MyProjectsPage = lazy(() => import("./pages/admin/MyProjectsPage").then(m => ({ default: m.MyProjectsPage })));
@@ -155,7 +156,7 @@ const AppContent = () => {
               {/* Dashboard Routes */}
               <Route index element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
-                  <UsersPage />
+                  <UsersDashboard />
                 </RoleBasedRoute>
               } />
               <Route path="dashboard" element={
