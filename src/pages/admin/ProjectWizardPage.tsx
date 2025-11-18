@@ -29,7 +29,7 @@ const steps = [
 const ProjectWizardPage = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { createProject } = useProjects();
+  const { createProject, fetchProjects } = useProjects();
   const { user } = useAuth();
   const { availablePlans, loading: plansLoading, usePlanForProject } = useUserPlans();
   const [currentStep, setCurrentStep] = useState(0);
@@ -350,7 +350,55 @@ const ProjectWizardPage = () => {
             console.error('Error saving portfolio properties:', propertiesError);
             toast.error('Projeto criado, mas houve erro ao salvar os imóveis', { id: loadingToast });
           } else {
-          // console.log('Properties saved successfully');
+            // console.log('Properties saved successfully');
+            try {
+              // Aggregate all property photos (they should already be public URLs returned by uploadMultipleFiles)
+              const propertyPhotoUrls: string[] = propertiesWithUrls
+                .flatMap((p) => (Array.isArray(p.photos) ? p.photos : []))
+                .filter(Boolean);
+
+              // Combine logo (if any) with property photos and remove duplicates
+              const combinedPhotos = Array.from(new Set([...(projectPhotos || []), ...propertyPhotoUrls]));
+
+              // Prepare update payload for project - also populate some top-level fields from the first property
+              const updateData: any = {
+                photos: combinedPhotos,
+              };
+
+              const firstProp = propertiesWithUrls[0];
+              if (firstProp) {
+                // If the wizard provided a full address use it (already saved at creation); otherwise use first property's location
+                if (!fullAddress || fullAddress.trim() === '') {
+                  updateData.location = firstProp.location || null;
+                }
+
+                if (firstProp.price !== undefined && firstProp.price !== null) updateData.price = firstProp.price;
+                if (firstProp.bedrooms !== undefined) updateData.bedrooms = firstProp.bedrooms;
+                if (firstProp.bathrooms !== undefined) updateData.bathrooms = firstProp.bathrooms;
+                if (firstProp.area !== undefined) updateData.area = firstProp.area;
+                if (firstProp.property_type) updateData.property_type = firstProp.property_type;
+              }
+
+              const { error: updateError } = await supabase
+                .from('projects')
+                .update(updateData)
+                .eq('id', projectId);
+
+              if (updateError) {
+                console.error('Error updating project with aggregated photos/fields:', updateError);
+                toast.error('Projeto criado, mas houve erro ao atualizar informações agregadas', { id: loadingToast });
+              } else {
+                try {
+                  // Refresh local projects list so ProjectDetailPage and other views show the aggregated photos/fields immediately
+                  await fetchProjects();
+                } catch (err) {
+                  // Non-fatal: already created project, but log for debugging
+                  console.error('Error refetching projects after update:', err);
+                }
+              }
+            } catch (err) {
+              console.error('Error while aggregating property photos into project:', err);
+            }
           }
         }
 
@@ -556,7 +604,7 @@ const ProjectWizardPage = () => {
                 variant="outline"
                 onClick={() => {
                   if (currentStep === 0) {
-                    navigate('/admin/project-type-selection');
+                    navigate('/admin/new-project');
                   } else {
                     setCurrentStep(currentStep - 1);
                   }

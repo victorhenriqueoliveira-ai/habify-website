@@ -19,6 +19,30 @@ export const uploadFileToStorage = async (
 
     if (error) {
       console.error('Error uploading file:', error);
+      // If bucket not found, try fallback to default 'project-photos' bucket
+  const isBucketNotFound = ((error as any)?.status === 404) || (typeof (error as any)?.message === 'string' && (error as any).message.includes('Bucket not found'));
+      if (isBucketNotFound && bucket !== 'project-photos') {
+        try {
+          const { data: fallbackData, error: fallbackError } = await supabase.storage
+            .from('project-photos')
+            .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+          if (fallbackError) {
+            console.error('Fallback upload error:', fallbackError);
+            return null;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('project-photos')
+            .getPublicUrl(fallbackData.path);
+
+          return publicUrl;
+        } catch (err) {
+          console.error('Error in fallback upload:', err);
+          return null;
+        }
+      }
+
       return null;
     }
 

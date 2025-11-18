@@ -11,7 +11,7 @@ VALUES
   'website_only',
   597.00,
   'Landing page profissional personalizada',
-  '["Design responsivo", "Otimização SEO básica", "Formulário de contato", "Integração com Google Analytics"]'::jsonb,
+  '["Design responsivo", "Otimização SEO básica", "Integração com Google Analytics"]'::jsonb,
   true,
   'price_1SDEreBkpbQLOAieahJ1Xlv2'
 ),

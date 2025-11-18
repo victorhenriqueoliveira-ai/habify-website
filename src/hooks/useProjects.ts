@@ -21,6 +21,30 @@ export const useProjects = () => {
 
       if (error) throw error;
 
+      // helper to ensure photos are public URLs
+      const toPublicUrl = (path: string) => {
+        if (!path) return path;
+        if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:'))) {
+          return path;
+        }
+        try {
+          const { data: urlData } = supabase.storage.from('project-photos').getPublicUrl(path);
+          return urlData.publicUrl || path;
+        } catch (err) {
+          return path;
+        }
+      };
+
+      const toCamelCaseKeys = (obj: any): any => {
+        if (!obj || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(toCamelCaseKeys);
+        return Object.keys(obj).reduce((acc: any, key) => {
+          const camelKey = key.replace(/_([a-z])/g, (_, g) => g.toUpperCase());
+          acc[camelKey] = toCamelCaseKeys(obj[key]);
+          return acc;
+        }, {});
+      };
+
       const formattedProjects: Project[] = data?.map((project) => ({
         id: project.id,
         userId: project.user_id,
@@ -28,7 +52,7 @@ export const useProjects = () => {
         description: project.description || '',
         status: project.status,
         landingPageUrl: project.landing_page_url,
-        photos: project.photos || [],
+        photos: (project.photos || []).map((p: string) => toPublicUrl(p)),
         createdAt: project.created_at,
         updatedAt: project.updated_at,
         completedAt: project.completed_at,
@@ -42,9 +66,26 @@ export const useProjects = () => {
         features: project.features as Record<string, any> || {},
         layoutChoice: project.layout_choice,
         colorPalette: project.color_palette,
-        logoUrl: project.logo_url,
-        wizardData: project.wizard_data as Record<string, any> || {},
+        logoUrl: project.logo_url ? toPublicUrl(project.logo_url) : project.logo_url,
+        // normalize wizard_data keys to camelCase so components can access consistent field names
+        wizardData: toCamelCaseKeys(project.wizard_data) || {},
       })) || [];
+
+      // Dev-only debug: log sample of received data to help diagnose missing fields/urls
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          const sample = formattedProjects[0];
+          console.debug('[useProjects] fetched projects sample:', {
+            id: sample?.id,
+            photos: sample?.photos?.slice(0, 10),
+            logoUrl: sample?.logoUrl,
+            wizardDataKeys: sample?.wizardData ? Object.keys(sample.wizardData) : undefined,
+            rawFirstProject: data?.[0],
+          });
+        } catch (err) {
+          // ignore
+        }
+      }
 
       setProjects(formattedProjects);
     } catch (error) {

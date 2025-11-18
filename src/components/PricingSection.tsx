@@ -232,10 +232,6 @@ const PricingSection = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <span>Integração completa com seu CRM</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
                       <span>Relatórios e analytics avançados</span>
                     </li>
                     <li className="flex items-start gap-2">
@@ -253,11 +249,10 @@ const PricingSection = () => {
                   size="lg"
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-auto"
                   onClick={() => {
-                    const whatsappNumber = "551196176-9504";
                     const message = encodeURIComponent(
                       "Olá! Vim do site e gostaria de saber mais sobre o Plano Interphase da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
                     );
-                    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+                    window.open(`https://wa.me/5511961769504?text=${message}`, '_blank');
                   }}
                 >
                   Falar com Especialista
