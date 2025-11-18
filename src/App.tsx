@@ -156,7 +156,7 @@ const AppContent = () => {
               {/* Dashboard Routes */}
               <Route index element={
                 <RoleBasedRoute allowedRoles={['admin', 'dev']}>
-                  <UsersDashboard />
+                  <UsersPage />
                 </RoleBasedRoute>
               } />
               <Route path="dashboard" element={

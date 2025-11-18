@@ -554,8 +554,14 @@ const ProjectWizardPage = () => {
             <div className="flex justify-between">
               <Button
                 variant="outline"
-                onClick={() => navigate('/admin/my-projects')}
-                disabled={currentStep === 1 || loading}
+                onClick={() => {
+                  if (currentStep === 0) {
+                    navigate('/admin/project-type-selection');
+                  } else {
+                    setCurrentStep(currentStep - 1);
+                  }
+                }}
+                disabled={loading}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar
