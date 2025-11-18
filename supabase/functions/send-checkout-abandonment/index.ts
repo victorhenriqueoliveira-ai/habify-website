@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[SEND-CHECKOUT-ABANDONMENT] Sending abandonment email to:', email);
 
     const emailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: [email],
       subject: "😊 Notamos que você não finalizou sua compra - Habify",
       html: `

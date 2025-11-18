@@ -55,7 +55,7 @@ serve(async (req) => {
 
     // Enviar email para o cliente
     const emailResponse = await resend.emails.send({
-      from: "Habify <onboarding@resend.dev>",
+      from: "Habify <contato@habify.com.br>",
       to: [customerEmail],
       subject: "✅ Manutenção Mensal Confirmada - Habify",
       html: `

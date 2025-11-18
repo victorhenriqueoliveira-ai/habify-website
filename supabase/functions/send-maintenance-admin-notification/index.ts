@@ -60,7 +60,7 @@ serve(async (req) => {
 
     // Enviar email para admins
     const emailResponse = await resend.emails.send({
-      from: "Habify Notificações <onboarding@resend.dev>",
+      from: "Habify Notificações <contato@habify.com.br>",
       to: [adminEmail],
       subject: `🔧 Nova Manutenção Contratada - ${projectTitle}`,
       html: `

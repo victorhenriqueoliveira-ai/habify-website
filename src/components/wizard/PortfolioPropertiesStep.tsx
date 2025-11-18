@@ -5,9 +5,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Upload, X } from 'lucide-react';
+import { Plus, Trash2, Upload, X, MapPin, Loader2 } from 'lucide-react';
 import { useMultipleProjects, PropertyData } from '@/hooks/useMultipleProjects';
 import { formatCurrency } from '@/lib/validations';
+import { usePropertyCepSearch } from '@/hooks/usePropertyCepSearch';
+import { toast } from 'sonner';
 
 interface PortfolioPropertiesStepProps {
   projectType: 'corretor' | 'imobiliaria';
@@ -50,6 +52,7 @@ export const PortfolioPropertiesStep = ({
 }: PortfolioPropertiesStepProps) => {
   const maxProperties = projectType === 'corretor' ? 5 : 1;
   const maxPhotosPerProperty = projectType === 'corretor' ? 5 : 20;
+  const { searchCep, formatCep, loading: cepLoading } = usePropertyCepSearch();
 
   const addProperty = () => {
     if (properties.length < maxProperties) {
@@ -117,6 +120,21 @@ export const PortfolioPropertiesStep = ({
       ? currentAmenities.filter((a) => a !== amenity)
       : [...currentAmenities, amenity];
     updateProperty(propertyIndex, 'amenities', updatedAmenities);
+  };
+
+  const handleCepSearch = async (propertyIndex: number, cep: string) => {
+    if (!cep) return;
+    
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length === 8) {
+      const address = await searchCep(cleanCep);
+      if (address) {
+        // Construir localização no formato: Bairro, Cidade - Estado
+        const location = `${address.bairro}, ${address.localidade} - ${address.uf}`;
+        updateProperty(propertyIndex, 'location', location);
+        toast.success('Endereço encontrado!');
+      }
+    }
   };
 
   return (
@@ -211,16 +229,55 @@ export const PortfolioPropertiesStep = ({
                   </Select>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor={`location-cep-${index}`}>
+                    CEP <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id={`location-cep-${index}`}
+                      value={property.location}
+                      onChange={(e) => {
+                        const formatted = formatCep(e.target.value);
+                        updateProperty(index, 'location', formatted);
+                      }}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleCepSearch(index, property.location)}
+                      disabled={cepLoading}
+                    >
+                      {cepLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Insira o CEP para buscar o endereço automaticamente
+                  </p>
+                </div>
+
                 <div>
-                  <Label htmlFor={`location-${index}`}>
-                    Localização <span className="text-destructive">*</span>
+                  <Label htmlFor={`full-location-${index}`}>
+                    Localização Completa <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id={`location-${index}`}
+                    id={`full-location-${index}`}
                     value={property.location}
                     onChange={(e) => updateProperty(index, 'location', e.target.value)}
-                    placeholder="Ex: Centro, São Paulo - SP"
+                    placeholder="Bairro, Cidade - Estado"
+                    readOnly
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Preenchido automaticamente após buscar o CEP
+                  </p>
                 </div>
 
                <div>

@@ -2,7 +2,8 @@ import { useState } from 'react';
 
 export interface PropertyData {
   title: string;
-  location: string;
+  cep?: string; // CEP para busca automática de endereço
+  location: string; // Localização completa formatada
   price: string;
   propertyType: 'apartment' | 'house' | 'commercial' | 'land' | 'warehouse' | 'penthouse';
   purpose: 'sale' | 'rent';
