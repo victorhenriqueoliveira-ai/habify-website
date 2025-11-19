@@ -67,6 +67,12 @@ const menuItems = [
     roles: ['admin', 'dev'],
   },
   {
+    title: 'Solicitações',
+    url: '/admin/maintenance-requests',
+    icon: Wrench,
+    roles: ['admin', 'dev'],
+  },
+  {
     title: 'Dashboard Manutenções',
     url: '/admin/maintenances-dashboard',
     icon: BarChart3,

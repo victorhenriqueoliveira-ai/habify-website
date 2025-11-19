@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMaintenances } from '@/hooks/useMaintenances';
 import { useProjects } from '@/hooks/useProjects';
+import { useMaintenanceRequests } from '@/hooks/useMaintenanceRequests';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,16 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Wrench, Clock, CheckCircle, XCircle, Plus, CreditCard } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, XCircle, Plus, CreditCard, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { MaintenanceCreditsDisplay } from '@/components/MaintenanceCreditsDisplay';
+import { MaintenanceRequestForm } from '@/components/MaintenanceRequestForm';
 
 const UserMaintenancesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { maintenances, loading, getActiveMaintenances } = useMaintenances(user?.id);
   const { projects } = useProjects();
+  const { requests } = useMaintenanceRequests(user?.userId);
+  const [requestFormOpen, setRequestFormOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
@@ -59,20 +65,34 @@ const UserMaintenancesPage = () => {
     );
   }
 
+  const openRequestForm = (project: any) => {
+    setSelectedProject(project);
+    setRequestFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Minhas Manutenções</h1>
           <p className="text-muted-foreground">
-            Contrate e acompanhe as manutenções dos seus projetos
+            Gerencie créditos e solicite customizações nos seus projetos
           </p>
         </div>
 
+        {/* Créditos de Manutenção */}
+        <MaintenanceCreditsDisplay />
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-4">
             <div className="text-sm text-muted-foreground">Manutenções Ativas</div>
             <div className="text-2xl font-bold">{activeMaintenances.length}</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Solicitações Pendentes</div>
+            <div className="text-2xl font-bold">
+              {requests.filter(r => r.status === 'pending').length}
+            </div>
           </Card>
           <Card className="p-4">
             <div className="text-sm text-muted-foreground">Total de Manutenções</div>
@@ -83,6 +103,82 @@ const UserMaintenancesPage = () => {
             <div className="text-2xl font-bold">{completedProjects.length}</div>
           </Card>
         </div>
+
+        {/* Solicitações de Customização */}
+        {completedProjects.length > 0 && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Solicitar Customização
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Use seus créditos de manutenção para solicitar alterações em seus projetos
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {completedProjects.map((project) => (
+                <Card key={project.id} className="p-4 hover:border-primary/50 transition-colors">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-semibold">{project.title}</h3>
+                      {project.landingPageUrl && (
+                        <a
+                          href={project.landingPageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Ver projeto online
+                        </a>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => openRequestForm(project)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Solicitar Customização
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Histórico de Solicitações */}
+        {requests.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Histórico de Solicitações</h2>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Projeto</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell className="font-medium">{request.title}</TableCell>
+                    <TableCell>{request.project?.title}</TableCell>
+                    <TableCell>{getStatusBadge(request.status)}</TableCell>
+                    <TableCell>
+                      {format(new Date(request.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
 
         {/* Available Projects */}
         {completedProjects.length > 0 && (
