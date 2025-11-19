@@ -16,7 +16,7 @@ export default function TermosDeUso(): JSX.Element {
     {
       icon: Shield,
       title: "2. Descrição do Serviço",
-      content: "A Habify é uma plataforma tecnológica que fornece ferramentas para criação de landing pages e sites profissionais voltados para o mercado imobiliário, incluindo corretores e imobiliárias. Os serviços incluem: hospedagem básica, integração com meios de pagamento, área administrativa, templates personalizáveis, e serviços complementares de manutenção e suporte técnico."
+      content: "A Habify é uma plataforma tecnológica que fornece ferramentas para criação de landing pages e sites profissionais construídos em React.js voltados para o mercado imobiliário, incluindo corretores e imobiliárias. Os serviços incluem: hospedagem básica, área administrativa, templates personalizáveis, e serviços complementares de manutenção e suporte técnico."
     },
     {
       icon: AlertCircle,
@@ -63,7 +63,7 @@ export default function TermosDeUso(): JSX.Element {
       items: [
         "Nos esforçamos para manter o serviço disponível, mas não garantimos 100% de uptime",
         "Não nos responsabilizamos por perdas indiretas, lucros cessantes ou interrupções causadas por terceiros",
-        "Nossa responsabilidade máxima é limitada ao valor pago pelo usuário nos últimos 12 meses",
+        "Nossa responsabilidade máxima é limitada a entrega dos serviços contratados",
         "Manutenções programadas serão comunicadas previamente quando possível"
       ]
     }

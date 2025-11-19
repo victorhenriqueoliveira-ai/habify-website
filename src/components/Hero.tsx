@@ -119,7 +119,7 @@ const Hero = () => {
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle opacity-0 animate-fade-in text-muted-foreground text-lg sm:text-xl leading-relaxed"
             >
-              <strong className="text-foreground">Sem {" "}<span className="line-through">WordPrxxx</span>. Sem complicação.</strong> Plataforma própria 100% otimizada para conversão e SEO. Você envia as fotos, nós criamos sua máquina de vendas. Leads direto no WhatsApp automaticamente.
+              <strong className="text-foreground">Sem {" "}<span className="line-through">WordPrxxx</span>. Sem complicação.</strong> Plataforma própria 100% otimizada para conversão e SEO. Você envia as fotos, nós criamos sua máquina de vendas. Página feita em React.js, Leads direto no WhatsApp automaticamente. Pagamento único a partir de R$ 597.
             </p>
 
             {/* Animated Stats Counter */}
