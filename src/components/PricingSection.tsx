@@ -188,7 +188,7 @@ const PricingSection = () => {
               );
             })}
             
-            {/* Plano Interphase */}
+            {/* Plano Interprise */}
             <Card className="relative border-2 border-purple-500 shadow-xl flex flex-col justify-between h-full">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1 whitespace-nowrap">
@@ -246,7 +246,7 @@ const PricingSection = () => {
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-auto"
                   onClick={() => {
                     const message = encodeURIComponent(
-                      "Olá! Vim do site e gostaria de saber mais sobre o Plano Interphase da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
+                      "Olá! Vim do site e gostaria de saber mais sobre o Plano Interprise da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
                     );
                     window.open(`https://wa.me/5511961769504?text=${message}`, '_blank');
                   }}

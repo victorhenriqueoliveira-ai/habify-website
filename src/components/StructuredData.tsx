@@ -102,10 +102,10 @@ const StructuredData = () => {
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "O site é feito em WordPress?",
+        "name": "O site é feito em WordPrxxx?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPress. Desenvolvemos uma tecnologia exclusiva focada em conversão e performance."
+          "text": "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPrxxx. Desenvolvemos uma tecnologia exclusiva focada em conversão e performance."
         }
       },
       {
