@@ -160,7 +160,6 @@ export const useUserPlans = () => {
       return userPlanId;
     } catch (error) {
       console.error('Error using plan:', error);
-      toast.error('Erro ao usar plano');
       return null;
     }
   };

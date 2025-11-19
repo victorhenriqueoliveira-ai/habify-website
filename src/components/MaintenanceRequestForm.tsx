@@ -14,6 +14,7 @@ interface MaintenanceRequestFormProps {
   projectTitle: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (request: any) => void;
 }
 
 export const MaintenanceRequestForm = ({
@@ -21,6 +22,7 @@ export const MaintenanceRequestForm = ({
   projectTitle,
   open,
   onOpenChange,
+  onCreated,
 }: MaintenanceRequestFormProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -83,6 +85,7 @@ export const MaintenanceRequestForm = ({
       setDescription('');
       setAttachments([]);
       onOpenChange(false);
+      if (onCreated) onCreated(result);
     }
   };
 

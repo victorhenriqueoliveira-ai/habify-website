@@ -82,7 +82,7 @@ const Hero = () => {
             <div className="flex flex-wrap gap-3 sm:gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Zap className="w-4 h-4 text-pulse-500" />
-                <span className="text-xs sm:text-sm font-semibold text-foreground">Entrega em 72h</span>
+                <span className="text-xs sm:text-sm font-semibold text-foreground">Entrega em 72h úteis</span>
               </div>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Trophy className="w-4 h-4 text-pulse-500" />
@@ -96,13 +96,19 @@ const Hero = () => {
 
             {/* Main Title */}
             <h1 
-              className="section-title text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] opacity-0 animate-fade-in font-black" 
+              className="section-title text-4xl sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.1] opacity-0 animate-fade-in font-black" 
               style={{ animationDelay: "0.3s" }}
             >
-              Sua Máquina de Vendas 24/7: Site Profissional + Captação Automática de Leads em{" "}
+              Tenha uma Máquina de Vendas 24/7:{" "}
+              <span className="relative inline-block">
+                Site Profissional entregue em até{" "}
+              </span>
               <span className="relative inline-block">
                 <span className="relative z-10 bg-gradient-to-r from-pulse-500 via-pulse-600 to-pulse-700 bg-clip-text text-transparent">
-                  72 Horas
+                  72 Horas úteis{" "}
+                </span>
+                <span className="relative inline-block">
+                  com captação automática de leads
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-pulse-500/20 to-pulse-600/20 blur-xl"></span>
               </span>
