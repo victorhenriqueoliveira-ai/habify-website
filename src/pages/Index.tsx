@@ -98,7 +98,7 @@ const Index = () => {
         <Hero />
         <FeaturesAnimated />
         <PortfolioShowcasePremium />
-        <ProblemsSection />
+        {/* <ProblemsSection /> */}
         {/* <SpecsSection /> */}
         <LeadCaptureFlow />
         <TechnologyExplainer />

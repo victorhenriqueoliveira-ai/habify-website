@@ -200,7 +200,7 @@ const PricingSection = () => {
                   <Sparkles className="h-5 w-5 text-purple-600" />
                 </div>
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                  Plano Interphase
+                  Plano Interprise
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
                   Solução personalizada para imobiliárias e grandes corretores
@@ -224,7 +224,7 @@ const PricingSection = () => {
                   <ul className="space-y-2 text-xs text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <span>Múltiplos empreendimentos ilimitados</span>
+                      <span>Múltiplos empreendimentos</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
@@ -237,10 +237,6 @@ const PricingSection = () => {
                     <li className="flex items-start gap-2">
                       <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
                       <span>Suporte prioritário e consultoria dedicada</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="h-3 w-3 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <span>Manutenção e atualizações ilimitadas</span>
                     </li>
                   </ul>
                 </div>

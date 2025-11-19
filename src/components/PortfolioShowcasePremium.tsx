@@ -187,7 +187,7 @@ const PortfolioShowcasePremium: React.FC = () => {
         >
           <a
             href="#plans"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary text-primary-foreground rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-primary from-primary text-primary-foreground rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:scale-105"
           >
             Quero Meu Site Premium
             <TrendingUp className="w-5 h-5" />

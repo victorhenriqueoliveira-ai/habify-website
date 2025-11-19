@@ -7,6 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -15,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Wrench, Clock, CheckCircle, XCircle, Plus, CreditCard, Sparkles } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, XCircle, Plus, CreditCard, Sparkles, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -25,11 +28,14 @@ import { MaintenanceRequestForm } from '@/components/MaintenanceRequestForm';
 const UserMaintenancesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { maintenances, loading, getActiveMaintenances } = useMaintenances(user?.id);
+  const { maintenances, loading, getActiveMaintenances, fetchMaintenances } = useMaintenances(user?.id);
   const { projects } = useProjects();
-  const { requests } = useMaintenanceRequests(user?.userId);
+  const { requests, refetch } = useMaintenanceRequests(user?.userId);
   const [requestFormOpen, setRequestFormOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [viewRequestOpen, setViewRequestOpen] = useState(false);
+  const [creditsRefreshKey, setCreditsRefreshKey] = useState<number>(0);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
@@ -71,16 +77,31 @@ const UserMaintenancesPage = () => {
   };
 
   return (
+    <>
     <div className="space-y-6">
         <div>
+        {/* Maintenance Request Form Modal */}
+        {requestFormOpen && selectedProject && (
+          <MaintenanceRequestForm
+            projectId={selectedProject.id}
+            projectTitle={selectedProject.title}
+            open={requestFormOpen}
+            onOpenChange={(open: boolean) => setRequestFormOpen(open)}
+            onCreated={() => {
+              if (refetch) refetch();
+              if (typeof fetchMaintenances === 'function') fetchMaintenances();
+              setCreditsRefreshKey((k) => k + 1);
+            }}
+          />
+        )}
           <h1 className="text-3xl font-bold">Minhas Manutenções</h1>
           <p className="text-muted-foreground">
             Gerencie créditos e solicite customizações nos seus projetos
           </p>
         </div>
 
-        {/* Créditos de Manutenção */}
-        <MaintenanceCreditsDisplay />
+  {/* Créditos de Manutenção */}
+  <MaintenanceCreditsDisplay refreshTrigger={creditsRefreshKey} />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -162,6 +183,7 @@ const UserMaintenancesPage = () => {
                   <TableHead>Projeto</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,6 +195,18 @@ const UserMaintenancesPage = () => {
                     <TableCell>
                       {format(new Date(request.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setViewRequestOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -180,7 +214,101 @@ const UserMaintenancesPage = () => {
           </Card>
         )}
 
-        {/* Available Projects */}
+        {/* Visualizar Solicitação (somente leitura) */}
+        <Dialog open={viewRequestOpen} onOpenChange={setViewRequestOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Solicitação</DialogTitle>
+            </DialogHeader>
+
+            {selectedRequest && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Cliente</Label>
+                    <p className="font-medium">{selectedRequest.profile?.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedRequest.profile?.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Projeto</Label>
+                    <p className="font-medium">{selectedRequest.project?.title}</p>
+                    {selectedRequest.project?.landing_page_url && (
+                      <a
+                        href={selectedRequest.project.landing_page_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Ver projeto online
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-muted-foreground">Título</Label>
+                  <p className="font-medium">{selectedRequest.title}</p>
+                </div>
+
+                <div>
+                  <Label className="text-muted-foreground">Descrição</Label>
+                  <p className="text-sm whitespace-pre-wrap">{selectedRequest.description}</p>
+                </div>
+
+                {selectedRequest.attachments_urls && selectedRequest.attachments_urls.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground">Anexos</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {selectedRequest.attachments_urls.map((url: string, index: number) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Anexo ${index + 1}`}
+                          className="w-full h-32 object-cover rounded border"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.admin_notes && (
+                  <div>
+                    <Label className="text-muted-foreground">Notas do Admin</Label>
+                    <Textarea value={selectedRequest.admin_notes} readOnly rows={4} />
+                  </div>
+                )}
+
+                {selectedRequest.before_urls?.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground">Antes</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedRequest.before_urls.map((url: string, i: number) => (
+                        <img key={i} src={url} alt={`Antes ${i}`} className="w-full h-20 object-cover rounded" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.after_urls?.length > 0 && (
+                  <div>
+                    <Label className="text-muted-foreground">Depois</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedRequest.after_urls.map((url: string, i: number) => (
+                        <img key={i} src={url} alt={`Depois ${i}`} className="w-full h-20 object-cover rounded" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setViewRequestOpen(false)}>Fechar</Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+  </Dialog>
+
+  {/* Available Projects */}
         {completedProjects.length > 0 && (
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Contratar Manutenção</h2>
@@ -267,6 +395,7 @@ const UserMaintenancesPage = () => {
         </Card>
 
       </div>
+      </>
   );
 };
 

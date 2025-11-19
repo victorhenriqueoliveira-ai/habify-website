@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Sparkles, Clock, CheckCircle2 } from 'lucide-react';
@@ -5,8 +6,19 @@ import { useMaintenanceCredits } from '@/hooks/useMaintenanceCredits';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export const MaintenanceCreditsDisplay = () => {
-  const { credits, totalRemaining, loading } = useMaintenanceCredits();
+interface MaintenanceCreditsDisplayProps {
+  // when this value changes the component will refetch credits
+  refreshTrigger?: any;
+}
+
+export const MaintenanceCreditsDisplay = ({ refreshTrigger }: MaintenanceCreditsDisplayProps) => {
+  const { credits, totalRemaining, loading, refetch } = useMaintenanceCredits();
+
+  // refetch when refreshTrigger changes
+  useEffect(() => {
+    if (typeof refetch === 'function') refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   if (loading) {
     return (

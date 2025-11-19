@@ -128,7 +128,7 @@ const LeadCaptureFlow = () => {
                   Funciona Mesmo Você Dormindo 💤
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Seu site captura leads <strong>24 horas por dia, 7 dias por semana</strong>. Cliente interessado às 2h da manhã? Sem problema! O formulário captura os dados e você recebe a notificação no WhatsApp para atender quando acordar.
+                  Seu site captura leads <strong>24 horas por dia, 7 dias por semana</strong>. Cliente interessado às 2h da manhã? Sem problema! O botão CTA captura os dados e você recebe a notificação no WhatsApp para atender quando acordar.
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-border">
