@@ -7,7 +7,7 @@ const StructuredData = () => {
     "name": "HabiFy",
     "url": "https://habify.com",
     "logo": "https://habify.com/logotipo_habify.png",
-    "description": "Plataforma completa para corretores criarem sites profissionais para venda de imóveis com captação automática de leads 24/7",
+    "description": "Plataforma completa para corretores criarem sites profissionais em React.js para venda de imóveis com captação automática de leads 24/7",
     "foundingDate": "2024",
     "contactPoint": {
       "@type": "ContactPoint",
@@ -31,7 +31,7 @@ const StructuredData = () => {
     "@type": "Service",
     "serviceType": "Criação de Sites para Imóveis",
     "name": "Criação de Landing Pages Profissionais para Corretores de Imóveis",
-    "description": "Desenvolvimento de sites profissionais para corretores e imobiliárias com captação automática de leads, SEO otimizado e entrega em 72 horas",
+    "description": "Desenvolvimento de sites profissionais em React.js para corretores e imobiliárias com captação automática de leads, SEO otimizado e entrega em 72 horas",
     "provider": {
       "@type": "Organization",
       "name": "HabiFy",
@@ -63,7 +63,7 @@ const StructuredData = () => {
     "@type": "WebSite",
     "name": "HabiFy",
     "url": "https://habify.com",
-    "description": "Sites profissionais para corretores de imóveis com captação automática de leads",
+    "description": "Sites profissionais em 72h feitos em React.js para corretores de imóveis com captação automática de leads",
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://habify.com/?s={search_term_string}",

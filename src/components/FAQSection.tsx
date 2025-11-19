@@ -11,7 +11,7 @@ const faqs = [
   {
     id: "faq-1",
     question: "O site é feito em WordPrxxx?",
-    answer: "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPrxxx. Desenvolvemos uma tecnologia exclusiva focada em conversão e performance. Sites HabiFy carregam até 5x mais rápido que WordPrxxx e têm 3x mais conversão."
+    answer: "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPrxxx. A HabiFy utiliza tecnologias avançadas, como React.js, tailwindcss e typescript. Sites HabiFy carregam até 5x mais rápido que WordPrxxx e têm 3x mais conversão."
   },
   {
     id: "faq-2",
@@ -43,6 +43,11 @@ const faqs = [
     question: "O que está incluído na hospedagem?",
     answer: "Está tudo incluído no valor do plano: hospedagem profissional em servidor de alta performance, certificado SSL (cadeado de segurança), domínio personalizado (ex: seunome.com.br) e garantia de uptime 99.9%. Você não precisa contratar nada separado."
   },
+  {
+    id: "faq-8",
+    question: "O site após entregue para o cliente, é de minha propriedade?",
+    answer: "Sim! Após a entrega, o site é 100% seu. Você terá acesso total ao código-fonte e poderá fazer as alterações que desejar. Nossa equipe também está disponível para ajudar com edições e manutenções, caso você precise."
+  }
 ];
 
 const FAQSection = () => {
