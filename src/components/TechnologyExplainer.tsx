@@ -4,7 +4,7 @@ import { Zap, Shield, Palette, Layout, Check, X } from "lucide-react";
 const features = [
   {
     icon: Zap,
-    title: "100% Proprietário, Zero WordPress",
+    title: "100% Proprietário, Zero WordPrxxx",
     description: "Plataforma própria desenvolvida do zero com as melhores tecnologias do mercado. Velocidade, segurança e otimização garantidas."
   },
   {
@@ -25,14 +25,14 @@ const features = [
 ];
 
 const comparison = [
-  { feature: "Velocidade de Carregamento", habify: true, wordpress: false, builders: true },
-  { feature: "SEO Otimizado Nativamente", habify: true, wordpress: false, builders: false },
-  { feature: "Edição Fácil e Intuitiva", habify: true, wordpress: false, builders: true },
-  { feature: "Suporte Dedicado", habify: true, wordpress: false, builders: false },
-  { feature: "Hospedagem Inclusa", habify: true, wordpress: false, builders: true },
-  { feature: "Atualizações Automáticas", habify: true, wordpress: false, builders: true },
-  { feature: "Segurança Reforçada", habify: true, wordpress: false, builders: true },
-  { feature: "Captação de Leads 24/7", habify: true, wordpress: false, builders: false }
+  { feature: "Velocidade de Carregamento", habify: true, WordPrxxx: false, builders: true },
+  { feature: "SEO Otimizado Nativamente", habify: true, WordPrxxx: false, builders: false },
+  { feature: "Edição Fácil e Intuitiva", habify: true, WordPrxxx: false, builders: true },
+  { feature: "Suporte Dedicado", habify: true, WordPrxxx: false, builders: false },
+  { feature: "Hospedagem Inclusa", habify: true, WordPrxxx: false, builders: true },
+  { feature: "Atualizações Automáticas", habify: true, WordPrxxx: false, builders: true },
+  { feature: "Segurança Reforçada", habify: true, WordPrxxx: false, builders: true },
+  { feature: "Captação de Leads 24/7", habify: true, WordPrxxx: false, builders: false }
 ];
 
 const TechnologyExplainer = () => {
@@ -56,7 +56,8 @@ const TechnologyExplainer = () => {
           </div>
           <h2 className="section-title text-3xl sm:text-4xl lg:text-5xl mb-4">
             Plataforma Própria,{" "}
-            <span className="text-primary">Não WordPress</span>
+            <span className="text-primary">Não é </span>
+            <span className="line-through">WordPrxxx</span>
           </h2>
           <p className="section-subtitle text-lg max-w-2xl mx-auto">
             Desenvolvemos uma tecnologia exclusiva, muito mais rápida, segura e otimizada para vendas de imóveis
@@ -115,7 +116,7 @@ const TechnologyExplainer = () => {
                       </th>
                       <th className="px-6 py-4 text-center text-sm font-bold text-muted-foreground">
                         <div className="flex flex-col items-center">
-                          <span>WordPress</span>
+                          <span>WordPrxxx</span>
                           <span className="text-xs font-normal">+ Plugins</span>
                         </div>
                       </th>
@@ -145,7 +146,7 @@ const TechnologyExplainer = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          {row.wordpress ? (
+                          {row.WordPrxxx ? (
                             <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600">
                               <Check className="w-5 h-5" />
                             </div>
@@ -177,7 +178,7 @@ const TechnologyExplainer = () => {
           {/* Highlight */}
           <div className="mt-8 p-6 bg-primary/5 border border-primary/20 rounded-xl">
             <p className="text-center text-foreground font-semibold">
-              💡 <strong>Resultado:</strong> Sites HabiFy carregam até <span className="text-primary">5x mais rápido</span> que WordPress e têm <span className="text-primary">3x mais conversão</span> que builders genéricos
+              💡 <strong>Resultado:</strong> Sites HabiFy carregam até <span className="text-primary">5x mais rápido</span> que WordPrxxx e têm <span className="text-primary">3x mais conversão</span> que builders genéricos
             </p>
           </div>
         </motion.div>

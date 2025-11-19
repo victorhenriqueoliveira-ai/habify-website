@@ -10,8 +10,8 @@ import {
 const faqs = [
   {
     id: "faq-1",
-    question: "O site é feito em WordPress?",
-    answer: "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPress. Desenvolvemos uma tecnologia exclusiva focada em conversão e performance. Sites HabiFy carregam até 5x mais rápido que WordPress e têm 3x mais conversão."
+    question: "O site é feito em WordPrxxx?",
+    answer: "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPrxxx. Desenvolvemos uma tecnologia exclusiva focada em conversão e performance. Sites HabiFy carregam até 5x mais rápido que WordPrxxx e têm 3x mais conversão."
   },
   {
     id: "faq-2",
