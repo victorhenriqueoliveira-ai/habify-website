@@ -162,6 +162,137 @@ export type Database = {
           },
         ]
       }
+      maintenance_credits: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          remaining_credits: number | null
+          total_credits: number
+          updated_at: string
+          used_credits: number
+          user_id: string
+          user_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          remaining_credits?: number | null
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id: string
+          user_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          remaining_credits?: number | null
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id?: string
+          user_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_credits_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_credits_user_plan_id_fkey"
+            columns: ["user_plan_id"]
+            isOneToOne: false
+            referencedRelation: "user_plans_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_requests: {
+        Row: {
+          admin_notes: string | null
+          after_urls: string[] | null
+          attachments_urls: string[] | null
+          before_urls: string[] | null
+          completed_at: string | null
+          created_at: string
+          description: string
+          id: string
+          maintenance_credit_id: string | null
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          after_urls?: string[] | null
+          attachments_urls?: string[] | null
+          before_urls?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          maintenance_credit_id?: string | null
+          project_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          after_urls?: string[] | null
+          attachments_urls?: string[] | null
+          before_urls?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          maintenance_credit_id?: string | null
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_maintenance_credit_id_fkey"
+            columns: ["maintenance_credit_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_credits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenances: {
         Row: {
           admin_notes: string | null
@@ -1045,6 +1176,10 @@ export type Database = {
       use_credits: {
         Args: { _amount: number; _description?: string; _user_id: string }
         Returns: boolean
+      }
+      use_maintenance_credit: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: string
       }
       use_user_plan: {
         Args: { _plan_id: string; _project_id: string; _user_id: string }
