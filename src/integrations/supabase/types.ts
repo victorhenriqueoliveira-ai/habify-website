@@ -576,6 +576,7 @@ export type Database = {
           message: string
           project_id: string
           sender_id: string
+          sender_name: string | null
           updated_at: string
         }
         Insert: {
@@ -586,6 +587,7 @@ export type Database = {
           message: string
           project_id: string
           sender_id: string
+          sender_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -596,6 +598,7 @@ export type Database = {
           message?: string
           project_id?: string
           sender_id?: string
+          sender_name?: string | null
           updated_at?: string
         }
         Relationships: [
