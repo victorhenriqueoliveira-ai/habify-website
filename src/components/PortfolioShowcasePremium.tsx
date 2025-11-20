@@ -163,6 +163,10 @@ const PortfolioShowcasePremium: React.FC = () => {
             effect={'coverflow'}
             grabCursor={true}
             centeredSlides={true}
+            // garantir que comece pelo primeiro slide
+            initialSlide={0}
+            // desativar loop para evitar que o swiper comece em uma posição duplicada
+            loop={false}
             slidesPerView={'auto'}
             coverflowEffect={{
               rotate: 50,
