@@ -70,7 +70,7 @@ const projects: Project[] = [
   {
     id: '3',
     name: 'Empreendimento Único Cor Vibrante',
-    url: 'https://https://modelo-empreendimento-unico-vibrant.vercel.app',
+    url: 'https://modelo-empreendimento-unico-vibrant.vercel.app',
     image: '/fotos/site_empreendimentounicovibrante.png',
     type: 'Landing Page Empreendimento Único',
     description: 'Site institucional premium para corretor de imóveis, com um único empreendimento e SEO avançado.',
@@ -90,7 +90,7 @@ const projects: Project[] = [
   {
     id: '4',
     name: 'Empreendimentos Moderno',
-    url: 'https://https://modelo-empreendimentos-moderno.vercel.app/',
+    url: 'https://modelo-empreendimentos-moderno.vercel.app/',
     image: '/fotos/site_empreendimentosmoderno.png',
     type: 'Landing Page para Empreendimentos Moderno',
     description: 'Site institucional moderno para corretor de imóveis, destacando projetos e contato.',
