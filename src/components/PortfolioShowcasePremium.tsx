@@ -66,6 +66,66 @@ const projects: Project[] = [
       'A/B Testing implementado'
     ],
     badge: 'Corporativo'
+  },
+  {
+    id: '3',
+    name: 'Empreendimento Único Cor Vibrante',
+    url: 'https://https://modelo-empreendimento-unico-vibrant.vercel.app',
+    image: '/fotos/site_empreendimentounicovibrante.png',
+    type: 'Landing Page Empreendimento Único',
+    description: 'Site institucional premium para corretor de imóveis, com um único empreendimento e SEO avançado.',
+    metrics: {
+      leads: '+120%',
+      traffic: '+275%',
+      conversion: '+75%'
+    },
+    features: [
+      'Design exclusivo para empreendimento único',
+      'Blog integrado com SEO',
+      'Design corporativo elegante',
+      'Otimização para motores de busca'
+    ],
+    badge: 'Institucional'
+  },
+  {
+    id: '4',
+    name: 'Empreendimentos Moderno',
+    url: 'https://https://modelo-empreendimentos-moderno.vercel.app/',
+    image: '/fotos/site_empreendimentosmoderno.png',
+    type: 'Landing Page para Empreendimentos Moderno',
+    description: 'Site institucional moderno para corretor de imóveis, destacando projetos e contato.',
+    metrics: {
+      leads: '+110%',
+      traffic: '+200%',
+      conversion: '+70%'
+    },
+    features: [
+      'Design corporativo sofisticado',
+      'Seção de projetos detalhada',
+      'Imóveis em destaque',
+      'Botão de contato visível'
+    ],
+    badge: 'Institucional'
+  },
+  {
+    id: '5',
+    name: 'Empreendimentos Clássico',
+    url: 'https://modelo-empreendimentos-classico.vercel.app/',
+    image: '/fotos/site_empreendimentosclassico.png',
+    type: 'Landing Page para Empreendimentos Clássico',
+    description: 'Site institucional clássico para corretor de imóveis, com foco em tradição e confiança.',
+    metrics: {
+      leads: '+105%',
+      traffic: '+100%',
+      conversion: '+65%'
+    },
+    features: [
+      'Design clássico e confiável',
+      'Seção de testemunhos',
+      'História do corretor',
+      'Contato fácil'
+    ],
+    badge: 'Institucional'
   }
 ];
 

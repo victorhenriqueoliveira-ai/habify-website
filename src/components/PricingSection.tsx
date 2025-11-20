@@ -187,8 +187,8 @@ const PricingSection = () => {
               </Card>
               );
             })}
-            
-            {/* Plano Interprise */}
+
+            {/* Plano Enterprise */}
             <Card className="relative border-2 border-purple-500 shadow-xl flex flex-col justify-between h-full">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1 whitespace-nowrap">
@@ -200,7 +200,7 @@ const PricingSection = () => {
                   <Sparkles className="h-5 w-5 text-purple-600" />
                 </div>
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                  Plano Interprise
+                  Plano Enterprise
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
                   Solução personalizada para imobiliárias e grandes corretores
