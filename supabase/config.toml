@@ -48,3 +48,12 @@ verify_jwt = false
 
 [functions.check-unique-fields]
 verify_jwt = false
+
+[functions.send-maintenance-admin-notification]
+verify_jwt = false
+
+[functions.send-maintenance-confirmation]
+verify_jwt = false
+
+[functions.send-maintenance-request-notification]
+verify_jwt = false

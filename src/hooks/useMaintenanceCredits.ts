@@ -6,6 +6,7 @@ export interface MaintenanceCredit {
   id: string;
   user_plan_id: string;
   user_id: string;
+  project_id?: string;
   total_credits: number;
   used_credits: number;
   remaining_credits: number;
@@ -14,7 +15,7 @@ export interface MaintenanceCredit {
   updated_at: string;
 }
 
-export const useMaintenanceCredits = (userId?: string) => {
+export const useMaintenanceCredits = (userId?: string, projectId?: string) => {
   const [credits, setCredits] = useState<MaintenanceCredit[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalRemaining, setTotalRemaining] = useState(0);
@@ -39,11 +40,16 @@ export const useMaintenanceCredits = (userId?: string) => {
 
       if (!targetProfileId) return;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('maintenance_credits')
         .select('*')
-        .eq('user_id', targetProfileId)
-        .order('expires_at', { ascending: true, nullsFirst: false });
+        .eq('user_id', targetProfileId);
+      
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+      
+      const { data, error } = await query.order('expires_at', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
 
@@ -69,7 +75,7 @@ export const useMaintenanceCredits = (userId?: string) => {
 
   useEffect(() => {
     fetchCredits();
-  }, [userId]);
+  }, [userId, projectId]);
 
   return {
     credits,

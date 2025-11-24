@@ -167,6 +167,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          project_id: string | null
           remaining_credits: number | null
           total_credits: number
           updated_at: string
@@ -178,6 +179,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          project_id?: string | null
           remaining_credits?: number | null
           total_credits?: number
           updated_at?: string
@@ -189,6 +191,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          project_id?: string | null
           remaining_credits?: number | null
           total_credits?: number
           updated_at?: string
@@ -197,6 +200,13 @@ export type Database = {
           user_plan_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "maintenance_credits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "maintenance_credits_user_id_fkey"
             columns: ["user_id"]
@@ -216,6 +226,50 @@ export type Database = {
             columns: ["user_plan_id"]
             isOneToOne: false
             referencedRelation: "user_plans_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_request_messages: {
+        Row: {
+          attachment_url: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          maintenance_request_id: string
+          message: string
+          sender_id: string
+          sender_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          maintenance_request_id: string
+          message: string
+          sender_id: string
+          sender_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          maintenance_request_id?: string
+          message?: string
+          sender_id?: string
+          sender_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_request_messages_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
             referencedColumns: ["id"]
           },
         ]

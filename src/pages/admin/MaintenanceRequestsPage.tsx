@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MaintenanceRequestChat } from '@/components/MaintenanceRequestChat';
 
 export default function MaintenanceRequestsPage() {
   const { requests, loading, updateRequestStatus, refetch } = useMaintenanceRequests();
@@ -381,6 +382,13 @@ export default function MaintenanceRequestsPage() {
                   </Button>
                 )}
               </DialogFooter>
+
+              <div className="mt-6 pt-6 border-t">
+                <MaintenanceRequestChat
+                  requestId={selectedRequest.id}
+                  currentUserId={selectedRequest.user_id}
+                />
+              </div>
             </div>
           )}
         </DialogContent>
