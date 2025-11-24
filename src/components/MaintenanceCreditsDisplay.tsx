@@ -7,12 +7,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface MaintenanceCreditsDisplayProps {
+  projectId?: string;
   // when this value changes the component will refetch credits
   refreshTrigger?: any;
 }
 
-export const MaintenanceCreditsDisplay = ({ refreshTrigger }: MaintenanceCreditsDisplayProps) => {
-  const { credits, totalRemaining, loading, refetch } = useMaintenanceCredits();
+export const MaintenanceCreditsDisplay = ({ projectId, refreshTrigger }: MaintenanceCreditsDisplayProps) => {
+  const { credits, totalRemaining, loading, refetch } = useMaintenanceCredits(undefined, projectId);
 
   // refetch when refreshTrigger changes
   useEffect(() => {

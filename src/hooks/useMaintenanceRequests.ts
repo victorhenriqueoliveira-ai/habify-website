@@ -148,6 +148,15 @@ export const useMaintenanceRequests = (userId?: string, projectId?: string) => {
 
       if (error) throw error;
 
+      // Enviar notificação por email
+      try {
+        await supabase.functions.invoke('send-maintenance-request-notification', {
+          body: { requestId: data.id, action: 'created' }
+        });
+      } catch (emailError) {
+        console.error('Error sending notification email:', emailError);
+      }
+
       toast.success('Solicitação criada com sucesso!');
       await fetchRequests();
       return data;
@@ -182,6 +191,16 @@ export const useMaintenanceRequests = (userId?: string, projectId?: string) => {
         .eq('id', requestId);
 
       if (error) throw error;
+
+      // Enviar notificação por email
+      try {
+        const action = status === 'completed' ? 'completed' : 'updated';
+        await supabase.functions.invoke('send-maintenance-request-notification', {
+          body: { requestId, action }
+        });
+      } catch (emailError) {
+        console.error('Error sending notification email:', emailError);
+      }
 
       toast.success('Status atualizado com sucesso!');
       await fetchRequests();
