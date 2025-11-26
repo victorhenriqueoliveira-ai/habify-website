@@ -1,32 +1,25 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AdvancedSEO from "@/components/seo/AdvancedSEO";
 import AdvancedSchema from "@/components/seo/AdvancedSchema";
 import StructuredData from "@/components/StructuredData";
-import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
-import StickyCTABar from "@/components/mobile/StickyCTABar";
-import StickyDesktopCTA from "@/components/conversion/StickyDesktopCTA";
-import ExitIntentPopup from "@/components/conversion/ExitIntentPopup";
-import PortfolioShowcasePremium from "@/components/PortfolioShowcasePremium";
-import TechnologyExplainer from "@/components/TechnologyExplainer";
-import LeadCaptureFlow from "@/components/LeadCaptureFlow";
-import TrafficExplainer from "@/components/TrafficExplainer";
-import ProjectTypesExplainer from "@/components/ProjectTypesExplainer";
-import FAQSection from "@/components/FAQSection";
-import ProblemsSection from "@/components/HumanoidSection";
-import SpecsSection from "@/components/SpecsSection";
-import DetailsSection from "@/components/DetailsSection";
-import ImageShowcaseSection from "@/components/ImageShowcaseSection";
-import PricingSection from "@/components/PricingSection";
-import TestimonialsPremium from "@/components/TestimonialsPremium";
-import FeaturesAnimated from "@/components/FeaturesAnimated";
-import Newsletter from "@/components/Newsletter";
-import MadeByHumans from "@/components/MadeByHumans";
-import Footer from "@/components/Footer";
 import { preloadCriticalImages } from "@/utils/preloadImages";
 import { setupScrollTracking } from "@/utils/analytics";
+
+// Lazy load non-critical components
+const StickyCTABar = lazy(() => import("@/components/mobile/StickyCTABar"));
+const StickyDesktopCTA = lazy(() => import("@/components/conversion/StickyDesktopCTA"));
+const PortfolioShowcasePremium = lazy(() => import("@/components/PortfolioShowcasePremium"));
+const TechnologyExplainer = lazy(() => import("@/components/TechnologyExplainer"));
+const LeadCaptureFlow = lazy(() => import("@/components/LeadCaptureFlow"));
+const TrafficExplainer = lazy(() => import("@/components/TrafficExplainer"));
+const ProjectTypesExplainer = lazy(() => import("@/components/ProjectTypesExplainer"));
+const FAQSection = lazy(() => import("@/components/FAQSection"));
+const PricingSection = lazy(() => import("@/components/PricingSection"));
+const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
+const Footer = lazy(() => import("@/components/Footer"));
 
 const Index = () => {
   // Preload critical images on mount
@@ -91,24 +84,40 @@ const Index = () => {
       <AdvancedSchema />
       <StructuredData />
       <Navbar />
-      {/* <FloatingWhatsAppButton /> */}
-      <StickyCTABar showAfterScroll={300} />
-      <StickyDesktopCTA showAfterScroll={800} />
+      <Suspense fallback={<div className="h-0" />}>
+        <StickyCTABar showAfterScroll={300} />
+        <StickyDesktopCTA showAfterScroll={800} />
+      </Suspense>
       <main className="space-y-0">
         <Hero />
-        <FeaturesAnimated />
-        <PortfolioShowcasePremium />
-        {/* <ProblemsSection /> */}
-        {/* <SpecsSection /> */}
-        <LeadCaptureFlow />
-        <TechnologyExplainer />
-        <ProjectTypesExplainer />
-        <TrafficExplainer />
-        <PricingSection />
-        <FAQSection />
-        {/* <TestimonialsPremium /> */}
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <FeaturesAnimated />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[600px] bg-background" />}>
+          <PortfolioShowcasePremium />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
+          <LeadCaptureFlow />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <TechnologyExplainer />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <ProjectTypesExplainer />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <TrafficExplainer />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
+          <PricingSection />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <FAQSection />
+        </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={<div className="h-20 bg-background" />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
