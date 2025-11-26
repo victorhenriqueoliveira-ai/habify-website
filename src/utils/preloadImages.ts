@@ -1,16 +1,18 @@
 // Preload critical images for better performance
 export const preloadCriticalImages = () => {
   const criticalImages = [
-    '/Header-background.webp',
-    '/Foto1.png',
-    '/logotipo_habify.png'
+    { src: '/Header-background.webp', priority: 'high' },
+    { src: '/Foto1.png', priority: 'high' },
   ];
 
-  criticalImages.forEach((src) => {
+  criticalImages.forEach(({ src, priority }) => {
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
     link.href = src;
+    if (priority === 'high') {
+      link.setAttribute('fetchpriority', 'high');
+    }
     document.head.appendChild(link);
   });
 };
