@@ -127,17 +127,8 @@ export default function AssignPlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/admin/users')}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar para Usuários
-        </Button>
-
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto">
         <Card>
           <CardHeader>
             <CardTitle>Atribuir Plano Manual</CardTitle>

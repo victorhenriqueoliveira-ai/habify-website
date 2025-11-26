@@ -150,7 +150,7 @@ export const UserSubscriptionsPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-6xl">
+    <div className="mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button

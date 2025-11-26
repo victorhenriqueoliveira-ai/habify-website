@@ -92,7 +92,6 @@ export default function TermosDeUso(): JSX.Element {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Termos de Uso
                 </h1>
-                <p className="text-muted-foreground">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
               </div>
             </div>
             <p className="text-lg text-muted-foreground mt-4">

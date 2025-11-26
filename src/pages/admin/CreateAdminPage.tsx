@@ -101,13 +101,13 @@ export default function CreateAdminPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 mx-auto">
       <div>
         <h1 className="text-3xl font-bold">Criar Novo Administrador</h1>
         <p className="text-muted-foreground">Cadastre um novo usuário Admin ou Dev</p>
       </div>
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardHeader>
           <CardTitle>Informações do Administrador</CardTitle>
           <CardDescription>

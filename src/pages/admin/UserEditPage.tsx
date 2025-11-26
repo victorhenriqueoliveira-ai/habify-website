@@ -104,22 +104,7 @@ export const UserEditPage = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/admin/users')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Editar Usuário</h1>
-          <p className="text-muted-foreground">{user.email}</p>
-        </div>
-      </div>
-
+    <div className="mx-auto space-y-6">
       {/* Form */}
       <Card>
         <CardHeader>
