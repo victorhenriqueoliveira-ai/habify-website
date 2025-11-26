@@ -224,7 +224,7 @@ const PortfolioShowcasePremium: React.FC = () => {
                     </div>
 
                     {/* Badge */}
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-background/90 backdrop-blur-sm rounded-full text-sm font-semibold border border-border">
+                    <div className="hidden group-hover:block absolute top-4 right-4 px-3 py-1 bg-background/90 backdrop-blur-sm rounded-full text-sm font-semibold border border-border">
                       {project.type}
                     </div>
                   </div>
