@@ -123,10 +123,7 @@ export const useProjectMessages = (projectId?: string) => {
     if (!projectId || !user?.userId) return { success: false, error: 'Missing data' };
 
     try {
-      // Try to include sender_name on insert to avoid relying on client-side joins (helps when RLS
-      // prevents the recipient from reading the profiles table). We'll attempt insert with
-      // sender_name, and if the column doesn't exist we'll fallback to inserting without it.
-      // First, try to read the sender name from profiles (best-effort).
+      // Get sender profile
       let senderName: string | undefined = undefined;
       try {
         const { data: senderProfile } = await supabase
@@ -137,7 +134,7 @@ export const useProjectMessages = (projectId?: string) => {
           .single();
         if (senderProfile?.name) senderName = senderProfile.name;
       } catch (err) {
-        // ignore - we'll try insert with/without sender_name
+        // ignore
       }
 
       let insertPayload: any = {
@@ -153,7 +150,6 @@ export const useProjectMessages = (projectId?: string) => {
       try {
         insertResult = await supabase.from('project_messages').insert(insertPayload).select().single();
       } catch (err) {
-        // If insert with sender_name failed (column missing), retry without sender_name
         if (insertPayload.sender_name) {
           const { sender_name, ...withoutName } = insertPayload;
           insertResult = await supabase.from('project_messages').insert(withoutName).select().single();
@@ -165,28 +161,25 @@ export const useProjectMessages = (projectId?: string) => {
       const { data, error } = insertResult || {};
       if (error) throw error;
 
-      if (error) throw error;
-
-      // Send email notification
+      // Send notifications (email + system notification)
       try {
-        // Get project and recipient info
         const { data: project } = await supabase
           .from('projects')
-          .select('user_id, title, profiles:user_id(name, email)')
+          .select('user_id, title')
           .eq('id', projectId)
           .single();
 
-          const { data: sender } = await supabase
-            .from('profiles')
-            .select('name, role')
-            .eq('user_id', user.userId)
-            .single();
+        const { data: sender } = await supabase
+          .from('profiles')
+          .select('name, role, id')
+          .eq('user_id', user.userId)
+          .single();
 
         if (project && sender) {
           const isUserOwner = project.user_id === user.userId;
           
           if (isUserOwner) {
-            // User sent message - notify admins
+            // User sent message - notify admins via email
             await supabase.functions.invoke('send-message-notification', {
               body: {
                 recipientName: 'Equipe Habify',
@@ -199,24 +192,39 @@ export const useProjectMessages = (projectId?: string) => {
               },
             });
           } else {
-            // Admin sent message - notify project owner
-            const projectOwner = project.profiles as any;
-            await supabase.functions.invoke('send-message-notification', {
-              body: {
-                recipientName: projectOwner.name,
-                recipientEmail: projectOwner.email,
-                senderName: sender.name,
-                message: message.trim(),
-                projectTitle: project.title,
-                projectId: projectId,
-                isForAdmin: false,
-              },
-            });
+            // Admin sent message - get owner profile and notify
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('id, name, email, user_id')
+              .eq('user_id', project.user_id)
+              .single();
+
+            if (ownerProfile) {
+              // Send email notification
+              await supabase.functions.invoke('send-message-notification', {
+                body: {
+                  recipientName: ownerProfile.name,
+                  recipientEmail: ownerProfile.email,
+                  senderName: sender.name,
+                  message: message.trim(),
+                  projectTitle: project.title,
+                  projectId: projectId,
+                  isForAdmin: false,
+                },
+              });
+
+              // Create system notification for the user
+              await supabase.from('notifications').insert({
+                user_id: ownerProfile.user_id,
+                title: `💬 Nova mensagem de ${sender.name}`,
+                message: `Você recebeu uma nova mensagem no projeto "${project.title}". Projeto ID: ${projectId}`,
+                type: 'info',
+              });
+            }
           }
         }
-      } catch (emailError) {
-        console.error('Error sending message notification email:', emailError);
-        // Don't fail message sending if email fails
+      } catch (notificationError) {
+        console.error('Error sending notifications:', notificationError);
       }
 
       return { success: true, data };

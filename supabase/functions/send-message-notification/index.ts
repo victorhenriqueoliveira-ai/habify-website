@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@3.5.0";
 
 const corsHeaders = {
@@ -34,9 +35,41 @@ const handler = async (req: Request): Promise<Response> => {
       isForAdmin 
     }: MessageNotificationRequest = await req.json();
 
-    console.log('[SEND-MESSAGE-NOTIFICATION] Sending notification to:', recipientEmail);
+    console.log('[SEND-MESSAGE-NOTIFICATION] Sending notification:', {
+      to: isForAdmin ? 'habifybr@gmail.com' : recipientEmail,
+      from: senderName,
+      project: projectTitle,
+      projectId
+    });
 
     const truncatedMessage = message.length > 150 ? message.substring(0, 150) + '...' : message;
+
+    // Create Supabase client to create system notification for admins
+    if (isForAdmin) {
+      const supabaseService = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+
+      // Get all admins and create notifications for them
+      const { data: admins } = await supabaseService
+        .from('user_roles')
+        .select('user_id')
+        .in('role', ['admin', 'dev']);
+
+      if (admins && admins.length > 0) {
+        const notifications = admins.map(admin => ({
+          user_id: admin.user_id,
+          title: `💬 Nova mensagem de ${senderName}`,
+          message: `Mensagem recebida no projeto "${projectTitle}". Projeto ID: ${projectId}`,
+          type: 'info' as const,
+        }));
+
+        await supabaseService.from('notifications').insert(notifications);
+        console.log('[SEND-MESSAGE-NOTIFICATION] System notifications created for', admins.length, 'admins');
+      }
+    }
 
     const emailResponse = await resend.emails.send({
       from: "Habify <contato@habify.com.br>",
@@ -105,8 +138,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }

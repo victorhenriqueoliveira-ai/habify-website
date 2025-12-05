@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
+import { Bell, CheckCheck, ExternalLink } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -16,7 +17,48 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
+// Helper to extract project ID from notification message
+const extractProjectId = (message: string): string | null => {
+  // Try to find UUID pattern in message
+  const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const match = message.match(uuidPattern);
+  return match ? match[0] : null;
+};
+
+// Helper to determine notification action URL
+const getNotificationActionUrl = (notification: { title: string; message: string }): string | null => {
+  const projectId = extractProjectId(notification.message);
+  
+  // Check if it's a message notification
+  if (notification.title.toLowerCase().includes('mensagem') || 
+      notification.title.toLowerCase().includes('chat') ||
+      notification.message.toLowerCase().includes('mensagem')) {
+    if (projectId) {
+      return `/admin/projects/${projectId}?tab=chat`;
+    }
+  }
+  
+  // Check if it's a project notification
+  if (notification.title.toLowerCase().includes('projeto') ||
+      notification.message.toLowerCase().includes('projeto')) {
+    if (projectId) {
+      return `/admin/projects/${projectId}`;
+    }
+  }
+  
+  // Check if it's a maintenance notification
+  if (notification.title.toLowerCase().includes('manutenção') ||
+      notification.title.toLowerCase().includes('customização') ||
+      notification.message.toLowerCase().includes('manutenção') ||
+      notification.message.toLowerCase().includes('customização')) {
+    return '/admin/maintenance-requests';
+  }
+  
+  return null;
+};
+
 export const NotificationBell = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { 
     notifications, 
@@ -53,9 +95,15 @@ export const NotificationBell = () => {
     };
   }, [user, fetchNotifications]);
 
-  const handleNotificationClick = async (notificationId: string, isRead: boolean) => {
-    if (!isRead) {
-      await markAsRead(notificationId);
+  const handleNotificationClick = async (notification: any) => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    
+    const actionUrl = getNotificationActionUrl(notification);
+    if (actionUrl) {
+      setIsOpen(false);
+      navigate(actionUrl);
     }
   };
 
@@ -73,19 +121,6 @@ export const NotificationBell = () => {
         return '❌';
       default:
         return '💬';
-    }
-  };
-
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'success':
-        return 'text-green-600';
-      case 'warning':
-        return 'text-yellow-600';
-      case 'error':
-        return 'text-red-600';
-      default:
-        return 'text-blue-600';
     }
   };
 
@@ -114,9 +149,10 @@ export const NotificationBell = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                className="text-sm"
+                className="text-sm gap-1"
               >
-                Marcar todas como lidas
+                <CheckCheck className="h-4 w-4" />
+                Ler todas
               </Button>
             )}
           </div>
@@ -130,46 +166,57 @@ export const NotificationBell = () => {
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.slice(0, 10).map((notification) => (
-                <Card
-                  key={notification.id}
-                  className={cn(
-                    "border-0 rounded-none cursor-pointer hover:bg-muted/50 transition-colors",
-                    !notification.read && "bg-blue-50/50"
-                  )}
-                  onClick={() => handleNotificationClick(notification.id, notification.read)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="text-lg flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <h5 className={cn(
-                            "font-medium text-sm",
-                            !notification.read && "font-semibold"
-                          )}>
-                            {notification.title}
-                          </h5>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
-                          )}
+              {notifications.slice(0, 10).map((notification) => {
+                const actionUrl = getNotificationActionUrl(notification);
+                return (
+                  <Card
+                    key={notification.id}
+                    className={cn(
+                      "border-0 rounded-none cursor-pointer hover:bg-muted/50 transition-colors",
+                      !notification.read && "bg-blue-50/50"
+                    )}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="text-lg flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
                         </div>
                         
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {format(new Date(notification.createdAt), 'dd/MM/yy HH:mm', { locale: ptBR })}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <h5 className={cn(
+                              "font-medium text-sm",
+                              !notification.read && "font-semibold"
+                            )}>
+                              {notification.title}
+                            </h5>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
+                            )}
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-muted-foreground">
+                              {format(new Date(notification.createdAt), 'dd/MM/yy HH:mm', { locale: ptBR })}
+                            </p>
+                            {actionUrl && (
+                              <span className="text-xs text-primary flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" />
+                                Ver
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </ScrollArea>
