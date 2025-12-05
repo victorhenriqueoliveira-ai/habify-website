@@ -22,68 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { name, email, isAdmin }: WelcomeEmailRequest = await req.json();
 
-    console.log('[SEND-WELCOME-EMAIL] Sending welcome email to:', email);
-
-    if (isAdmin) {
-      // Email para admin sobre novo cliente
-      const adminEmailResponse = await resend.emails.send({
-        from: "Habify Sistema <contato@habify.com.br>",
-        to: ["habifybr@gmail.com"],
-        subject: "🎉 Novo Cliente Registrado - Habify",
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
-                .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F97316; }
-                .info-item { margin: 10px 0; }
-                .label { font-weight: bold; color: #F97316; }
-                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>🎉 Novo Cliente Registrado!</h1>
-                </div>
-                <div class="content">
-                  <p>Um novo cliente acabou de se registrar na plataforma Habify:</p>
-                  
-                  <div class="info-box">
-                    <div class="info-item">
-                      <span class="label">Nome:</span> ${name}
-                    </div>
-                    <div class="info-item">
-                      <span class="label">Email:</span> ${email}
-                    </div>
-                    <div class="info-item">
-                      <span class="label">Data:</span> ${new Date().toLocaleDateString('pt-BR', { 
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-
-                  <p>O cliente já pode acessar a plataforma e criar seus projetos.</p>
-                </div>
-                <div class="footer">
-                  <p>© ${new Date().getFullYear()} Habify. Todos os direitos reservados.</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `,
-      });
-
-      console.log('[SEND-WELCOME-EMAIL] Admin notification sent:', adminEmailResponse.data?.id);
-    }
+    console.log('[SEND-WELCOME-EMAIL] Sending welcome email to:', email, 'isAdmin:', isAdmin);
 
     // Email de boas-vindas para o usuário
     const userEmailResponse = await resend.emails.send({
@@ -181,6 +120,75 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log('[SEND-WELCOME-EMAIL] User email sent:', userEmailResponse.data?.id);
+
+    // Se isAdmin = true, também envia notificação para administração
+    if (isAdmin) {
+      console.log('[SEND-WELCOME-EMAIL] Sending admin notification about new user');
+      
+      const adminEmailResponse = await resend.emails.send({
+        from: "Habify <contato@habify.com.br>",
+        to: ["habifybr@gmail.com"],
+        subject: "🎉 Novo Cliente Registrado - Habify",
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #fafafa; padding: 30px; border-radius: 0 0 10px 10px; }
+                .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F97316; }
+                .info-item { margin: 10px 0; }
+                .label { font-weight: bold; color: #F97316; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🎉 Novo Cliente Registrado!</h1>
+                </div>
+                <div class="content">
+                  <p>Um novo cliente acabou de se registrar na plataforma Habify:</p>
+                  
+                  <div class="info-box">
+                    <div class="info-item">
+                      <span class="label">👤 Nome:</span> ${name}
+                    </div>
+                    <div class="info-item">
+                      <span class="label">📧 Email:</span> ${email}
+                    </div>
+                    <div class="info-item">
+                      <span class="label">📅 Data:</span> ${new Date().toLocaleDateString('pt-BR', { 
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+
+                  <p>O cliente já pode acessar a plataforma e criar seus projetos.</p>
+                  
+                  <div style="text-align: center; margin: 20px 0;">
+                    <a href="https://habify.com.br/admin/users" style="background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                      Ver no Painel Admin
+                    </a>
+                  </div>
+                </div>
+                <div class="footer">
+                  <p>© ${new Date().getFullYear()} Habify. Todos os direitos reservados.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+      });
+
+      console.log('[SEND-WELCOME-EMAIL] Admin notification sent:', adminEmailResponse.data?.id);
+    }
 
     return new Response(JSON.stringify({ 
       success: true,

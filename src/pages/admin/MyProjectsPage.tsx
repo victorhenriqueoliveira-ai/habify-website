@@ -274,15 +274,25 @@ export const MyProjectsPage = () => {
                             {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => navigate(`/admin/projects/${project.id}`)}
-            className="w-full"
-          >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Ver Detalhes
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => navigate(`/admin/projects/${project.id}`)}
+                            className="flex-1"
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver Detalhes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
+                            className="flex-1"
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chat
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -384,7 +394,7 @@ export const MyProjectsPage = () => {
                             Concluído em {format(new Date(project.completedAt || project.updatedAt), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button 
                             size="sm" 
                             variant="outline" 
@@ -392,7 +402,16 @@ export const MyProjectsPage = () => {
                             className="flex-1"
                           >
                             <Eye className="mr-2 h-4 w-4" />
-                            Ver Detalhes
+                            Detalhes
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
+                            className="flex-1"
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chat
                           </Button>
                           {project.landingPageUrl && (
                             <Button 
