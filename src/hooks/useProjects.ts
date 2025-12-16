@@ -5,6 +5,22 @@ import { useAuditLogger } from './useAuditLogger';
 import { useUserPlans } from './useUserPlans';
 import { toast } from 'sonner';
 
+// Helper to check if user is admin/dev via user_roles table (secure)
+const checkIsAdminOrDev = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'dev'])
+      .maybeSingle();
+
+    return !error && !!data;
+  } catch {
+    return false;
+  }
+};
+
 export const useProjects = () => {
   const { logProjectAction } = useAuditLogger();
   const { usePlanForProject, availablePlans } = useUserPlans();
@@ -67,25 +83,8 @@ export const useProjects = () => {
         layoutChoice: project.layout_choice,
         colorPalette: project.color_palette,
         logoUrl: project.logo_url ? toPublicUrl(project.logo_url) : project.logo_url,
-        // normalize wizard_data keys to camelCase so components can access consistent field names
         wizardData: toCamelCaseKeys(project.wizard_data) || {},
       })) || [];
-
-      // Dev-only debug: log sample of received data to help diagnose missing fields/urls
-      if (process.env.NODE_ENV !== 'production') {
-        try {
-          const sample = formattedProjects[0];
-          console.debug('[useProjects] fetched projects sample:', {
-            id: sample?.id,
-            photos: sample?.photos?.slice(0, 10),
-            logoUrl: sample?.logoUrl,
-            wizardDataKeys: sample?.wizardData ? Object.keys(sample.wizardData) : undefined,
-            rawFirstProject: data?.[0],
-          });
-        } catch (err) {
-          // ignore
-        }
-      }
 
       setProjects(formattedProjects);
     } catch (error) {
@@ -104,14 +103,8 @@ export const useProjects = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Verificar role do usuário
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      const isAdminOrDev = profile?.role === 'admin' || profile?.role === 'dev';
+      // Verificar role do usuário via user_roles table (secure)
+      const isAdminOrDev = await checkIsAdminOrDev(user.id);
 
       // Apenas usuários regulares precisam validar planos
       if (!isAdminOrDev && availablePlans.length === 0) {
@@ -219,9 +212,7 @@ export const useProjects = () => {
       if (updates.status) updateData.status = updates.status;
       if (updates.landingPageUrl !== undefined) updateData.landing_page_url = updates.landingPageUrl;
       if (updates.photos !== undefined) {
-        // Ensure photos is always an array
         updateData.photos = Array.isArray(updates.photos) ? updates.photos : [];
-        // console.log('Updating project photos:', { id, photosCount: updateData.photos.length });
       }
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.location !== undefined) updateData.location = updates.location;
@@ -235,8 +226,6 @@ export const useProjects = () => {
       if (updates.status === 'completed' && !updates.completedAt) {
         updateData.completed_at = new Date().toISOString();
       }
-
-      // console.log('Updating project in database:', { id, updateData });
 
       const { data, error } = await supabase
         .from('projects')
@@ -253,8 +242,6 @@ export const useProjects = () => {
       if (!data) {
         throw new Error('Projeto não encontrado ou sem permissão para atualizar');
       }
-      
-      // console.log('Project updated successfully:', { id, photos: data.photos?.length || 0 });
       
       // Log the update action
       await logProjectAction('UPDATE_PROJECT', id, {

@@ -26,6 +26,22 @@ export interface AvailablePlan {
   expires_at: string | null;
 }
 
+// Helper to check if user is admin/dev via user_roles table (secure)
+const checkIsAdminOrDev = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'dev'])
+      .maybeSingle();
+
+    return !error && !!data;
+  } catch {
+    return false;
+  }
+};
+
 export const useUserPlans = () => {
   const [plans, setPlans] = useState<UserPlan[]>([]);
   const [availablePlans, setAvailablePlans] = useState<AvailablePlan[]>([]);
@@ -36,16 +52,17 @@ export const useUserPlans = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar profile e role do usuário
+      // Buscar profile do usuário
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, role')
+        .select('id')
         .eq('user_id', user.id)
         .single();
 
       if (!profile) return;
 
-      const isAdminOrDev = profile.role === 'admin' || profile.role === 'dev';
+      // Check admin/dev status using user_roles table (secure)
+      const isAdminOrDev = await checkIsAdminOrDev(user.id);
 
       // Buscar planos - admin/dev veem todos, usuários veem apenas os seus
       let query = supabase
