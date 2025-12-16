@@ -1,43 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Notification } from '@/types/admin';
+
+// Helper to check if user is admin/dev via user_roles table (secure)
+const checkIsAdminOrDev = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'dev'])
+      .maybeSingle();
+
+    return !error && !!data;
+  } catch {
+    return false;
+  }
+};
 
 export const useNotifications = (userId?: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Verificar se o usuário atual é admin/dev
+      // Get current user
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      let isAdminOrDev = false;
-
-      if (currentUser) {
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', currentUser.id)
-          .single();
-        
-        isAdminOrDev = currentProfile?.role === 'admin' || currentProfile?.role === 'dev';
+      
+      if (!currentUser) {
+        setNotifications([]);
+        setLoading(false);
+        return;
       }
+
+      setCurrentUserId(currentUser.id);
+
+      // Check admin/dev status using user_roles table (secure)
+      const isAdminOrDev = await checkIsAdminOrDev(currentUser.id);
 
       let query = supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Se userId foi passado explicitamente, filtrar por ele
-      // Se não foi passado e não é admin/dev, filtrar pelo usuário atual
+      // Filter notifications based on role
       if (userId) {
+        // Explicit userId passed - use it
         query = query.eq('user_id', userId);
-      } else if (!isAdminOrDev && currentUser) {
-        // Usuário regular vê apenas suas notificações
+      } else if (!isAdminOrDev) {
+        // Regular user - only their notifications
         query = query.eq('user_id', currentUser.id);
       }
-      // Admin/Dev sem userId específico veem todas as notificações
+      // Admin/Dev without explicit userId see all notifications
 
       const { data, error } = await query;
 
@@ -59,7 +76,7 @@ export const useNotifications = (userId?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   const markAsRead = async (id: string) => {
     try {
@@ -79,12 +96,27 @@ export const useNotifications = (userId?: string) => {
 
   const markAllAsRead = async () => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('read', false);
+      // SECURITY FIX: Filter by current user's ID to prevent marking other users' notifications
+      if (!currentUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: 'Not authenticated' };
+        
+        const { error } = await supabase
+          .from('notifications')
+          .update({ read: true })
+          .eq('read', false)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ read: true })
+          .eq('read', false)
+          .eq('user_id', currentUserId);
+
+        if (error) throw error;
+      }
       
       await fetchNotifications();
       return { success: true };
@@ -122,7 +154,7 @@ export const useNotifications = (userId?: string) => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [userId]);
+  }, [fetchNotifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

@@ -11,6 +11,29 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
+// Helper function to fetch user role from user_roles table (more secure than profiles.role)
+const fetchUserRole = async (userId: string): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      // Fallback to 'user' if no role found
+      return 'user';
+    }
+
+    // Map app_role to user_role format if needed
+    return data.role;
+  } catch {
+    return 'user';
+  }
+};
+
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
@@ -35,6 +58,7 @@ export const useAuth = () => {
         if (session?.user) {
           setTimeout(async () => {
             try {
+              // Fetch profile data
               const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -42,13 +66,16 @@ export const useAuth = () => {
                 .single();
 
               if (!error && profile) {
+                // Fetch role from user_roles table (secure)
+                const userRole = await fetchUserRole(session.user.id);
+
                 const adminUser: AdminUser = {
                   id: profile.id,
                   userId: profile.user_id,
                   name: profile.name,
                   email: session.user.email || '',
                   phone: profile.phone || '',
-                  role: profile.role,
+                  role: userRole as 'user' | 'admin' | 'dev',
                   company: profile.company,
                   avatar: profile.avatar_url,
                   createdAt: profile.created_at,
@@ -61,10 +88,12 @@ export const useAuth = () => {
                   profile: adminUser,
                   loading: false,
                 }));
-              }
-              } catch (error) {
+              } else {
                 setAuthState(prev => ({ ...prev, loading: false }));
               }
+            } catch (error) {
+              setAuthState(prev => ({ ...prev, loading: false }));
+            }
           }, 0);
         } else {
           setAuthState(prev => ({
