@@ -25,11 +25,27 @@ const extractProjectId = (message: string): string | null => {
   return match ? match[0] : null;
 };
 
+// Helper to extract request ID from notification message
+const extractRequestId = (message: string): string | null => {
+  const requestIdMatch = message.match(/Request ID: ([0-9a-f-]+)/i);
+  return requestIdMatch ? requestIdMatch[1] : null;
+};
+
 // Helper to determine notification action URL
 const getNotificationActionUrl = (notification: { title: string; message: string }): string | null => {
   const projectId = extractProjectId(notification.message);
+  const requestId = extractRequestId(notification.message);
   
-  // Check if it's a message notification
+  // Check if it's a maintenance message notification (has Request ID)
+  if (requestId && (
+    notification.title.toLowerCase().includes('manutenção') ||
+    notification.title.toLowerCase().includes('resposta') ||
+    notification.message.toLowerCase().includes('solicitação')
+  )) {
+    return `/admin/maintenance-requests?request=${requestId}`;
+  }
+  
+  // Check if it's a project chat message notification
   if (notification.title.toLowerCase().includes('mensagem') || 
       notification.title.toLowerCase().includes('chat') ||
       notification.message.toLowerCase().includes('mensagem')) {
@@ -46,7 +62,7 @@ const getNotificationActionUrl = (notification: { title: string; message: string
     }
   }
   
-  // Check if it's a maintenance notification
+  // Check if it's a maintenance/customization notification
   if (notification.title.toLowerCase().includes('manutenção') ||
       notification.title.toLowerCase().includes('customização') ||
       notification.message.toLowerCase().includes('manutenção') ||
