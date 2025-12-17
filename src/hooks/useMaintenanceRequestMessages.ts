@@ -14,6 +14,21 @@ export interface MaintenanceRequestMessage {
   updated_at: string;
 }
 
+// Helper to check if user is admin/dev
+const checkIsAdminOrDev = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'dev'])
+      .maybeSingle();
+    return !error && !!data;
+  } catch {
+    return false;
+  }
+};
+
 export const useMaintenanceRequestMessages = (requestId?: string) => {
   const [messages, setMessages] = useState<MaintenanceRequestMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +68,7 @@ export const useMaintenanceRequestMessages = (requestId?: string) => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('name')
+        .select('name, email')
         .eq('user_id', user.id)
         .single();
 
@@ -70,6 +85,87 @@ export const useMaintenanceRequestMessages = (requestId?: string) => {
         .single();
 
       if (error) throw error;
+
+      // Send notifications
+      try {
+        // Get maintenance request details
+        const { data: maintenanceRequest } = await supabase
+          .from('maintenance_requests')
+          .select('user_id, project_id, title')
+          .eq('id', requestId)
+          .single();
+
+        if (maintenanceRequest) {
+          const isAdminOrDev = await checkIsAdminOrDev(user.id);
+          const isRequestOwner = maintenanceRequest.user_id === user.id;
+
+          if (isRequestOwner) {
+            // User sent message - notify admins
+            const { data: admins } = await supabase
+              .from('user_roles')
+              .select('user_id')
+              .in('role', ['admin', 'dev']);
+
+            if (admins && admins.length > 0) {
+              // Create system notifications for admins
+              const notifications = admins.map(admin => ({
+                user_id: admin.user_id,
+                title: `💬 Nova mensagem de manutenção`,
+                message: `${profile?.name || 'Usuário'} enviou uma mensagem na solicitação "${maintenanceRequest.title}". Request ID: ${requestId}`,
+                type: 'info' as const,
+              }));
+
+              await supabase.from('notifications').insert(notifications);
+
+              // Send email to admin
+              await supabase.functions.invoke('send-maintenance-request-notification', {
+                body: {
+                  recipientName: 'Equipe Habify',
+                  recipientEmail: 'habifybr@gmail.com',
+                  senderName: profile?.name || 'Usuário',
+                  message: message,
+                  requestTitle: maintenanceRequest.title,
+                  requestId: requestId,
+                  isForAdmin: true,
+                },
+              });
+            }
+          } else if (isAdminOrDev) {
+            // Admin/Dev sent message - notify the request owner
+            // maintenance_requests.user_id references profiles.id
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('name, email, user_id')
+              .eq('id', maintenanceRequest.user_id)
+              .single();
+
+            if (ownerProfile && ownerProfile.email) {
+              // Create system notification for user
+              await supabase.from('notifications').insert({
+                user_id: ownerProfile.user_id,
+                title: `💬 Nova resposta da equipe Habify`,
+                message: `${profile?.name || 'Equipe Habify'} respondeu sua solicitação "${maintenanceRequest.title}". Request ID: ${requestId}`,
+                type: 'info',
+              });
+
+              // Send email notification to user
+              await supabase.functions.invoke('send-maintenance-request-notification', {
+                body: {
+                  recipientName: ownerProfile.name,
+                  recipientEmail: ownerProfile.email,
+                  senderName: profile?.name || 'Equipe Habify',
+                  message: message,
+                  requestTitle: maintenanceRequest.title,
+                  requestId: requestId,
+                  isForAdmin: false,
+                },
+              });
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error('Error sending notifications:', notificationError);
+      }
 
       return data;
     } catch (error: any) {
