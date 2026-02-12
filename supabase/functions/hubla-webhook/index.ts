@@ -14,9 +14,15 @@ serve(async (req) => {
 
   try {
     const headers = Object.fromEntries(req.headers.entries());
-    console.log('🔔 Hubla webhook received:', {
+    
+    // ⚠️ DEPRECATION NOTICE: This webhook is deprecated as of 2026-02-12.
+    // All new payments now use AbacatePay for both PIX and CARD.
+    // This webhook is kept active for 30 days to process any pending Hubla transactions.
+    // Scheduled for deletion: 2026-03-14
+    console.log('⚠️ [DEPRECATED] Hubla webhook received:', {
       method: req.method,
       timestamp: new Date().toISOString(),
+      deprecation: 'This webhook is deprecated. All new payments use AbacatePay.',
       headers: {
         hasAuth: !!req.headers.get('authorization'),
         hasToken: !!req.headers.get('x-webhook-token')
