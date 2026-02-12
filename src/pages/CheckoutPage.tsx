@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                     <div className="text-3xl font-bold text-primary">
                       12x R$ {getInstallmentValue(plan.id)}
                     </div>
-                    <p className="text-sm text-muted-foreground">no cartão via Hubla</p>
+                    <p className="text-sm text-muted-foreground">no cartão</p>
                     <div className="pt-2 border-t mt-2">
                       <p className="text-xs text-muted-foreground">
                         Total: R$ {(parseFloat(getInstallmentValue(plan.id).replace(',', '.')) * 12).toFixed(2)}
@@ -335,7 +335,7 @@ export default function CheckoutPage() {
                         <div className="flex-1">
                           <div className="font-medium">Cartão de Crédito</div>
                           <div className="text-sm text-muted-foreground">
-                            Via Hubla
+                            Parcelado
                           </div>
                           <div className="text-lg font-bold text-primary mt-1">
                             12x R$ {getInstallmentValue(plan.id)}
@@ -350,8 +350,8 @@ export default function CheckoutPage() {
                       <div className="flex items-start space-x-2">
                         <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                         <div className="text-sm text-blue-700">
-                          <p className="font-medium mb-1">Parcelamento via Hubla</p>
-                          <p>Você escolherá o número de parcelas no checkout da Hubla. Cupons de desconto disponíveis!</p>
+                          <p className="font-medium mb-1">Pagamento com cartão</p>
+                          <p>Você poderá escolher o número de parcelas na página de pagamento. Cupons de desconto disponíveis!</p>
                         </div>
                       </div>
                     </div>
