@@ -35,19 +35,6 @@ export default function CheckoutPage() {
   const plan = plans.find(p => p.id === planId);
   const isSpecificPlan = planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9';
 
-  const getInstallmentValue = (planId: string) => {
-    switch (planId) {
-      case '9fb31f78-ed65-44e7-a67d-271a0cad8eb9': // Apenas o site
-        return '98,77';
-      case 'fd32cbd6-84d1-4f0e-9ece-5fccb911eeb8': // Site + Manutenção 1 Mês
-        return '136,30';
-      case '377030c9-efe1-461d-9bca-9fc6717d99ed': // Site + Manutenção 6 Meses
-        return '198,73';
-      default:
-        return '0,00';
-    }
-  };
-
   // Google Tag para plano específico - inserção direta no head
   useEffect(() => {
     if (isSpecificPlan && !document.querySelector('script[src*="googletagmanager.com/gtag/js?id=AW-17736187305"]')) {
@@ -270,26 +257,14 @@ export default function CheckoutPage() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total:</span>
                 </div>
-                {paymentMethod === 'PIX' ? (
-                  <div className="text-right space-y-1">
-                    <div className="text-3xl font-bold text-primary">
-                      R$ {(plan.pix_price || plan.price).toFixed(2)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">à vista no PIX</p>
+                <div className="text-right space-y-1">
+                  <div className="text-3xl font-bold text-primary">
+                    R$ {(plan.pix_price || plan.price).toFixed(2).replace('.', ',')}
                   </div>
-                ) : (
-                  <div className="text-right space-y-1">
-                    <div className="text-3xl font-bold text-primary">
-                      12x R$ {getInstallmentValue(plan.id)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">no cartão</p>
-                    <div className="pt-2 border-t mt-2">
-                      <p className="text-xs text-muted-foreground">
-                        Total: R$ {(parseFloat(getInstallmentValue(plan.id).replace(',', '.')) * 12).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  <p className="text-sm text-muted-foreground">
+                    {paymentMethod === 'PIX' ? 'à vista no PIX' : 'no cartão de crédito'}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -335,10 +310,10 @@ export default function CheckoutPage() {
                         <div className="flex-1">
                           <div className="font-medium">Cartão de Crédito</div>
                           <div className="text-sm text-muted-foreground">
-                            Parcelado
+                            Pagamento no cartão
                           </div>
                           <div className="text-lg font-bold text-primary mt-1">
-                            12x R$ {getInstallmentValue(plan.id)}
+                            R$ {plan.price.toFixed(2).replace('.', ',')}
                           </div>
                         </div>
                       </Label>

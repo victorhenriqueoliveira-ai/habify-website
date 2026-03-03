@@ -60,8 +60,8 @@ serve(async (req) => {
         id: 'maintenance-monthly',
         name: 'Manutenção Mensal',
         description: 'Manutenção mensal do projeto',
-        price: 79.90,
-        pix_price: 79.90,
+        price: 54.90,
+        pix_price: 54.90,
         credits_granted: 0,
         is_active: true,
         type: 'website_maintenance_1m'
