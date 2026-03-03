@@ -99,16 +99,16 @@ const Hero = () => {
               className="section-title text-4xl sm:text-5xl lg:text-5xl xl:text-6xl leading-[1.1] opacity-0 animate-fade-in font-black" 
               style={{ animationDelay: "0.3s" }}
             >
-              Tenha uma Máquina de Vendas 24/7:{" "}
+              Site para Corretor de Imóveis:{" "}
               <span className="relative inline-block">
-                Site Profissional entregue em até{" "}
+                Crie seu Site Profissional em{" "}
               </span>
               <span className="relative inline-block">
                 <span className="relative z-10 bg-gradient-to-r from-pulse-500 via-pulse-600 to-pulse-700 bg-clip-text text-transparent">
                   72 Horas úteis{" "}
                 </span>
                 <span className="relative inline-block">
-                  com captação automática de leads
+                  com Captação Automática de Leads
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-pulse-500/20 to-pulse-600/20 blur-xl"></span>
               </span>
@@ -223,7 +223,7 @@ const Hero = () => {
                   <div className="relative">
                     <OptimizedImage
                       src="/Foto1.png" 
-                      alt="Landing Page Profissional para Corretores - HabiFy" 
+                      alt="Site para Corretor de Imóveis - Exemplo de Landing Page Profissional HabiFy" 
                       className="w-full h-auto transition-transform duration-500 ease-out group-hover:scale-105" 
                       style={{ transformStyle: 'preserve-3d' }} 
                       priority

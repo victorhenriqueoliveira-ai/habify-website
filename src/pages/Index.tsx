@@ -16,6 +16,7 @@ const LeadCaptureFlow = lazy(() => import("@/components/LeadCaptureFlow"));
 const TrafficExplainer = lazy(() => import("@/components/TrafficExplainer"));
 const ProjectTypesExplainer = lazy(() => import("@/components/ProjectTypesExplainer"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
+const SEOContent = lazy(() => import("@/components/SEOContent"));
 const PricingSection = lazy(() => import("@/components/PricingSection"));
 const MaintenanceSection = lazy(() => import("@/components/MaintenanceSection"));
 const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
@@ -113,6 +114,9 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
           <MaintenanceSection />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <SEOContent />
         </Suspense>
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
           <FAQSection />

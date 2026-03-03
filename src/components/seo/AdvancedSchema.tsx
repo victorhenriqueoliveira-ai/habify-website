@@ -173,6 +173,8 @@ const AdvancedSchema: React.FC = () => {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "HabiFy - Site para Corretor de Imóveis",
+    "alternateName": ["Site para Corretor", "Criar Site Corretor de Imóveis", "Site de Corretor de Imóveis"],
+    "description": "Plataforma para criar site profissional para corretores de imóveis e imobiliárias com captação automática de leads",
     "url": "https://habify.com.br",
     "potentialAction": {
       "@type": "SearchAction",
