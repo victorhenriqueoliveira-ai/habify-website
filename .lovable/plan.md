@@ -1,95 +1,32 @@
 
-# Verificador de Dominio + Pagamento Separado
 
-## Visao Geral
+## Google Search Console Errors - Fix Plan
 
-Adicionar um novo Step 5 "Dominio" ao wizard de criacao de projeto, onde o usuario pesquisa dominios `.com.br` em tempo real via RDAP do Registro.br, e depois pode pagar o dominio separadamente (R$40) apos a criacao do projeto.
+### Problems Identified
 
----
+From the screenshots, Google reports **2 invalid items**:
 
-## Parte 1: Verificador de Dominio (Step 5 no Wizard)
+1. **"O campo FAQPage está duplicado"** - The FAQ schema in `AdvancedSchema.tsx` has **5 questions** that are completely different from the **8 questions** displayed in `FAQSection.tsx`. Google sees the visual FAQ content on the page and a mismatched schema, flagging it as duplicate/inconsistent. The schema must be synced with the actual page content.
 
-### Edge Function: `check-domain-availability`
+2. **Service schema error** - "Criação de Landing Pages Profissionais para Corretores de Imóveis" has 1 critical error. The `Service` schema is missing the required `name` field (Google requires `name` for Service type). Currently it only has `serviceType`.
 
-Cria uma edge function que consulta a API RDAP oficial do Registro.br:
-- Endpoint: `https://rdap.registro.br/domain/{dominio}.com.br`
-- Se retornar 404 -> dominio disponivel
-- Se retornar 200 -> dominio ja registrado
-- Retorna tambem sugestoes alternativas (ex: se `meusite.com.br` esta ocupado, sugere `meusiteimoveis.com.br`, `meusitecorretor.com.br`, etc.)
+### Changes
 
-### Componente: `DomainStep.tsx`
+**File: `src/components/seo/AdvancedSchema.tsx`**
 
-Novo componente do wizard com:
-- Campo de input para digitar o dominio desejado (sem o `.com.br`, que aparece fixo ao lado)
-- Botao "Verificar Disponibilidade"
-- Resultado visual:
-  - **Verde**: "Disponivel!" com icone de check
-  - **Vermelho**: "Indisponivel" com icone de X
-- Se indisponivel, mostra 3-4 sugestoes alternativas clicaveis
-- O dominio escolhido e salvo no `wizardData` e persistido no campo `wizard_data` do projeto
-- Campo opcional - o usuario pode pular se ainda nao decidiu o dominio
+1. **Sync FAQ schema with FAQSection.tsx** - Replace the 5 questions in `faqSchema.mainEntity` with the exact 8 questions/answers from `FAQSection.tsx` so the structured data matches the visible page content.
 
-### Alteracoes no Wizard
+2. **Fix Service schema** - Add the required `name` field and ensure `serviceType` is consistent. Add `description` at the top level too:
+   ```
+   "name": "Criação de Sites para Corretores de Imóveis",
+   "serviceType": "Web Design",
+   "description": "Landing page profissional otimizada para corretores..."
+   ```
 
-- Array `steps` passa de 5 para 6 itens (novo step "Dominio" entre "Dados do Projeto" e "Finalizar")
-- Reordenar: Step 0 (Plano) -> Step 1 (Layout) -> Step 2 (Logo) -> Step 3 (Imoveis) -> Step 4 (Dados) -> Step 5 (Dominio)
-- O step de dominio nao e obrigatorio - pode avancar sem escolher
-- Progress bar atualizada para 6 steps
-- Botao "Finalizar" no step 5
+3. **Remove redundant schemas** - The `LocalBusiness` and `Organization` schemas overlap (both claim to be HabiFy at the same address). Keep only `Organization` since HabiFy is a SaaS platform, not a walk-in local business. This avoids potential future Google warnings about conflicting entity types.
 
----
+### Impact
+- Resolves both critical errors in Google Search Console
+- FAQ rich results become eligible for enhanced search display
+- Service schema becomes valid for Google rich snippets
 
-## Parte 2: Pagamento do Dominio (Cobranca Separada)
-
-### Novo plano no banco de dados
-
-Criar um plano do tipo `domain_registration` na tabela `plans`:
-- Nome: "Registro de Dominio .com.br"
-- Preco: R$ 40,00
-- Tipo: `domain_registration` (novo valor no enum `plan_type`)
-- `is_active: true`
-
-### Migracao de banco
-
-- Adicionar `domain_registration` ao enum `plan_type`
-- Adicionar coluna `desired_domain` (text, nullable) na tabela `projects` para armazenar o dominio escolhido
-- Adicionar coluna `domain_status` (text, nullable) na tabela `projects` com valores: `pending`, `paid`, `registered`, `active`
-
-### Fluxo de pagamento
-
-Apos criar o projeto, na pagina "Meus Projetos" ou na pagina de detalhe do projeto:
-- Se o projeto tem `desired_domain` preenchido e `domain_status = 'pending'` (ou null), mostra um banner/card:
-  - "Dominio escolhido: **meusite.com.br**"
-  - Botao "Pagar Dominio - R$ 40,00"
-- O botao redireciona para o checkout usando o fluxo de pagamento existente (AbacatePay) com o plano de dominio
-- Apos pagamento confirmado, o `domain_status` atualiza para `paid`
-- O admin entao registra o dominio manualmente e atualiza para `registered` e depois `active`
-
-### Pagina de Detalhe do Projeto
-
-Adicionar secao "Dominio" na pagina de detalhe do projeto mostrando:
-- Dominio escolhido
-- Status atual (Pendente pagamento / Pago / Registrado / Ativo)
-- Botao de pagamento se ainda nao pago
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos a criar:
-- `supabase/functions/check-domain-availability/index.ts` - Edge function RDAP
-- `src/components/wizard/DomainStep.tsx` - Componente do wizard
-
-### Arquivos a modificar:
-- `src/pages/admin/ProjectWizardPage.tsx` - Adicionar step 5, salvar dominio
-- `src/types/wizard.ts` - Adicionar campo `desiredDomain` ao WizardData
-- `src/pages/admin/ProjectDetailPage.tsx` - Secao de dominio com status e pagamento
-- `supabase/config.toml` - Configurar nova edge function
-- Migracao SQL: enum `plan_type`, colunas `desired_domain` e `domain_status` na tabela `projects`
-
-### Fluxo resumido:
-```text
-Wizard Step 5 -> Digita dominio -> Consulta RDAP -> Mostra resultado
-                                                 -> Salva no projeto
-Pos-criacao -> Meus Projetos -> "Pagar Dominio R$40" -> AbacatePay -> Webhook confirma -> domain_status = 'paid'
-```
