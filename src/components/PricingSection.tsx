@@ -43,7 +43,11 @@ const PricingSection = () => {
     );
   }
 
-  if (error || plans.length === 0) {
+  // Filter out domain_registration plans - only show website plans
+  const websitePlans = plans.filter(p => p.type !== 'domain_registration');
+  const activePlan = websitePlans[0]; // Apenas 1 plano ativo de site
+
+  if (error || websitePlans.length === 0) {
     return (
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
@@ -57,8 +61,6 @@ const PricingSection = () => {
       </section>
     );
   }
-
-  const activePlan = plans[0]; // Apenas 1 plano ativo
 
   return (
     <>
