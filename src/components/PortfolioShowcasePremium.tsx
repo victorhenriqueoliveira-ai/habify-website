@@ -4,8 +4,11 @@ import { ExternalLink, TrendingUp, Award, ChevronLeft, ChevronRight } from 'luci
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow, Navigation, Autoplay } from 'swiper/modules';
 import LightboxModal from './premium/LightboxModal';
+// @ts-ignore
 import 'swiper/css';
+// @ts-ignore
 import 'swiper/css/effect-coverflow';
+// @ts-ignore
 import 'swiper/css/navigation';
 
 interface Project {

@@ -43,9 +43,9 @@ const StructuredData = () => {
     },
     "offers": {
       "@type": "Offer",
-      "price": "997",
+      "price": "74.90",
       "priceCurrency": "BRL",
-      "priceValidUntil": "2025-12-31",
+      "priceValidUntil": "2026-12-31",
       "availability": "https://schema.org/InStock",
       "url": "https://habify.com#plans"
     },

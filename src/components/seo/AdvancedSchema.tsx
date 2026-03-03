@@ -83,7 +83,7 @@ const AdvancedSchema: React.FC = () => {
         "name": "Quanto custa um site para corretor?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Os planos HabiFy começam a partir de R$ 497 para site completo. Incluem design profissional, SEO otimizado, integração WhatsApp e suporte técnico. Sem mensalidades de plataforma."
+          "text": "O site profissional HabiFy custa R$ 74,90 (pagamento único). Inclui design profissional, SEO otimizado, integração WhatsApp e suporte técnico. Sem mensalidades de plataforma. Manutenção opcional por R$ 54,90/mês."
         }
       },
       {
@@ -171,9 +171,9 @@ const AdvancedSchema: React.FC = () => {
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "BRL",
-      "lowPrice": "497",
-      "highPrice": "2497",
-      "offerCount": "3"
+      "lowPrice": "74.90",
+      "highPrice": "74.90",
+      "offerCount": "1"
     },
     "aggregateRating": {
       "@type": "AggregateRating",
@@ -193,7 +193,7 @@ const AdvancedSchema: React.FC = () => {
     "@id": "https://habify.com.br",
     "url": "https://habify.com.br",
     "telephone": "+55-11-96176-9504",
-    "priceRange": "R$ 497 - R$ 2497",
+    "priceRange": "R$ 74,90 - Sob Consulta",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Av. Paulista",

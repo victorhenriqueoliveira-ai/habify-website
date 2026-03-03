@@ -11,7 +11,7 @@ interface SEOProps {
 
 const SEO = ({
   title = "HabiFy - Sites Profissionais para Imóveis | Landing Pages em React.js com Alta Performance",
-  description = "Plataforma completa para corretores criarem sites feitos em React.js para imóveis e imobiliárias. Sites profissionais em 72h. Captação automática de leads 24/7. SEO otimizado. Sem WordPrxxx. A partir de R$ 597, Pagamento único.",
+  description = "Plataforma completa para corretores criarem sites feitos em React.js para imóveis e imobiliárias. Sites profissionais em 72h. Captação automática de leads 24/7. SEO otimizado. A partir de R$ 74,90, Pagamento único.",
   keywords = "site para corretor, site para corretores, landing page imóveis, site imobiliário, captação de leads, marketing imobiliário, site para imobiliária, site profissional corretor, página de vendas imóveis, website para corretor de imóveis, site em 72 horas, site em react.js, site otimizado para SEO, site para corretor de imóveis, site para venda de imóveis, site para captação de leads, site responsivo para corretor, site moderno para corretor, site personalizado para corretor",
   image = "https://habify.com/fotos/site_habify.png",
   url = "https://habify.com",
