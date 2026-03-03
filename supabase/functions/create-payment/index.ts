@@ -19,6 +19,7 @@ interface PaymentRequest {
     installments?: number;
     isLoggedInPurchase?: boolean;
     userId?: string;
+    projectId?: string;
   };
 }
 

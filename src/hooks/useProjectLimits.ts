@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 
 export const useProjectLimits = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { projects } = useProjects();
   const [canCreateProject, setCanCreateProject] = useState(true);
   const [activeProjectsCount, setActiveProjectsCount] = useState(0);
@@ -22,18 +22,13 @@ export const useProjectLimits = () => {
     setActiveProjectsCount(activeProjects.length);
     
     // Limitar a 1 projeto ativo por usuário regular
-    // Admins e devs podem ter projetos ilimitados
-    const hasRole = (roles: string[]) => {
-      if (!user.role) return false;
-      return roles.includes(user.role);
-    };
-    
+    // Admins e devs podem ter projetos ilimitados (usando user_roles table)
     if (hasRole(['admin', 'dev'])) {
       setCanCreateProject(true);
     } else {
       setCanCreateProject(activeProjects.length === 0);
     }
-  }, [projects, user]);
+  }, [projects, user, hasRole]);
 
   return {
     canCreateProject,
