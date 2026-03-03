@@ -1,147 +1,141 @@
 
-# Plano de Migracão: Cartão de Crédito Hubla para AbacatePay
 
-## Contexto
+# Plano: Simplificacao de Planos e Precos
 
-Atualmente o sistema usa dois gateways de pagamento:
-- **AbacatePay** para pagamentos via PIX
-- **Hubla** para pagamentos via cartão de crédito (12x)
+## Resumo da Mudanca
 
-O objetivo é unificar tudo na AbacatePay, que agora suporta o metodo `CARD` (em beta) alem do PIX.
-
-## Descoberta Importante
-
-A documentacao da AbacatePay confirma que o campo `methods` na API de billing aceita:
-- `PIX` (estavel)
-- `CARD` (beta)
-
-O array aceita de 1 a 2 elementos, ou seja, podemos enviar `["PIX", "CARD"]` para oferecer ambos na mesma cobranca.
+**Antes:** 3 planos ativos (R$ 597, R$ 897, R$ 1.597) + Enterprise
+**Depois:** 1 plano unico (R$ 74,90) + Enterprise + Manutencao avulsa (R$ 54,90)
 
 ---
 
-## Etapas de Implementacao
+## Etapa 1: Atualizar Banco de Dados (plans)
 
-### 1. Atualizar Edge Function `create-payment`
+Desativar os 3 planos antigos e criar 1 novo plano:
 
-**Arquivo:** `supabase/functions/create-payment/index.ts`
+- **Desativar** os planos existentes (`is_active = false`) para manter historico
+- **Criar** novo plano:
+  - Nome: "Site Profissional"
+  - Tipo: `website_only`
+  - Preco (cartao): R$ 74,90
+  - Preco PIX: R$ 74,90
+  - Features: Site personalizado, Design responsivo, Otimizacao SEO, Google Analytics
+  - credits_granted: 1
 
-Alteracoes:
-- Remover toda a logica condicional `useHubla` (linhas 54, 374-409)
-- Quando o metodo for `CARD`, usar AbacatePay com `methods: ['CARD']` ao inves de redirecionar para Hubla
-- Quando o metodo for `PIX`, manter `methods: ['PIX']` (sem alteracao)
-- Remover a dependencia de `plan.hubla_checkout_url`
-- Sempre usar gateway `ABACATEPAY` independente do metodo
-- Salvar `abacatepay_id` para ambos os metodos (PIX e CARD)
-- Remover referencia a `hubla_transaction_id` na criacao do order
+- **Atualizar** preco da manutencao avulsa no `create-payment` de R$ 79,90 para R$ 54,90
 
-### 2. Atualizar Edge Function `abacatepay-webhook`
+---
 
-**Arquivo:** `supabase/functions/abacatepay-webhook/index.ts`
+## Etapa 2: Atualizar PricingSection
 
-O webhook ja processa pagamentos PIX da AbacatePay. Precisamos garantir que:
-- Ele tambem processe pagamentos por cartao (mesmo fluxo, pois o webhook e o mesmo)
-- Nenhuma alteracao significativa necessaria pois o fluxo de processamento pos-pagamento (criar usuario, adicionar plano, creditos, emails) ja existe e e identico
+**Arquivo:** `src/components/PricingSection.tsx`
 
-### 3. Remover Edge Function `hubla-webhook`
+Simplificar drasticamente:
+- Remover grid de 4 colunas, logica de multiplos planos, badges "Recomendado"/"Mais Popular"
+- Exibir apenas 1 card com o plano unico (R$ 74,90)
+- Manter card Enterprise (WhatsApp) ao lado
+- Remover funcoes `getInstallmentValue`, `getPlanBadge` (nao ha mais parcelamento complexo)
+- Atualizar texto rodape: remover mencoes a Hubla, atualizar para "AbacatePay"
+- Mostrar preco simples: "R$ 74,90" (mesmo valor PIX e cartao)
+- Adicionar nota sobre dominio: "Dominio por conta do cliente (~R$ 40/ano)"
 
-**Arquivo:** `supabase/functions/hubla-webhook/index.ts`
+---
 
-- Nao deletar imediatamente! Manter por 30 dias para processar webhooks pendentes
-- Adicionar log de deprecacao no inicio da funcao
-- Apos 30 dias sem uso, deletar a funcao
-
-### 4. Atualizar Frontend - CheckoutPage
+## Etapa 3: Atualizar CheckoutPage
 
 **Arquivo:** `src/pages/CheckoutPage.tsx`
 
-Alteracoes:
-- Remover mencao "via Hubla" na opcao de cartao (linha 339)
-- Atualizar texto para "Cartao de Credito" sem referencia a gateway
-- Remover bloco informativo sobre "Parcelamento via Hubla" (linhas 348-358)
-- Manter a selecao PIX/CARD funcionando normalmente
-- Ajustar texto do resumo do pedido (linha 285 "no cartao via Hubla" -> "no cartao")
+- Remover funcao `getInstallmentValue` (preco unico sem parcelamento complexo)
+- Simplificar exibicao de preco: R$ 74,90 para ambos os metodos
+- Remover logica de valores hardcoded por planId
+- Manter selecao PIX/CARD funcionando (AbacatePay gerencia parcelamento do cartao)
+- No resumo do pedido, mostrar preco direto do plano sem calculos de parcela
 
-### 5. Atualizar Frontend - MaintenanceCheckoutPage
+---
+
+## Etapa 4: Atualizar MaintenanceCheckoutPage
 
 **Arquivo:** `src/pages/admin/MaintenanceCheckoutPage.tsx`
 
-- Sem alteracoes necessarias, pois manutencoes usam apenas PIX
+- Atualizar valor de R$ 79,90 para R$ 54,90 em todas as referencias
 
-### 6. Atualizar Hook `usePayment`
+---
 
-**Arquivo:** `src/hooks/usePayment.ts`
+## Etapa 5: Atualizar Edge Function create-payment
 
-- Sem alteracoes necessarias na logica, pois o hook ja envia `paymentMethod` para o backend
+**Arquivo:** `supabase/functions/create-payment/index.ts`
 
-### 7. Atualizar `verify-payment` e `verify-payment-status`
+- Atualizar preco fixo da manutencao mensal de R$ 79,90 para R$ 54,90
 
-**Arquivos:**
-- `supabase/functions/verify-payment/index.ts`
-- `supabase/functions/verify-payment-status/index.ts`
+---
 
-- Manter busca por `abacatepay_id` (ja existente)
-- Busca por `hubla_transaction_id` pode ser mantida para orders historicos
+## Etapa 6: Atualizar Edge Function abacatepay-webhook (se necessario)
+
+Verificar se ha referencia ao valor 79.90 hardcoded e atualizar para 54.90.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Payload da AbacatePay para CARD
+### Novo Plano no Banco
 
 ```text
-POST https://api.abacatepay.com/v1/billing/create
-
-{
-  "frequency": "ONE_TIME",
-  "methods": ["CARD"],         // <-- diferenca principal
-  "products": [{
-    "externalId": "plan-id",
-    "name": "Nome do Plano",
-    "description": "Descricao",
-    "quantity": 1,
-    "price": 59700              // em centavos (R$ 597,00)
-  }],
-  "customerId": "cust_xxx",
-  "returnUrl": "https://habify.com.br/payment-success",
-  "completionUrl": "https://habify.com.br/payment-success",
-  "webhookUrl": "https://xxx.supabase.co/functions/v1/abacatepay-webhook",
-  "allowCoupons": true
-}
+INSERT INTO plans (name, type, price, pix_price, description, features, is_active, credits_granted, card_gateway)
+VALUES (
+  'Site Profissional',
+  'website_only',
+  74.90,
+  74.90,
+  'Seu site imobiliario profissional',
+  '["Site personalizado", "Design responsivo", "Otimizacao SEO", "Google Analytics", "Dominio proprio"]',
+  true,
+  1,
+  'ABACATEPAY'
+);
 ```
 
-O checkout da AbacatePay cuida do formulario de cartao, parcelamento, etc. O usuario e redirecionado para a pagina da AbacatePay (igual ao PIX) e la escolhe os dados do cartao.
+### Desativar planos antigos
 
-### Questao sobre Parcelamento
-
-A AbacatePay gerencia o parcelamento internamente na pagina de checkout. Os valores de parcela exibidos no frontend (12x R$ 98,77, etc.) podem precisar de ajuste dependendo das taxas da AbacatePay vs Hubla. Recomendo verificar no painel da AbacatePay como configurar parcelamento e taxas antes de implementar.
-
----
-
-## Riscos e Mitigacoes
-
-| Risco | Mitigacao |
-|-------|-----------|
-| CARD esta em beta na AbacatePay | Testar completamente antes de ir para producao. Manter Hubla webhook ativo por 30 dias |
-| Valores de parcela podem diferir | Verificar taxas no painel da AbacatePay e ajustar textos no frontend |
-| Orders historicos com hubla_transaction_id | Manter coluna no banco e logica de busca para compatibilidade |
-| Webhook pendente da Hubla | Nao remover webhook imediatamente |
+```text
+UPDATE plans SET is_active = false WHERE id IN (
+  '9fb31f78-ed65-44e7-a67d-271a0cad8eb9',
+  'fd32cbd6-84d1-4f0e-9ece-5fccb911eeb8',
+  '377030c9-efe1-461d-9bca-9fc6717d99ed'
+);
+```
 
 ---
 
-## Checklist Pre-Implementacao
+## Impacto nos Componentes
 
-Antes de aprovar, voce precisa:
-1. Confirmar no painel da AbacatePay que sua conta tem acesso ao metodo CARD (beta)
-2. Verificar as taxas de cartao da AbacatePay para calcular os novos valores de parcela
-3. Testar uma cobranca CARD no modo dev da AbacatePay
+| Arquivo | Mudanca |
+|---------|---------|
+| `PricingSection.tsx` | Simplificar para 1 plano + Enterprise |
+| `CheckoutPage.tsx` | Remover logica de parcelas hardcoded |
+| `MaintenanceCheckoutPage.tsx` | Atualizar valor 79.90 -> 54.90 |
+| `create-payment/index.ts` | Atualizar valor manutencao 79.90 -> 54.90 |
+| `usePlans.ts` | Sem alteracao (ja busca planos ativos dinamicamente) |
+| `usePayment.ts` | Sem alteracao |
+| Banco `plans` | Desativar 3 planos, criar 1 novo |
+
+---
+
+## O que NAO muda
+
+- Fluxo de pagamento AbacatePay (PIX + CARD) ja implementado
+- Webhook de pagamento (abacatepay-webhook)
+- Sistema de creditos e user_plans
+- Plano Enterprise (WhatsApp)
+- Autenticacao e criacao de usuario pos-pagamento
 
 ---
 
 ## Ordem de Execucao
 
-1. Atualizar `create-payment` para usar AbacatePay com CARD
-2. Verificar que `abacatepay-webhook` processa pagamentos CARD
-3. Atualizar frontend (CheckoutPage) removendo referencias a Hubla
-4. Adicionar log de deprecacao no `hubla-webhook`
-5. Testar fluxo completo (PIX + CARD) em ambiente de teste
-6. Deploy para producao
+1. Desativar planos antigos e criar novo plano no banco
+2. Atualizar `create-payment` (manutencao 54.90)
+3. Atualizar `PricingSection.tsx` (UI simplificada)
+4. Atualizar `CheckoutPage.tsx` (remover parcelas hardcoded)
+5. Atualizar `MaintenanceCheckoutPage.tsx` (54.90)
+6. Deploy edge function e testar fluxo completo
+
