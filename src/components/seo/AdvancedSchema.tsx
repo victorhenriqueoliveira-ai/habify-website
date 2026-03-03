@@ -158,7 +158,7 @@ const AdvancedSchema: React.FC = () => {
     }
   };
 
-  // Product Schema
+  // Product Schema (without fabricated aggregateRating to avoid Google penalties)
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -174,13 +174,6 @@ const AdvancedSchema: React.FC = () => {
       "lowPrice": "74.90",
       "highPrice": "74.90",
       "offerCount": "1"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "reviewCount": "500",
-      "bestRating": "5",
-      "worstRating": "1"
     }
   };
 
