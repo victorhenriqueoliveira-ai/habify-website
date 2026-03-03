@@ -637,7 +637,7 @@ export const ProjectDetailPage = () => {
           {id && <ProjectPlanInfo projectId={id} />}
 
           {/* Domain Section */}
-          {(project.wizardData?.desiredDomain || (project as any).desired_domain) && (
+          {(project.wizardData?.desiredDomain || project.desired_domain) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -650,28 +650,28 @@ export const ProjectDetailPage = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Domínio escolhido</p>
                     <p className="text-lg font-semibold">
-                      {((project as any).desired_domain || project.wizardData?.desiredDomain)}.com.br
+                      {(project.desired_domain || project.wizardData?.desiredDomain)}.com.br
                     </p>
                   </div>
                   <Badge variant={
-                    (project as any).domain_status === 'active' ? 'default' :
-                    (project as any).domain_status === 'registered' ? 'default' :
-                    (project as any).domain_status === 'paid' ? 'secondary' :
+                    project.domain_status === 'active' ? 'default' :
+                    project.domain_status === 'registered' ? 'default' :
+                    project.domain_status === 'paid' ? 'secondary' :
                     'outline'
                   }>
-                    {(project as any).domain_status === 'active' ? '✅ Ativo' :
-                     (project as any).domain_status === 'registered' ? '📋 Registrado' :
-                     (project as any).domain_status === 'paid' ? '💰 Pago' :
+                    {project.domain_status === 'active' ? '✅ Ativo' :
+                     project.domain_status === 'registered' ? '📋 Registrado' :
+                     project.domain_status === 'paid' ? '💰 Pago' :
                      '⏳ Pendente pagamento'}
                   </Badge>
                 </div>
-                {(!(project as any).domain_status || (project as any).domain_status === 'pending') && (
+                {(!project.domain_status || project.domain_status === 'pending') && (
                   <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                     <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
                       O registro do domínio custa <strong>R$ 40,00</strong>. Após o pagamento, nossa equipe fará o registro para você.
                     </p>
                     <Button
-                      onClick={() => navigate(`/checkout?type=domain&projectId=${project.id}&domain=${(project as any).desired_domain || project.wizardData?.desiredDomain}`)}
+                      onClick={() => navigate(`/checkout?type=domain&projectId=${project.id}&domain=${project.desired_domain || project.wizardData?.desiredDomain}`)}
                       size="sm"
                     >
                       <DollarSign className="h-4 w-4 mr-1" />

@@ -41,6 +41,9 @@ export interface Project {
   colorPalette?: string;
   logoUrl?: string;
   wizardData?: Record<string, any>;
+  // Domain fields
+  desired_domain?: string;
+  domain_status?: 'pending' | 'paid' | 'registered' | 'active';
 }
 
 export interface Notification {
