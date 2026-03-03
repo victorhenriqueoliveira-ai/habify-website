@@ -104,7 +104,7 @@ const AdvancedSEO: React.FC<AdvancedSEOProps> = ({
       <meta name="publisher" content="HabiFy" />
       
       {/* Copyright */}
-      <meta name="copyright" content="HabiFy © 2024" />
+      <meta name="copyright" content="HabiFy © 2024-2025" />
       
       {/* Rating */}
       <meta name="rating" content="general" />
