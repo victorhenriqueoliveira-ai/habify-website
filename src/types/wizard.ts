@@ -12,6 +12,9 @@ export interface WizardData {
   hasLogo: boolean;
   logoUrl?: string;
   
+  // Step 5: Domain
+  desiredDomain?: string;
+  
   // Step 3: Form Data
   profileType: ProfileType;
   ownerName: string;

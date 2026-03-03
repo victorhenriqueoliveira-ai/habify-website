@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.send-maintenance-request-notification]
 verify_jwt = false
+
+[functions.check-domain-availability]
+verify_jwt = false

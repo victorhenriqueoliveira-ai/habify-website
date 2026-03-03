@@ -812,6 +812,8 @@ export type Database = {
           completed_at: string | null
           created_at: string
           description: string | null
+          desired_domain: string | null
+          domain_status: string | null
           features: Json | null
           id: string
           landing_page_url: string | null
@@ -838,6 +840,8 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           description?: string | null
+          desired_domain?: string | null
+          domain_status?: string | null
           features?: Json | null
           id?: string
           landing_page_url?: string | null
@@ -864,6 +868,8 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           description?: string | null
+          desired_domain?: string | null
+          domain_status?: string | null
           features?: Json | null
           id?: string
           landing_page_url?: string | null
@@ -1248,6 +1254,7 @@ export type Database = {
         | "website_only"
         | "website_maintenance_1m"
         | "website_maintenance_6m"
+        | "domain_registration"
       project_status:
         | "pending"
         | "in_progress"
@@ -1392,6 +1399,7 @@ export const Constants = {
         "website_only",
         "website_maintenance_1m",
         "website_maintenance_6m",
+        "domain_registration",
       ],
       project_status: [
         "pending",

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Plan {
   id: string;
   name: string;
-  type: 'website_only' | 'website_maintenance_1m' | 'website_maintenance_6m';
+  type: 'website_only' | 'website_maintenance_1m' | 'website_maintenance_6m' | 'domain_registration';
   price: number;
   pix_price?: number;
   description: string;
