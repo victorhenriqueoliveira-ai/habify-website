@@ -9,6 +9,7 @@ import { LayoutColorStep } from '@/components/wizard/LayoutColorStep';
 import { LogoStep } from '@/components/wizard/LogoStep';
 import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
+import { DomainStep } from '@/components/wizard/DomainStep';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlans } from '@/hooks/useUserPlans';
@@ -24,6 +25,7 @@ const steps = [
   { id: 2, title: 'Logotipo', description: 'Upload ou criação de logo' },
   { id: 3, title: 'Imóveis', description: 'Portfólio de imóveis' },
   { id: 4, title: 'Dados do Projeto', description: 'Informações completas' },
+  { id: 5, title: 'Domínio', description: 'Escolha seu domínio' },
 ];
 
 const ProjectWizardPage = () => {
@@ -180,7 +182,7 @@ const ProjectWizardPage = () => {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (currentStep < 4) {
+      if (currentStep < 5) {
         setCurrentStep(currentStep + 1);
       } else {
         handleSubmit();
@@ -287,12 +289,23 @@ const ProjectWizardPage = () => {
           contactEmail: wizardData.contactEmail,
           palette: paletteData,
           hasLogo: wizardData.hasLogo,
+          desiredDomain: wizardData.desiredDomain,
         },
       });
 
       if (result.success && result.data) {
         const projectId = result.data.id;
-        // console.log('Project created successfully with ID:', projectId);
+
+        // Save desired_domain if chosen
+        if (wizardData.desiredDomain) {
+          await supabase
+            .from('projects')
+            .update({
+              desired_domain: wizardData.desiredDomain,
+              domain_status: 'pending',
+            } as any)
+            .eq('id', projectId);
+        }
         
         // Save portfolio properties to database
         if (portfolioProperties.length > 0) {
@@ -438,7 +451,7 @@ const ProjectWizardPage = () => {
     }
   };
 
-  const progress = (currentStep / 5) * 100;
+  const progress = (currentStep / 6) * 100;
 
   if (plansLoading) {
     return (
@@ -476,7 +489,7 @@ const ProjectWizardPage = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               <div className="flex justify-between text-sm font-medium">
-                <span>Passo {currentStep + 1} de 5</span>
+                <span>Passo {currentStep + 1} de 6</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -594,6 +607,13 @@ const ProjectWizardPage = () => {
               errors={errors}
             />
           )}
+
+          {currentStep === 5 && (
+            <DomainStep
+              desiredDomain={wizardData.desiredDomain}
+              onDomainChange={(domain) => updateWizardData('desiredDomain', domain)}
+            />
+          )}
         </div>
 
         {/* Navigation */}
@@ -621,7 +641,7 @@ const ProjectWizardPage = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Criando...
                   </>
-                ) : currentStep === 4 ? (
+                ) : currentStep === 5 ? (
                   <>
                     <Check className="mr-2 h-4 w-4" />
                     Finalizar

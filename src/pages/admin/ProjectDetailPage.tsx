@@ -24,6 +24,7 @@ import {
   Image,
   Mail,
   Phone,
+  Globe,
 } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
@@ -634,6 +635,53 @@ export const ProjectDetailPage = () => {
 
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}
+
+          {/* Domain Section */}
+          {(project.wizardData?.desiredDomain || (project as any).desired_domain) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Domínio
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Domínio escolhido</p>
+                    <p className="text-lg font-semibold">
+                      {((project as any).desired_domain || project.wizardData?.desiredDomain)}.com.br
+                    </p>
+                  </div>
+                  <Badge variant={
+                    (project as any).domain_status === 'active' ? 'default' :
+                    (project as any).domain_status === 'registered' ? 'default' :
+                    (project as any).domain_status === 'paid' ? 'secondary' :
+                    'outline'
+                  }>
+                    {(project as any).domain_status === 'active' ? '✅ Ativo' :
+                     (project as any).domain_status === 'registered' ? '📋 Registrado' :
+                     (project as any).domain_status === 'paid' ? '💰 Pago' :
+                     '⏳ Pendente pagamento'}
+                  </Badge>
+                </div>
+                {(!(project as any).domain_status || (project as any).domain_status === 'pending') && (
+                  <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                      O registro do domínio custa <strong>R$ 40,00</strong>. Após o pagamento, nossa equipe fará o registro para você.
+                    </p>
+                    <Button
+                      onClick={() => navigate(`/checkout?type=domain&projectId=${project.id}&domain=${(project as any).desired_domain || project.wizardData?.desiredDomain}`)}
+                      size="sm"
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      Pagar Domínio - R$ 40,00
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Wizard & Customization Data */}
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
