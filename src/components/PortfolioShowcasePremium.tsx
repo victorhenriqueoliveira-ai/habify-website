@@ -71,26 +71,6 @@ const projects: Project[] = [
     badge: 'Corporativo'
   },
   {
-    id: '3',
-    name: 'Empreendimento Único Cor Vibrante',
-    url: 'https://modelo-empreendimento-unico-vibrant.vercel.app',
-    image: '/fotos/site_empreendimentounicovibrante.png',
-    type: 'Landing Page Empreendimento Único',
-    description: 'Site institucional premium para corretor de imóveis, com um único empreendimento e SEO avançado.',
-    metrics: {
-      leads: '+120%',
-      traffic: '+275%',
-      conversion: '+75%'
-    },
-    features: [
-      'Design exclusivo para empreendimento único',
-      'Blog integrado com SEO',
-      'Design corporativo elegante',
-      'Otimização para motores de busca'
-    ],
-    badge: 'Institucional'
-  },
-  {
     id: '4',
     name: 'Empreendimentos Moderno',
     url: 'https://modelo-empreendimentos-moderno.vercel.app/',

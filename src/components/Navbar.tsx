@@ -77,7 +77,7 @@ const Navbar = () => {
             onClick={() => scrollToSection('#plans')} 
             className="hidden md:inline-block nav-link font-medium hover:text-primary transition-colors"
           >
-            Planos
+            Investimento
           </button>
           <button 
             onClick={() => scrollToSection('#faq')} 
