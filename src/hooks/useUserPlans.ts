@@ -70,6 +70,8 @@ export const useUserPlans = () => {
         .select(`
           id,
           plan_id,
+          plan_name,
+          plan_type,
           status,
           created_at,
           used_at,
@@ -79,11 +81,7 @@ export const useUserPlans = () => {
           used_for_project_id,
           user_id,
           user_name,
-          user_email,
-          plans:plan_id (
-            name,
-            type
-          )
+          user_email
         `);
 
       // Admin/Dev veem todos os planos, usuários veem apenas os seus
@@ -99,8 +97,8 @@ export const useUserPlans = () => {
       const formattedPlans: UserPlan[] = (userPlansData || []).map((up: any) => ({
         id: up.id,
         plan_id: up.plan_id,
-        plan_name: up.plans?.name || 'Plano Desconhecido',
-        plan_type: up.plans?.type || 'website_only',
+        plan_name: up.plan_name || 'Plano Desconhecido',
+        plan_type: up.plan_type || 'website_only',
         plan_price: up.price,
         notes: up.notes,
         status: up.status,

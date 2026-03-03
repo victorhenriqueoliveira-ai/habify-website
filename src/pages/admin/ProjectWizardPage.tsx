@@ -402,8 +402,8 @@ const ProjectWizardPage = () => {
           }
         }
 
-        // Use the selected plan for this project
-        await usePlanForProject(selectedPlanId, projectId);
+        // Plan is already consumed inside createProject() for regular users
+        // No need to call usePlanForProject again here
 
         // Send project confirmation email
         try {
