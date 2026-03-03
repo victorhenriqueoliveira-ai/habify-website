@@ -154,7 +154,7 @@ const Hero = () => {
               style={{ animationDelay: "0.7s" }}
             >
               <MagneticButton 
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-8 py-4 text-base sm:text-lg shadow-2xl shadow-pulse-500/50 hover:shadow-pulse-500/80 transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50"
+                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-10 py-5 text-lg sm:text-xl shadow-[0_0_30px_rgba(254,92,2,0.6)] hover:shadow-[0_0_40px_rgba(254,92,2,0.8)] transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-glow-pulse"
                 onClick={() => {
                   trackCTAClick('Criar meu site agora', 'hero-section');
                   window.location.href = '#plans';
