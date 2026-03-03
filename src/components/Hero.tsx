@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowRight, MessageCircle, Zap, Trophy, TrendingUp, CheckCircle, Shield, Clock } from "lucide-react";
+import { ArrowRight, Zap, Trophy, TrendingUp, CheckCircle, Shield, Clock } from "lucide-react";
 import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
 import LottieAnimation from "./LottieAnimation";
 import OptimizedImage from "./OptimizedImage";
 import MagneticButton from "./animations/MagneticButton";
 import ParallaxLayer from "./animations/ParallaxLayer";
-import { trackCTAClick, trackWhatsAppClick } from "@/utils/analytics";
+import { trackCTAClick } from "@/utils/analytics";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -148,37 +148,34 @@ const Hero = () => {
               </div>
             </div> */}
             
-            {/* Premium CTAs with Magnetic Effect */}
+            {/* Premium CTA — Impossible to Ignore */}
             <div 
-              className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in" 
+              className="flex flex-col items-center sm:items-start gap-3 opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.7s" }}
             >
               <MagneticButton 
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-transparent bg-gradient-to-r from-[#FE5C02] via-[#FF7020] to-[#FE5C02] bg-[length:200%_auto] text-white px-10 py-5 text-lg sm:text-xl shadow-[0_0_30px_rgba(254,92,2,0.6)] hover:shadow-[0_0_40px_rgba(254,92,2,0.8)] transition-all duration-300 hover:scale-105 hover:bg-right focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-glow-pulse"
+                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-extrabold rounded-2xl border-2 border-[#FFB800]/40 bg-gradient-to-r from-[#FE5C02] via-[#FF8C00] to-[#FE5C02] bg-[length:300%_auto] text-white px-12 sm:px-16 py-5 sm:py-6 text-xl sm:text-2xl shadow-[0_0_40px_rgba(254,92,2,0.7),0_0_80px_rgba(254,92,2,0.3)] hover:shadow-[0_0_60px_rgba(254,92,2,0.9),0_0_120px_rgba(254,92,2,0.4)] transition-all duration-300 hover:scale-[1.08] focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-cta-glow"
                 onClick={() => {
                   trackCTAClick('Criar meu site agora', 'hero-section');
                   window.location.href = '#plans';
                 }}
                 strength={0.4}
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  Criar meu site agora
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                {/* Continuous shimmer sweep */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer-sweep" />
+                {/* Pulsing ring */}
+                <span className="absolute inset-0 rounded-2xl border-2 border-white/30 animate-ping-slow" />
+                
+                <span className="relative z-10 flex items-center gap-3">
+                  🚀 Criar meu site agora
+                  <ArrowRight className="w-6 h-6 animate-bounce-x" />
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
               </MagneticButton>
               
-              <MagneticButton
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-bold rounded-full border-2 border-[#25D366] bg-background/80 backdrop-blur-sm text-[#25D366] px-8 py-4 text-base sm:text-lg shadow-lg hover:bg-[#25D366] hover:text-white hover:shadow-2xl hover:shadow-[#25D366]/30 hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/50"
-                onClick={() => {
-                  trackWhatsAppClick('hero-cta');
-                  window.open('https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy', '_blank');
-                }}
-                strength={0.4}
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Falar com Especialista
-              </MagneticButton>
+              {/* Micro-text urgência */}
+              <p className="text-xs sm:text-sm text-white/80 font-medium tracking-wide text-center sm:text-left">
+                Pagamento único • Sem mensalidade • Entrega em 72h úteis
+              </p>
             </div>
 
             {/* Trust Indicators Below CTAs */}
