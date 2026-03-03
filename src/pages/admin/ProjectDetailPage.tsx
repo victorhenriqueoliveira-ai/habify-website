@@ -35,6 +35,8 @@ import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const statusColors = {
   pending: 'secondary',
@@ -67,11 +69,12 @@ const projectTypeLabels = {
 export const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects, loading } = useProjects();
+  const { projects, loading, updateProject } = useProjects();
   const { users } = useUsers();
   const { hasRole } = useAuth();
   const { properties: portfolioProperties, loading: loadingProperties } = usePortfolioProperties(id);
   const [activeTab, setActiveTab] = useState('details');
+  const isAdmin = hasRole(['admin', 'dev']);
 
   const project = projects.find(p => p.id === id);
   const [showRawJson, setShowRawJson] = useState(false);
@@ -665,7 +668,36 @@ export const ProjectDetailPage = () => {
                      '⏳ Pendente pagamento'}
                   </Badge>
                 </div>
-                {(!project.domain_status || project.domain_status === 'pending') && (
+
+                {/* Admin domain status control */}
+                {isAdmin && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Atualizar status do domínio</Label>
+                    <Select
+                      value={project.domain_status || 'pending'}
+                      onValueChange={async (value) => {
+                        try {
+                          await updateProject(project.id, { domain_status: value as any });
+                          toast.success(`Status do domínio atualizado para "${value}"`);
+                        } catch {
+                          toast.error('Erro ao atualizar status do domínio');
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">⏳ Pendente pagamento</SelectItem>
+                        <SelectItem value="paid">💰 Pago</SelectItem>
+                        <SelectItem value="registered">📋 Registrado</SelectItem>
+                        <SelectItem value="active">✅ Ativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {(!project.domain_status || project.domain_status === 'pending') && !isAdmin && (
                   <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                     <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
                       O registro do domínio custa <strong>R$ 40,00</strong>. Após o pagamento, nossa equipe fará o registro para você.

@@ -224,6 +224,8 @@ export const useProjects = () => {
       if (updates.area !== undefined) updateData.area = updates.area;
       if (updates.projectType) updateData.project_type = updates.projectType;
       if (updates.features !== undefined) updateData.features = updates.features;
+      if (updates.desired_domain !== undefined) updateData.desired_domain = updates.desired_domain;
+      if (updates.domain_status !== undefined) updateData.domain_status = updates.domain_status;
       
       if (updates.status === 'completed' && !updates.completedAt) {
         updateData.completed_at = new Date().toISOString();
