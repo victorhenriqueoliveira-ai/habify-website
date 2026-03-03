@@ -1,95 +1,128 @@
 
-# Auditoria Completa: Criacao de Projetos e Sistema
+# Auditoria SEO e Performance - HabiFy
 
-## Resultado Geral
+## Pontuacao Atual Estimada
 
-O sistema esta **majoritariamente funcional**. Os dados do wizard (layout, cores, logo, endereco, contato, CRECI, imoveis) estao sendo salvos corretamente no banco, conforme confirmado pelos projetos existentes. No entanto, identifiquei **5 problemas** que precisam ser corrigidos.
-
----
-
-## Problema 1: Plano sendo usado DUAS VEZES (CRITICO)
-
-**Impacto:** O credito do usuario pode ser consumido 2x por projeto
-
-No `ProjectWizardPage.tsx` (linha 406), apos criar o projeto via `createProject()`, o codigo chama `usePlanForProject()` novamente. Porem, `createProject()` dentro de `useProjects.ts` (linha 165) **ja consome o plano** internamente para usuarios regulares.
-
-**Resultado:** Para usuarios regulares, o plano e consumido 2 vezes - uma dentro do `createProject` e outra no wizard. A segunda chamada provavelmente falha silenciosamente (nao ha mais plano disponivel), mas gera erro no console e pode causar comportamento inesperado.
-
-**Correcao:** Remover a chamada duplicada `usePlanForProject(selectedPlanId, projectId)` na linha 406 do `ProjectWizardPage.tsx`, pois `createProject` ja cuida disso internamente.
+- **SEO**: ~85/100 (bom, mas com problemas corrigiveis)
+- **Performance**: ~70/100 (varios gargalos identificados)
 
 ---
 
-## Problema 2: PortfolioPropertiesStep - projectType mapeado incorretamente
+## PROBLEMAS DE PERFORMANCE (Impacto Alto)
 
-**Impacto:** Limites de imoveis/fotos trocados
+### 1. Google Fonts bloqueando renderizacao (CRITICO)
+O `index.css` importa 2 fontes externas via `@import url()` que bloqueiam a renderizacao:
+- Inter (8 pesos)
+- Playfair Display (4 pesos)
 
-Na linha 583 do `ProjectWizardPage.tsx`:
-```
-projectType={projectType === 'realtor_multiple' ? 'corretor' : 'imobiliaria'}
-```
+**Correcao:** Mover para `<link>` com `display=swap` no `index.html` e adicionar `rel="preconnect"`. Reduzir pesos carregados ao minimo necessario (Inter: 400,500,600,700,800 / Playfair: removida se nao usada).
 
-O `PortfolioPropertiesStep` usa `projectType === 'corretor'` para definir `maxProperties = 5` e `maxPhotosPerProperty = 5`. Quando o tipo e `single_property` (empreendimento), o componente recebe `'imobiliaria'`, o que limita a `maxProperties = 1` e `maxPhotosPerProperty = 20`. Isso esta **correto** para empreendimento.
+### 2. Fonte local Brockmann em formato nao otimizado
+Usa `.ttf` e `.otf` (pesados). Deveria usar `.woff2`.
 
-Para `realtor_multiple` (corretor), recebe `'corretor'`, limitando a 5 imoveis com 5 fotos cada. Tambem **correto**.
+**Correcao:** Converter para WOFF2 ou pelo menos adicionar WOFF2 como formato prioritario no `@font-face`.
 
-**Veredicto:** Este mapeamento esta funcionando como esperado. Sem correcao necessaria.
+### 3. Hero background sem width/height no `<img>` principal
+O `OptimizedImage` renderiza `<img>` sem `width` e `height` explicitamente definidos, causando CLS (Cumulative Layout Shift).
 
----
+**Correcao:** Adicionar `width` e `height` props ao OptimizedImage e propagar para o `<img>` tag.
 
-## Problema 3: Campo `projectId` nao enviado no create-payment para manutencao
+### 4. Logo no Navbar sem dimensoes explicitas
+A tag `<img>` do logo (linha 54-60 do Navbar) nao tem `width` e `height`, causando layout shift.
 
-**Impacto:** Manutencao pode nao ser vinculada ao projeto correto
+**Correcao:** Adicionar `width="160" height="48"` ao logo.
 
-No `create-payment/index.ts` (linha 336), `customerData.projectId` e salvo em `payment_data`, porem a interface `PaymentRequest` (linha 10-23) nao inclui `projectId` no tipo `customerData`. Alem disso, o `MaintenanceCheckoutPage` precisa verificar se esta enviando `projectId` corretamente.
+### 5. Animacoes CSS pesadas no carregamento inicial
+Multiplos `animate-pulse`, `animate-float`, `animate-fade-in` no Hero rodam imediatamente. `animate-ping` no WhatsApp button e especialmente pesado.
 
-**Correcao:** Adicionar `projectId?: string` a interface `PaymentRequest.customerData` no edge function.
+**Correcao:** Usar `will-change: transform` seletivamente e substituir `animate-ping` por uma animacao mais leve.
 
----
+### 6. Framer Motion no FloatingWhatsAppButton carregado eagerly
+O `FloatingWhatsAppButton` importa `framer-motion` (pesada) e nao e lazy-loaded.
 
-## Problema 4: useProjectLimits verifica `user.role` diretamente do contexto
-
-**Impacto:** Baixo - funciona na pratica, mas inconsistente com padrao de seguranca
-
-O `useProjectLimits.ts` (linha 26-31) verifica `user.role` do contexto local ao inves de usar a tabela `user_roles`. Diferente de outros hooks que consultam `user_roles` para verificar admin/dev.
-
-**Correcao:** Usar `hasRole` do `AuthContext` ao inves de verificar `user.role` diretamente. O contexto ja importa `useAuth` mas nao usa o `hasRole` de la.
-
----
-
-## Problema 5: `useUserPlans` faz query com join que pode falhar
-
-**Impacto:** Medio - pode impedir carregamento de planos do usuario
-
-No `useUserPlans.ts` (linhas 68-87), a query usa `user_plans_detailed` (uma view) com um join `plans:plan_id (name, type)`. A view `user_plans_detailed` ja traz `plan_name` e `plan_type`, entao o join adicional com `plans` e redundante e pode causar erros se as colunas da view nao tiverem FK configurada.
-
-**Correcao:** Remover o join desnecessario e usar diretamente os campos `plan_name` e `plan_type` da view.
+**Correcao:** Lazy-load o FloatingWhatsAppButton ou remover framer-motion dele.
 
 ---
 
-## Campos que ESTAO sendo salvos corretamente
+## PROBLEMAS DE SEO (Impacto Medio-Alto)
 
-Confirmado pela analise do banco e do codigo:
+### 7. Dominio inconsistente nos schemas
+- `SEO.tsx` usa `https://habify.com`
+- `AdvancedSEO.tsx` usa `https://habify.com.br`
+- `AdvancedSchema.tsx` usa `https://habify.com.br`
+- `StructuredData.tsx` usa `https://habify.com`
+- `sitemap.xml` usa `https://habify.com`
 
-| Campo | Salvo? | Onde |
-|-------|--------|------|
-| Layout Choice | Sim | `projects.layout_choice` |
-| Color Palette | Sim | `projects.color_palette` |
-| Logo URL | Sim | `projects.logo_url` |
-| Wizard Data (CRECI, endereco, contato, perfil, paleta) | Sim | `projects.wizard_data` (JSON) |
-| Fotos do projeto | Sim | `projects.photos[]` |
-| Imoveis do portfolio | Sim | `portfolio_properties` |
-| Fotos dos imoveis | Sim | `portfolio_properties.photos[]` |
-| Tipo de projeto | Sim | `projects.project_type` |
-| Localizacao | Sim | `projects.location` |
+**Correcao:** Unificar tudo para `https://habify.com.br` (dominio principal).
+
+### 8. Schemas duplicados entre StructuredData e AdvancedSchema
+Ambos os componentes definem FAQ, Organization e WebSite schemas, gerando JSON-LD duplicado no HTML. Google pode ignorar ou penalizar.
+
+**Correcao:** Remover `StructuredData.tsx` e manter apenas `AdvancedSchema.tsx` que e mais completo.
+
+### 9. Sitemap desatualizado
+- `lastmod` em todas as URLs e `2025-01-15` (desatualizado)
+- Falta a URL `/termos-de-uso` com path correto (esta `/termos-de-uso` mas no sitemap esta como `termos-de-uso`)
+- URLs com `#fragment` nao sao ideais para sitemaps (Google ignora fragments)
+- Falta URL da pagina `/login`
+
+**Correcao:** Atualizar datas, remover URLs com `#fragment`, manter apenas URLs de paginas completas.
+
+### 10. Meta tags SEO duplicadas entre SEO.tsx e AdvancedSEO.tsx
+Ambos definem `<title>`, `<meta description>`, `<meta og:*>` etc. No Index.tsx, apenas AdvancedSEO e usado, mas SEO.tsx fica orfao.
+
+**Correcao:** Remover importacao de `SEO.tsx` de qualquer lugar que use AdvancedSEO.
+
+### 11. Falta `<h2>` semantico em secoes
+Varias secoes lazy-loaded provavelmente nao tem heading hierarchy correto. Google penaliza skip de niveis (h1 -> h3).
+
+### 12. Navbar logo sem `<h1>` ou `aria-label` adequado para pagina interna
+O logo no Navbar tem `aria-label="HabiFy Logo and Home Link"` mas nao ha relacao semantica clara.
+
+### 13. AggregateRating com dados fabricados
+- `AdvancedSchema.tsx` linha 180: `reviewCount: "500"` e `ratingValue: "4.9"`
+- `StructuredData.tsx`: `reviewCount: "87"` e `ratingValue: "4.9"` (valores conflitantes!)
+
+Google pode penalizar reviews fabricadas. Se nao tem reviews reais, remover `aggregateRating`.
+
+**Correcao:** Remover `aggregateRating` de ambos os schemas, ou usar numeros reais.
 
 ---
 
-## Plano de Correcao (Ordem de Execucao)
+## PLANO DE CORRECAO (Priorizado)
 
-1. **Corrigir duplicacao de uso de plano** no `ProjectWizardPage.tsx` - remover chamada redundante `usePlanForProject` (linha 406)
-2. **Corrigir interface PaymentRequest** no `create-payment/index.ts` - adicionar `projectId` ao tipo
-3. **Corrigir useProjectLimits** - usar `hasRole` do AuthContext
-4. **Corrigir useUserPlans** - remover join redundante com `plans`
-5. Re-deploy da edge function `create-payment`
+### Fase 1 - Performance (impacto maximo)
 
-Tempo estimado: ~15 minutos de implementacao
+1. **Otimizar Google Fonts** - Mover de `@import` para `<link>` no `index.html` com `display=swap` e `preconnect`
+2. **Adicionar dimensoes explicitas** nas imagens (logo, hero image) para eliminar CLS
+3. **Lazy-load FloatingWhatsAppButton** para evitar carregar framer-motion no bundle inicial
+4. **Suavizar animacao ping** no WhatsApp button
+
+### Fase 2 - SEO (correcoes criticas)
+
+5. **Unificar dominio** para `habify.com.br` em todos os schemas, metas e sitemap
+6. **Remover StructuredData.tsx** (duplicado) - manter apenas AdvancedSchema.tsx
+7. **Remover aggregateRating fabricado** dos schemas
+8. **Atualizar sitemap.xml** com datas corretas e remover URLs com fragments
+
+### Fase 3 - SEO (refinamentos)
+
+9. **Atualizar robots.txt** com dominio correto no Sitemap
+10. **Limpar SEO.tsx** que nao e mais usado na Index page
+
+---
+
+## Detalhes Tecnicos
+
+### Arquivos a modificar:
+- `index.html` - preconnect fonts, remover CSS blocking
+- `src/index.css` - remover `@import url()` de Google Fonts
+- `src/components/Navbar.tsx` - adicionar width/height ao logo
+- `src/components/OptimizedImage.tsx` - propagar width/height
+- `src/components/FloatingWhatsAppButton.tsx` - suavizar ping animation
+- `src/pages/Index.tsx` - remover StructuredData, lazy-load WhatsApp button
+- `src/components/seo/AdvancedSchema.tsx` - remover aggregateRating, unificar dominio
+- `src/components/seo/AdvancedSEO.tsx` - unificar dominio
+- `src/components/StructuredData.tsx` - remover (duplicado)
+- `public/sitemap.xml` - atualizar datas e URLs
+- `public/robots.txt` - corrigir URL do sitemap
