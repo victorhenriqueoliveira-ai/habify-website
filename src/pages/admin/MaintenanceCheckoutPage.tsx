@@ -95,7 +95,7 @@ export default function MaintenanceCheckoutPage() {
           paymentId: response.paymentId,
           gateway: response.gateway,
           projectId: project.id,
-          amount: 79.90,
+          amount: 54.90,
           timestamp: new Date().toISOString()
         });
 
@@ -112,7 +112,7 @@ export default function MaintenanceCheckoutPage() {
         localStorage.setItem('maintenanceData', JSON.stringify({
           projectId: project.id,
           projectTitle: project.title,
-          amount: 79.90,
+          amount: 54.90,
           timestamp: Date.now()
         }));
 
@@ -194,8 +194,8 @@ export default function MaintenanceCheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-lg">Total:</span>
-                  <span className="text-2xl font-bold text-primary">
-                    R$ 79,90
+                    <span className="text-2xl font-bold text-primary">
+                    R$ 54,90
                   </span>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function MaintenanceCheckoutPage() {
                         <div>
                           <div className="font-medium">PIX</div>
                           <div className="text-sm text-muted-foreground">
-                            Pagamento instantâneo - R$ 79,90
+                            Pagamento instantâneo - R$ 54,90
                           </div>
                         </div>
                       </Label>
