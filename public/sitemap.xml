@@ -1,75 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <!-- Homepage -->
   <url>
-    <loc>https://habify.com/</loc>
-    <lastmod>2025-01-15</lastmod>
+    <loc>https://habify.com.br/</loc>
+    <lastmod>2026-03-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Portfolio Section -->
-  <url>
-    <loc>https://habify.com/#portfolio</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Technology Section -->
-  <url>
-    <loc>https://habify.com/#technology</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- How It Works Section -->
-  <url>
-    <loc>https://habify.com/#how-it-works</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Traffic Explanation Section -->
-  <url>
-    <loc>https://habify.com/#traffic</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Project Types Section -->
-  <url>
-    <loc>https://habify.com/#project-types</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Pricing Section -->
-  <url>
-    <loc>https://habify.com/#plans</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
   <!-- Terms of Use -->
   <url>
-    <loc>https://habify.com/termos-de-uso</loc>
-    <lastmod>2025-01-15</lastmod>
+    <loc>https://habify.com.br/termos-de-uso</loc>
+    <lastmod>2026-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
-  <!-- Admin Login -->
+  <!-- Login -->
   <url>
-    <loc>https://habify.com/admin/login</loc>
-    <lastmod>2025-01-15</lastmod>
+    <loc>https://habify.com.br/login</loc>
+    <lastmod>2026-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>

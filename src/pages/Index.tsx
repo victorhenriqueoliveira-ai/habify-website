@@ -4,7 +4,6 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AdvancedSEO from "@/components/seo/AdvancedSEO";
 import AdvancedSchema from "@/components/seo/AdvancedSchema";
-import StructuredData from "@/components/StructuredData";
 import { preloadCriticalImages } from "@/utils/preloadImages";
 import { setupScrollTracking } from "@/utils/analytics";
 
@@ -21,6 +20,7 @@ const PricingSection = lazy(() => import("@/components/PricingSection"));
 const MaintenanceSection = lazy(() => import("@/components/MaintenanceSection"));
 const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
 const Footer = lazy(() => import("@/components/Footer"));
+const FloatingWhatsAppButton = lazy(() => import("@/components/FloatingWhatsAppButton"));
 
 const Index = () => {
   // Preload critical images on mount
@@ -83,7 +83,6 @@ const Index = () => {
     <div className="min-h-screen">
       <AdvancedSEO />
       <AdvancedSchema />
-      <StructuredData />
       <Navbar />
       <Suspense fallback={<div className="h-0" />}>
         <StickyCTABar showAfterScroll={300} />
@@ -121,6 +120,9 @@ const Index = () => {
       </main>
       <Suspense fallback={<div className="h-20 bg-background" />}>
         <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FloatingWhatsAppButton />
       </Suspense>
     </div>
   );

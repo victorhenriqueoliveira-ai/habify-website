@@ -54,8 +54,9 @@ const Navbar = () => {
           <img
             src="/logotipo_habify.png"
             alt="Logotipo HabiFy"
+            width={160}
+            height={48}
             className="h-8 sm:h-10 md:h-12 w-auto max-h-12 object-contain select-none"
-            style={{ maxWidth: "160px" }}
             draggable={false}
           />
           <span className="text-primary font-bold text-lg sm:text-2xl md:text-3xl">Habify</span>

@@ -9,6 +9,8 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   blurDataURL?: string;
   priority?: boolean;
   objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+  width?: number;
+  height?: number;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -18,6 +20,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   blurDataURL,
   priority = false,
   objectFit = 'cover',
+  width,
+  height,
   ...props
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -100,6 +104,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           `object-${objectFit}`,
           isLoaded ? "opacity-100" : "opacity-0"
         )}
+        width={width}
+        height={height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "low"}
         decoding="async"
