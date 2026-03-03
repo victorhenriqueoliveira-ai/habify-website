@@ -36,7 +36,9 @@ const AdvancedSchema: React.FC = () => {
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "Criação de Sites para Corretores de Imóveis",
+    "name": "Criação de Sites para Corretores de Imóveis",
+    "serviceType": "Web Design",
+    "description": "Landing page profissional otimizada para corretores de imóveis com captação automática de leads, SEO e integração WhatsApp",
     "provider": {
       "@type": "Organization",
       "name": "HabiFy"
@@ -65,49 +67,73 @@ const AdvancedSchema: React.FC = () => {
     }
   };
 
-  // FAQ Schema
+  // FAQ Schema - synced with FAQSection.tsx
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "Como criar um site para corretor de imóveis?",
+        "name": "O site é feito em WordPress?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Com a HabiFy, você cria seu site profissional em 3 passos: 1) Escolha seu plano, 2) Envie suas informações e fotos, 3) Receba seu site pronto em até 72h. Totalmente otimizado para conversão e captação de leads no WhatsApp."
+          "text": "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPress. A HabiFy utiliza tecnologias avançadas, como React.js, tailwindcss e typescript. Sites HabiFy carregam até 5x mais rápido que WordPress e têm 3x mais conversão."
         }
       },
       {
         "@type": "Question",
-        "name": "Quanto custa um site para corretor?",
+        "name": "Preciso investir em Google Ads para ter leads?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "O site profissional HabiFy custa R$ 74,90 (pagamento único). Inclui design profissional, SEO otimizado, integração WhatsApp e suporte técnico. Sem mensalidades de plataforma. Manutenção opcional por R$ 54,90/mês."
+          "text": "Não é obrigatório! Seu site já vem 100% otimizado para SEO e aparece naturalmente no Google. Anúncios pagos (Google Ads, Facebook Ads) são opcionais para acelerar resultados, mas você já recebe leads organicamente sem custos extras. Muitos clientes têm ótimos resultados apenas com o tráfego orgânico incluído."
         }
       },
       {
         "@type": "Question",
-        "name": "O site para corretor gera leads automaticamente?",
+        "name": "Quanto tempo leva para o site ficar pronto?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! Todos os sites HabiFy possuem formulários otimizados que enviam leads diretamente para seu WhatsApp. Integração automática com principais plataformas de captação."
+          "text": "Apenas 72 horas úteis após o envio completo das suas fotos e informações. Trabalhamos rápido para você começar a captar leads o mais rápido possível. Assim que seu site estiver pronto, você recebe acesso ao painel administrativo e o link para começar a divulgar."
         }
       },
       {
         "@type": "Question",
-        "name": "Preciso de conhecimento técnico para ter um site?",
+        "name": "Posso editar o site depois de pronto?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Não! A HabiFy cuida de tudo. Você só precisa enviar suas informações e fotos. Nós criamos, otimizamos e entregamos seu site profissional pronto para captar leads."
+          "text": "Sim! Após solicitação, fazemos as edições em até 72 horas úteis. Para ter acesso a edições ilimitadas, você pode contratar um plano de manutenção. Alternativamente, podemos enviar o código-fonte do site para você, já que o site é 100% seu e você tem total propriedade."
         }
       },
       {
         "@type": "Question",
-        "name": "O site funciona bem no celular?",
+        "name": "Posso colocar vários imóveis no mesmo site?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sim! Todos os sites são 100% responsivos e otimizados para mobile. Mais de 70% dos seus leads virão de smartphones, por isso garantimos experiência perfeita em todos os dispositivos."
+          "text": "Sim! Oferecemos dois formatos: Site para Projeto Único (ideal para 1 empreendimento/imóvel específico) e Portfólio com Múltiplos Imóveis (até 5 imóveis listados com sistema de filtros). Escolha o formato que melhor atende suas necessidades e tipo de negócio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Como funciona a captação de leads 24/7?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Seu site possui botões de CTA estrategicamente posicionados que direcionam clientes interessados diretamente para o seu WhatsApp a qualquer hora do dia ou da noite. Os visitantes clicam no botão e iniciam uma conversa direta com você. Simples, direto e eficiente para não perder nenhuma oportunidade!"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O que está incluído na hospedagem?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A hospedagem profissional em servidor de alta performance e o certificado SSL (cadeado de segurança) estão inclusos. O domínio personalizado (ex: seunome.com.br) fica por conta do cliente, com custo médio de R$ 40/ano. Garantia de uptime 99.9%."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "O site após entregue para o cliente, é de minha propriedade?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim! Após a entrega, o site é 100% seu. Você terá acesso total ao código-fonte e poderá fazer as alterações que desejar. Nossa equipe também está disponível para ajudar com edições e manutenções, caso você precise."
         }
       }
     ]
@@ -177,47 +203,6 @@ const AdvancedSchema: React.FC = () => {
     }
   };
 
-  // LocalBusiness Schema
-  const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "HabiFy",
-    "image": "https://habify.com.br/logotipo_habify.png",
-    "@id": "https://habify.com.br",
-    "url": "https://habify.com.br",
-    "telephone": "+55-11-96176-9504",
-    "priceRange": "R$ 74,90 - Sob Consulta",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Av. Paulista",
-      "addressLocality": "São Paulo",
-      "addressRegion": "SP",
-      "postalCode": "01310-000",
-      "addressCountry": "BR"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": -23.550520,
-      "longitude": -46.633308
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
-      ],
-      "opens": "09:00",
-      "closes": "18:00"
-    },
-    "sameAs": [
-      "https://www.instagram.com/habify",
-      "https://www.facebook.com/habify"
-    ]
-  };
-
   return (
     <Helmet>
       <script type="application/ld+json">
@@ -237,9 +222,6 @@ const AdvancedSchema: React.FC = () => {
       </script>
       <script type="application/ld+json">
         {JSON.stringify(productSchema)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(localBusinessSchema)}
       </script>
     </Helmet>
   );
