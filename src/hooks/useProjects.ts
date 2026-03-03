@@ -84,6 +84,8 @@ export const useProjects = () => {
         colorPalette: project.color_palette,
         logoUrl: project.logo_url ? toPublicUrl(project.logo_url) : project.logo_url,
         wizardData: toCamelCaseKeys(project.wizard_data) || {},
+        desired_domain: project.desired_domain,
+        domain_status: project.domain_status as Project['domain_status'],
       })) || [];
 
       setProjects(formattedProjects);

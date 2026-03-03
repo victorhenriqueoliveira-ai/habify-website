@@ -141,6 +141,7 @@ const AppContent = () => {
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-canceled" element={<PaymentCanceled />} />
               <Route path="/checkout/:planId" element={<CheckoutPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
             
             {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />

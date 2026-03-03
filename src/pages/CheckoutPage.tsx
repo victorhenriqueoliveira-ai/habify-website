@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,16 @@ import { formatCPF, formatPhone } from '@/lib/validations';
 
 export default function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { plans, loading: plansLoading } = usePlans();
   const { createPayment, loading: paymentLoading } = usePayment();
+  
+  // Domain checkout support via query params
+  const isDomainCheckout = searchParams.get('type') === 'domain';
+  const domainProjectId = searchParams.get('projectId');
+  const domainName = searchParams.get('domain');
   
   const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   const [formData, setFormData] = useState({
@@ -32,7 +38,10 @@ export default function CheckoutPage() {
     cpf: '',
   });
 
-  const plan = plans.find(p => p.id === planId);
+  // For domain checkout, find the domain_registration plan; otherwise use planId from URL
+  const plan = isDomainCheckout 
+    ? plans.find(p => p.type === 'domain_registration')
+    : plans.find(p => p.id === planId);
   const isSpecificPlan = planId === '9fb31f78-ed65-44e7-a67d-271a0cad8eb9';
 
   // Google Tag para plano específico - inserção direta no head
