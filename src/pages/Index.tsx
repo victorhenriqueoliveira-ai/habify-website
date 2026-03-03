@@ -18,6 +18,7 @@ const TrafficExplainer = lazy(() => import("@/components/TrafficExplainer"));
 const ProjectTypesExplainer = lazy(() => import("@/components/ProjectTypesExplainer"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const PricingSection = lazy(() => import("@/components/PricingSection"));
+const MaintenanceSection = lazy(() => import("@/components/MaintenanceSection"));
 const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
 const Footer = lazy(() => import("@/components/Footer"));
 
@@ -110,6 +111,9 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
           <PricingSection />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <MaintenanceSection />
         </Suspense>
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
           <FAQSection />

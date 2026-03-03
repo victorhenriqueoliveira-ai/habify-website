@@ -313,7 +313,7 @@ const UserMaintenancesPage = () => {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Contratar Manutenção</h2>
             <p className="text-muted-foreground mb-4">
-              Contrate manutenção mensal para seus projetos concluídos por apenas R$ 79,90/mês
+              Contrate manutenção mensal para seus projetos concluídos por apenas R$ 54,90/mês
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {completedProjects.map((project) => {
@@ -341,7 +341,7 @@ const UserMaintenancesPage = () => {
                         className="w-full"
                       >
                         <CreditCard className="h-4 w-4 mr-2" />
-                        {hasActiveMaintenance ? 'Manutenção Ativa' : 'Contratar por R$ 79,90'}
+                        {hasActiveMaintenance ? 'Manutenção Ativa' : 'Contratar por R$ 54,90'}
                       </Button>
                     </div>
                   </Card>

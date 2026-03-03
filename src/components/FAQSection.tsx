@@ -41,7 +41,7 @@ const faqs = [
   {
     id: "faq-7",
     question: "O que está incluído na hospedagem?",
-    answer: "Está tudo incluído no valor do plano: hospedagem profissional em servidor de alta performance, certificado SSL (cadeado de segurança), domínio personalizado (ex: seunome.com.br) e garantia de uptime 99.9%. Você não precisa contratar nada separado."
+    answer: "A hospedagem profissional em servidor de alta performance e o certificado SSL (cadeado de segurança) estão inclusos. O domínio personalizado (ex: seunome.com.br) fica por conta do cliente, com custo médio de R$ 40/ano. Garantia de uptime 99.9%."
   },
   {
     id: "faq-8",

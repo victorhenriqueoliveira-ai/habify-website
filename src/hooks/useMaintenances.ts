@@ -141,7 +141,7 @@ export const useMaintenances = (userId?: string, projectId?: string) => {
           user_id: profile.id,
           project_id: projectId,
           description,
-          amount: 79.90,
+          amount: 54.90,
           status: 'pending'
         })
         .select()
