@@ -1,23 +1,17 @@
 
-# Destacar o botão "Criar meu site agora" na Hero
 
-## Problema
-O botão CTA principal está com aparência "apagada" porque usa `shadow-pulse-500/50` (50% opacidade na sombra) e o gradiente laranja pode estar se perdendo contra o fundo escuro.
+# Limpeza de Pendencias Finais
 
-## Correções no arquivo `src/components/Hero.tsx`
+## 1. Deletar `src/components/StructuredData.tsx`
+Arquivo orfao (nao importado em lugar nenhum). Contem schemas JSON-LD duplicados com dominio errado (`habify.com`) e `aggregateRating` fabricado. O `AdvancedSchema.tsx` ja cobre tudo.
 
-### Botão "Criar meu site agora" (linha 157)
+## 2. Deletar `src/components/SEO.tsx`
+Arquivo orfao (nao importado em lugar nenhum). O `AdvancedSEO.tsx` ja cobre todas as meta tags. Contem dominio errado (`habify.com`).
 
-Alterações no className do MagneticButton:
+## 3. Atualizar copyright em `src/components/seo/AdvancedSEO.tsx`
+Linha 107: trocar `HabiFy © 2024` por `HabiFy © 2024-2025`.
 
-1. **Sombra mais forte**: Trocar `shadow-2xl shadow-pulse-500/50` por `shadow-[0_0_30px_rgba(254,92,2,0.6)]` para criar um glow laranja vibrante ao redor do botão
-2. **Hover com glow intenso**: Trocar `hover:shadow-pulse-500/80` por `hover:shadow-[0_0_40px_rgba(254,92,2,0.8)]`
-3. **Texto maior e mais impactante**: Trocar `text-base sm:text-lg` por `text-lg sm:text-xl`
-4. **Padding maior**: Trocar `px-8 py-4` por `px-10 py-5`
-5. **Adicionar animação pulsante sutil**: Adicionar classe `animate-pulse-slow` ou uma animação CSS de pulse no glow para atrair atenção contínua
-
-### Adicionar animação de glow pulsante
-
-Envolver o botão com um efeito de brilho pulsante usando um `::before` pseudo-element via uma div extra, ou aplicar uma animação CSS customizada que faz o box-shadow pulsar entre intensidades.
-
-Resultado: botão laranja vibrante com glow forte, tamanho maior, e animação sutil de pulsação que chama atenção imediatamente.
+## Resumo
+- 2 arquivos deletados (limpeza de codigo morto)
+- 1 linha editada (copyright)
+- Zero impacto funcional, apenas higiene do projeto
