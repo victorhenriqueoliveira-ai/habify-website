@@ -252,7 +252,7 @@ const PaymentSuccess = () => {
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-              Dúvidas? Entre em contato via WhatsApp: (11) 99999-9999
+              Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
             </div>
           </CardContent>
         </Card>
