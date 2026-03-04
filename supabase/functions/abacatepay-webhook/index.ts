@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -358,7 +358,7 @@ serve(async (req) => {
           // console.log('🔧 Creating maintenance record for project:', projectId);
           
           // Criar registro de manutenção ao invés de adicionar plano
-          const { error: maintenanceError } = await supabaseService
+          const { data: maintenance, error: maintenanceError } = await supabaseService
             .from('maintenances')
             .insert({
               user_id: profileId,
@@ -374,7 +374,9 @@ serve(async (req) => {
               },
               contracted_at: new Date().toISOString(),
               expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dias
-            });
+            })
+            .select()
+            .single();
           
           if (maintenanceError) {
             console.error('❌ Failed to create maintenance:', maintenanceError);

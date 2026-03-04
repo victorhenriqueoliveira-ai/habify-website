@@ -58,7 +58,7 @@ const PaymentCanceled = () => {
           <div className="text-center">
             <Button
               variant="link"
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              onClick={() => window.open('https://wa.me/5511961769504', '_blank')}
               className="text-sm"
             >
               Falar no WhatsApp
