@@ -125,6 +125,22 @@ export const useNotifications = (userId?: string) => {
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchNotifications();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error };
+    }
+  };
+
   const createNotification = async (notificationData: {
     userId: string;
     title: string;
