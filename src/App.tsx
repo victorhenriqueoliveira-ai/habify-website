@@ -59,6 +59,7 @@ const AssignPlanPage = lazy(() => import("./pages/admin/AssignPlanPage"));
 const PaymentDetailPage = lazy(() => import("./pages/admin/PaymentDetailPage"));
 const PaymentLogsPage = lazy(() => import("./pages/admin/PaymentLogsPage").then(m => ({ default: m.PaymentLogsPage })));
 const PaymentSettingsPage = lazy(() => import("./pages/admin/PaymentSettingsPage").then(m => ({ default: m.PaymentSettingsPage })));
+const NotificationsPage = lazy(() => import("./pages/admin/NotificationsPage"));
 
 const queryClient = new QueryClient();
 
