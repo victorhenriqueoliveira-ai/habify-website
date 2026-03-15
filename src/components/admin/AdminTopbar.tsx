@@ -136,7 +136,8 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                 <h3 className="font-semibold">Notificações</h3>
               </div>
               {notifications.length > 0 ? (
-                notifications.slice(0, 5).map((notification) => (
+                <>
+                {notifications.slice(0, 5).map((notification) => (
                   <DropdownMenuItem 
                     key={notification.id} 
                     className="p-3 cursor-pointer focus:bg-accent"
