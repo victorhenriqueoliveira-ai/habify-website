@@ -34,6 +34,7 @@ const routeLabels: Record<string, string> = {
   '/admin/payment-settings': 'Gateway de Pagamento',
   '/admin/profile': 'Meu Perfil',
   '/admin/users/create-admin': 'Criar Admin/Dev',
+  '/admin/notifications': 'Notificações',
 };
 
 export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
