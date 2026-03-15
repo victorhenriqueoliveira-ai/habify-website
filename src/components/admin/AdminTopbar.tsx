@@ -158,8 +158,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                       </p>
                     </div>
                   </DropdownMenuItem>
-                ))
-                ))
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="p-3 cursor-pointer justify-center text-primary font-medium"
