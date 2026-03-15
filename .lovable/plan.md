@@ -1,52 +1,36 @@
 
 
-## Plano: Tela de Notificações Dedicada
+## Varredura Completa do Sistema — Relatório
 
-### O que será feito
+Revisei todos os fluxos críticos: checkout, pagamento, webhook, criação de projetos, autenticação e rotas. Comparado com a última auditoria, os 3 bugs anteriores já foram corrigidos. Encontrei **1 bug remanescente**.
 
-Criar uma página completa de notificações (`/admin/notifications`) acessível por todos os usuários logados, com listagem completa, filtros, ações em lote e navegação contextual. Também adicionar um link "Ver todas" no dropdown de notificações existente no topbar e um item no sidebar.
+---
 
-### Estrutura
+### BUG (MENOR): Número de WhatsApp placeholder na página de Pagamento Pendente
 
-1. **Nova página `src/pages/admin/NotificationsPage.tsx`**
-   - Lista completa de notificações com scroll infinito (todas, não apenas 5)
-   - Filtros: Todas / Não lidas / Por tipo (info, success, warning, error)
-   - Botão "Marcar todas como lidas"
-   - Cada notificação: ícone por tipo, título, mensagem, data formatada, indicador de não lida
-   - Clique na notificação: marca como lida + navega para o contexto (chat do projeto, solicitação de manutenção, etc.) usando a mesma lógica do `NotificationBell.tsx`
-   - Botão de deletar notificação individual
-   - Estado vazio com ilustração quando não há notificações
-   - Realtime subscription para atualizar automaticamente
+No `PaymentSuccess.tsx`, linha 255, a seção de "Pagamento Pendente" ainda exibe o número placeholder `(11) 99999-9999` ao invés do número correto `+55 (11) 96176-9504`. As outras duas seções da mesma página (erro e confirmado) já têm o número correto.
 
-2. **Atualizar `src/components/admin/AdminSidebar.tsx`**
-   - Adicionar item "Notificações" com ícone `Bell` e badge de contagem de não lidas
-   - Visível para todas as roles: `['user', 'admin', 'dev', 'corretor']`
+**Arquivo:** `src/pages/PaymentSuccess.tsx` linha 255
 
-3. **Atualizar `src/components/admin/AdminTopbar.tsx`**
-   - Adicionar link "Ver todas" no dropdown de notificações apontando para `/admin/notifications`
+---
 
-4. **Atualizar `src/App.tsx`**
-   - Adicionar rota `/admin/notifications` acessível para todas as roles
+### Funcionalidades OK
 
-5. **Atualizar `src/hooks/useNotifications.ts`**
-   - Adicionar função `deleteNotification` para remover notificações individuais
+- **Checkout flow (CheckoutPage)**: Validação de formulário, limpeza de localStorage antes de novo pagamento, criação via `create-payment`, redirect ✅
+- **Edge function `create-payment`**: CORS atualizado, criação de customer + billing no AbacatePay, registro de order, log de erros ✅
+- **Edge function `verify-payment-status`**: CORS atualizado, configurado com `verify_jwt = false` no config.toml, busca order por ID, retorna dados completos ✅
+- **Polling pós-pagamento (`usePostPaymentFlow`)**: 20 tentativas a cada 3s, tratamento de paid/pending/failed, cleanup de localStorage ✅
+- **Webhook (`abacatepay-webhook`)**: Variável `maintenance` corrigida com `.select().single()`, CORS atualizado ✅
+- **PaymentCanceled**: Número WhatsApp corrigido ✅
+- **Criação de projetos**: Verificação de role via `user_roles`, consumo de crédito com rollback, admin bypass ✅
+- **Autenticação**: Login/logout, roles via `user_roles` + `has_role()`, rotas protegidas ✅
+- **Rotas**: Todas públicas e protegidas corretas, lazy loading ativo ✅
+- **Realtime**: Subscription para projetos ativa ✅
 
-6. **Migração SQL**
-   - Adicionar RLS policy para DELETE de notificações pelo próprio usuário (já existe conforme schema)
-   - Não são necessárias alterações no banco — a tabela `notifications` já suporta tudo
+---
 
-### Detalhes técnicos
+### Correção necessária
 
-- Reutiliza o hook `useNotifications` existente e a lógica de navegação contextual do `NotificationBell.tsx`
-- RLS já permite que usuários vejam/atualizem/deletem suas próprias notificações
-- Realtime via `supabase.channel` para INSERT na tabela `notifications`
-- Filtro por tipo usando state local (sem query adicional)
-
-### Arquivos a criar/editar
-
-1. **Criar** `src/pages/admin/NotificationsPage.tsx`
-2. **Editar** `src/components/admin/AdminSidebar.tsx` — adicionar item Notificações com badge
-3. **Editar** `src/components/admin/AdminTopbar.tsx` — link "Ver todas"
-4. **Editar** `src/App.tsx` — adicionar rota
-5. **Editar** `src/hooks/useNotifications.ts` — adicionar `deleteNotification`
+**Arquivo:** `src/pages/PaymentSuccess.tsx`
+- Linha 255: Trocar `(11) 99999-9999` por `+55 (11) 96176-9504`
 

@@ -34,6 +34,7 @@ const routeLabels: Record<string, string> = {
   '/admin/payment-settings': 'Gateway de Pagamento',
   '/admin/profile': 'Meu Perfil',
   '/admin/users/create-admin': 'Criar Admin/Dev',
+  '/admin/notifications': 'Notificações',
 };
 
 export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
@@ -136,7 +137,8 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                 <h3 className="font-semibold">Notificações</h3>
               </div>
               {notifications.length > 0 ? (
-                notifications.slice(0, 5).map((notification) => (
+                <>
+                {notifications.slice(0, 5).map((notification) => (
                   <DropdownMenuItem 
                     key={notification.id} 
                     className="p-3 cursor-pointer focus:bg-accent"
@@ -157,7 +159,15 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                       </p>
                     </div>
                   </DropdownMenuItem>
-                ))
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="p-3 cursor-pointer justify-center text-primary font-medium"
+                  onClick={() => navigate('/admin/notifications')}
+                >
+                  Ver todas as notificações
+                </DropdownMenuItem>
+                </>
               ) : (
                 <DropdownMenuItem disabled className="p-3">
                   <p className="text-sm text-muted-foreground">Nenhuma notificação</p>

@@ -10,8 +10,10 @@ import {
   Shield,
   CreditCard,
   Package,
-  Wrench
+  Wrench,
+  Bell
 } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -101,6 +103,12 @@ const menuItems = [
     url: '/admin/payment-settings',
     icon: CreditCard,
     roles: ['dev'],
+  },
+  {
+    title: 'Notificações',
+    url: '/admin/notifications',
+    icon: Bell,
+    roles: ['user', 'admin', 'dev', 'corretor'],
   },
   {
     title: 'Meu Perfil',
