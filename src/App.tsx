@@ -326,6 +326,9 @@ const AppContent = () => {
                 </RoleBasedRoute>
               } />
               
+              {/* Notifications */}
+              <Route path="notifications" element={<NotificationsPage />} />
+              
               {/* Profile */}
               <Route path="profile" element={<ProfilePage />} />
             </Route>

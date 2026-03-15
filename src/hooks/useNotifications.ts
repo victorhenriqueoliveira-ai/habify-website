@@ -181,6 +181,7 @@ export const useNotifications = (userId?: string) => {
     fetchNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     createNotification,
   };
 };

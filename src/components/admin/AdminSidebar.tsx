@@ -105,6 +105,12 @@ const menuItems = [
     roles: ['dev'],
   },
   {
+    title: 'Notificações',
+    url: '/admin/notifications',
+    icon: Bell,
+    roles: ['user', 'admin', 'dev', 'corretor'],
+  },
+  {
     title: 'Meu Perfil',
     url: '/admin/profile',
     icon: User,

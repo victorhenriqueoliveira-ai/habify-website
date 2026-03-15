@@ -159,6 +159,15 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                     </div>
                   </DropdownMenuItem>
                 ))
+                ))
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="p-3 cursor-pointer justify-center text-primary font-medium"
+                  onClick={() => navigate('/admin/notifications')}
+                >
+                  Ver todas as notificações
+                </DropdownMenuItem>
+                </>
               ) : (
                 <DropdownMenuItem disabled className="p-3">
                   <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
