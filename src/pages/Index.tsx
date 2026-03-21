@@ -10,7 +10,9 @@ import { setupScrollTracking } from "@/utils/analytics";
 // Lazy load non-critical components
 const StickyCTABar = lazy(() => import("@/components/mobile/StickyCTABar"));
 const StickyDesktopCTA = lazy(() => import("@/components/conversion/StickyDesktopCTA"));
+const ProblemsSection = lazy(() => import("@/components/HumanoidSection"));
 const PortfolioShowcasePremium = lazy(() => import("@/components/PortfolioShowcasePremium"));
+const Testimonials = lazy(() => import("@/components/Testimonials"));
 const TechnologyExplainer = lazy(() => import("@/components/TechnologyExplainer"));
 const LeadCaptureFlow = lazy(() => import("@/components/LeadCaptureFlow"));
 const TrafficExplainer = lazy(() => import("@/components/TrafficExplainer"));
