@@ -94,10 +94,16 @@ const Index = () => {
       <main className="space-y-0">
         <Hero />
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <ProblemsSection />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
           <FeaturesAnimated />
         </Suspense>
         <Suspense fallback={<div className="min-h-[600px] bg-background" />}>
           <PortfolioShowcasePremium />
+        </Suspense>
+        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
+          <Testimonials />
         </Suspense>
         <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
           <LeadCaptureFlow />
