@@ -14,6 +14,7 @@ import { usePayment } from '@/hooks/usePayment';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, CreditCard, QrCode, Info, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatCPF, formatPhone } from '@/lib/validations';
 
 export default function CheckoutPage() {
@@ -30,6 +31,7 @@ export default function CheckoutPage() {
   const domainName = searchParams.get('domain');
   
   const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
+  const [lgpdConsent, setLgpdConsent] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -148,18 +150,7 @@ export default function CheckoutPage() {
 
       if (response.success && response.paymentUrl) {
         // Log estruturado para debug
-        console.log('🔥 Redirecionando para pagamento', {
-          orderId: response.orderId,
-          paymentId: response.paymentId,
-          gateway: response.gateway,
-          planId: plan.id,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
-          paymentMethod,
-          isLoggedIn: !!user,
-          timestamp: new Date().toISOString()
-        });
-
-        // 🔥 CRÍTICO: Salvar IDs antes de redirecionar
+        // Salvar apenas IDs técnicos antes de redirecionar
         if (response.orderId) {
           localStorage.setItem('orderId', response.orderId);
         }
@@ -167,16 +158,6 @@ export default function CheckoutPage() {
           localStorage.setItem('paymentId', response.paymentId);
         }
         localStorage.setItem('gateway', response.gateway || 'UNKNOWN');
-        
-        // Salvar dados do cliente para conferência posterior
-        localStorage.setItem('checkoutData', JSON.stringify({
-          email: formData.email,
-          name: formData.name,
-          planId: plan.id,
-          planName: plan.name,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
-          timestamp: Date.now()
-        }));
 
         window.location.href = response.paymentUrl;
       } else {
@@ -414,12 +395,31 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                 )}
+              {/* LGPD Consent */}
+              <div className="flex items-start space-x-3 pt-2">
+                <Checkbox
+                  id="lgpd-consent"
+                  checked={lgpdConsent}
+                  onCheckedChange={(checked) => setLgpdConsent(checked === true)}
+                />
+                <label htmlFor="lgpd-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                  Li e aceito os{' '}
+                  <a href="/termos-de-uso" target="_blank" className="text-primary underline hover:text-primary/80">
+                    Termos de Uso
+                  </a>{' '}
+                  e a{' '}
+                  <a href="/politica-privacidade" target="_blank" className="text-primary underline hover:text-primary/80">
+                    Política de Privacidade
+                  </a>
+                  , e autorizo o tratamento dos meus dados pessoais conforme a LGPD.
+                </label>
+              </div>
               </CardContent>
               <CardFooter>
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={paymentLoading}
+                  disabled={paymentLoading || !lgpdConsent}
                 >
                   {paymentLoading ? (
                     <>

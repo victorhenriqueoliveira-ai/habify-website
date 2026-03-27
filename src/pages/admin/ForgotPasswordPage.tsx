@@ -57,7 +57,7 @@ export const ForgotPasswordPage = () => {
         description: 'Verifique sua caixa de entrada para redefinir sua senha',
       });
     } catch (error: any) {
-      console.error('Error sending reset email:', error);
+      // Error silenced for security - details not exposed to client
       toast({
         title: 'Email enviado',
         description: 'Se o email existir em nossa base, você receberá as instruções',

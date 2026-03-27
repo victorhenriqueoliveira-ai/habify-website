@@ -346,7 +346,13 @@ serve(async (req) => {
           if (orderLinkError) {
             console.error('❌ Failed to link order:', orderLinkError);
           } else {
-            // console.log('✅ Order linked to profile');
+            // SECURITY: Remove password from payment_data after user creation
+            const sanitizedPaymentData = { ...orderPaymentData };
+            delete sanitizedPaymentData.password;
+            await supabaseService
+              .from('orders')
+              .update({ payment_data: sanitizedPaymentData })
+              .eq('id', order.id);
           }
         }
         

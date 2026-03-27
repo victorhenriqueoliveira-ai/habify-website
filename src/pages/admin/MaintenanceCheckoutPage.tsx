@@ -90,16 +90,7 @@ export default function MaintenanceCheckoutPage() {
       } as any);
 
       if (response.success && response.paymentUrl) {
-        console.log('🔥 Redirecionando para pagamento de manutenção', {
-          orderId: response.orderId,
-          paymentId: response.paymentId,
-          gateway: response.gateway,
-          projectId: project.id,
-          amount: 54.90,
-          timestamp: new Date().toISOString()
-        });
-
-        // Salvar IDs e dados da manutenção
+        // Salvar apenas IDs técnicos antes de redirecionar
         if (response.orderId) {
           localStorage.setItem('orderId', response.orderId);
         }
@@ -107,14 +98,6 @@ export default function MaintenanceCheckoutPage() {
           localStorage.setItem('paymentId', response.paymentId);
         }
         localStorage.setItem('gateway', response.gateway || 'ABACATEPAY');
-        
-        // Salvar dados da manutenção para processar após confirmação
-        localStorage.setItem('maintenanceData', JSON.stringify({
-          projectId: project.id,
-          projectTitle: project.title,
-          amount: 54.90,
-          timestamp: Date.now()
-        }));
 
         window.location.href = response.paymentUrl;
       } else {

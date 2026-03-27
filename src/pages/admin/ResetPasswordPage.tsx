@@ -74,7 +74,7 @@ export const ResetPasswordPage = () => {
         navigate('/login');
       }, 2000);
     } catch (error: any) {
-      console.error('Error resetting password:', error);
+      // Error silenced for security - details not exposed to client
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao redefinir senha. Tente solicitar um novo link.',
