@@ -102,6 +102,15 @@ const Footer = () => {
                   Termos de Uso
                 </a>
               </li>
+              <li>
+                <a 
+                  href="/politica-privacidade" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  <Lock className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                  Política de Privacidade
+                </a>
+              </li>
             </ul>
           </div>
 

@@ -148,18 +148,7 @@ export default function CheckoutPage() {
 
       if (response.success && response.paymentUrl) {
         // Log estruturado para debug
-        console.log('🔥 Redirecionando para pagamento', {
-          orderId: response.orderId,
-          paymentId: response.paymentId,
-          gateway: response.gateway,
-          planId: plan.id,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
-          paymentMethod,
-          isLoggedIn: !!user,
-          timestamp: new Date().toISOString()
-        });
-
-        // 🔥 CRÍTICO: Salvar IDs antes de redirecionar
+        // Salvar apenas IDs técnicos antes de redirecionar
         if (response.orderId) {
           localStorage.setItem('orderId', response.orderId);
         }
@@ -167,16 +156,6 @@ export default function CheckoutPage() {
           localStorage.setItem('paymentId', response.paymentId);
         }
         localStorage.setItem('gateway', response.gateway || 'UNKNOWN');
-        
-        // Salvar dados do cliente para conferência posterior
-        localStorage.setItem('checkoutData', JSON.stringify({
-          email: formData.email,
-          name: formData.name,
-          planId: plan.id,
-          planName: plan.name,
-          amount: paymentMethod === 'PIX' ? (plan.pix_price || plan.price) : plan.price,
-          timestamp: Date.now()
-        }));
 
         window.location.href = response.paymentUrl;
       } else {
