@@ -130,10 +130,12 @@ serve(async (req) => {
           continue;
         }
 
-        // Atualizar order com user_id
+        // Atualizar order com user_id e remover senha do payment_data
+        const sanitizedPaymentData = { ...order.payment_data };
+        delete sanitizedPaymentData.password;
         await supabaseService
           .from('orders')
-          .update({ user_id: profileId })
+          .update({ user_id: profileId, payment_data: sanitizedPaymentData })
           .eq('id', order.id);
 
         // Buscar plano
