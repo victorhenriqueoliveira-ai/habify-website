@@ -17,12 +17,25 @@ import {
   Activity,
   CheckCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const roleLabels = {
   user: 'Corretor',
@@ -224,6 +237,87 @@ export const ProfilePage = () => {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      {/* Exclusão de Conta - LGPD Art. 18 */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="flex items-center text-destructive">
+            <Trash2 className="mr-2 h-5 w-5" />
+            Exclusão de Conta
+          </CardTitle>
+          <CardDescription>
+            Conforme a LGPD (Art. 18), você pode solicitar a exclusão dos seus dados pessoais.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Ao solicitar a exclusão, um administrador será notificado e processará sua solicitação.
+            Dados fiscais podem ser mantidos por até 5 anos conforme exigência legal.
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Solicitar Exclusão da Minha Conta
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar solicitação de exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação enviará uma solicitação de exclusão de conta para o administrador.
+                  Todos os seus dados pessoais serão removidos, exceto os exigidos por lei.
+                  Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async () => {
+                    try {
+                      await supabase.from('notifications').insert({
+                        user_id: (user as any).userId || user?.id,
+                        title: 'Solicitação de exclusão de conta',
+                        message: `O usuário ${user?.name || user?.email} (${user?.email}) solicitou a exclusão da sua conta conforme LGPD Art. 18.`,
+                        type: 'warning',
+                      });
+                      // Also notify admins
+                      const { data: admins } = await supabase
+                        .from('profiles')
+                        .select('user_id')
+                        .in('role', ['admin', 'dev']);
+                      if (admins) {
+                        for (const admin of admins) {
+                          if (admin.user_id) {
+                            await supabase.from('notifications').insert({
+                              user_id: admin.user_id,
+                              title: '⚠️ Solicitação LGPD - Exclusão de conta',
+                              message: `O usuário ${user?.name || user?.email} (${user?.email}) solicitou a exclusão da sua conta.`,
+                              type: 'warning',
+                            });
+                          }
+                        }
+                      }
+                      toast({
+                        title: 'Solicitação enviada',
+                        description: 'Sua solicitação de exclusão foi registrada. Um administrador entrará em contato.',
+                      });
+                    } catch {
+                      toast({
+                        title: 'Erro',
+                        description: 'Não foi possível enviar a solicitação. Tente novamente.',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                >
+                  Confirmar Exclusão
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>

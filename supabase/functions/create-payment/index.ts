@@ -335,7 +335,7 @@ serve(async (req) => {
         isNewUser: !customerData.isLoggedInPurchase,
         isMaintenance: isMaintenance,
         projectId: customerData.projectId,
-        password: customerData.isLoggedInPurchase ? undefined : customerData.password
+        // SECURITY: password is NEVER stored in payment_data
       }
     };
     
