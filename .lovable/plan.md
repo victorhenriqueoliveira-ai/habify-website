@@ -1,37 +1,27 @@
 
 
-## Duas Artes Instagram — Estética Laranja + Branco (Atual do Perfil)
+## Carrossel Instagram — 3 Slides "Como Funciona" (1080×1080)
 
-### Referência visual analisada
+### Conteúdo dos slides (baseado no fluxo real do produto)
 
-O perfil atual da HabiFy no Instagram usa uma estética **completamente diferente** do tema escuro do site:
-- **Fundo branco/claro** com elementos em **laranja vibrante** (#FF6A00)
-- **Badges/pills** com bordas laranja contendo benefícios (ex: "MAIS CREDIBILIDADE", "SITE 100% SEU")
-- **Tipografia bold** em laranja e branco
-- **Linhas repetitivas** com "HABIFY" como textura decorativa no rodapé
-- Estilo limpo, moderno, sem glassmorphism — mais editorial/flat
+**Slide 1**: "ESCOLHA SEU PLANO" — Badge R$ 74,90 / pagamento único, ícone de seleção, texto curto sobre escolher e pagar
+**Slide 2**: "PERSONALIZE SEU SITE" — Envie logo, cores, informações. Site pronto em até 3 dias úteis
+**Slide 3**: "COMECE A VENDER" — Site no ar com domínio próprio, SEO otimizado, captação de leads automática
 
-### Arte 1 — Story (1080×1920)
+### Estética
 
-- Fundo branco
-- Logo HabiFy + ícone laranja no topo
-- Headline bold em laranja: "CORRETOR! O FUTURO DAS SUAS VENDAS COMEÇA AQUI"
-- Preço em destaque: **R$ 74,90** (pagamento único)
-- 4-6 badges/pills com bordas laranja: "SITE EM 3 DIAS ÚTEIS", "SEM MENSALIDADE", "MAIS LEADS", "DOMÍNIO PRÓPRIO", "SEO OTIMIZADO"
-- Rodapé com textura de texto repetitivo "HABIFY" em laranja claro
-
-### Arte 2 — Post Feed (1080×1080)
-
-- Mesma estética laranja + branco
-- Headline: "SEU SITE PROFISSIONAL POR APENAS R$ 74,90"
-- Badges/pills com benefícios principais
-- Logo no topo, textura "HABIFY" no rodapé
-- Layout compacto e impactante para feed quadrado
+- Fundo branco, elementos em laranja vibrante (#FF6A00)
+- Badges/pills com bordas laranja para benefícios
+- Tipografia bold em laranja e preto
+- Números grandes (01, 02, 03) como destaque visual
+- Textura "HABIFY" repetitiva no rodapé
+- Logo HabiFy no topo de cada slide
+- Indicador de carrossel (dots) no rodapé
 
 ### Detalhes técnicos
 
-- Geradas via AI Gateway (google/gemini-3-pro-image-preview) com prompt detalhado descrevendo a estética exata do perfil
-- Post-processing com Pillow para dimensões exatas (1080×1920 e 1080×1080)
-- QA visual obrigatório em ambas
-- Output: `/mnt/documents/habify-story-v2.png` e `/mnt/documents/habify-post-v2.png`
+- 3 imagens geradas via AI Gateway (google/gemini-3-pro-image-preview) com prompt detalhado
+- Post-processing com Pillow para exatamente 1080×1080 cada
+- QA visual em todos os 3 slides
+- Output: `/mnt/documents/habify-carousel-01.png`, `habify-carousel-02.png`, `habify-carousel-03.png`
 
