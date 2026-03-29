@@ -14,6 +14,8 @@ interface Order {
   paidAt?: string;
   createdAt: string;
   updatedAt: string;
+  customerName: string;
+  customerEmail: string;
 }
 
 export const usePayments = () => {
@@ -30,7 +32,7 @@ export const usePayments = () => {
         .from('orders')
         .select(`
           *,
-          profiles!inner(name, email)
+          profiles(name, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -63,6 +65,8 @@ export const usePayments = () => {
         paidAt: order.paid_at,
         createdAt: order.created_at,
         updatedAt: order.updated_at,
+        customerName: order.profiles?.name || order.payment_data?.customerData?.name || 'N/A',
+        customerEmail: order.profiles?.email || order.payment_data?.customerData?.email || 'N/A',
       })) || [];
 
       setOrders(formattedOrders);
