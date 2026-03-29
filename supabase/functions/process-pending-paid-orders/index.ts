@@ -78,7 +78,7 @@ serve(async (req) => {
           console.log(`User already exists for order ${order.id}, linking to profile ${existingProfile.id}`);
           profileId = existingProfile.id;
         } else if (password) {
-          // Criar novo usuário
+          // Criar novo usuário via auth (trigger handle_new_user criará o profile)
           console.log(`Creating new user for order ${order.id}`);
           const { data: authData, error: authError } = await supabaseService.auth.admin.createUser({
             email: customerData.email,
@@ -100,29 +100,35 @@ serve(async (req) => {
             continue;
           }
 
-          // Criar perfil
-          const { data: newProfile, error: profileError } = await supabaseService
-            .from('profiles')
-            .insert({
-              auth_user_id: authData.user.id,
-              user_id: authData.user.id,
-              name: customerData.name,
-              email: customerData.email,
-              phone: customerData.phone?.replace(/\D/g, '') || null,
-              cpf: customerData.cpf?.replace(/\D/g, '') || null,
-              role: 'user',
-              is_active: true
-            })
-            .select()
-            .single();
+          // Aguardar trigger handle_new_user criar o profile
+          console.log(`⏳ Waiting for trigger to create profile for auth user ${authData.user.id}...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
-          if (profileError) {
-            console.error(`Failed to create profile for order ${order.id}:`, profileError);
-            results.push({ orderId: order.id, success: false, error: profileError.message });
+          // Buscar profile criado pelo trigger
+          const { data: triggerProfile, error: profileError } = await supabaseService
+            .from('profiles')
+            .select('id')
+            .eq('user_id', authData.user.id)
+            .maybeSingle();
+
+          if (profileError || !triggerProfile) {
+            console.error(`Profile not created by trigger for order ${order.id}:`, profileError);
+            // Rollback auth user
+            await supabaseService.auth.admin.deleteUser(authData.user.id);
+            results.push({ orderId: order.id, success: false, error: 'Profile not created by trigger' });
             continue;
           }
 
-          profileId = newProfile.id;
+          // Atualizar profile com dados adicionais
+          await supabaseService
+            .from('profiles')
+            .update({
+              phone: customerData.phone?.replace(/\D/g, '') || null,
+              cpf: customerData.cpf?.replace(/\D/g, '') || null
+            })
+            .eq('id', triggerProfile.id);
+
+          profileId = triggerProfile.id;
           console.log(`Created new profile ${profileId} for order ${order.id}`);
         } else {
           console.error(`Order ${order.id} missing password and user doesn't exist`);
