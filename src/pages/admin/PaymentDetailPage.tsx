@@ -171,28 +171,45 @@ export default function PaymentDetailPage() {
           </Card>
 
           {/* Informações do Cliente */}
-          {order.profiles && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Informações do Cliente
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="font-medium">{order.profiles.name}</p>
-                </div>
-                {order.profiles.email && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{order.profiles.email}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const clientName = order.profiles?.name || order.payment_data?.customerData?.name;
+            const clientEmail = order.profiles?.email || order.payment_data?.customerData?.email;
+            const clientPhone = order.payment_data?.customerData?.phone;
+            if (!clientName && !clientEmail) return null;
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Informações do Cliente
+                    {!order.profiles && (
+                      <Badge variant="outline" className="text-xs">via checkout</Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {clientName && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Nome</p>
+                      <p className="font-medium">{clientName}</p>
+                    </div>
+                  )}
+                  {clientEmail && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{clientEmail}</p>
+                    </div>
+                  )}
+                  {clientPhone && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{clientPhone}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Informações do Plano */}
           {order.plans && (
@@ -218,10 +235,24 @@ export default function PaymentDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Dados Técnicos</CardTitle>
+                <CardDescription>Campos sensíveis (senha, CPF) são ocultados automaticamente</CardDescription>
               </CardHeader>
               <CardContent>
                 <pre className="bg-muted p-4 rounded-lg overflow-auto text-xs">
-                  {JSON.stringify(order.payment_data, null, 2)}
+                  {JSON.stringify(
+                    Object.fromEntries(
+                      Object.entries(order.payment_data).filter(
+                        ([key]) => !['password', 'cpf', 'webhook_data'].includes(key)
+                      ).map(([key, value]) => {
+                        if (key === 'customerData' && typeof value === 'object' && value !== null) {
+                          const { password, cpf, ...safeCustomerData } = value as Record<string, unknown>;
+                          return [key, safeCustomerData];
+                        }
+                        return [key, value];
+                      })
+                    ),
+                    null, 2
+                  )}
                 </pre>
               </CardContent>
             </Card>
