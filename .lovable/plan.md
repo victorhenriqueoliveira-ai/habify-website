@@ -1,25 +1,23 @@
 
 
-## Arte Instagram — Post Feed Promoção HabiFy
+## Arte Instagram Story — Promoção HabiFy (1080×1920)
 
 ### O que será criado
 
-Um post 1080×1080 PNG para Instagram promovendo a HabiFy, com foco na oferta do plano (pagamento único) e chamada para ação.
+Um Story 1080×1920 PNG promocional da HabiFy, mesmo estilo visual da arte anterior (dark theme, gradientes laranja, glassmorphism), com o preço R$ 74,90 em destaque e sem o CTA "Acesse habify.com.br".
 
-### Conceito da arte
+### Conteúdo
 
-- **Fundo escuro** (#121212) com gradiente sutil em laranja (#FE5C02) — seguindo a identidade visual da marca
-- **Headline** impactante: "Seu site profissional por um único pagamento"
-- **Preço** em destaque com tipografia bold
-- **Bullets visuais** com 3-4 benefícios principais (Site em 72h, SEO otimizado, Captação de leads, Domínio próprio)
-- **CTA**: "Acesse habify.com.br"
-- **Logo** HabiFy no topo ou rodapé
-- Estilo: glassmorphism sutil, formas geométricas, visual premium e limpo
+- Logo HabiFy no topo
+- Headline: "Seu site profissional por um único pagamento"
+- Preço em destaque: **R$ 74,90**
+- 4 benefícios: Site em 72h, SEO otimizado, Captação de leads, Domínio próprio
+- Sem CTA de URL
 
 ### Detalhes técnicos
 
-- Gerado via script Python com Pillow + AI Gateway para imagem de alta qualidade
-- Formato: PNG 1080×1080
-- Output: `/mnt/documents/habify-promo-instagram.png`
-- QA visual obrigatório após geração
+- Gerado via AI Gateway (image generation) com prompt detalhado
+- Redimensionado para exatamente 1080×1920 com Pillow
+- QA visual obrigatório
+- Output: `/mnt/documents/habify-promo-story.png`
 
