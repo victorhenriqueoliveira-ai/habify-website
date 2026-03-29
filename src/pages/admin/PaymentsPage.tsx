@@ -142,10 +142,11 @@ export const PaymentsPage = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Cliente</th>
                   <th className="text-left p-2">Data</th>
                   <th className="text-left p-2">Valor</th>
                   <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">AbacatePay ID</th>
+                  <th className="text-left p-2">Gateway / ID</th>
                   <th className="text-left p-2">Ações</th>
                 </tr>
               </thead>
@@ -154,6 +155,10 @@ export const PaymentsPage = () => {
                   <tr key={order.id} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-mono text-xs">
                       {order.id.slice(0, 8)}...
+                    </td>
+                    <td className="p-2">
+                      <div className="text-sm font-medium">{order.customerName}</div>
+                      <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
                     </td>
                     <td className="p-2">
                       {new Date(order.createdAt).toLocaleDateString('pt-BR')}
