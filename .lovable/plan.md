@@ -1,80 +1,254 @@
 
+## HabiFy AI Site Builder — Geração Automática de Site + Repositório GitHub via IA
 
-## Varredura Completa do Sistema de Pagamento — Relatório
-
-Analisei todos os fluxos: checkout, criação de pagamento, webhooks (AbacatePay + Hubla), verificação, polling, tela de sucesso, painel admin e edge function de recuperação.
-
----
-
-### ESTADO ATUAL: O que está funcionando
-
-- **Checkout (PIX + Cartão)**: Validação completa de CPF, email, telefone, senha. Verificação de unicidade via `check-unique-fields`. Prevenção de pedidos duplicados (15 min para novos, pedidos pendentes para logados). LGPD consent checkbox ativo.
-- **create-payment**: Criação de customer e billing no AbacatePay para PIX e CARD. Order criada no banco com `payment_data` contendo dados do cliente. Senha removida para compras de usuários logados (`undefined`).
-- **abacatepay-webhook**: Validação de secret, atualização de order, criação de auth user + profile, adição de plano + créditos, envio de emails, sanitização de senha do `payment_data` após criação do usuário.
-- **verify-payment**: Busca por `orderId`, `abacatepay_id` ou `hubla_transaction_id`. Validação de profile + auth_user_id + is_active.
-- **verify-payment-status**: Retorna dados do order + plano + créditos. Usado pelo polling.
-- **usePostPaymentFlow**: Polling a cada 3s, máximo 20 tentativas (60s). Salva `transactionData` no localStorage quando confirmado.
-- **PaymentSuccess**: Exibe estados processing/confirmed/pending/error. Auto-redirect após 5s.
-- **usePayments (admin)**: LEFT JOIN com profiles, fallback para `payment_data.customerData`. Realtime subscription com debounce.
-- **process-pending-paid-orders**: Recuperação de orders pagos sem `user_id` após 1 hora.
-- **hubla-webhook**: Depreciado mas funcional para transações legadas.
+> **Modo de lançamento controlado**: toda a feature ficará atrás de um **feature flag por usuário**. Em produção, apenas você (e usuários explicitamente liberados via tabela `feature_flags_users`) poderão disparar a geração. O fluxo atual de criação de projeto continua **100% intocado** para os demais usuários.
 
 ---
 
-### BUG 1 (ALTO): Hubla webhook não remove senha do payment_data
+### Visão geral do fluxo (apenas para usuários liberados)
 
-O webhook da AbacatePay remove a senha após criar o usuário (linhas 349-355), mas o webhook da Hubla **não faz essa sanitização**. Se um pagamento legado da Hubla for processado, a senha do cliente fica permanentemente no campo `payment_data` da tabela `orders`.
+```text
+Corretor liberado finaliza wizard
+        ↓
+createProject() salva projeto (status: 'pending')
+        ↓
+[GATE] Verifica se usuário tem flag 'ai_site_builder' ativa
+        ↓ (se SIM)
+Edge Function `ai-site-builder` (background, fire-and-forget)
+        ↓
+[A] IA gera ESTRUTURA (JSON via tool calling)
+[B] IA gera CONTEÚDO (textos + SEO de imóveis)
+[C] Renderiza arquivos React/Vite a partir do template
+[D] Cria repositório GitHub privado + commit inicial (Git Data API)
+[E] Atualiza projects: github_repo_url, ai_generation_status='done'
+        ↓
+Notifica corretor (in-app + email)
+```
 
-**Arquivo:** `supabase/functions/hubla-webhook/index.ts`
-**Correção:** Adicionar `delete sanitizedPaymentData.password` após linking do order ao profile (após linha 406).
-
----
-
-### BUG 2 (ALTO): PaymentDetailPage expõe payment_data completo incluindo senha
-
-Na página de detalhes do pagamento (`PaymentDetailPage.tsx`, linha 223), o `payment_data` é renderizado como JSON bruto na tela. Isso pode expor:
-- Senha do cliente (se não foi sanitizada)
-- CPF completo
-- Dados do webhook
-
-**Arquivo:** `src/pages/admin/PaymentDetailPage.tsx`
-**Correção:** Filtrar campos sensíveis antes de exibir. Remover `password`, `cpf`, e dados brutos do webhook. Mostrar apenas campos relevantes.
-
----
-
-### BUG 3 (MÉDIO): process-pending-paid-orders cria profile manualmente (possível duplicata)
-
-Na edge function `process-pending-paid-orders` (linhas 104-117), quando o usuário não existe, ela cria o auth user E insere manualmente um profile. Porém, o trigger `handle_new_user` já cria o profile automaticamente quando um auth user é criado. Isso pode gerar **profiles duplicados** com IDs diferentes.
-
-O webhook da AbacatePay resolve isso corretamente: cria o auth user, espera 2s, e busca o profile criado pelo trigger. A edge function de recuperação deveria seguir o mesmo padrão.
-
-**Arquivo:** `supabase/functions/process-pending-paid-orders/index.ts`
-**Correção:** Remover o INSERT manual de profile. Após criar o auth user, aguardar 2s e buscar o profile criado pelo trigger (mesmo padrão do abacatepay-webhook).
+Para usuários **sem** o flag, nada muda: o projeto é criado exatamente como hoje.
 
 ---
 
-### BUG 4 (MÉDIO): CORS headers incompletos em verify-payment e process-pending-paid-orders
+### 1. Feature flag — isolamento total
 
-As edge functions `verify-payment` e `process-pending-paid-orders` usam headers CORS antigos sem os headers `x-supabase-client-*`. Isso pode causar falhas em navegadores que enviam esses headers.
+**Nova tabela `feature_flags_users`**:
+- `id uuid pk`
+- `user_id uuid` (referencia profiles)
+- `flag_name text` (ex: `'ai_site_builder'`)
+- `enabled boolean default true`
+- `created_at`, `created_by`
+- Unique (`user_id`, `flag_name`)
+- RLS: só admin/dev podem inserir/atualizar/deletar; usuários podem ver as próprias flags
 
-**Arquivos:** `supabase/functions/verify-payment/index.ts`, `supabase/functions/process-pending-paid-orders/index.ts`
-**Correção:** Atualizar `corsHeaders` para incluir todos os headers do padrão do projeto.
+**Função SQL `has_feature_flag(_user_id uuid, _flag text) returns boolean`** — `SECURITY DEFINER`, usada tanto no frontend quanto na edge function.
+
+**Hook `src/hooks/useFeatureFlag.ts`** — `useFeatureFlag('ai_site_builder')` retorna `{ enabled, loading }`.
+
+**Seed inicial**: na própria migração, inserir flag `ai_site_builder` para o seu user_id (você confirma o ID na fase de implementação, ou eu busco pelo seu email).
+
+**Bloqueio em camadas** (defesa em profundidade):
+1. **Frontend**: hook `useFeatureFlag` esconde toda a UI nova
+2. **Hook `useProjects.ts`**: só invoca `ai-site-builder` se flag ativa
+3. **Edge function**: re-valida via `has_feature_flag()` no início — rejeita com 403 se usuário não tiver
 
 ---
 
-### BUG 5 (MENOR): PaymentDetailPage não mostra cliente quando user_id é null
+### 2. SKILL.md (raiz do projeto)
 
-Na `PaymentDetailPage.tsx` (linha 174), as informações do cliente só são exibidas se `order.profiles` existir. Para orders sem `user_id` (novos clientes antes do webhook processar), o admin não vê nome/email do cliente.
-
-**Arquivo:** `src/pages/admin/PaymentDetailPage.tsx`
-**Correção:** Adicionar fallback para `payment_data.customerData` quando `profiles` é null.
+Arquivo de contexto persistente para o Antigravity contendo:
+- Stack: React 18 + Vite 5 + TS 5 + Tailwind v3 + Supabase
+- Porta dev: `http://localhost:8080` (vite.config.ts)
+- TS estrito: nunca `any`; tipos em `src/types/`; alias `@/`
+- Tailwind: SEMPRE tokens semânticos do `index.css`/`tailwind.config.ts`; nunca `text-white`/`bg-orange-500` direto
+- Roles: SEMPRE via `user_roles` + `has_role()`/`is_admin_or_dev_v2()`; NUNCA `profiles.role`
+- Edge Functions: CORS obrigatório, IA via Lovable AI Gateway (`LOVABLE_API_KEY`), tratar 429/402
+- **Feature flags: SEMPRE checar `has_feature_flag()` antes de expor features experimentais**
+- Regra 4.1: gerar Implementation Plan antes de codar; validar no browser via localhost
 
 ---
 
-### Resumo dos arquivos a editar
+### 3. Migração de banco
 
-1. **`supabase/functions/hubla-webhook/index.ts`** — Sanitizar senha do payment_data após linking
-2. **`src/pages/admin/PaymentDetailPage.tsx`** — Filtrar campos sensíveis do payment_data + fallback de cliente
-3. **`supabase/functions/process-pending-paid-orders/index.ts`** — Usar trigger ao invés de INSERT manual + atualizar CORS
-4. **`supabase/functions/verify-payment/index.ts`** — Atualizar CORS headers
+**Adicionar à tabela `projects`**:
+- `github_repo_url text`
+- `github_repo_name text`
+- `ai_generation_status text default 'idle'` — `idle | queued | generating_structure | generating_content | rendering | pushing_github | done | failed`
+- `ai_generation_error text`
+- `ai_site_structure jsonb`
 
+**Criar tabela `feature_flags_users`** (descrita acima)
+
+**Criar tabela `ai_generation_logs`**:
+- `project_id`, `step`, `status`, `payload jsonb`, `error text`, `created_at`
+- RLS: admin/dev veem tudo; corretor vê os do próprio projeto
+
+**Criar função SQL** `has_feature_flag(_user_id uuid, _flag text)` (`SECURITY DEFINER`)
+
+---
+
+### 4. Edge Function nova: `ai-site-builder`
+
+`supabase/functions/ai-site-builder/index.ts` (`verify_jwt = false`).
+
+**Validação inicial**:
+1. Recebe `{ project_id, requesting_user_id }`
+2. Service role busca o projeto + dono
+3. Verifica `has_feature_flag(project.user_id, 'ai_site_builder')` → se false, 403
+
+**Etapa A — Estrutura** (Lovable AI Gateway, `google/gemini-2.5-pro`, tool calling):
+- Input: `wizard_data`, `portfolio_properties`, `layout_choice`, `color_palette`, `logo_url`
+- Tool schema obriga JSON: `{ pages, sections, theme, seo, navigation }`
+- Sections: `hero`, `propertyGrid`, `propertyDetail`, `about`, `contact`, `cta`, `footer`
+
+**Etapa B — Conteúdo** (`google/gemini-3-flash-preview`):
+- Por imóvel: `descriptionLong` (200-300 palavras SEO) + `highlights` + `metaDescription`
+- Hero/about/CTA conforme perfil (corretor/imobiliária)
+
+**Etapa C — Render** (templates string em `templates/`):
+- `package.json`, `vite.config.ts`, `tsconfig.json`, `tailwind.config.ts`, `index.html`, `src/main.tsx`, `src/App.tsx`, `src/pages/*.tsx`, `src/components/sections/*.tsx`, `src/data/properties.json`, `src/styles/theme.css`, `README.md`, `.gitignore`, `vercel.json`
+
+**Etapa D — GitHub** (Git Data API, eficiente):
+- `POST /user/repos` → repo **privado** `habify-{slug}`
+- 1 tree + 1 commit + update ref `main` (4 requests vs 30+)
+- Convida o corretor como collaborator (opcional, configurável)
+
+**Etapa E — Finalizar**:
+- Atualiza `projects.github_repo_url`, `ai_generation_status='done'`, `status='completed'`
+- Notification in-app + chama `send-project-confirmation`
+
+**Helpers** (mesma pasta):
+- `ai.ts` — wrapper Lovable AI Gateway com retry/backoff (429), erros claros (402)
+- `github.ts` — wrapper Git Data API
+- `templates/` — strings de cada arquivo do site gerado
+
+---
+
+### 5. Disparo (em `src/hooks/useProjects.ts`)
+
+Após `createProject()` bem-sucedido:
+```ts
+const { enabled } = await checkFeatureFlag(user.id, 'ai_site_builder');
+if (enabled) {
+  supabase.functions.invoke('ai-site-builder', { 
+    body: { project_id: data.id, requesting_user_id: user.id } 
+  });
+  // fire-and-forget — não bloqueia UI
+}
+```
+
+Para usuários sem flag: comportamento atual preservado integralmente.
+
+---
+
+### 6. UI — escondida atrás do flag
+
+- **Componente** `src/components/admin/AIGenerationStatus.tsx`: subscribe realtime em `projects.ai_generation_status`
+  - Estados: "IA criando seu site..." → "Publicando no GitHub..." → "Pronto! Ver repositório"
+- **Em `ProjectDetailPage.tsx`**: renderiza `<AIGenerationStatus />` só se `useFeatureFlag('ai_site_builder').enabled`
+- **Em `MyProjectsPage.tsx`**: badge de status só aparece para usuários com flag
+- **Botão "Regenerar com IA"**: visível só para admin/dev **com flag**
+- **Página admin opcional** `/admin/feature-flags`: você gerencia quem tem acesso (criar na v1.1 ou via SQL Editor mesmo)
+
+---
+
+### 7. Secrets necessários
+
+- `GITHUB_TOKEN` — PAT fine-grained, escopo `repo` (você fornece na implementação)
+- `GITHUB_OWNER` — seu username GitHub
+- `LOVABLE_API_KEY` — já existe ✓
+
+---
+
+### 8. Tratamento de erros / idempotência
+
+- Cada etapa loga em `ai_generation_logs`
+- Falha em D: `ai_site_structure` salvo → retry sem regerar IA
+- Endpoint retry: `POST /functions/v1/ai-site-builder` com `{ project_id, retry: true }`
+- 429 → backoff exponencial (3 tentativas); 402 → `failed` + mensagem clara
+- Falha NUNCA quebra o fluxo de criação do projeto (ele já está salvo no banco)
+
+---
+
+### Arquivos a criar/editar
+
+**Criar**:
+1. `SKILL.md` (raiz)
+2. `supabase/functions/ai-site-builder/index.ts`
+3. `supabase/functions/ai-site-builder/ai.ts`
+4. `supabase/functions/ai-site-builder/github.ts`
+5. `supabase/functions/ai-site-builder/templates/` (vários `.ts`)
+6. `src/components/admin/AIGenerationStatus.tsx`
+7. `src/hooks/useFeatureFlag.ts`
+8. Migração SQL: colunas em `projects`, tabelas `feature_flags_users` + `ai_generation_logs`, função `has_feature_flag()`, seed do flag para você
+
+**Editar**:
+1. `src/hooks/useProjects.ts` — invocação condicionada ao flag
+2. `src/pages/admin/ProjectDetailPage.tsx` — embute `<AIGenerationStatus />` condicional
+3. `src/pages/admin/MyProjectsPage.tsx` — badge condicional
+4. `src/types/admin.ts` — novos campos no tipo `Project`
+5. `supabase/config.toml` — `[functions.ai-site-builder] verify_jwt = false`
+
+---
+
+### Garantias de não-impacto no sistema atual
+
+- ✅ Nenhum fluxo existente é alterado para usuários sem o flag
+- ✅ A invocação da edge function é **fire-and-forget**: se ela falhar, o projeto continua criado normalmente
+- ✅ Colunas novas em `projects` são todas nullable com defaults — não quebram queries existentes
+- ✅ RLS endurecida na tabela de feature flags: só admin/dev gerencia
+- ✅ Edge function rejeita chamadas de usuários sem o flag (defesa em profundidade)
+- ✅ Você pode revogar o flag a qualquer momento via SQL Editor (1 UPDATE)
+
+---
+
+### Mapa de pastas/documentos para o Antigravity
+
+```text
+Projeto HabiFy (React + Vite + TS + Tailwind + Supabase). Feature em modo BETA RESTRITA.
+
+LEIA PRIMEIRO: SKILL.md (raiz)
+
+FEATURE FLAG (gate da feature):
+- src/hooks/useFeatureFlag.ts
+- Tabela feature_flags_users + função SQL has_feature_flag()
+
+WIZARD (entrada do fluxo):
+- src/pages/admin/ProjectWizardPage.tsx
+- src/components/wizard/{LayoutColorStep,LogoStep,PortfolioPropertiesStep,ProjectDataForm,DomainStep}.tsx
+- src/types/wizard.ts
+
+CRIAÇÃO/PERSISTÊNCIA:
+- src/hooks/useProjects.ts (gate do flag fica aqui)
+- src/hooks/{useMultipleProjects,useUserPlans}.ts
+- src/types/admin.ts
+- src/integrations/supabase/{client.ts,types.ts}
+
+EXIBIÇÃO PÓS-CRIAÇÃO (UI condicionada ao flag):
+- src/pages/admin/{ProjectDetailPage,MyProjectsPage,ProjectsPage}.tsx
+- src/components/admin/AIGenerationStatus.tsx (novo)
+
+EDGE FUNCTIONS DE REFERÊNCIA:
+- supabase/functions/check-domain-availability/index.ts
+- supabase/functions/send-project-confirmation/index.ts
+- supabase/functions/abacatepay-webhook/index.ts
+- supabase/config.toml
+
+A CRIAR:
+- supabase/functions/ai-site-builder/{index.ts,ai.ts,github.ts,templates/}
+
+REGRAS GLOBAIS:
+- Roles via user_roles + has_role()/is_admin_or_dev_v2() (NUNCA profiles.role)
+- Estilo via tokens semânticos (src/index.css + tailwind.config.ts)
+- IA SEMPRE via Lovable AI Gateway em edge function
+- Toda feature nova SEMPRE atrás de feature flag
+- Secrets: GITHUB_TOKEN, GITHUB_OWNER (LOVABLE_API_KEY já existe)
+```
+
+---
+
+### Pendências para a fase de implementação (após aprovação)
+
+1. Você fornece `GITHUB_TOKEN` (PAT fine-grained, `repo`) e `GITHUB_OWNER` quando eu solicitar.
+2. Confirmar seu email/user_id para o seed inicial da feature flag (posso buscar pelo email).
+3. Repos privados por padrão — confirmar se OK.
+4. Deploy Vercel automático fica para v2 (precisaria `VERCEL_TOKEN`).
