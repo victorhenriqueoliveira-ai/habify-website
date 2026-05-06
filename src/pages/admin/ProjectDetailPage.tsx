@@ -934,3 +934,11 @@ export const ProjectDetailPage = () => {
     </div>
   );
 };
+
+// Renderiza o status da geração por IA somente para usuários com a flag
+// `ai_site_builder` habilitada. Para todos os outros, é completamente invisível.
+const AISiteBuilderGate = ({ projectId }: { projectId: string }) => {
+  const { enabled, loading } = useFeatureFlag('ai_site_builder');
+  if (loading || !enabled) return null;
+  return <AIGenerationStatus projectId={projectId} canRegenerate />;
+};
