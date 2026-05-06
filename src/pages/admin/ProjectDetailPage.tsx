@@ -34,6 +34,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
+import { AIGenerationStatus } from '@/components/admin/AIGenerationStatus';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -635,6 +637,9 @@ export const ProjectDetailPage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* AI Site Builder status (BETA, gated) */}
+          {id && <AISiteBuilderGate projectId={id} />}
 
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}
