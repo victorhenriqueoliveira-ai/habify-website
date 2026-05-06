@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Project } from '@/types/admin';
 import { useAuditLogger } from './useAuditLogger';
 import { useUserPlans } from './useUserPlans';
+import { checkFeatureFlag } from './useFeatureFlag';
 import { toast } from 'sonner';
 
 // Helper to check if user is admin/dev via user_roles table (secure)
@@ -185,7 +186,22 @@ export const useProjects = () => {
       }
 
       toast.success('Projeto criado com sucesso!');
-      
+
+      // [BETA] AI Site Builder — gate por feature flag por usuário.
+      // Fire-and-forget: nunca bloqueia o fluxo de criação.
+      try {
+        const aiEnabled = await checkFeatureFlag(user.id, 'ai_site_builder');
+        if (aiEnabled) {
+          supabase.functions
+            .invoke('ai-site-builder', {
+              body: { project_id: data.id, requesting_user_id: user.id },
+            })
+            .catch((err) => console.warn('[ai-site-builder] invoke failed:', err));
+        }
+      } catch (flagErr) {
+        console.warn('[ai-site-builder] feature flag check failed:', flagErr);
+      }
+
       // Log the create action
       await logProjectAction('CREATE_PROJECT', data.id, {
         title: projectData.title,
