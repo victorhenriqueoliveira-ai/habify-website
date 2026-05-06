@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.verify-payment-status]
 verify_jwt = false
+
+[functions.ai-site-builder]
+verify_jwt = false
