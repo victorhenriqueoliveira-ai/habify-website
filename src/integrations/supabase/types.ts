@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generation_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          payload: Json | null
+          project_id: string
+          status: string
+          step: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          project_id: string
+          status: string
+          step: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          payload?: Json | null
+          project_id?: string
+          status?: string
+          step?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -161,6 +191,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_flags_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          flag_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          flag_name: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          flag_name?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       maintenance_credits: {
         Row: {
@@ -805,6 +862,9 @@ export type Database = {
       }
       projects: {
         Row: {
+          ai_generation_error: string | null
+          ai_generation_status: string | null
+          ai_site_structure: Json | null
           area: number | null
           bathrooms: number | null
           bedrooms: number | null
@@ -815,6 +875,8 @@ export type Database = {
           desired_domain: string | null
           domain_status: string | null
           features: Json | null
+          github_repo_name: string | null
+          github_repo_url: string | null
           id: string
           landing_page_url: string | null
           layout_choice: string | null
@@ -833,6 +895,9 @@ export type Database = {
           wizard_data: Json | null
         }
         Insert: {
+          ai_generation_error?: string | null
+          ai_generation_status?: string | null
+          ai_site_structure?: Json | null
           area?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -843,6 +908,8 @@ export type Database = {
           desired_domain?: string | null
           domain_status?: string | null
           features?: Json | null
+          github_repo_name?: string | null
+          github_repo_url?: string | null
           id?: string
           landing_page_url?: string | null
           layout_choice?: string | null
@@ -861,6 +928,9 @@ export type Database = {
           wizard_data?: Json | null
         }
         Update: {
+          ai_generation_error?: string | null
+          ai_generation_status?: string | null
+          ai_site_structure?: Json | null
           area?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -871,6 +941,8 @@ export type Database = {
           desired_domain?: string | null
           domain_status?: string | null
           features?: Json | null
+          github_repo_name?: string | null
+          github_repo_url?: string | null
           id?: string
           landing_page_url?: string | null
           layout_choice?: string | null
@@ -1220,6 +1292,10 @@ export type Database = {
       }
       get_database_stats: { Args: never; Returns: Json }
       get_system_metrics: { Args: never; Returns: Json }
+      has_feature_flag: {
+        Args: { _flag: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
