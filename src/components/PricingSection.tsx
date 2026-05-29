@@ -200,10 +200,12 @@ const PricingSection = () => {
                   size="lg"
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-auto"
                   onClick={() => {
-                    const message = encodeURIComponent(
-                      "Olá! Vim do site e gostaria de saber mais sobre o Plano Enterprise da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
+                    window.open(
+                      BUSINESS.whatsapp.url(
+                        'Olá! Vim do site e gostaria de saber mais sobre o Plano Enterprise da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora.'
+                      ),
+                      '_blank'
                     );
-                    window.open(`https://wa.me/5511961769504?text=${message}`, '_blank');
                   }}
                 >
                   Falar com Especialista
