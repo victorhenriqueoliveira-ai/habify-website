@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Globe } from 'lucide-react';
+import { Check, Sparkles, Globe, ShieldCheck, Zap } from 'lucide-react';
 import { usePlans } from '@/hooks/usePlans';
+import { BUSINESS } from '@/config/business';
+
 
 const PricingSection = () => {
   const navigate = useNavigate();
@@ -81,25 +83,32 @@ const PricingSection = () => {
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Plano Único */}
             <Card className="relative border-primary shadow-primary/20 shadow-lg flex flex-col justify-between h-full transition-all duration-300 hover:shadow-xl hover:scale-105">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 flex gap-2">
                 <Badge variant="secondary">Mais Vendido</Badge>
+                <Badge className="bg-primary text-primary-foreground gap-1">
+                  <Zap className="h-3 w-3" /> Pagamento Único
+                </Badge>
               </div>
 
-              <CardHeader className="text-center pb-4">
+              <CardHeader className="text-center pb-4 pt-6">
                 <div className="flex items-center justify-center mb-2">
                   <Globe className="h-5 w-5" />
                 </div>
                 <CardTitle className="text-xl font-bold">{activePlan.name}</CardTitle>
-                
+
                 <div className="mt-4 space-y-2">
                   <div className="text-4xl font-bold text-primary">
                     R$ {activePlan.price.toFixed(2).replace('.', ',')}
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    pagamento único via AbacatePay
+                    pagamento único · sem mensalidades
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Concorrentes: R$ {BUSINESS.competitor.monthlyPrice}/mês ={' '}
+                    <span className="line-through">R$ {BUSINESS.competitor.yearlyCost.toLocaleString('pt-BR')}/ano</span>
                   </p>
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground mt-2">
                   {activePlan.description}
                 </p>
@@ -116,15 +125,19 @@ const PricingSection = () => {
                 </ul>
 
                 <div className="mt-auto space-y-3">
-                  <Button 
+                  <Button
                     onClick={() => handleSelectPlan(activePlan.id)}
                     className="w-full"
                     size="lg"
                   >
                     Começar Agora
                   </Button>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                    <span>Garantia de {BUSINESS.pricing.guaranteeDays} dias</span>
+                  </div>
                   <p className="text-xs text-center text-muted-foreground">
-                    Domínio por conta do cliente (~R$ 40/ano)
+                    Domínio por conta do cliente (~R$ {BUSINESS.pricing.domainYearly}/ano)
                   </p>
                 </div>
               </CardContent>
@@ -187,10 +200,12 @@ const PricingSection = () => {
                   size="lg"
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 mt-auto"
                   onClick={() => {
-                    const message = encodeURIComponent(
-                      "Olá! Vim do site e gostaria de saber mais sobre o Plano Enterprise da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora."
+                    window.open(
+                      BUSINESS.whatsapp.url(
+                        'Olá! Vim do site e gostaria de saber mais sobre o Plano Enterprise da Habify. Tenho interesse em uma solução personalizada para minha imobiliária/corretora.'
+                      ),
+                      '_blank'
                     );
-                    window.open(`https://wa.me/5511961769504?text=${message}`, '_blank');
                   }}
                 >
                   Falar com Especialista
