@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Globe } from 'lucide-react';
+import { Check, Sparkles, Globe, ShieldCheck, Zap } from 'lucide-react';
 import { usePlans } from '@/hooks/usePlans';
+import { BUSINESS } from '@/config/business';
+
 
 const PricingSection = () => {
   const navigate = useNavigate();
