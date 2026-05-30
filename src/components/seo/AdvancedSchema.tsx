@@ -199,8 +199,8 @@ const AdvancedSchema: React.FC = () => {
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "BRL",
-      "lowPrice": "74.90",
-      "highPrice": "74.90",
+      "lowPrice": "300.00",
+      "highPrice": "300.00",
       "offerCount": "1"
     }
   };
