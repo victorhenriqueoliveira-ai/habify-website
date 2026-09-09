@@ -221,6 +221,15 @@ serve(async (req) => {
     if (!customerResponse.ok) {
       const customerErrorText = await customerResponse.text();
       console.error('Customer creation error:', customerErrorText);
+
+      await supabaseService.from('payment_logs').insert({
+        gateway: 'ABACATEPAY',
+        status_code: customerResponse.status,
+        error_message: `Customer creation failed: ${customerErrorText}`,
+        request_body: { step: 'customer/create', payload: customerPayload },
+        response_body: { error: customerErrorText },
+      });
+
       throw new Error('Falha ao criar cliente no sistema de pagamento.');
     }
 
@@ -238,7 +247,10 @@ serve(async (req) => {
       frequency: 'ONE_TIME',
       methods: [paymentMethod], // 'PIX' or 'CARD'
       products: [{
-        externalId: planId,
+        // Inclui o preço no externalId do produto: a AbacatePay parece cachear
+        // nome/preço exibidos por externalId, então reusar o mesmo id do plano
+        // para sempre mantinha o rótulo antigo visível mesmo após mudar o preço.
+        externalId: `${planId}-${Math.round(planPrice * 100)}`,
         name: planData.name,
         description: planData.description || planData.name,
         quantity: 1,
