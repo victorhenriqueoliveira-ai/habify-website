@@ -32,7 +32,7 @@ const SEOContent = () => {
           </p>
 
           <p>
-            Nossos sites incluem hospedagem profissional, certificado SSL, integração com WhatsApp e <strong className="text-foreground">captação de leads 24/7</strong>. Tudo isso com pagamento único a partir de R$ 300,00 — sem mensalidades surpresa. Se você está pesquisando <strong className="text-foreground">como criar site de corretor</strong>, encontrou a solução certa.
+            Nossos sites incluem hospedagem profissional, certificado SSL, integração com WhatsApp e <strong className="text-foreground">captação de leads 24/7</strong>. Tudo isso com pagamento único a partir de R$ 74,90 — sem mensalidades surpresa. Se você está pesquisando <strong className="text-foreground">como criar site de corretor</strong>, encontrou a solução certa.
           </p>
         </div>
       </div>
