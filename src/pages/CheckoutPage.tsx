@@ -293,21 +293,9 @@ export default function CheckoutPage() {
                       </Label>
                     </div>
                     
-                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
-                      <RadioGroupItem value="CARD" id="card" />
-                      <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
-                        <CreditCard className="h-5 w-5 mr-3" />
-                        <div className="flex-1">
-                          <div className="font-medium">Cartão de Crédito</div>
-                          <div className="text-sm text-muted-foreground">
-                            Pagamento no cartão
-                          </div>
-                          <div className="text-lg font-bold text-primary mt-1">
-                            R$ {plan.price.toFixed(2).replace('.', ',')}
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
+                    {/* Cartão de crédito temporariamente indisponível: AbacatePay retorna
+                        "CARD is not available for this store" até habilitarem o método
+                        na conta. Reative este bloco assim que confirmarem a liberação. */}
                   </RadioGroup>
 
                   {paymentMethod === 'CARD' && (
