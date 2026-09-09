@@ -43,6 +43,11 @@ export const useAnalytics = () => {
         ...event.metadata,
       });
 
+      // audit_logs RLS only allows authenticated inserts tied to auth.uid() = user_id
+      // (it's a security audit table, not a marketing analytics table). Skip anonymous
+      // visitors instead of firing a request that will always 401.
+      if (!user?.id) return;
+
       // Store in database for analytics
       await supabase.from('audit_logs').insert({
         action: `analytics_${event.category}`,
