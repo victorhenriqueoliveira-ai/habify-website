@@ -7,6 +7,22 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Sufixos públicos de 2 partes (a HabiFy vende domínio .com.br, mas o
+// cliente pode digitar qualquer domínio próprio). Sem isso, "meusite.com.br"
+// (3 partes, mas é RAIZ) seria confundido com um subdomínio de 3 partes tipo
+// "blog.meusite.com" — e um CNAME na raiz de um .com.br nem é válido.
+const TWO_PART_SUFFIXES = new Set([
+  'com.br', 'net.br', 'org.br', 'adv.br', 'eng.br', 'med.br', 'blog.br', 'app.br', 'gov.br',
+  'co.uk', 'com.au', 'com.mx', 'com.ar',
+]);
+
+function isApexDomain(domain: string): boolean {
+  const parts = domain.split('.');
+  const lastTwo = parts.slice(-2).join('.');
+  const suffixLength = TWO_PART_SUFFIXES.has(lastTwo) ? 3 : 2;
+  return parts.length <= suffixLength;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -101,7 +117,7 @@ serve(async (req) => {
       .update({ vercel_domain_verified: verified })
       .eq('id', project_id);
 
-    const isSubdomain = targetDomain.split('.').length > 2;
+    const isSubdomain = !isApexDomain(targetDomain);
 
     return new Response(
       JSON.stringify({
