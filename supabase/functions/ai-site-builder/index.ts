@@ -228,11 +228,15 @@ serve(async (req) => {
 
     let repoFullName: string;
     let repoUrl: string;
+    let repoId: number;
+    let defaultBranch: string;
 
     if (generateResponse.ok) {
       const repoData = await generateResponse.json();
       repoFullName = repoData.full_name as string;
       repoUrl = repoData.html_url as string;
+      repoId = repoData.id as number;
+      defaultBranch = (repoData.default_branch as string) || 'main';
     } else if (generateResponse.status === 422) {
       // "Regenerar com IA": repositório com esse nome já existe de uma
       // geração anterior — reaproveita em vez de falhar.
@@ -250,6 +254,8 @@ serve(async (req) => {
       const existingData = await existingResponse.json();
       repoFullName = existingData.full_name as string;
       repoUrl = existingData.html_url as string;
+      repoId = existingData.id as number;
+      defaultBranch = (existingData.default_branch as string) || 'main';
     } else {
       const errText = await generateResponse.text();
       throw new Error(`Falha ao gerar repositório no GitHub (${generateResponse.status}): ${errText}`);
@@ -357,6 +363,29 @@ serve(async (req) => {
       } else {
         const errText = await createProjectResponse.text();
         console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+      }
+
+      // Criar o Project com gitRepository NÃO dispara build sozinho quando o
+      // repo já tinha commits antes do link (não existe "push novo" pra
+      // acionar o webhook) — sem isso o Project fica sem nenhum deployment.
+      if (vercelProjectId) {
+        const deployResponse = await fetch(`https://api.vercel.com/v13/deployments${vercelQuery}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: repoName,
+            project: vercelProjectId,
+            target: 'production',
+            gitSource: { type: 'github', repoId, ref: defaultBranch },
+          }),
+        });
+        if (!deployResponse.ok) {
+          const errText = await deployResponse.text();
+          console.error('[ai-site-builder] Falha ao disparar deploy inicial na Vercel:', errText);
+        }
       }
 
       // Anexa o domínio do cliente, se já foi definido. Falha aqui é normal
