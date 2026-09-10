@@ -342,15 +342,12 @@ serve(async (req) => {
 
       if (vercelProjectId) {
         // "Regenerar com IA": Project já existe, só confirma que a Vercel
-        // ainda o reconhece e pega o nome/domínio atual dele.
+        // ainda o reconhece.
         const existingProjectResponse = await fetch(
           `https://api.vercel.com/v10/projects/${vercelProjectId}${vercelQuery}`,
           { headers: { Authorization: `Bearer ${vercelToken}` } },
         );
-        if (existingProjectResponse.ok) {
-          const existingProject = await existingProjectResponse.json();
-          vercelDeploymentUrl = `https://${existingProject.name}.vercel.app`;
-        } else {
+        if (!existingProjectResponse.ok) {
           console.warn('[ai-site-builder] vercel_project_id salvo não encontrado na Vercel, recriando:', await existingProjectResponse.text());
           vercelProjectId = null;
         }
@@ -373,9 +370,6 @@ serve(async (req) => {
         if (createProjectResponse.ok) {
           const projectData = await createProjectResponse.json();
           vercelProjectId = projectData.id;
-          // Idem: o domínio *.vercel.app vem do `name` que a Vercel
-          // realmente salvou, nunca do `repoName` que a gente pediu.
-          vercelDeploymentUrl = `https://${projectData.name}.vercel.app`;
         } else if (createProjectResponse.status === 409) {
           // Já existe um Project pra esse repo (de antes de vercel_project_id
           // existir na tabela), mas não sabemos o ID. Busca pelo nome que a
@@ -395,7 +389,6 @@ serve(async (req) => {
             );
             if (match) {
               vercelProjectId = match.id;
-              vercelDeploymentUrl = `https://${match.name}.vercel.app`;
             }
           }
           if (!vercelProjectId) {
@@ -407,6 +400,31 @@ serve(async (req) => {
         } else {
           const errText = await createProjectResponse.text();
           console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+        }
+      }
+
+      // O domínio *.vercel.app REAL não é necessariamente `{name}.vercel.app`
+      // — o campo `name` do Project pode preservar o que a gente pediu mesmo
+      // quando a Vercel atribui um domínio padrão diferente (foi exatamente
+      // isso que quebrou o link enviado por e-mail). A lista de domínios do
+      // Project é a única fonte confiável.
+      if (vercelProjectId) {
+        const domainsResponse = await fetch(
+          `https://api.vercel.com/v9/projects/${vercelProjectId}/domains${vercelQuery}`,
+          { headers: { Authorization: `Bearer ${vercelToken}` } },
+        );
+        if (domainsResponse.ok) {
+          const domainsData = await domainsResponse.json();
+          const defaultDomain = (domainsData.domains || []).find((d: { name: string }) =>
+            d.name.endsWith('.vercel.app'),
+          );
+          if (defaultDomain) {
+            vercelDeploymentUrl = `https://${defaultDomain.name}`;
+          } else {
+            console.error('[ai-site-builder] Project sem nenhum domínio *.vercel.app:', JSON.stringify(domainsData));
+          }
+        } else {
+          console.error('[ai-site-builder] Falha ao buscar domínios do Project:', await domainsResponse.text());
         }
       }
 
