@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Github, Loader2, CheckCircle2, AlertCircle, Sparkles, RefreshCw } from 'lucide-react';
+import { Github, Loader2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 export type AIGenerationStatusValue =
@@ -14,6 +14,7 @@ export type AIGenerationStatusValue =
   | 'generating_content'
   | 'rendering'
   | 'pushing_github'
+  | 'deploying'
   | 'done'
   | 'failed';
 
@@ -27,6 +28,7 @@ interface ProjectAIRow {
   ai_generation_error: string | null;
   github_repo_url: string | null;
   github_repo_name: string | null;
+  vercel_deployment_url: string | null;
 }
 
 const STEP_LABELS: Record<AIGenerationStatusValue, string> = {
@@ -36,6 +38,7 @@ const STEP_LABELS: Record<AIGenerationStatusValue, string> = {
   generating_content: 'IA escrevendo o conteúdo',
   rendering: 'Montando os arquivos do site',
   pushing_github: 'Publicando no GitHub',
+  deploying: 'Publicando na Vercel',
   done: 'Pronto!',
   failed: 'Falhou',
 };
@@ -43,10 +46,11 @@ const STEP_LABELS: Record<AIGenerationStatusValue, string> = {
 const STEP_PROGRESS: Record<AIGenerationStatusValue, number> = {
   idle: 0,
   queued: 10,
-  generating_structure: 30,
-  generating_content: 55,
-  rendering: 75,
-  pushing_github: 90,
+  generating_structure: 25,
+  generating_content: 45,
+  rendering: 65,
+  pushing_github: 80,
+  deploying: 92,
   done: 100,
   failed: 0,
 };
@@ -56,7 +60,8 @@ const isInProgress = (s: AIGenerationStatusValue): boolean =>
   s === 'generating_structure' ||
   s === 'generating_content' ||
   s === 'rendering' ||
-  s === 'pushing_github';
+  s === 'pushing_github' ||
+  s === 'deploying';
 
 export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGenerationStatusProps) => {
   const [row, setRow] = useState<ProjectAIRow | null>(null);
@@ -68,7 +73,7 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
     const fetchRow = async (): Promise<void> => {
       const { data } = await supabase
         .from('projects')
-        .select('ai_generation_status, ai_generation_error, github_repo_url, github_repo_name')
+        .select('ai_generation_status, ai_generation_error, github_repo_url, github_repo_name, vercel_deployment_url')
         .eq('id', projectId)
         .maybeSingle();
       if (!cancelled && data) setRow(data as ProjectAIRow);
@@ -88,6 +93,7 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
             ai_generation_error: next.ai_generation_error,
             github_repo_url: next.github_repo_url,
             github_repo_name: next.github_repo_name,
+            vercel_deployment_url: next.vercel_deployment_url,
           });
         },
       )
@@ -153,16 +159,31 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
           <p className="text-sm text-destructive">{row.ai_generation_error}</p>
         )}
 
-        {status === 'done' && row.github_repo_url && (
-          <a
-            href={row.github_repo_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-          >
-            <Github className="h-4 w-4" />
-            Ver repositório {row.github_repo_name ? `(${row.github_repo_name})` : ''}
-          </a>
+        {status === 'done' && (row.github_repo_url || row.vercel_deployment_url) && (
+          <div className="flex flex-wrap items-center gap-4">
+            {row.vercel_deployment_url && (
+              <a
+                href={row.vercel_deployment_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Visitar site
+              </a>
+            )}
+            {row.github_repo_url && (
+              <a
+                href={row.github_repo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:underline"
+              >
+                <Github className="h-4 w-4" />
+                Ver repositório {row.github_repo_name ? `(${row.github_repo_name})` : ''}
+              </a>
+            )}
+          </div>
         )}
 
         {canRegenerate && (status === 'failed' || status === 'done') && (

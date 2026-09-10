@@ -21,6 +21,7 @@ type GenerationStatus =
   | 'generating_content'
   | 'rendering'
   | 'pushing_github'
+  | 'deploying'
   | 'done'
   | 'failed';
 
@@ -304,7 +305,84 @@ serve(async (req) => {
       throw new Error(`Falha ao commitar site.config.json (${putResponse.status}): ${errText}`);
     }
 
-    // ---- 5. Concluído — falta só conectar a Vercel (próxima etapa) ----
+    // ---- 5. Cria (ou reaproveita) o Project na Vercel, ligado ao repo ----
+    await setStatus('deploying');
+
+    const vercelToken = Deno.env.get('VERCEL_API_TOKEN');
+    const vercelTeamId = Deno.env.get('VERCEL_TEAM_ID');
+
+    let vercelProjectId: string | null = null;
+    let vercelDeploymentUrl: string | null = null;
+
+    if (!vercelToken || !vercelTeamId) {
+      console.warn('[ai-site-builder] VERCEL_API_TOKEN/VERCEL_TEAM_ID não configurados — pulando deploy.');
+    } else {
+      const vercelQuery = `?teamId=${vercelTeamId}`;
+
+      const createProjectResponse = await fetch(`https://api.vercel.com/v11/projects${vercelQuery}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${vercelToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: repoName,
+          framework: 'nextjs',
+          gitRepository: { type: 'github', repo: repoFullName },
+        }),
+      });
+
+      if (createProjectResponse.ok) {
+        const projectData = await createProjectResponse.json();
+        vercelProjectId = projectData.id;
+        vercelDeploymentUrl = `https://${repoName}.vercel.app`;
+      } else if (createProjectResponse.status === 409) {
+        // "Regenerar com IA": o Project já existe de uma geração anterior.
+        const existingProjectResponse = await fetch(
+          `https://api.vercel.com/v10/projects/${repoName}${vercelQuery}`,
+          { headers: { Authorization: `Bearer ${vercelToken}` } },
+        );
+        if (existingProjectResponse.ok) {
+          const existingProject = await existingProjectResponse.json();
+          vercelProjectId = existingProject.id;
+          vercelDeploymentUrl = `https://${repoName}.vercel.app`;
+        } else {
+          const errText = await createProjectResponse.text();
+          console.error('[ai-site-builder] Falha ao criar/recuperar Project na Vercel:', errText);
+        }
+      } else {
+        const errText = await createProjectResponse.text();
+        console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+      }
+
+      // Anexa o domínio do cliente, se já foi definido. Falha aqui é normal
+      // (DNS ainda não apontado) — loga como aviso, não derruba o pipeline.
+      if (vercelProjectId && domain) {
+        const domainResponse = await fetch(
+          `https://api.vercel.com/v10/projects/${vercelProjectId}/domains${vercelQuery}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${vercelToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: domain }),
+          },
+        );
+        if (!domainResponse.ok) {
+          const errText = await domainResponse.text();
+          console.warn(`[ai-site-builder] Domínio ${domain} não anexado ainda:`, errText);
+          await supabaseService.from('ai_generation_logs').insert({
+            project_id: projectId,
+            step: 'deploying',
+            status: 'ok',
+            payload: { warning: `Domínio ${domain} não anexado: ${errText}` },
+          });
+        }
+      }
+    }
+
+    // ---- 6. Concluído ----
     await supabaseService
       .from('projects')
       .update({
@@ -312,6 +390,8 @@ serve(async (req) => {
         ai_generation_error: null,
         github_repo_url: repoUrl,
         github_repo_name: repoFullName,
+        vercel_project_id: vercelProjectId,
+        vercel_deployment_url: vercelDeploymentUrl,
       })
       .eq('id', projectId);
 
@@ -319,11 +399,11 @@ serve(async (req) => {
       project_id: projectId,
       step: 'done',
       status: 'ok',
-      payload: { repo_url: repoUrl, repo_name: repoFullName },
+      payload: { repo_url: repoUrl, repo_name: repoFullName, vercel_deployment_url: vercelDeploymentUrl },
     });
 
     return new Response(
-      JSON.stringify({ success: true, repoUrl, repoName: repoFullName }),
+      JSON.stringify({ success: true, repoUrl, repoName: repoFullName, vercelDeploymentUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     );
   } catch (error) {
