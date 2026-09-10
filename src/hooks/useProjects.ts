@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Project } from '@/types/admin';
 import { useAuditLogger } from './useAuditLogger';
 import { useUserPlans } from './useUserPlans';
-import { checkFeatureFlag } from './useFeatureFlag';
 import { toast } from 'sonner';
 
 // Helper to check if user is admin/dev via user_roles table (secure)
@@ -187,20 +186,14 @@ export const useProjects = () => {
 
       toast.success('Projeto criado com sucesso!');
 
-      // [BETA] AI Site Builder — gate por feature flag por usuário.
-      // Fire-and-forget: nunca bloqueia o fluxo de criação.
-      try {
-        const aiEnabled = await checkFeatureFlag(user.id, 'ai_site_builder');
-        if (aiEnabled) {
-          supabase.functions
-            .invoke('ai-site-builder', {
-              body: { project_id: data.id, requesting_user_id: user.id },
-            })
-            .catch((err) => console.warn('[ai-site-builder] invoke failed:', err));
-        }
-      } catch (flagErr) {
-        console.warn('[ai-site-builder] feature flag check failed:', flagErr);
-      }
+      // [BETA] AI Site Builder: NÃO dispara aqui de propósito. Esta função
+      // só cria a linha em `projects` — o ProjectWizardPage ainda vai inserir
+      // os imóveis em `portfolio_properties` (com upload de fotos) depois
+      // que este `createProject` retornar. Disparar o ai-site-builder aqui
+      // cria uma corrida real: ele lê `portfolio_properties` antes de existir
+      // qualquer linha lá, e gera o site com `properties: []`. Quem chama
+      // este hook e quer a geração automática deve invocar `ai-site-builder`
+      // só depois de terminar de gravar os imóveis (ver ProjectWizardPage).
 
       // Log the create action
       await logProjectAction('CREATE_PROJECT', data.id, {

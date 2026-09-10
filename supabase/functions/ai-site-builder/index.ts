@@ -183,7 +183,10 @@ serve(async (req) => {
       ownerName: wizardData.ownerName || companyName,
       companyName,
       creciNumber: wizardData.creciNumber || '',
-      creciType: wizardData.creciType || 'Pessoa Fisica',
+      // wizardData.creciType vem como "individual" | "juridico" do
+      // <Select> real do wizard (ProjectDataForm.tsx) — não confundir com o
+      // nome do tipo CreciType em src/types/wizard.ts, que está desatualizado.
+      creciType: wizardData.creciType || 'individual',
       address: {
         cep: wizardData.addressCep || '',
         street: wizardData.addressStreet || '',
