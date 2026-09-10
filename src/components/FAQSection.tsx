@@ -21,7 +21,7 @@ const faqs = [
   {
     id: "faq-3",
     question: "Quanto tempo leva para o site ficar pronto?",
-    answer: "Apenas 72 horas úteis após o envio completo das suas fotos e informações. Trabalhamos rápido para você começar a captar leads o mais rápido possível. Assim que seu site estiver pronto, você recebe acesso ao painel administrativo e o link para começar a divulgar."
+    answer: "Seu site fica pronto na hora, assim que você envia suas fotos e informações. Nossa plataforma gera e publica o site automaticamente, sem espera. Você recebe acesso ao painel administrativo e o link para começar a divulgar imediatamente."
   },
   {
     id: "faq-4",
@@ -163,7 +163,7 @@ const FAQSection = () => {
         >
           <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
             <span className="text-2xl">⚡</span>
-            <span className="text-sm font-semibold text-foreground">Entrega em 72h</span>
+            <span className="text-sm font-semibold text-foreground">Site pronto na hora</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border border-border shadow-sm">
             <span className="text-2xl">🔒</span>

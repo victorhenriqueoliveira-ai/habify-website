@@ -8,6 +8,7 @@ import OptimizedImage from "./OptimizedImage";
 import MagneticButton from "./animations/MagneticButton";
 import ParallaxLayer from "./animations/ParallaxLayer";
 import { trackCTAClick } from "@/utils/analytics";
+import HeroAnimation from "./HeroAnimation";
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,7 +83,7 @@ const Hero = () => {
             <div className="flex flex-wrap gap-3 sm:gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Zap className="w-4 h-4 text-pulse-500" />
-                <span className="text-xs sm:text-sm font-semibold text-foreground">Entrega em 72h úteis</span>
+                <span className="text-xs sm:text-sm font-semibold text-foreground">Site pronto na hora</span>
               </div>
               <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Trophy className="w-4 h-4 text-pulse-500" />
@@ -101,11 +102,11 @@ const Hero = () => {
             >
               Site para Corretor de Imóveis:{" "}
               <span className="relative inline-block">
-                Crie seu Site Profissional em{" "}
+                Crie seu Site Profissional na{" "}
               </span>
               <span className="relative inline-block">
                 <span className="relative z-10 bg-gradient-to-r from-pulse-500 via-pulse-600 to-pulse-700 bg-clip-text text-transparent">
-                  72 Horas úteis{" "}
+                  Hora{" "}
                 </span>
                 <span className="relative inline-block">
                   com Captação Automática de Leads
@@ -119,7 +120,7 @@ const Hero = () => {
               style={{ animationDelay: "0.5s" }} 
               className="section-subtitle opacity-0 animate-fade-in text-muted-foreground text-lg sm:text-xl leading-relaxed"
             >
-              <strong className="text-foreground">Pare de perder clientes para corretores que já têm site.</strong> Sua landing page profissional pronta em 72h — leads direto no WhatsApp automaticamente, SEO otimizado, plataforma própria em React.js. Pagamento único a partir de R$ 74,90.
+              <strong className="text-foreground">Pare de perder clientes para corretores que já têm site.</strong> Sua landing page profissional pronta na hora — leads direto no WhatsApp automaticamente, SEO otimizado, plataforma própria em React.js. Pagamento único a partir de R$ 74,90.
             </p>
 
             {/* Animated Stats Counter */}
@@ -174,7 +175,7 @@ const Hero = () => {
               
               {/* Micro-text urgência */}
               <p className="text-xs sm:text-sm text-white/80 font-medium tracking-wide text-center sm:text-left">
-                Pagamento único • Sem mensalidade • Entrega em 72h úteis
+                Pagamento único • Sem mensalidade • Site pronto na hora
               </p>
             </div>
 
@@ -197,47 +198,25 @@ const Hero = () => {
           
           {/* Right Column - Image/Mockup */}
           <div className="w-full lg:w-1/2 relative mt-8 lg:mt-0">
-            {lottieData ? (
-              <div className="relative z-10 animate-fade-in" style={{ animationDelay: "0.9s" }}>
-                <LottieAnimation 
-                  animationPath={lottieData} 
-                  className="w-full h-auto max-w-lg mx-auto"
-                  loop={true}
-                  autoplay={true}
-                />
-              </div>
-            ) : (
-              <div className="relative animate-fade-in" style={{ animationDelay: "0.9s" }}>
-                {/* Glassmorphism Card Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-background/20 to-transparent backdrop-blur-md rounded-3xl border border-pulse-500/20 shadow-2xl -z-10 transform rotate-3"></div>
-                <div className="absolute inset-0 bg-gradient-to-tl from-background/40 via-background/20 to-transparent backdrop-blur-md rounded-3xl border border-pulse-500/20 shadow-2xl -z-10 transform -rotate-2"></div>
-                
-                {/* Main Image Container */}
-                <div className="relative transition-all duration-500 ease-out overflow-hidden rounded-3xl shadow-2xl border-2 border-pulse-500/30 hover:border-pulse-500/50 group">
-                  {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-pulse-500/50 via-pulse-600/50 to-pulse-500/50 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  
-                  <div className="relative">
-                    <OptimizedImage
-                      src="/Foto1.png" 
-                      alt="Site para Corretor de Imóveis - Exemplo de Landing Page Profissional HabiFy" 
-                      className="w-full h-auto transition-transform duration-500 ease-out group-hover:scale-105" 
-                      style={{ transformStyle: 'preserve-3d' }} 
-                      priority
-                      objectFit="cover"
-                    />
-                    {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent pointer-events-none"></div>
-                  </div>
-                </div>
+            <div className="relative animate-fade-in" style={{ animationDelay: "0.9s" }}>
+              {/* Glassmorphism Card Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-background/20 to-transparent backdrop-blur-md rounded-3xl border border-pulse-500/20 shadow-2xl -z-10 transform rotate-3"></div>
+              <div className="absolute inset-0 bg-gradient-to-tl from-background/40 via-background/20 to-transparent backdrop-blur-md rounded-3xl border border-pulse-500/20 shadow-2xl -z-10 transform -rotate-2"></div>
 
-                {/* Floating Badge */}
-                <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-gradient-to-br from-pulse-500 to-pulse-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-2xl border border-pulse-400 animate-float">
-                  <div className="text-xs sm:text-sm font-semibold">✓ SEO Otimizado</div>
-                  <div className="text-xl sm:text-2xl font-black">100/100</div>
+              {/* Animated Hero */}
+              <div className="relative transition-all duration-500 ease-out overflow-hidden rounded-3xl shadow-2xl border-2 border-pulse-500/30 hover:border-pulse-500/50 group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pulse-500/50 via-pulse-600/50 to-pulse-500/50 rounded-3xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="relative">
+                  <HeroAnimation />
                 </div>
               </div>
-            )}
+
+              {/* Floating Badge */}
+              <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-gradient-to-br from-pulse-500 to-pulse-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-2xl border border-pulse-400 animate-float">
+                <div className="text-xs sm:text-sm font-semibold">✓ SEO Otimizado</div>
+                <div className="text-xl sm:text-2xl font-black">100/100</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

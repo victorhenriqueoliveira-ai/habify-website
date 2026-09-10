@@ -93,7 +93,7 @@ const AdvancedSchema: React.FC = () => {
         "name": "Quanto tempo leva para o site ficar pronto?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Apenas 72 horas úteis após o envio completo das suas fotos e informações. Trabalhamos rápido para você começar a captar leads o mais rápido possível. Assim que seu site estiver pronto, você recebe acesso ao painel administrativo e o link para começar a divulgar."
+          "text": "Seu site fica pronto na hora, assim que você envia suas fotos e informações. Nossa plataforma gera e publica o site automaticamente, sem espera. Você recebe acesso ao painel administrativo e o link para começar a divulgar imediatamente."
         }
       },
       {
@@ -144,8 +144,8 @@ const AdvancedSchema: React.FC = () => {
     "@context": "https://schema.org",
     "@type": "HowTo",
     "name": "Como Criar Site para Corretor de Imóveis com a HabiFy",
-    "description": "Guia passo a passo para criar seu site profissional de corretor em 72 horas",
-    "totalTime": "PT72H",
+    "description": "Guia passo a passo para criar seu site profissional de corretor na hora",
+    "totalTime": "PT5M",
     "step": [
       {
         "@type": "HowToStep",
@@ -162,7 +162,7 @@ const AdvancedSchema: React.FC = () => {
       {
         "@type": "HowToStep",
         "name": "Receba seu Site Pronto",
-        "text": "Em até 72 horas, seu site profissional estará online e pronto para captar leads automaticamente",
+        "text": "Na hora, seu site profissional já estará online e pronto para captar leads automaticamente",
         "position": 3
       }
     ]
