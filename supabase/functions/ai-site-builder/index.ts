@@ -324,51 +324,58 @@ serve(async (req) => {
     const vercelToken = Deno.env.get('VERCEL_API_TOKEN');
     const vercelTeamId = Deno.env.get('VERCEL_TEAM_ID');
 
-    let vercelProjectId: string | null = null;
-    let vercelDeploymentUrl: string | null = null;
+    // Fonte da verdade pra "já existe um Project?" é o NOSSO banco, nunca um
+    // lookup por nome na Vercel — a Vercel pode alterar o nome pedido (ex:
+    // truncar), então procurar de volta pelo nome que a gente pediu pode
+    // simplesmente não achar nada e deixar o projeto com uma URL quebrada.
+    let vercelProjectId: string | null = project.vercel_project_id ?? null;
+    let vercelDeploymentUrl: string | null = project.vercel_deployment_url ?? null;
 
     if (!vercelToken || !vercelTeamId) {
       console.warn('[ai-site-builder] VERCEL_API_TOKEN/VERCEL_TEAM_ID não configurados — pulando deploy.');
     } else {
       const vercelQuery = `?teamId=${vercelTeamId}`;
 
-      const createProjectResponse = await fetch(`https://api.vercel.com/v11/projects${vercelQuery}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${vercelToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: repoName,
-          framework: 'nextjs',
-          gitRepository: { type: 'github', repo: repoFullName },
-        }),
-      });
-
-      if (createProjectResponse.ok) {
-        const projectData = await createProjectResponse.json();
-        vercelProjectId = projectData.id;
-        // A Vercel pode alterar o nome pedido (ex: truncar), então o domínio
-        // *.vercel.app precisa vir do `name` que ela realmente salvou —
-        // nunca do `repoName` que a gente pediu.
-        vercelDeploymentUrl = `https://${projectData.name}.vercel.app`;
-      } else if (createProjectResponse.status === 409) {
-        // "Regenerar com IA": o Project já existe de uma geração anterior.
+      if (vercelProjectId) {
+        // "Regenerar com IA": Project já existe, só confirma que a Vercel
+        // ainda o reconhece e pega o nome/domínio atual dele.
         const existingProjectResponse = await fetch(
-          `https://api.vercel.com/v10/projects/${repoName}${vercelQuery}`,
+          `https://api.vercel.com/v10/projects/${vercelProjectId}${vercelQuery}`,
           { headers: { Authorization: `Bearer ${vercelToken}` } },
         );
         if (existingProjectResponse.ok) {
           const existingProject = await existingProjectResponse.json();
-          vercelProjectId = existingProject.id;
           vercelDeploymentUrl = `https://${existingProject.name}.vercel.app`;
         } else {
-          const errText = await createProjectResponse.text();
-          console.error('[ai-site-builder] Falha ao criar/recuperar Project na Vercel:', errText);
+          console.warn('[ai-site-builder] vercel_project_id salvo não encontrado na Vercel, recriando:', await existingProjectResponse.text());
+          vercelProjectId = null;
         }
-      } else {
-        const errText = await createProjectResponse.text();
-        console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+      }
+
+      if (!vercelProjectId) {
+        const createProjectResponse = await fetch(`https://api.vercel.com/v11/projects${vercelQuery}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: repoName,
+            framework: 'nextjs',
+            gitRepository: { type: 'github', repo: repoFullName },
+          }),
+        });
+
+        if (createProjectResponse.ok) {
+          const projectData = await createProjectResponse.json();
+          vercelProjectId = projectData.id;
+          // Idem: o domínio *.vercel.app vem do `name` que a Vercel
+          // realmente salvou, nunca do `repoName` que a gente pediu.
+          vercelDeploymentUrl = `https://${projectData.name}.vercel.app`;
+        } else {
+          const errText = await createProjectResponse.text();
+          console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+        }
       }
 
       // Criar o Project com gitRepository NÃO dispara build sozinho quando o
