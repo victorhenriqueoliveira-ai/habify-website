@@ -348,7 +348,10 @@ serve(async (req) => {
       if (createProjectResponse.ok) {
         const projectData = await createProjectResponse.json();
         vercelProjectId = projectData.id;
-        vercelDeploymentUrl = `https://${repoName}.vercel.app`;
+        // A Vercel pode alterar o nome pedido (ex: truncar), então o domínio
+        // *.vercel.app precisa vir do `name` que ela realmente salvou —
+        // nunca do `repoName` que a gente pediu.
+        vercelDeploymentUrl = `https://${projectData.name}.vercel.app`;
       } else if (createProjectResponse.status === 409) {
         // "Regenerar com IA": o Project já existe de uma geração anterior.
         const existingProjectResponse = await fetch(
@@ -358,7 +361,7 @@ serve(async (req) => {
         if (existingProjectResponse.ok) {
           const existingProject = await existingProjectResponse.json();
           vercelProjectId = existingProject.id;
-          vercelDeploymentUrl = `https://${repoName}.vercel.app`;
+          vercelDeploymentUrl = `https://${existingProject.name}.vercel.app`;
         } else {
           const errText = await createProjectResponse.text();
           console.error('[ai-site-builder] Falha ao criar/recuperar Project na Vercel:', errText);
