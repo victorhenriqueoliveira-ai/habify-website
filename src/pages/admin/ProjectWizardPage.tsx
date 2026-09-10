@@ -43,6 +43,13 @@ const ProjectWizardPage = () => {
   // Get project type from navigation state
   const projectType = (state as any)?.projectType || 'single_property';
 
+  // Sem isso, trocar de etapa com a página rolada pra baixo (ex: depois de
+  // preencher um formulário longo) deixa o usuário "perdido" no meio da
+  // etapa seguinte em vez de começar vendo o topo dela.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Redirect if no plans available
   useEffect(() => {
     if (!plansLoading && availablePlans.length === 0) {

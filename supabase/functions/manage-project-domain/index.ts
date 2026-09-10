@@ -43,7 +43,7 @@ serve(async (req) => {
 
     const { data: project, error: projectError } = await supabaseService
       .from('projects')
-      .select('user_id, vercel_project_id, desired_domain')
+      .select('user_id, vercel_project_id, vercel_custom_domain')
       .eq('id', project_id)
       .single();
 
@@ -67,7 +67,7 @@ serve(async (req) => {
     }
     const vercelQuery = `?teamId=${vercelTeamId}`;
 
-    const targetDomain = (domain || project.desired_domain || '').replace(/^https?:\/\//, '').trim();
+    const targetDomain = (domain || project.vercel_custom_domain || '').replace(/^https?:\/\//, '').trim();
     if (!targetDomain) {
       throw new Error('Informe um domínio (ex: meusite.com.br).');
     }
@@ -94,7 +94,7 @@ serve(async (req) => {
 
       await supabaseService
         .from('projects')
-        .update({ desired_domain: targetDomain })
+        .update({ vercel_custom_domain: targetDomain })
         .eq('id', project_id);
     }
 

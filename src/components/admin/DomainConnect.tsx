@@ -17,7 +17,7 @@ interface ProjectDomainRow {
   vercel_project_id: string | null;
   vercel_deployment_url: string | null;
   vercel_domain_verified: boolean | null;
-  desired_domain: string | null;
+  vercel_custom_domain: string | null;
 }
 
 interface DomainInstructions {
@@ -39,12 +39,12 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
     const fetchRow = async (): Promise<void> => {
       const { data } = await supabase
         .from('projects')
-        .select('ai_generation_status, vercel_project_id, vercel_deployment_url, vercel_domain_verified, desired_domain')
+        .select('ai_generation_status, vercel_project_id, vercel_deployment_url, vercel_domain_verified, vercel_custom_domain')
         .eq('id', projectId)
         .maybeSingle();
       if (!cancelled && data) {
         setRow(data as ProjectDomainRow);
-        setDomainInput((prev) => prev || (data as ProjectDomainRow).desired_domain || '');
+        setDomainInput((prev) => prev || (data as ProjectDomainRow).vercel_custom_domain || '');
       }
     };
 
@@ -167,11 +167,11 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
           </p>
         </div>
 
-        {row.desired_domain && (
+        {row.vercel_custom_domain && (
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
               <p className="text-xs text-muted-foreground">Domínio</p>
-              <p className="text-sm font-medium">{row.desired_domain}</p>
+              <p className="text-sm font-medium">{row.vercel_custom_domain}</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={row.vercel_domain_verified ? 'default' : 'secondary'} className="gap-1">

@@ -167,7 +167,15 @@ serve(async (req) => {
     });
 
     const companyName = wizardData.companyName || project.title || 'Meu Site';
-    const domain = (project.desired_domain || wizardData.desiredDomain || '').replace(/^https?:\/\//, '');
+    // vercel_custom_domain (DomainConnect) já vem com TLD e tem prioridade —
+    // é o que o cliente conectou manualmente depois do site no ar. Sem isso,
+    // cai pro domínio comprado via wizard/registro.br: desired_domain guarda
+    // só o slug (sempre .com.br), nunca o domínio completo.
+    const domain = (
+      project.vercel_custom_domain ||
+      (project.desired_domain ? `${project.desired_domain}.com.br` : '') ||
+      (wizardData.desiredDomain ? `${wizardData.desiredDomain}.com.br` : '')
+    ).replace(/^https?:\/\//, '');
     // 'single_property' = 1 empreendimento, site inteiro é a vitrine dele.
     // 'realtor_multiple' (ou qualquer outro valor futuro) = portfólio.
     const projectMode = project.project_type === 'single_property' ? 'single' : 'multiple';
@@ -334,6 +342,9 @@ serve(async (req) => {
     // regravar silenciosamente uma URL antiga/errada por cima.
     let vercelProjectId: string | null = project.vercel_project_id ?? null;
     let vercelDeploymentUrl: string | null = null;
+    // Esse aqui pode manter o valor salvo: só é atualizado se o attach de
+    // domínio for bem-sucedido nesta execução, nunca fica "errado".
+    let vercelCustomDomainToSave: string | null = project.vercel_custom_domain ?? null;
 
     if (!vercelToken || !vercelTeamId) {
       console.warn('[ai-site-builder] VERCEL_API_TOKEN/VERCEL_TEAM_ID não configurados — pulando deploy.');
@@ -465,7 +476,12 @@ serve(async (req) => {
             body: JSON.stringify({ name: domain }),
           },
         );
-        if (!domainResponse.ok) {
+        if (domainResponse.ok || domainResponse.status === 409) {
+          // 409 = já estava anexado (ex: reprocessamento) — ainda assim é o
+          // domínio ativo do cliente, então registra em vercel_custom_domain
+          // pra ele aparecer no card de domínio (DomainConnect) também.
+          vercelCustomDomainToSave = domain;
+        } else {
           const errText = await domainResponse.text();
           console.warn(`[ai-site-builder] Domínio ${domain} não anexado ainda:`, errText);
           await supabaseService.from('ai_generation_logs').insert({
@@ -488,6 +504,7 @@ serve(async (req) => {
         github_repo_name: repoFullName,
         vercel_project_id: vercelProjectId,
         vercel_deployment_url: vercelDeploymentUrl,
+        vercel_custom_domain: vercelCustomDomainToSave,
       })
       .eq('id', projectId);
 

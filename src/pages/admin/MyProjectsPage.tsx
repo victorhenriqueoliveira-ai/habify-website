@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { LiveSiteStatusBadge } from '@/components/admin/LiveSiteStatusBadge';
 import {
   Table,
   TableBody,
@@ -259,7 +260,10 @@ export const MyProjectsPage = () => {
                   <Card key={project.id} className="border-yellow-200">
                     <CardContent className="pt-4">
                       <div className="space-y-2">
-                        <h3 className="font-medium">{project.title}</h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-medium">{project.title}</h3>
+                          <LiveSiteStatusBadge projectId={project.id} />
+                        </div>
                         {hasRole(['admin', 'dev']) && (
                           <p className="text-sm text-muted-foreground">
                             Cliente: {getUserName(project.userId)}
@@ -319,7 +323,10 @@ export const MyProjectsPage = () => {
                   <Card key={project.id} className="border-blue-200">
                     <CardContent className="pt-4">
                       <div className="space-y-2">
-                        <h3 className="font-medium">{project.title}</h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-medium">{project.title}</h3>
+                          <LiveSiteStatusBadge projectId={project.id} />
+                        </div>
                         {hasRole(['admin', 'dev']) && (
                           <p className="text-sm text-muted-foreground">
                             Cliente: {getUserName(project.userId)}
@@ -379,7 +386,10 @@ export const MyProjectsPage = () => {
                   <Card key={project.id} className="border-green-200">
                     <CardContent className="pt-4">
                       <div className="space-y-2">
-                        <h3 className="font-medium">{project.title}</h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-medium">{project.title}</h3>
+                          <LiveSiteStatusBadge projectId={project.id} />
+                        </div>
                         {hasRole(['admin', 'dev']) && (
                           <p className="text-sm text-muted-foreground">
                             Cliente: {getUserName(project.userId)}
