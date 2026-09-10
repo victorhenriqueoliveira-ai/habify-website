@@ -328,8 +328,12 @@ serve(async (req) => {
     // lookup por nome na Vercel — a Vercel pode alterar o nome pedido (ex:
     // truncar), então procurar de volta pelo nome que a gente pediu pode
     // simplesmente não achar nada e deixar o projeto com uma URL quebrada.
+    //
+    // vercelDeploymentUrl começa null de propósito (não herda o valor salvo
+    // antes): se algo falhar nesta execução, é melhor não gravar nada do que
+    // regravar silenciosamente uma URL antiga/errada por cima.
     let vercelProjectId: string | null = project.vercel_project_id ?? null;
-    let vercelDeploymentUrl: string | null = project.vercel_deployment_url ?? null;
+    let vercelDeploymentUrl: string | null = null;
 
     if (!vercelToken || !vercelTeamId) {
       console.warn('[ai-site-builder] VERCEL_API_TOKEN/VERCEL_TEAM_ID não configurados — pulando deploy.');
@@ -372,6 +376,34 @@ serve(async (req) => {
           // Idem: o domínio *.vercel.app vem do `name` que a Vercel
           // realmente salvou, nunca do `repoName` que a gente pediu.
           vercelDeploymentUrl = `https://${projectData.name}.vercel.app`;
+        } else if (createProjectResponse.status === 409) {
+          // Já existe um Project pra esse repo (de antes de vercel_project_id
+          // existir na tabela), mas não sabemos o ID. Busca pelo nome que a
+          // gente pediu — a Vercel normalmente prefixa/mantém o começo do
+          // nome mesmo quando altera o final, então dá pra achar por busca
+          // parcial em vez de um lookup exato (que falharia do mesmo jeito).
+          const searchTerm = repoName.slice(0, 20);
+          const searchResponse = await fetch(
+            `https://api.vercel.com/v9/projects${vercelQuery}&search=${encodeURIComponent(searchTerm)}`,
+            { headers: { Authorization: `Bearer ${vercelToken}` } },
+          );
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            const match = (searchData.projects || []).find(
+              (p: { link?: { repo?: string; repoId?: number } }) =>
+                p.link?.repo === repoFullName || p.link?.repoId === repoId,
+            );
+            if (match) {
+              vercelProjectId = match.id;
+              vercelDeploymentUrl = `https://${match.name}.vercel.app`;
+            }
+          }
+          if (!vercelProjectId) {
+            console.error(
+              '[ai-site-builder] 409 ao criar Project, e não achei o existente pela busca:',
+              await createProjectResponse.text(),
+            );
+          }
         } else {
           const errText = await createProjectResponse.text();
           console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
