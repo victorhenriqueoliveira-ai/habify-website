@@ -66,3 +66,9 @@ verify_jwt = false
 
 [functions.ai-site-builder]
 verify_jwt = false
+
+[functions.manage-project-domain]
+verify_jwt = false
+
+[functions.send-site-ready]
+verify_jwt = false

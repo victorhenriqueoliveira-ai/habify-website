@@ -35,6 +35,7 @@ import { ptBR } from 'date-fns/locale';
 import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
 import { AIGenerationStatus } from '@/components/admin/AIGenerationStatus';
+import { DomainConnect } from '@/components/admin/DomainConnect';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -640,6 +641,9 @@ export const ProjectDetailPage = () => {
 
           {/* AI Site Builder status (BETA, gated) */}
           {id && <AISiteBuilderGate projectId={id} />}
+
+          {/* Conectar domínio próprio (aparece só depois do site publicado) */}
+          {id && <DomainConnect projectId={id} />}
 
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}

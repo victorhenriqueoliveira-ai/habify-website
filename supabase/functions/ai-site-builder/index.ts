@@ -435,6 +435,21 @@ serve(async (req) => {
       payload: { repo_url: repoUrl, repo_name: repoFullName, vercel_deployment_url: vercelDeploymentUrl },
     });
 
+    if (vercelDeploymentUrl && wizardData.contactEmail) {
+      const emailResult = await supabaseService.functions.invoke('send-site-ready', {
+        body: {
+          userName: wizardData.ownerName || companyName,
+          userEmail: wizardData.contactEmail,
+          projectTitle: companyName,
+          siteUrl: vercelDeploymentUrl,
+          projectId,
+        },
+      });
+      if (emailResult.error) {
+        console.warn('[ai-site-builder] Falha ao enviar e-mail de site pronto:', emailResult.error);
+      }
+    }
+
     return new Response(
       JSON.stringify({ success: true, repoUrl, repoName: repoFullName, vercelDeploymentUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },

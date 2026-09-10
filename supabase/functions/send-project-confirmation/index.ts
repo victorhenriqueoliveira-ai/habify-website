@@ -16,6 +16,8 @@ interface ProjectConfirmationRequest {
   projectLocation?: string;
   planName: string;
   projectId: string;
+  /** Projeto entra no pipeline de geração automática (ai-site-builder) em vez de fila manual de desenvolvimento. */
+  aiSiteBuilderEnabled?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -30,9 +32,23 @@ const handler = async (req: Request): Promise<Response> => {
       projectTitle, 
       projectDescription,
       projectLocation,
-      planName, 
-      projectId 
+      planName,
+      projectId,
+      aiSiteBuilderEnabled,
     }: ProjectConfirmationRequest = await req.json();
+
+    const nextSteps = aiSiteBuilderEnabled
+      ? `
+        <li>Seu site está sendo gerado e publicado automaticamente — geralmente pronto em poucos minutos</li>
+        <li>Você recebe um e-mail assim que ele estiver no ar, com o link e instruções pra conectar seu domínio</li>
+        <li>Acompanhe o progresso ao vivo no painel administrativo</li>
+      `
+      : `
+        <li>Nossa equipe está revisando seu projeto</li>
+        <li>Em breve você receberá atualizações sobre o desenvolvimento</li>
+        <li>Você pode acompanhar o progresso no painel administrativo</li>
+        <li>Use o chat para enviar dúvidas ou solicitações adicionais</li>
+      `;
 
     console.log('[SEND-PROJECT-CONFIRMATION] Sending emails for project:', projectTitle);
 
@@ -107,10 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
 
                 <h3 style="color: #F97316;">🎯 Próximos Passos:</h3>
                 <ul style="line-height: 2;">
-                  <li>Nossa equipe está revisando seu projeto</li>
-                  <li>Em breve você receberá atualizações sobre o desenvolvimento</li>
-                  <li>Você pode acompanhar o progresso no painel administrativo</li>
-                  <li>Use o chat para enviar dúvidas ou solicitações adicionais</li>
+                  ${nextSteps}
                 </ul>
 
                 <div style="text-align: center;">
