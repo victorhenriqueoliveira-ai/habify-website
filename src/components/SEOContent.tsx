@@ -14,7 +14,7 @@ const SEOContent = () => {
           </p>
 
           <p>
-            Com a HabiFy, você pode <strong className="text-foreground">criar site para corretor</strong> em apenas 72 horas úteis, sem precisar entender de programação ou design. Nossa plataforma entrega um <strong className="text-foreground">site imobiliário</strong> completo, otimizado para aparecer no Google e converter visitantes em contatos no seu WhatsApp automaticamente.
+            Com a HabiFy, você pode <strong className="text-foreground">criar site para corretor</strong> na hora, sem precisar entender de programação ou design. Nossa plataforma entrega um <strong className="text-foreground">site imobiliário</strong> completo, otimizado para aparecer no Google e converter visitantes em contatos no seu WhatsApp automaticamente.
           </p>
 
           <h3 className="text-2xl font-bold text-foreground pt-4">

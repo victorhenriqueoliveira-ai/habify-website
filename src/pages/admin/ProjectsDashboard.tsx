@@ -28,9 +28,10 @@ import {
   AlertCircle,
   TrendingUp,
   Zap,
+  BarChart3,
 } from 'lucide-react';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+const COLORS = ['hsl(var(--success))', 'hsl(var(--info))', 'hsl(var(--warning))', 'hsl(var(--destructive))'];
 
 const MetricCard = ({ 
   title, 
@@ -86,7 +87,10 @@ export const ProjectsDashboard = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">📊 Dashboard de Projetos</h1>
+        <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight mb-2">
+          <BarChart3 className="h-7 w-7 text-primary" />
+          Dashboard de Projetos
+        </h1>
         <p className="text-muted-foreground">
           Análise de performance, conclusão e tipos de projetos
         </p>
@@ -112,21 +116,21 @@ export const ProjectsDashboard = () => {
           value={projectMetrics?.completedProjects || 0}
           subtitle={`${(projectMetrics?.successRate || 0).toFixed(1)}% de taxa de sucesso`}
           icon={CheckCircle2}
-          color="text-green-600"
+          color="text-success"
         />
         <MetricCard
           title="Em Andamento"
           value={projectMetrics?.inProgressProjects || 0}
           subtitle="atualmente em desenvolvimento"
           icon={Clock}
-          color="text-blue-600"
+          color="text-info"
         />
         <MetricCard
           title="Tempo Médio"
           value={`${Math.round(projectMetrics?.averageCompletionTime || 0)} dias`}
           subtitle="para conclusão"
           icon={Zap}
-          color="text-amber-600"
+          color="text-warning"
         />
       </div>
 
@@ -156,16 +160,16 @@ export const ProjectsDashboard = () => {
                   <Area 
                     type="monotone" 
                     dataKey="created" 
-                    fill="#3b82f6" 
-                    stroke="#3b82f6"
+                    fill="hsl(var(--info))" 
+                    stroke="hsl(var(--info))"
                     fillOpacity={0.3}
                     name="Criados"
                   />
-                  <Bar dataKey="completed" fill="#10b981" name="Concluídos" />
+                  <Bar dataKey="completed" fill="hsl(var(--success))" name="Concluídos" />
                   <Line 
                     type="monotone" 
                     dataKey="completed" 
-                    stroke="#10b981" 
+                    stroke="hsl(var(--success))" 
                     strokeWidth={2}
                     name="Tendência"
                   />
@@ -193,7 +197,7 @@ export const ProjectsDashboard = () => {
                       labelLine={false}
                       label={({ type, count }) => `${type}: ${count}`}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="hsl(var(--muted))"
                       dataKey="count"
                     >
                       {(projectMetrics?.projectsByType || []).map((_, index) => (
@@ -256,7 +260,7 @@ export const ProjectsDashboard = () => {
               <CardContent>
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
-                    <div className="text-6xl font-bold text-green-600 mb-2">
+                    <div className="text-6xl font-bold text-success mb-2">
                       {(projectMetrics?.successRate || 0).toFixed(1)}%
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -264,19 +268,19 @@ export const ProjectsDashboard = () => {
                     </p>
                     <div className="mt-6 grid grid-cols-3 gap-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-2xl font-bold text-success">
                           {projectMetrics?.completedProjects || 0}
                         </div>
                         <p className="text-xs text-muted-foreground">Concluídos</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-info">
                           {projectMetrics?.inProgressProjects || 0}
                         </div>
                         <p className="text-xs text-muted-foreground">Em Progresso</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-amber-600">
+                        <div className="text-2xl font-bold text-warning">
                           {projectMetrics?.pendingProjects || 0}
                         </div>
                         <p className="text-xs text-muted-foreground">Pendentes</p>
@@ -295,14 +299,14 @@ export const ProjectsDashboard = () => {
               <CardContent>
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
-                    <Zap className="h-16 w-16 text-amber-600 mx-auto mb-4" />
-                    <div className="text-5xl font-bold text-amber-600 mb-2">
+                    <Zap className="h-16 w-16 text-warning mx-auto mb-4" />
+                    <div className="text-5xl font-bold text-warning mb-2">
                       {Math.round(projectMetrics?.averageCompletionTime || 0)}
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
                       dias em média
                     </p>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-medium">
                       <TrendingUp className="h-3 w-3" />
                       Performance excelente
                     </div>
@@ -320,19 +324,19 @@ export const ProjectsDashboard = () => {
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={[
-                  { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: '#10b981' },
-                  { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: '#3b82f6' },
-                  { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: '#f59e0b' },
+                  { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: 'hsl(var(--success))' },
+                  { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: 'hsl(var(--info))' },
+                  { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: 'hsl(var(--warning))' },
                 ]}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="status" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#8884d8">
+                  <Bar dataKey="count" fill="hsl(var(--muted))">
                     {[
-                      { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: '#10b981' },
-                      { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: '#3b82f6' },
-                      { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: '#f59e0b' },
+                      { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: 'hsl(var(--success))' },
+                      { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: 'hsl(var(--info))' },
+                      { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: 'hsl(var(--warning))' },
                     ].map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}

@@ -31,8 +31,8 @@ const features = [
   },
   {
     icon: Clock,
-    title: 'Entrega Expressa',
-    description: 'Site profissional pronto em até 72h. Comece a gerar leads enquanto seus concorrentes ainda estão planejando.',
+    title: 'Entrega Instantânea',
+    description: 'Site profissional pronto na hora. Comece a gerar leads enquanto seus concorrentes ainda estão planejando.',
     gradient: 'from-accent to-pulse-500'
   },
   {

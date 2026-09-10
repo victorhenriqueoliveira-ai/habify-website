@@ -1,4 +1,3 @@
-import React from 'react';
 import { Bell, LogOut, Menu, Home, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,7 +87,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden sm:flex lg:hidden items-center gap-3 flex-shrink-0">
             <img src={Logo} alt="HabiFy" className="h-8 w-8 object-contain" />
             <span className="font-bold text-lg hidden md:inline">HabiFy</span>
           </div>
@@ -96,7 +95,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
           {/* Breadcrumbs */}
           <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0">
             {breadcrumbs.map((crumb, index) => (
-              <React.Fragment key={crumb.path}>
+              <span key={crumb.path} className="contents">
                 {index > 0 && <ChevronRight className="w-4 h-4 flex-shrink-0" />}
                 <Link
                   to={crumb.path}
@@ -104,7 +103,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                 >
                   {crumb.label}
                 </Link>
-              </React.Fragment>
+              </span>
             ))}
           </nav>
         </div>

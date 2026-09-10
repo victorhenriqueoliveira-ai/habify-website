@@ -1,35 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { LiveSiteStatusBadge } from '@/components/admin/LiveSiteStatusBadge';
+import { ProjectStatusSection } from '@/components/admin/ProjectStatusSection';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { 
-  Search, 
-  MoreHorizontal, 
-  Plus, 
-  Eye, 
-  ExternalLink,
-  Filter,
-  MessageSquare,
-  Calendar,
+  Clock,
+  Hammer,
+  CheckCircle2,
+  Plus,
+  ShoppingCart,
+  AlertTriangle,
 } from 'lucide-react';
-import { Project, ProjectStatus } from '@/types/admin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
@@ -40,30 +21,6 @@ import { ptBR } from 'date-fns/locale';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 import { useUserPlans } from '@/hooks/useUserPlans';
-import { ShoppingCart } from 'lucide-react';
-
-const statusColors = {
-  pending: 'secondary',
-  in_progress: 'default',
-  completed: 'default',
-  approved: 'default',
-  rejected: 'destructive',
-} as const;
-
-const statusLabels = {
-  pending: 'Pendente',
-  in_progress: 'Em Andamento',
-  completed: 'Concluído',
-  approved: 'Aprovado',
-  rejected: 'Rejeitado',
-};
-
-const propertyTypeLabels = {
-  house: 'Casa',
-  apartment: 'Apartamento',
-  land: 'Terreno',
-  commercial: 'Comercial',
-};
 
 export const MyProjectsPage = () => {
   const navigate = useNavigate();
@@ -71,12 +28,10 @@ export const MyProjectsPage = () => {
   const isRegularUser = hasRole(['user']);
   const { projects } = useProjects();
   const { users } = useUsers();
-  const { canCreateProject, activeProjectsCount } = useProjectLimits();
-  const { canViewPlans } = useCanViewPlans();
-  const { availablePlans , loading} = useUserPlans();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<ProjectStatus | 'all'>('all');
-  
+  useProjectLimits();
+  useCanViewPlans();
+  const { availablePlans, loading } = useUserPlans();
+
   // Enable realtime updates
   useRealtimeProjects();
 
@@ -84,25 +39,17 @@ export const MyProjectsPage = () => {
   const canCreateMoreProjects = hasRole(['admin', 'dev']) || availablePlans.length > 0;
 
   const handleNewProject = () => {
-    if (hasRole(['user']) && availablePlans.length > 0) {
-      navigate('/admin/new-project');
-    } else {
-      navigate('/admin/new-project');
-    }
+    navigate('/admin/new-project');
   };
 
   // Filter projects - dev/admin see all projects, users see only their own
-  const userProjects = hasRole(['admin', 'dev']) 
-    ? projects 
+  const userProjects = hasRole(['admin', 'dev'])
+    ? projects
     : projects.filter(p => p.userId === user?.id || p.userId === user?.userId);
-    
-  const filteredProjects = userProjects.filter((project) => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || project.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
+
+  const pendingProjects = userProjects.filter(p => p.status === 'pending');
+  const inProgressProjects = userProjects.filter(p => p.status === 'in_progress');
+  const completedProjects = userProjects.filter(p => p.status === 'completed' || p.status === 'approved');
 
   const getUserName = (userId: string) => {
     const user = users.find(u => u.userId === userId);
@@ -114,7 +61,7 @@ export const MyProjectsPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando suas assinaturas...</p>
+          <p className="text-muted-foreground">Carregando seus projetos...</p>
         </div>
       </div>
     );
@@ -155,22 +102,22 @@ export const MyProjectsPage = () => {
 
       {/* Alert: Sem planos disponíveis */}
       {isRegularUser && !canCreateMoreProjects && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-warning/30 bg-warning/5">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">!</span>
+                <div className="w-6 h-6 rounded-full bg-warning/15 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="h-3.5 w-3.5 text-warning" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-amber-800">Nenhum Plano Disponível</h3>
-                  <p className="text-sm text-amber-700">
+                  <h3 className="font-medium text-foreground">Nenhum Plano Disponível</h3>
+                  <p className="text-sm text-muted-foreground">
                     Adquira um novo plano para criar projetos.
                   </p>
                 </div>
               </div>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 onClick={() => navigate('/admin/new-project-purchase')}
               >
                 Adquirir Plano
@@ -182,15 +129,17 @@ export const MyProjectsPage = () => {
 
       {/* Info: Planos disponíveis */}
       {isRegularUser && canCreateMoreProjects && availablePlans.length > 0 && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-success/30 bg-success/5">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">✓</span>
+              <div className="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
               </div>
               <div>
-                <h3 className="font-medium text-green-800">Você tem {availablePlans.length} plano(s) disponível(is)!</h3>
-                <p className="text-sm text-green-700">
+                <h3 className="font-medium text-foreground">
+                  Você tem {availablePlans.length} {availablePlans.length === 1 ? 'plano disponível' : 'planos disponíveis'}!
+                </h3>
+                <p className="text-sm text-muted-foreground">
                   Clique em "Criar Novo Projeto" para usar um de seus planos ativos e criar uma nova landing page.
                 </p>
               </div>
@@ -210,238 +159,74 @@ export const MyProjectsPage = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">⏳ Pendentes</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
+            <Clock className="h-4 w-4 text-warning" />
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {userProjects.filter(p => p.status === 'pending').length}
-            </div>
+            <div className="text-2xl font-bold text-warning">{pendingProjects.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">🚧 Em Andamento</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
+            <Hammer className="h-4 w-4 text-info" />
+            <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {userProjects.filter(p => p.status === 'in_progress').length}
-            </div>
+            <div className="text-2xl font-bold text-info">{inProgressProjects.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">✅ Concluídos</CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
+            <CheckCircle2 className="h-4 w-4 text-success" />
+            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length}
-            </div>
+            <div className="text-2xl font-bold text-success">{completedProjects.length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Projects by Status Sections */}
       <div className="space-y-8">
-        {/* Pending Projects */}
-        {userProjects.filter(p => p.status === 'pending').length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                ⏳ Projetos Pendentes ({userProjects.filter(p => p.status === 'pending').length})
-              </CardTitle>
-              <CardDescription>
-                Projetos aguardando aprovação e início dos trabalhos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {userProjects.filter(p => p.status === 'pending').map((project) => (
-                  <Card key={project.id} className="border-yellow-200">
-                    <CardContent className="pt-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="font-medium">{project.title}</h3>
-                          <LiveSiteStatusBadge projectId={project.id} />
-                        </div>
-                        {hasRole(['admin', 'dev']) && (
-                          <p className="text-sm text-muted-foreground">
-                            Cliente: {getUserName(project.userId)}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
-                        <div className="text-sm">
-                          {project.price > 0 && (
-                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
-                          )}
-                          <p className="text-muted-foreground">
-                            {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => navigate(`/admin/projects/${project.id}`)}
-                            className="flex-1"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver Detalhes
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
-                            className="flex-1"
-                          >
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Chat
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ProjectStatusSection
+          icon={Clock}
+          tone="warning"
+          title="Projetos Pendentes"
+          description="Projetos aguardando aprovação e início dos trabalhos"
+          projects={pendingProjects}
+          showClientName={hasRole(['admin', 'dev'])}
+          getUserName={getUserName}
+          onViewDetails={(id) => navigate(`/admin/projects/${id}`)}
+          onOpenChat={(id) => navigate(`/admin/projects/${id}?tab=chat`)}
+        />
 
-        {/* In Progress Projects */}
-        {userProjects.filter(p => p.status === 'in_progress').length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                🚧 Projetos Em Andamento ({userProjects.filter(p => p.status === 'in_progress').length})
-              </CardTitle>
-              <CardDescription>
-                Projetos sendo desenvolvidos pela nossa equipe
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {userProjects.filter(p => p.status === 'in_progress').map((project) => (
-                  <Card key={project.id} className="border-blue-200">
-                    <CardContent className="pt-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="font-medium">{project.title}</h3>
-                          <LiveSiteStatusBadge projectId={project.id} />
-                        </div>
-                        {hasRole(['admin', 'dev']) && (
-                          <p className="text-sm text-muted-foreground">
-                            Cliente: {getUserName(project.userId)}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
-                        <div className="text-sm">
-                          {project.price > 0 && (
-                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
-                          )}
-                          <p className="text-muted-foreground">
-                            {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => navigate(`/admin/projects/${project.id}`)}
-                            className="flex-1"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver Detalhes
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
-                            className="flex-1"
-                          >
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Chat
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ProjectStatusSection
+          icon={Hammer}
+          tone="info"
+          title="Projetos Em Andamento"
+          description="Projetos sendo desenvolvidos pela nossa equipe"
+          projects={inProgressProjects}
+          showClientName={hasRole(['admin', 'dev'])}
+          getUserName={getUserName}
+          onViewDetails={(id) => navigate(`/admin/projects/${id}`)}
+          onOpenChat={(id) => navigate(`/admin/projects/${id}?tab=chat`)}
+        />
 
-        {/* Completed Projects */}
-        {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                ✅ Projetos Concluídos ({userProjects.filter(p => p.status === 'completed' || p.status === 'approved').length})
-              </CardTitle>
-              <CardDescription>
-                Projetos finalizados e entregues
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {userProjects.filter(p => p.status === 'completed' || p.status === 'approved').map((project) => (
-                  <Card key={project.id} className="border-green-200">
-                    <CardContent className="pt-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="font-medium">{project.title}</h3>
-                          <LiveSiteStatusBadge projectId={project.id} />
-                        </div>
-                        {hasRole(['admin', 'dev']) && (
-                          <p className="text-sm text-muted-foreground">
-                            Cliente: {getUserName(project.userId)}
-                          </p>
-                        )}
-                        <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
-                        <div className="text-sm">
-                          {project.price > 0 && (
-                            <p className="font-medium">R$ {project.price.toLocaleString('pt-BR')}</p>
-                          )}
-                          <p className="text-muted-foreground">
-                            Concluído em {format(new Date(project.completedAt || project.updatedAt), 'dd/MM/yyyy', { locale: ptBR })}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => navigate(`/admin/projects/${project.id}`)}
-                            className="flex-1"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Detalhes
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => navigate(`/admin/projects/${project.id}?tab=chat`)}
-                            className="flex-1"
-                          >
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Chat
-                          </Button>
-                          {project.landingPageUrl && (
-                            <Button 
-                              size="sm" 
-                              onClick={() => window.open(project.landingPageUrl, '_blank')}
-                              className="flex-1"
-                            >
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Ver Site
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ProjectStatusSection
+          icon={CheckCircle2}
+          tone="success"
+          title="Projetos Concluídos"
+          description="Projetos finalizados e entregues"
+          projects={completedProjects}
+          showClientName={hasRole(['admin', 'dev'])}
+          getUserName={getUserName}
+          dateLabel={(project) =>
+            `Concluído em ${format(new Date(project.completedAt || project.updatedAt), 'dd/MM/yyyy', { locale: ptBR })}`
+          }
+          onViewDetails={(id) => navigate(`/admin/projects/${id}`)}
+          onOpenChat={(id) => navigate(`/admin/projects/${id}?tab=chat`)}
+        />
 
         {/* Empty State */}
         {userProjects.length === 0 && (

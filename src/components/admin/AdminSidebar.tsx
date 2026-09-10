@@ -149,7 +149,7 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
       <motion.aside
         className={cn(
           "hidden lg:flex flex-col bg-background border-r border-border shadow-sm transition-all duration-300",
-          "fixed left-0 top-0 bottom-0 z-20"
+          "fixed left-0 top-0 bottom-0 z-50"
         )}
         initial="collapsed"
         animate={isExpanded ? "expanded" : "collapsed"}
@@ -158,12 +158,18 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-center border-border px-4">
-          <motion.div 
-            className="flex items-center gap-3 overflow-hidden"
-            animate={{ opacity: isExpanded ? 1 : 0 }}
-          >
-          </motion.div>
+        <div className="h-16 flex items-center border-b border-border px-4 overflow-hidden">
+          <img src={Logo} alt="HabiFy" className="w-8 h-8 object-contain flex-shrink-0" />
+          {isExpanded && (
+            <motion.span
+              className="ml-3 font-bold text-lg whitespace-nowrap"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.05 }}
+            >
+              HabiFy
+            </motion.span>
+          )}
         </div>
 
         {/* Navigation */}

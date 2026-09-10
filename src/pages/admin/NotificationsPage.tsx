@@ -48,10 +48,10 @@ const getNotificationActionUrl = (notification: { title: string; message: string
 };
 
 const typeConfig = {
-  info: { icon: Info, label: 'Info', emoji: '💬', color: 'text-blue-500' },
-  success: { icon: CheckCircle, label: 'Sucesso', emoji: '✅', color: 'text-green-500' },
-  warning: { icon: AlertTriangle, label: 'Aviso', emoji: '⚠️', color: 'text-yellow-500' },
-  error: { icon: XCircle, label: 'Erro', emoji: '❌', color: 'text-destructive' },
+  info: { icon: Info, label: 'Info', color: 'text-info', bg: 'bg-info/10' },
+  success: { icon: CheckCircle, label: 'Sucesso', color: 'text-success', bg: 'bg-success/10' },
+  warning: { icon: AlertTriangle, label: 'Aviso', color: 'text-warning', bg: 'bg-warning/10' },
+  error: { icon: XCircle, label: 'Erro', color: 'text-destructive', bg: 'bg-destructive/10' },
 };
 
 type FilterType = 'all' | 'unread' | 'info' | 'success' | 'warning' | 'error';
@@ -151,10 +151,22 @@ const NotificationsPage = () => {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="info">💬 Info</TabsTrigger>
-          <TabsTrigger value="success">✅ Sucesso</TabsTrigger>
-          <TabsTrigger value="warning">⚠️ Aviso</TabsTrigger>
-          <TabsTrigger value="error">❌ Erro</TabsTrigger>
+          <TabsTrigger value="info" className="gap-1.5">
+            <Info className="h-3.5 w-3.5" />
+            Info
+          </TabsTrigger>
+          <TabsTrigger value="success" className="gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5" />
+            Sucesso
+          </TabsTrigger>
+          <TabsTrigger value="warning" className="gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Aviso
+          </TabsTrigger>
+          <TabsTrigger value="error" className="gap-1.5">
+            <XCircle className="h-3.5 w-3.5" />
+            Erro
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -201,7 +213,9 @@ const NotificationsPage = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="text-xl flex-shrink-0 mt-0.5">{config.emoji}</div>
+                    <div className={cn('flex-shrink-0 mt-0.5 rounded-full p-1.5', config.bg)}>
+                      <config.icon className={cn('h-4 w-4', config.color)} />
+                    </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
