@@ -168,8 +168,12 @@ serve(async (req) => {
 
     const companyName = wizardData.companyName || project.title || 'Meu Site';
     const domain = (project.desired_domain || wizardData.desiredDomain || '').replace(/^https?:\/\//, '');
+    // 'single_property' = 1 empreendimento, site inteiro é a vitrine dele.
+    // 'realtor_multiple' (ou qualquer outro valor futuro) = portfólio.
+    const projectMode = project.project_type === 'single_property' ? 'single' : 'multiple';
 
     const siteConfig = {
+      projectMode,
       layoutChoice: project.layout_choice || wizardData.layoutChoice || 'modern',
       colorPalette: project.color_palette || wizardData.colorPalette || 'blue',
       logoUrl: project.logo_url || '',
