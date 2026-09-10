@@ -135,7 +135,7 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-primary" />
-          Geração automática por IA
+          Status do site
         </CardTitle>
         <Badge
           variant={
@@ -199,7 +199,7 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
             ) : (
               <RefreshCw className="h-3.5 w-3.5" />
             )}
-            Regenerar com IA
+            Regenerar
           </Button>
         )}
       </CardContent>

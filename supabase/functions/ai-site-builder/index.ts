@@ -167,7 +167,15 @@ serve(async (req) => {
     });
 
     const companyName = wizardData.companyName || project.title || 'Meu Site';
-    const domain = (project.desired_domain || wizardData.desiredDomain || '').replace(/^https?:\/\//, '');
+    // vercel_custom_domain (DomainConnect) já vem com TLD e tem prioridade —
+    // é o que o cliente conectou manualmente depois do site no ar. Sem isso,
+    // cai pro domínio comprado via wizard/registro.br: desired_domain guarda
+    // só o slug (sempre .com.br), nunca o domínio completo.
+    const domain = (
+      project.vercel_custom_domain ||
+      (project.desired_domain ? `${project.desired_domain}.com.br` : '') ||
+      (wizardData.desiredDomain ? `${wizardData.desiredDomain}.com.br` : '')
+    ).replace(/^https?:\/\//, '');
     // 'single_property' = 1 empreendimento, site inteiro é a vitrine dele.
     // 'realtor_multiple' (ou qualquer outro valor futuro) = portfólio.
     const projectMode = project.project_type === 'single_property' ? 'single' : 'multiple';
@@ -324,48 +332,111 @@ serve(async (req) => {
     const vercelToken = Deno.env.get('VERCEL_API_TOKEN');
     const vercelTeamId = Deno.env.get('VERCEL_TEAM_ID');
 
-    let vercelProjectId: string | null = null;
+    // Fonte da verdade pra "já existe um Project?" é o NOSSO banco, nunca um
+    // lookup por nome na Vercel — a Vercel pode alterar o nome pedido (ex:
+    // truncar), então procurar de volta pelo nome que a gente pediu pode
+    // simplesmente não achar nada e deixar o projeto com uma URL quebrada.
+    //
+    // vercelDeploymentUrl começa null de propósito (não herda o valor salvo
+    // antes): se algo falhar nesta execução, é melhor não gravar nada do que
+    // regravar silenciosamente uma URL antiga/errada por cima.
+    let vercelProjectId: string | null = project.vercel_project_id ?? null;
     let vercelDeploymentUrl: string | null = null;
+    // Esse aqui pode manter o valor salvo: só é atualizado se o attach de
+    // domínio for bem-sucedido nesta execução, nunca fica "errado".
+    let vercelCustomDomainToSave: string | null = project.vercel_custom_domain ?? null;
 
     if (!vercelToken || !vercelTeamId) {
       console.warn('[ai-site-builder] VERCEL_API_TOKEN/VERCEL_TEAM_ID não configurados — pulando deploy.');
     } else {
       const vercelQuery = `?teamId=${vercelTeamId}`;
 
-      const createProjectResponse = await fetch(`https://api.vercel.com/v11/projects${vercelQuery}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${vercelToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: repoName,
-          framework: 'nextjs',
-          gitRepository: { type: 'github', repo: repoFullName },
-        }),
-      });
-
-      if (createProjectResponse.ok) {
-        const projectData = await createProjectResponse.json();
-        vercelProjectId = projectData.id;
-        vercelDeploymentUrl = `https://${repoName}.vercel.app`;
-      } else if (createProjectResponse.status === 409) {
-        // "Regenerar com IA": o Project já existe de uma geração anterior.
+      if (vercelProjectId) {
+        // "Regenerar com IA": Project já existe, só confirma que a Vercel
+        // ainda o reconhece.
         const existingProjectResponse = await fetch(
-          `https://api.vercel.com/v10/projects/${repoName}${vercelQuery}`,
+          `https://api.vercel.com/v10/projects/${vercelProjectId}${vercelQuery}`,
           { headers: { Authorization: `Bearer ${vercelToken}` } },
         );
-        if (existingProjectResponse.ok) {
-          const existingProject = await existingProjectResponse.json();
-          vercelProjectId = existingProject.id;
-          vercelDeploymentUrl = `https://${repoName}.vercel.app`;
+        if (!existingProjectResponse.ok) {
+          console.warn('[ai-site-builder] vercel_project_id salvo não encontrado na Vercel, recriando:', await existingProjectResponse.text());
+          vercelProjectId = null;
+        }
+      }
+
+      if (!vercelProjectId) {
+        const createProjectResponse = await fetch(`https://api.vercel.com/v11/projects${vercelQuery}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: repoName,
+            framework: 'nextjs',
+            gitRepository: { type: 'github', repo: repoFullName },
+          }),
+        });
+
+        if (createProjectResponse.ok) {
+          const projectData = await createProjectResponse.json();
+          vercelProjectId = projectData.id;
+        } else if (createProjectResponse.status === 409) {
+          // Já existe um Project pra esse repo (de antes de vercel_project_id
+          // existir na tabela), mas não sabemos o ID. Busca pelo nome que a
+          // gente pediu — a Vercel normalmente prefixa/mantém o começo do
+          // nome mesmo quando altera o final, então dá pra achar por busca
+          // parcial em vez de um lookup exato (que falharia do mesmo jeito).
+          const searchTerm = repoName.slice(0, 20);
+          const searchResponse = await fetch(
+            `https://api.vercel.com/v9/projects${vercelQuery}&search=${encodeURIComponent(searchTerm)}`,
+            { headers: { Authorization: `Bearer ${vercelToken}` } },
+          );
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            const match = (searchData.projects || []).find(
+              (p: { link?: { repo?: string; repoId?: number } }) =>
+                p.link?.repo === repoFullName || p.link?.repoId === repoId,
+            );
+            if (match) {
+              vercelProjectId = match.id;
+            }
+          }
+          if (!vercelProjectId) {
+            console.error(
+              '[ai-site-builder] 409 ao criar Project, e não achei o existente pela busca:',
+              await createProjectResponse.text(),
+            );
+          }
         } else {
           const errText = await createProjectResponse.text();
-          console.error('[ai-site-builder] Falha ao criar/recuperar Project na Vercel:', errText);
+          console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
         }
-      } else {
-        const errText = await createProjectResponse.text();
-        console.error('[ai-site-builder] Falha ao criar Project na Vercel:', errText);
+      }
+
+      // O domínio *.vercel.app REAL não é necessariamente `{name}.vercel.app`
+      // — o campo `name` do Project pode preservar o que a gente pediu mesmo
+      // quando a Vercel atribui um domínio padrão diferente (foi exatamente
+      // isso que quebrou o link enviado por e-mail). A lista de domínios do
+      // Project é a única fonte confiável.
+      if (vercelProjectId) {
+        const domainsResponse = await fetch(
+          `https://api.vercel.com/v9/projects/${vercelProjectId}/domains${vercelQuery}`,
+          { headers: { Authorization: `Bearer ${vercelToken}` } },
+        );
+        if (domainsResponse.ok) {
+          const domainsData = await domainsResponse.json();
+          const defaultDomain = (domainsData.domains || []).find((d: { name: string }) =>
+            d.name.endsWith('.vercel.app'),
+          );
+          if (defaultDomain) {
+            vercelDeploymentUrl = `https://${defaultDomain.name}`;
+          } else {
+            console.error('[ai-site-builder] Project sem nenhum domínio *.vercel.app:', JSON.stringify(domainsData));
+          }
+        } else {
+          console.error('[ai-site-builder] Falha ao buscar domínios do Project:', await domainsResponse.text());
+        }
       }
 
       // Criar o Project com gitRepository NÃO dispara build sozinho quando o
@@ -405,7 +476,12 @@ serve(async (req) => {
             body: JSON.stringify({ name: domain }),
           },
         );
-        if (!domainResponse.ok) {
+        if (domainResponse.ok || domainResponse.status === 409) {
+          // 409 = já estava anexado (ex: reprocessamento) — ainda assim é o
+          // domínio ativo do cliente, então registra em vercel_custom_domain
+          // pra ele aparecer no card de domínio (DomainConnect) também.
+          vercelCustomDomainToSave = domain;
+        } else {
           const errText = await domainResponse.text();
           console.warn(`[ai-site-builder] Domínio ${domain} não anexado ainda:`, errText);
           await supabaseService.from('ai_generation_logs').insert({
@@ -428,6 +504,7 @@ serve(async (req) => {
         github_repo_name: repoFullName,
         vercel_project_id: vercelProjectId,
         vercel_deployment_url: vercelDeploymentUrl,
+        vercel_custom_domain: vercelCustomDomainToSave,
       })
       .eq('id', projectId);
 
