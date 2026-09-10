@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Supabase CLI local cache (link state, não é conteúdo do projeto)
+supabase/.temp
+
 # Environment variables (never commit secrets)
 .env
 .env.local

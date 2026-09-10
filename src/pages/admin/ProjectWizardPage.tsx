@@ -13,6 +13,7 @@ import { DomainStep } from '@/components/wizard/DomainStep';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlans } from '@/hooks/useUserPlans';
+import { checkFeatureFlag } from '@/hooks/useFeatureFlag';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
@@ -421,6 +422,7 @@ const ProjectWizardPage = () => {
         // Send project confirmation email
         try {
           const selectedPlan = availablePlans.find(p => p.plan_id === selectedPlanId);
+          const aiSiteBuilderEnabled = await checkFeatureFlag(userId, 'ai_site_builder');
           await supabase.functions.invoke('send-project-confirmation', {
             body: {
               userName: wizardData.ownerName,
@@ -430,6 +432,7 @@ const ProjectWizardPage = () => {
               projectLocation: fullAddress,
               planName: selectedPlan?.plan_name || 'Plano',
               projectId: projectId,
+              aiSiteBuilderEnabled,
             },
           });
         } catch (emailError) {
