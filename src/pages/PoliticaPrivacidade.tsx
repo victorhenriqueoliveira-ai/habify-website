@@ -133,7 +133,7 @@ const PoliticaPrivacidade = () => {
             </p>
             <ul>
               <li><strong>E-mail:</strong> contato@habify.com.br</li>
-              <li><strong>WhatsApp:</strong> +55 (11) 96176-9504</li>
+              <li><strong>WhatsApp:</strong> +55 (11) 91110-3963</li>
             </ul>
 
             <h2>11. Alterações nesta Política</h2>

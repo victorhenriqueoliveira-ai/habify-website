@@ -211,7 +211,7 @@ const PaymentSuccess = () => {
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-              Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
+              Dúvidas? Entre em contato via WhatsApp: +55 (11) 91110-3963
             </div>
           </CardContent>
         </Card>
@@ -252,7 +252,7 @@ const PaymentSuccess = () => {
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-              Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
+              Dúvidas? Entre em contato via WhatsApp: +55 (11) 91110-3963
             </div>
           </CardContent>
         </Card>
@@ -354,7 +354,7 @@ const PaymentSuccess = () => {
           </div>
 
           <div className="text-xs text-muted-foreground text-center">
-            Dúvidas? Entre em contato via WhatsApp: +55 (11) 96176-9504
+            Dúvidas? Entre em contato via WhatsApp: +55 (11) 91110-3963
           </div>
         </CardContent>
       </Card>

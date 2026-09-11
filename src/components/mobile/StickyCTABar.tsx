@@ -56,7 +56,7 @@ const StickyCTABar: React.FC<StickyCTABarProps> = ({ showAfterScroll = 500 }) =>
               </a>
               
               <a
-                href="https://wa.me/5511961769504?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
+                href="https://wa.me/5511911103963?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 py-4 px-4 border-2 border-[#25D366] text-[#25D366] rounded-xl font-bold text-sm hover:bg-[#25D366]/10 transition-colors touch-manipulation min-h-[48px]"

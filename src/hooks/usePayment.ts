@@ -20,7 +20,7 @@ interface PaymentResponse {
   paymentUrl?: string;
   orderId?: string;
   paymentId?: string;
-  gateway?: 'ABACATEPAY' | 'STRIPE';
+  gateway?: 'ABACATEPAY' | 'ASAAS';
   error?: string;
 }
 

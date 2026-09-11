@@ -293,9 +293,21 @@ export default function CheckoutPage() {
                       </Label>
                     </div>
                     
-                    {/* Cartão de crédito temporariamente indisponível: AbacatePay retorna
-                        "CARD is not available for this store" até habilitarem o método
-                        na conta. Reative este bloco assim que confirmarem a liberação. */}
+                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="CARD" id="card" />
+                      <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                        <CreditCard className="h-5 w-5 mr-3" />
+                        <div className="flex-1">
+                          <div className="font-medium">Cartão de Crédito</div>
+                          <div className="text-sm text-muted-foreground">
+                            Em até 12x
+                          </div>
+                          <div className="text-lg font-bold text-primary mt-1">
+                            R$ {plan.price.toFixed(2)}
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
                   </RadioGroup>
 
                   {paymentMethod === 'CARD' && (
@@ -304,7 +316,7 @@ export default function CheckoutPage() {
                         <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                         <div className="text-sm text-blue-700">
                           <p className="font-medium mb-1">Pagamento com cartão</p>
-                          <p>Você poderá escolher o número de parcelas na página de pagamento. Cupons de desconto disponíveis!</p>
+                          <p>Você poderá escolher o número de parcelas na página de pagamento.</p>
                         </div>
                       </div>
                     </div>
