@@ -32,7 +32,7 @@ const projects: Project[] = [
     id: '1',
     name: 'Ralph Santos Imóveis',
     url: 'https://ralphsantos.com.br',
-    image: '/fotos/site_ralphsantos1.png',
+    image: '/fotos/site_ralphsantos1.webp',
     type: 'Portfólio Completo de Empreendimentos',
     description: 'Site completo com portfólio de imóveis, integração WhatsApp e SEO otimizado. Solução premium para corretor de alto padrão.',
     metrics: {
@@ -53,7 +53,7 @@ const projects: Project[] = [
     id: '2',
     name: 'MAC São Paulo',
     url: 'https://macsaopaulo.com.br',
-    image: '/fotos/site_macsaopaulo.png',
+    image: '/fotos/site_macsaopaulo.webp',
     type: 'Landing Page Empreendimento',
     description: 'Landing page focada em conversão para empreendimento comercial. CTAs estratégicos e design moderno.',
     metrics: {
@@ -74,7 +74,7 @@ const projects: Project[] = [
     id: '4',
     name: 'Empreendimentos Moderno',
     url: 'https://modelo-empreendimentos-moderno.vercel.app/',
-    image: '/fotos/site_empreendimentosmoderno.png',
+    image: '/fotos/site_empreendimentosmoderno.webp',
     type: 'Landing Page para Empreendimentos Moderno',
     description: 'Site institucional moderno para corretor de imóveis, destacando projetos e contato.',
     metrics: {
@@ -94,7 +94,7 @@ const projects: Project[] = [
     id: '5',
     name: 'Empreendimentos Clássico',
     url: 'https://modelo-empreendimentos-classico.vercel.app/',
-    image: '/fotos/site_empreendimentosclassico.png',
+    image: '/fotos/site_empreendimentosclassico.webp',
     type: 'Landing Page para Empreendimentos Clássico',
     description: 'Site institucional clássico para corretor de imóveis, com foco em tradição e confiança.',
     metrics: {
@@ -185,6 +185,10 @@ const PortfolioShowcasePremium: React.FC = () => {
                     <img
                       src={project.image}
                       alt={project.name}
+                      width={1600}
+                      height={738}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     
@@ -217,10 +221,16 @@ const PortfolioShowcasePremium: React.FC = () => {
           </Swiper>
 
           {/* Custom Navigation */}
-          <button className="swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-background/80 backdrop-blur-sm border border-border rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg">
+          <button
+            aria-label="Projeto anterior"
+            className="swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-background/80 backdrop-blur-sm border border-border rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg"
+          >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <button className="swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-background/80 backdrop-blur-sm border border-border rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg">
+          <button
+            aria-label="Próximo projeto"
+            className="swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-background/80 backdrop-blur-sm border border-border rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors shadow-lg"
+          >
             <ChevronRight className="w-6 h-6" />
           </button>
         </div>

@@ -91,9 +91,8 @@ const AdvancedSEO: React.FC<AdvancedSEOProps> = ({
       {/* Theme Color */}
       <meta name="theme-color" content="#FE5C02" />
       
-      {/* Preconnect to improve performance */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      {/* fonts.googleapis.com / fonts.gstatic.com já são preconectados em index.html —
+          duplicar aqui só soma tags sem ganho e passa do limite recomendado de preconnects */}
       <link rel="dns-prefetch" href="https://www.google-analytics.com" />
       
       {/* Alternate Languages */}

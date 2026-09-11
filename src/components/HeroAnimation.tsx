@@ -689,6 +689,8 @@ export default function HeroAnimation() {
           <img
             src="/logotipo_habify.png"
             alt=""
+            width={62}
+            height={52}
             style={{
               height: "clamp(28px,4.6cqw,52px)",
               width: "auto",
