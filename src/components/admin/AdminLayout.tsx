@@ -16,8 +16,8 @@ export const AdminLayout = () => {
 
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar fixo e sempre full width */}
-        <div className="fixed top-0 left-0 right-0 z-40">
+        {/* Topbar fixo — desloca 64px em telas lg+ pra não ficar atrás da sidebar recolhida */}
+        <div className="fixed top-0 left-0 lg:left-16 right-0 z-40">
           <AdminTopbar onMenuClick={() => setIsSidebarOpen(true)} />
         </div>
 
