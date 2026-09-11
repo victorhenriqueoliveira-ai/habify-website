@@ -76,16 +76,6 @@ serve(async (req) => {
 
     await setStatus('queued');
 
-    // Defesa em profundidade: a UI já esconde isso atrás da flag, o hook
-    // já bloqueia — a edge function revalida antes de fazer qualquer coisa.
-    const { data: hasFlag } = await supabaseService.rpc('has_feature_flag', {
-      _user_id: requestingUserId,
-      _flag: 'ai_site_builder',
-    });
-    if (!hasFlag) {
-      throw new Error('Usuário não tem a feature flag ai_site_builder habilitada.');
-    }
-
     const githubToken = Deno.env.get('GITHUB_PAT');
     if (!githubToken) {
       throw new Error('GITHUB_PAT não configurado nos secrets da função.');

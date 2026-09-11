@@ -36,7 +36,6 @@ import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
 import { AIGenerationStatus } from '@/components/admin/AIGenerationStatus';
 import { DomainConnect } from '@/components/admin/DomainConnect';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -639,8 +638,8 @@ export const ProjectDetailPage = () => {
             </Card>
           </div>
 
-          {/* AI Site Builder status (BETA, gated) */}
-          {id && <AISiteBuilderGate projectId={id} />}
+          {/* Status da geração automática do site (self-hide se o projeto nunca passou pelo pipeline) */}
+          {id && <AIGenerationStatus projectId={id} canRegenerate />}
 
           {/* Conectar domínio próprio (aparece só depois do site publicado) */}
           {id && <DomainConnect projectId={id} />}
@@ -937,12 +936,4 @@ export const ProjectDetailPage = () => {
       </Tabs>
     </div>
   );
-};
-
-// Renderiza o status da geração por IA somente para usuários com a flag
-// `ai_site_builder` habilitada. Para todos os outros, é completamente invisível.
-const AISiteBuilderGate = ({ projectId }: { projectId: string }) => {
-  const { enabled, loading } = useFeatureFlag('ai_site_builder');
-  if (loading || !enabled) return null;
-  return <AIGenerationStatus projectId={projectId} canRegenerate />;
 };
