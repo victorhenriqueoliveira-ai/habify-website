@@ -61,6 +61,7 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ isOpen, onClose, project 
                     </a>
                     <button
                       onClick={onClose}
+                      aria-label="Fechar"
                       className="p-2 hover:bg-muted rounded-lg transition-colors"
                     >
                       <X className="w-6 h-6" />
@@ -75,6 +76,10 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ isOpen, onClose, project 
                     <img
                       src={project.image}
                       alt={project.name}
+                      width={1600}
+                      height={738}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                     />
                   </div>

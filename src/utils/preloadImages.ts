@@ -2,7 +2,6 @@
 export const preloadCriticalImages = () => {
   const criticalImages = [
     { src: '/Header-background.webp', priority: 'high' },
-    { src: '/Foto1.png', priority: 'high' },
   ];
 
   criticalImages.forEach(({ src, priority }) => {

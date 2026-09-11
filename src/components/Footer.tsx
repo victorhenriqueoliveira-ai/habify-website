@@ -25,10 +25,12 @@ const Footer = () => {
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <img 
-                  src="/logotipo_habify.png" 
-                  alt="HabiFy" 
-                  className="h-8 w-auto brightness-0 invert" 
+                <img
+                  src="/logotipo_habify.png"
+                  alt="HabiFy"
+                  width={38}
+                  height={32}
+                  className="h-8 w-auto brightness-0 invert"
                 />
               </div>
               <div>
