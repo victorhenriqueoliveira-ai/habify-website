@@ -2,13 +2,20 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Globe, ShieldCheck, Zap } from 'lucide-react';
+import { Check, Sparkles, Globe, ShieldCheck, Zap, Wrench } from 'lucide-react';
 import { usePlans } from '@/hooks/usePlans';
 import { BUSINESS } from '@/config/business';
+import { useAuth } from '@/contexts/AuthContext';
 
+const maintenanceBenefits = [
+  'Atualizações de textos, fotos e informações',
+  'Correções de bugs e suporte técnico dedicado',
+  'Backup regular dos seus dados',
+];
 
 const PricingSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { plans, loading, error } = usePlans();
 
   const handleSelectPlan = (planId: string) => {
@@ -221,10 +228,39 @@ const PricingSection = () => {
             <p className="text-sm text-muted-foreground">
               Pagamento 100% seguro via AbacatePay (PIX e Cartão)
             </p>
-            <p className="text-xs text-muted-foreground italic">
-              Manutenção mensal disponível por R$ 54,90/mês após a entrega do site.
-            </p>
           </div>
+
+          {/* Manutenção mensal — add-on após a entrega */}
+          <Card className="max-w-3xl mx-auto mt-8 border-border/60">
+            <CardContent className="flex flex-col sm:flex-row items-center gap-6 p-6 sm:p-8">
+              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Wrench className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="font-bold text-foreground">Manutenção mensal (opcional)</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {maintenanceBenefits.join(' · ')}
+                </p>
+              </div>
+              <div className="flex-shrink-0 text-center sm:text-right">
+                <div className="text-2xl font-bold text-primary">R$ 54,90<span className="text-sm font-normal text-muted-foreground">/mês</span></div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    if (user) {
+                      navigate('/admin/my-maintenances');
+                    } else {
+                      window.open(BUSINESS.whatsapp.url('Olá! Gostaria de saber mais sobre a manutenção mensal da Habify.'), '_blank');
+                    }
+                  }}
+                >
+                  {user ? 'Contratar' : 'Saiba mais'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </>

@@ -1,6 +1,7 @@
 import React from "react";
-import { UserX, ShieldAlert, Lock, MessagesSquare, ArrowRight } from "lucide-react";
+import { UserX, ShieldAlert, Lock, MessagesSquare, ArrowRight, TriangleAlert } from "lucide-react";
 import { trackCTAClick } from "@/utils/analytics";
+import { CornerMarks } from "@/components/shared/DesignAccents";
 
 const problems = [
   {
@@ -35,15 +36,13 @@ const problems = [
 
 const ProblemsSection = () => {
   return (
-    <section className="py-16 sm:py-24 bg-background relative" id="problems">
-      <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
-        <div className="flex items-center gap-4 mb-10 sm:mb-16">
-          <div className="flex-1 h-[1px] bg-border"></div>
-        </div>
-        
+    <section className="relative overflow-hidden bg-dot-grid py-16 sm:py-24" id="problems">
+      <CornerMarks />
+      <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center mb-12 sm:mb-16 animate-on-scroll">
-          <span className="inline-block px-4 py-2 mb-6 text-sm font-semibold bg-destructive/10 text-destructive rounded-full border border-destructive/20">
-            ⚠️ Realidade do mercado
+          <span className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-semibold bg-destructive/10 text-destructive rounded-full border border-destructive/20">
+            <TriangleAlert className="h-4 w-4" />
+            Realidade do mercado
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-display font-black leading-tight mb-6">
             Seus concorrentes já têm site.{" "}

@@ -240,10 +240,16 @@
 
 /* Grid pattern background */
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* Dotted texture background — subtle blueprint/drafting-canvas feel */
+.bg-dot-grid {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.14) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
 /* Swiper customization */

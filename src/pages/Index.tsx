@@ -12,15 +12,11 @@ const StickyCTABar = lazy(() => import("@/components/mobile/StickyCTABar"));
 const StickyDesktopCTA = lazy(() => import("@/components/conversion/StickyDesktopCTA"));
 const ProblemsSection = lazy(() => import("@/components/HumanoidSection"));
 const PortfolioShowcasePremium = lazy(() => import("@/components/PortfolioShowcasePremium"));
-const Testimonials = lazy(() => import("@/components/Testimonials"));
-const TechnologyExplainer = lazy(() => import("@/components/TechnologyExplainer"));
+const WhyHabify = lazy(() => import("@/components/WhyHabify"));
 const LeadCaptureFlow = lazy(() => import("@/components/LeadCaptureFlow"));
-const TrafficExplainer = lazy(() => import("@/components/TrafficExplainer"));
-const ProjectTypesExplainer = lazy(() => import("@/components/ProjectTypesExplainer"));
 const FAQSection = lazy(() => import("@/components/FAQSection"));
 const SEOContent = lazy(() => import("@/components/SEOContent"));
 const PricingSection = lazy(() => import("@/components/PricingSection"));
-const MaintenanceSection = lazy(() => import("@/components/MaintenanceSection"));
 const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
 const Footer = lazy(() => import("@/components/Footer"));
 const FloatingWhatsAppButton = lazy(() => import("@/components/FloatingWhatsAppButton"));
@@ -102,26 +98,14 @@ const Index = () => {
         <Suspense fallback={<div className="min-h-[600px] bg-background" />}>
           <PortfolioShowcasePremium />
         </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <Testimonials />
-        </Suspense>
         <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
           <LeadCaptureFlow />
         </Suspense>
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <TechnologyExplainer />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <ProjectTypesExplainer />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <TrafficExplainer />
+          <WhyHabify />
         </Suspense>
         <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
           <PricingSection />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <MaintenanceSection />
         </Suspense>
         <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
           <SEOContent />

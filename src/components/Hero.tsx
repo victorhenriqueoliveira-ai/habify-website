@@ -59,7 +59,7 @@ const Hero = () => {
       style={{
         backgroundImage: 'url("/Header-background.webp")',
         backgroundPosition: 'center 30%', 
-        padding: isMobile ? '120px 16px 60px' : '140px 20px 80px'
+        padding: isMobile ? '120px 16px 60px' : '80px 20px 20px'
       }}
     >
       {/* Animated Background Gradients with Parallax */}
@@ -78,18 +78,18 @@ const Hero = () => {
       <div className="container px-4 sm:px-6 lg:px-8 relative z-10" ref={containerRef}>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center">
           {/* Left Column - Content */}
-          <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8">
+          <div className="w-full lg:w-1/2 space-y-3 lg:space-y-4">
             {/* Trust Badges Above Title */}
             <div className="flex flex-wrap gap-3 sm:gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Zap className="w-4 h-4 text-pulse-500" />
                 <span className="text-xs sm:text-sm font-semibold text-foreground">Site pronto na hora</span>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <Trophy className="w-4 h-4 text-pulse-500" />
                 <span className="text-xs sm:text-sm font-semibold text-foreground">100% Satisfação</span>
               </div>
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-background/60 backdrop-blur-md border border-pulse-500/20 shadow-lg">
                 <TrendingUp className="w-4 h-4 text-pulse-500" />
                 <span className="text-xs sm:text-sm font-semibold text-foreground">ROI Garantido</span>
               </div>
@@ -151,11 +151,11 @@ const Hero = () => {
             
             {/* Premium CTA — Impossible to Ignore */}
             <div 
-              className="flex flex-col items-center sm:items-start gap-3 opacity-0 animate-fade-in" 
+              className="flex flex-col items-center sm:items-start gap-2 opacity-0 animate-fade-in" 
               style={{ animationDelay: "0.7s" }}
             >
               <MagneticButton 
-                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-extrabold rounded-2xl border-2 border-[#FFB800]/40 bg-gradient-to-r from-[#FE5C02] via-[#FF8C00] to-[#FE5C02] bg-[length:300%_auto] text-white px-12 sm:px-16 py-5 sm:py-6 text-xl sm:text-2xl shadow-[0_0_40px_rgba(254,92,2,0.7),0_0_80px_rgba(254,92,2,0.3)] hover:shadow-[0_0_60px_rgba(254,92,2,0.9),0_0_120px_rgba(254,92,2,0.4)] transition-all duration-300 hover:scale-[1.08] focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-cta-glow"
+                className="group relative overflow-hidden flex items-center justify-center w-full sm:w-auto text-center font-extrabold rounded-2xl border-2 border-[#FFB800]/40 bg-gradient-to-r from-[#FE5C02] via-[#FF8C00] to-[#FE5C02] bg-[length:300%_auto] text-white px-12 sm:px-16 py-4 sm:py-5 text-xl sm:text-2xl shadow-[0_0_40px_rgba(254,92,2,0.7),0_0_80px_rgba(254,92,2,0.3)] hover:shadow-[0_0_60px_rgba(254,92,2,0.9),0_0_120px_rgba(254,92,2,0.4)] transition-all duration-300 hover:scale-[1.08] focus:outline-none focus:ring-4 focus:ring-pulse-500/50 animate-cta-glow"
                 onClick={() => {
                   trackCTAClick('Criar meu site agora', 'hero-section');
                   window.location.href = '#plans';
