@@ -61,7 +61,13 @@ const UserMaintenancesPage = () => {
   };
 
   const activeMaintenances = getActiveMaintenances();
-  const completedProjects = projects.filter(p => p.status === 'completed');
+  // Elegível pra manutenção é "site no ar", não só status === 'completed':
+  // projetos gerados automaticamente ficam em 'in_review' até um admin
+  // aprovar manualmente, e sem isso o cliente nunca via a opção de comprar
+  // manutenção pro próprio site que já está funcionando.
+  const completedProjects = projects.filter(
+    (p) => ['completed', 'approved', 'in_review'].includes(p.status) || !!p.landingPageUrl
+  );
 
   if (loading) {
     return (

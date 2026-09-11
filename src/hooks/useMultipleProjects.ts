@@ -1,5 +1,10 @@
 import { useState } from 'react';
 
+export interface FloorPlanData {
+  name: string;
+  file: File;
+}
+
 export interface PropertyData {
   title: string;
   cep?: string; // CEP para busca automática de endereço
@@ -18,6 +23,7 @@ export interface PropertyData {
   description: string;
   amenities: string[];
   photos: File[];
+  floorPlans: FloorPlanData[];
   id?: string;
 }
 
@@ -39,6 +45,7 @@ export const useMultipleProjects = () => {
     description: '',
     amenities: [],
     photos: [],
+    floorPlans: [],
   }]);
 
   const addProperty = (maxProperties: number = 5) => {
@@ -60,6 +67,7 @@ export const useMultipleProjects = () => {
         description: '',
         amenities: [],
         photos: [],
+        floorPlans: [],
       }]);
     }
   };
@@ -94,6 +102,7 @@ export const useMultipleProjects = () => {
       description: '',
       amenities: [],
       photos: [],
+      floorPlans: [],
     }]);
   };
 

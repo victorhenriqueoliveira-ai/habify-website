@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.recheck-pending-domains]
 verify_jwt = false
+
+[functions.grant-maintenance]
+verify_jwt = false

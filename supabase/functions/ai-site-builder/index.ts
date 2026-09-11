@@ -455,6 +455,10 @@ serve(async (req) => {
         vercel_project_id: vercelProjectId,
         vercel_deployment_url: vercelDeploymentUrl,
         vercel_custom_domain: vercelCustomDomainToSave,
+        // Campo legado usado em vários lugares do painel ("ver site") — sem
+        // isso, projetos gerados automaticamente nunca preenchem o link que
+        // essas telas leem, mesmo com o site já no ar.
+        ...(vercelDeploymentUrl ? { landing_page_url: vercelDeploymentUrl } : {}),
         ...(project.status !== 'rejected' ? { status: 'in_review' } : {}),
       })
       .eq('id', projectId);

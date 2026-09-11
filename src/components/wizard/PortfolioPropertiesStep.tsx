@@ -5,8 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Upload, X, MapPin, Loader2 } from 'lucide-react';
-import { useMultipleProjects, PropertyData } from '@/hooks/useMultipleProjects';
+import { Plus, Trash2, Upload, X, MapPin, Loader2, LayoutPanelLeft } from 'lucide-react';
+import { useMultipleProjects, PropertyData, FloorPlanData } from '@/hooks/useMultipleProjects';
 import { formatCurrency } from '@/lib/validations';
 import { usePropertyCepSearch } from '@/hooks/usePropertyCepSearch';
 import { toast } from 'sonner';
@@ -75,6 +75,7 @@ export const PortfolioPropertiesStep = ({
           description: '',
           amenities: [],
           photos: [],
+          floorPlans: [],
         },
       ]);
     }
@@ -112,6 +113,31 @@ export const PortfolioPropertiesStep = ({
     const currentPhotos = properties[propertyIndex].photos;
     const updatedPhotos = currentPhotos.filter((_, i) => i !== photoIndex);
     updateProperty(propertyIndex, 'photos', updatedPhotos);
+  };
+
+  const handleFloorPlanUpload = (index: number, files: FileList | null) => {
+    if (!files) return;
+    const currentPlans = properties[index].floorPlans;
+    const newPlans: FloorPlanData[] = Array.from(files).map((file) => ({ name: '', file }));
+    updateProperty(index, 'floorPlans', [...currentPlans, ...newPlans]);
+  };
+
+  const removeFloorPlan = (propertyIndex: number, planIndex: number) => {
+    const currentPlans = properties[propertyIndex].floorPlans;
+    updateProperty(
+      propertyIndex,
+      'floorPlans',
+      currentPlans.filter((_, i) => i !== planIndex),
+    );
+  };
+
+  const renameFloorPlan = (propertyIndex: number, planIndex: number, name: string) => {
+    const currentPlans = properties[propertyIndex].floorPlans;
+    updateProperty(
+      propertyIndex,
+      'floorPlans',
+      currentPlans.map((plan, i) => (i === planIndex ? { ...plan, name } : plan)),
+    );
   };
 
   const toggleAmenity = (propertyIndex: number, amenity: string) => {
@@ -491,6 +517,70 @@ export const PortfolioPropertiesStep = ({
                       </Label>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Plantas — separadas das fotos gerais, cada uma com nome próprio */}
+              <div>
+                <Label>
+                  Plantas do Imóvel
+                  <span className="text-muted-foreground text-xs ml-2">
+                    (opcional — aparecem numa seção separada das fotos no site)
+                  </span>
+                </Label>
+                <div className="mt-3 space-y-3">
+                  {property.floorPlans.length > 0 && (
+                    <div className="space-y-3">
+                      {property.floorPlans.map((plan, planIndex) => (
+                        <div key={planIndex} className="flex items-center gap-3 rounded-lg border p-3">
+                          <img
+                            src={URL.createObjectURL(plan.file)}
+                            alt={plan.name || `Planta ${planIndex + 1}`}
+                            className="w-20 h-20 object-cover rounded border shrink-0"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor={`floorplan-name-${index}-${planIndex}`} className="text-xs text-muted-foreground">
+                              Nome da planta
+                            </Label>
+                            <Input
+                              id={`floorplan-name-${index}-${planIndex}`}
+                              value={plan.name}
+                              onChange={(e) => renameFloorPlan(index, planIndex, e.target.value)}
+                              placeholder="Ex: Planta 2 quartos, Cobertura duplex..."
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeFloorPlan(index, planIndex)}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div>
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      onChange={(e) => handleFloorPlanUpload(index, e.target.files)}
+                      className="hidden"
+                      id={`floorplans-${index}`}
+                    />
+                    <Label
+                      htmlFor={`floorplans-${index}`}
+                      className="flex items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <LayoutPanelLeft className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Adicionar plantas ({property.floorPlans.length})
+                      </span>
+                    </Label>
+                  </div>
                 </div>
               </div>
             </CardContent>

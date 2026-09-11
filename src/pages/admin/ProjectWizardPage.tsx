@@ -322,7 +322,7 @@ const ProjectWizardPage = () => {
           const propertiesWithUrls = await Promise.all(
             portfolioProperties.map(async (prop) => {
               const photoUrls: string[] = [];
-              
+
               // Upload photos if they are File objects
               for (const photo of prop.photos) {
                 if (photo instanceof File) {
@@ -336,9 +336,18 @@ const ProjectWizardPage = () => {
                   photoUrls.push(photo);
                 }
               }
-              
+
               // console.log(`Uploaded ${photoUrls.length} photos for property: ${prop.title}`);
-              
+
+              // Upload das plantas — separadas das fotos gerais, cada uma com o nome digitado no wizard.
+              const floorPlans: { name: string; imageUrl: string }[] = [];
+              for (const plan of prop.floorPlans || []) {
+                const fileUrls = await uploadMultipleFiles([plan.file], 'project-photos', `properties/${projectId}/floor-plans`);
+                if (fileUrls.length > 0) {
+                  floorPlans.push({ name: plan.name?.trim() || 'Planta', imageUrl: fileUrls[0] });
+                }
+              }
+
               return {
                 project_id: projectId,
                 title: prop.title,
@@ -357,6 +366,7 @@ const ProjectWizardPage = () => {
                 description: prop.description || null,
                 amenities: prop.amenities || [],
                 photos: photoUrls,
+                floor_plans: floorPlans,
               };
             })
           );
