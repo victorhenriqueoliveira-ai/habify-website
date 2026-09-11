@@ -43,6 +43,7 @@ import { Label } from '@/components/ui/label';
 const statusColors = {
   pending: 'secondary',
   in_progress: 'default',
+  in_review: 'outline',
   completed: 'default',
   approved: 'default',
   rejected: 'destructive',
@@ -51,6 +52,7 @@ const statusColors = {
 const statusLabels = {
   pending: 'Pendente',
   in_progress: 'Em Andamento',
+  in_review: 'Em Revisão',
   completed: 'Concluído',
   approved: 'Aprovado',
   rejected: 'Rejeitado',

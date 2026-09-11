@@ -1,6 +1,6 @@
 export type UserRole = 'user' | 'admin' | 'dev';
 
-export type ProjectStatus = 'pending' | 'in_progress' | 'completed' | 'approved' | 'rejected';
+export type ProjectStatus = 'pending' | 'in_progress' | 'in_review' | 'completed' | 'approved' | 'rejected';
 
 export interface User {
   id: string;

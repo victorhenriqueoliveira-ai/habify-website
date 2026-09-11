@@ -11,7 +11,8 @@ import {
   CreditCard,
   Package,
   Wrench,
-  Bell
+  Bell,
+  Route
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { motion } from 'framer-motion';
@@ -72,6 +73,12 @@ const menuItems = [
     title: 'Solicitações',
     url: '/admin/maintenance-requests',
     icon: Wrench,
+    roles: ['admin', 'dev'],
+  },
+  {
+    title: 'Pipeline de Geração',
+    url: '/admin/pipeline-logs',
+    icon: Route,
     roles: ['admin', 'dev'],
   },
   {
