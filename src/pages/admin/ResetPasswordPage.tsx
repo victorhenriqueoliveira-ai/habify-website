@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Loader2, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 
 export const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
@@ -86,45 +86,38 @@ export const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader className="text-center space-y-4 pb-6">
-          <div className="flex justify-center">
-            <img 
-              src="/logotipo_habify.png" 
-              alt="Habify" 
-              className="h-16 w-auto"
-            />
-          </div>
-          <div>
-            <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
-              Nova Senha
-            </CardTitle>
-            <CardDescription className="text-base mt-2">
-              Crie uma senha forte e segura para sua conta
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
+    <AuthLayout>
+      <div className="space-y-2 text-center lg:text-left">
+        <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground">
+          Nova senha
+        </h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Crie uma senha forte e segura para sua conta
+        </p>
+      </div>
+      <div className="mt-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
                 Nova Senha
               </Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 h-11"
+                  className="pl-10 pr-10 h-11"
+                  autoComplete="new-password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -192,19 +185,22 @@ export const ResetPasswordPage = () => {
                 Confirmar Senha
               </Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pr-10 h-11"
+                  className="pl-10 pr-10 h-11"
+                  autoComplete="new-password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -226,8 +222,7 @@ export const ResetPasswordPage = () => {
               {loading ? 'Atualizando...' : 'Redefinir Senha'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </AuthLayout>
   );
 };
