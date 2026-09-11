@@ -7,28 +7,28 @@ const steps = [
     number: "1",
     title: "Cliente Encontra Seu Site",
     description: "Via Google, Instagram, Facebook ou links diretos. Seu site está disponível 24 horas por dia, 7 dias por semana.",
-    color: "from-blue-500 to-blue-600"
+    color: "from-info to-info/80"
   },
   {
     icon: Eye,
     number: "2",
     title: "Navega e se Interessa",
     description: "Fotos profissionais em alta resolução, descrição completa do imóvel, localização e todos os detalhes que importam.",
-    color: "from-purple-500 to-purple-600"
+    color: "from-primary to-primary/80"
   },
   {
     icon: MousePointerClick,
     number: "3",
     title: "Clica no Botão de CTA",
     description: "Botões estratégicos de WhatsApp posicionados em pontos-chave da página. Um clique e o cliente inicia conversa direta com você.",
-    color: "from-orange-500 to-orange-600"
+    color: "from-warning to-warning/80"
   },
   {
     icon: MessageCircle,
     number: "4",
     title: "Conversa Direta no WhatsApp",
     description: "O cliente é direcionado automaticamente para seu WhatsApp, já demonstrando interesse. Pronto para você fechar negócio!",
-    color: "from-green-500 to-green-600"
+    color: "from-success to-success/80"
   }
 ];
 
@@ -37,7 +37,7 @@ const LeadCaptureFlow = () => {
     <section className="py-16 sm:py-24 bg-gradient-to-b from-muted/20 to-background" id="how-it-works">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4 mb-8 sm:mb-16">
-          <div className="flex-1 h-[1px] bg-gray-300"></div>
+          <div className="flex-1 h-[1px] bg-border"></div>
         </div>
         {/* Header */}
         <motion.div 
@@ -125,22 +125,22 @@ const LeadCaptureFlow = () => {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl font-bold text-foreground mb-2">
-                  Funciona Mesmo Você Dormindo 💤
+                  Funciona Mesmo Você Dormindo
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   Seu site captura leads <strong>24 horas por dia, 7 dias por semana</strong>. Cliente interessado às 2h da manhã? Sem problema! O botão CTA captura os dados e você recebe a notificação no WhatsApp para atender quando acordar.
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-border">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full shadow-sm border border-border">
                     <Clock className="w-4 h-4 text-primary" />
                     <span className="text-sm font-semibold">24/7 Online</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-border">
-                    <MessageCircle className="w-4 h-4 text-green-600" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full shadow-sm border border-border">
+                    <MessageCircle className="w-4 h-4 text-success" />
                     <span className="text-sm font-semibold">Notificação Instantânea</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-border">
-                    <MousePointerClick className="w-4 h-4 text-blue-600" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full shadow-sm border border-border">
+                    <MousePointerClick className="w-4 h-4 text-info" />
                     <span className="text-sm font-semibold">Conversão Otimizada</span>
                   </div>
                 </div>
