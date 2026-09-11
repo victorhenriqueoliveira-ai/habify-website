@@ -36,6 +36,7 @@ import { ProjectChat } from '@/components/ProjectChat';
 import { ProjectPlanInfo } from '@/components/ProjectPlanInfo';
 import { AIGenerationStatus } from '@/components/admin/AIGenerationStatus';
 import { DomainConnect } from '@/components/admin/DomainConnect';
+import { GrantMaintenanceCard } from '@/components/admin/GrantMaintenanceCard';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -648,6 +649,9 @@ export const ProjectDetailPage = () => {
 
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}
+
+          {/* Conceder manutenção sem cobrança (só dev/admin) */}
+          {id && isAdmin && <GrantMaintenanceCard projectId={id} />}
 
           {/* Domain Section */}
           {(project.wizardData?.desiredDomain || project.desired_domain) && (

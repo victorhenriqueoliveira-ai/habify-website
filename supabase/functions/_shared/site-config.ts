@@ -48,6 +48,7 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
       description: p.description ?? undefined,
       amenities: Array.isArray(p.amenities) ? p.amenities : [],
       photos: Array.isArray(p.photos) ? p.photos : [],
+      floorPlans: Array.isArray(p.floor_plans) ? p.floor_plans : [],
     };
   });
 
