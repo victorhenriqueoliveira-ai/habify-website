@@ -76,16 +76,6 @@ serve(async (req) => {
 
     await setStatus('queued');
 
-    // Defesa em profundidade: a UI já esconde isso atrás da flag, o hook
-    // já bloqueia — a edge function revalida antes de fazer qualquer coisa.
-    const { data: hasFlag } = await supabaseService.rpc('has_feature_flag', {
-      _user_id: requestingUserId,
-      _flag: 'ai_site_builder',
-    });
-    if (!hasFlag) {
-      throw new Error('Usuário não tem a feature flag ai_site_builder habilitada.');
-    }
-
     const githubToken = Deno.env.get('GITHUB_PAT');
     if (!githubToken) {
       throw new Error('GITHUB_PAT não configurado nos secrets da função.');
@@ -245,6 +235,9 @@ serve(async (req) => {
     // regravar silenciosamente uma URL antiga/errada por cima.
     let vercelProjectId: string | null = project.vercel_project_id ?? null;
     let vercelDeploymentUrl: string | null = null;
+    // true só quando a Vercel confirma readyState === 'READY' — controla se
+    // o e-mail de "site pronto" é enviado lá na frente.
+    let deploymentConfirmed = false;
     // Esse aqui pode manter o valor salvo: só é atualizado se o attach de
     // domínio for bem-sucedido nesta execução, nunca fica "errado".
     let vercelCustomDomainToSave: string | null = project.vercel_custom_domain ?? null;
@@ -345,6 +338,7 @@ serve(async (req) => {
       // Criar o Project com gitRepository NÃO dispara build sozinho quando o
       // repo já tinha commits antes do link (não existe "push novo" pra
       // acionar o webhook) — sem isso o Project fica sem nenhum deployment.
+      let deploymentId: string | null = null;
       if (vercelProjectId) {
         const deployResponse = await fetch(`https://api.vercel.com/v13/deployments${vercelQuery}`, {
           method: 'POST',
@@ -362,6 +356,9 @@ serve(async (req) => {
         if (!deployResponse.ok) {
           const errText = await deployResponse.text();
           console.error('[ai-site-builder] Falha ao disparar deploy inicial na Vercel:', errText);
+        } else {
+          const deployData = await deployResponse.json();
+          deploymentId = (deployData.id as string) ?? null;
         }
       }
 
@@ -395,9 +392,56 @@ serve(async (req) => {
           });
         }
       }
+
+      // ---- 5b. Espera o build da Vercel terminar de verdade ----
+      // Sem isso, "done" só significava "disparamos o deploy" — um erro de
+      // build (ex: site.config.json com um valor que quebra o template)
+      // ficava invisível e o cliente recebia o e-mail de "site pronto"
+      // apontando pra um link com erro. Timeout não é tratado como falha:
+      // a Vercel continua buildando por conta própria mesmo se pararmos de
+      // esperar aqui; só deixamos de confirmar e pulamos o e-mail.
+      if (deploymentId) {
+        const POLL_INTERVAL_MS = 4000;
+        const MAX_ATTEMPTS = 25; // ~100s no total, dentro do limite de execução da edge function
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+          const statusResponse = await fetch(
+            `https://api.vercel.com/v13/deployments/${deploymentId}${vercelQuery}`,
+            { headers: { Authorization: `Bearer ${vercelToken}` } },
+          );
+          if (!statusResponse.ok) break;
+
+          const statusData = await statusResponse.json();
+          const readyState = statusData.readyState as string | undefined;
+
+          if (readyState === 'READY') {
+            deploymentConfirmed = true;
+            break;
+          }
+          if (readyState === 'ERROR' || readyState === 'CANCELED') {
+            throw new Error(
+              `O build do site falhou na Vercel (${readyState}). Confira os logs em https://vercel.com/deployments/${deploymentId}`,
+            );
+          }
+          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        }
+
+        if (!deploymentConfirmed) {
+          console.warn('[ai-site-builder] Build ainda não confirmado como pronto após o tempo de espera — seguindo sem enviar o e-mail de "site pronto".');
+          await supabaseService.from('ai_generation_logs').insert({
+            project_id: projectId,
+            step: 'deploying',
+            status: 'ok',
+            payload: { warning: 'Deploy ainda não confirmado como READY após o tempo de espera — verificar manualmente.' },
+          });
+        }
+      }
     }
 
     // ---- 6. Concluído ----
+    // Também fecha o status legado (fila manual "Aprovar → Finalizar") —
+    // sem isso o projeto fica preso em "Pendente" nas estatísticas e nos
+    // filtros do painel mesmo com o site já gerado e no ar. Só não mexe se
+    // alguém já rejeitou o projeto manualmente por outro motivo.
     await supabaseService
       .from('projects')
       .update({
@@ -408,6 +452,7 @@ serve(async (req) => {
         vercel_project_id: vercelProjectId,
         vercel_deployment_url: vercelDeploymentUrl,
         vercel_custom_domain: vercelCustomDomainToSave,
+        ...(project.status !== 'rejected' ? { status: 'completed' } : {}),
       })
       .eq('id', projectId);
 
@@ -418,7 +463,7 @@ serve(async (req) => {
       payload: { repo_url: repoUrl, repo_name: repoFullName, vercel_deployment_url: vercelDeploymentUrl },
     });
 
-    if (vercelDeploymentUrl && wizardData.contactEmail) {
+    if (vercelDeploymentUrl && wizardData.contactEmail && deploymentConfirmed) {
       const emailResult = await supabaseService.functions.invoke('send-site-ready', {
         body: {
           userName: wizardData.ownerName || companyName,

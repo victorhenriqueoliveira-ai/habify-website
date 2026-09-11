@@ -13,7 +13,6 @@ import { DomainStep } from '@/components/wizard/DomainStep';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlans } from '@/hooks/useUserPlans';
-import { checkFeatureFlag } from '@/hooks/useFeatureFlag';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
@@ -426,18 +425,16 @@ const ProjectWizardPage = () => {
         // Plan is already consumed inside createProject() for regular users
         // No need to call usePlanForProject again here
 
-        // [BETA] AI Site Builder — dispara só agora, depois que os imóveis
+        // AI Site Builder — dispara só agora, depois que os imóveis
         // (portfolio_properties) já foram gravados acima. Disparar antes
         // disso é uma corrida real: a function lê portfolio_properties e
         // gera o site com properties: [] se ainda não existir nenhuma linha.
-        const aiSiteBuilderEnabled = await checkFeatureFlag(userId, 'ai_site_builder');
-        if (aiSiteBuilderEnabled) {
-          supabase.functions
-            .invoke('ai-site-builder', {
-              body: { project_id: projectId, requesting_user_id: userId },
-            })
-            .catch((err) => console.warn('[ai-site-builder] invoke failed:', err));
-        }
+        // Caminho padrão pra todo corretor — não depende mais de feature flag.
+        supabase.functions
+          .invoke('ai-site-builder', {
+            body: { project_id: projectId, requesting_user_id: userId },
+          })
+          .catch((err) => console.warn('[ai-site-builder] invoke failed:', err));
 
         // Send project confirmation email
         try {

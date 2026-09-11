@@ -186,7 +186,7 @@ export const useProjects = () => {
 
       toast.success('Projeto criado com sucesso!');
 
-      // [BETA] AI Site Builder: NÃO dispara aqui de propósito. Esta função
+      // AI Site Builder: NÃO dispara aqui de propósito. Esta função
       // só cria a linha em `projects` — o ProjectWizardPage ainda vai inserir
       // os imóveis em `portfolio_properties` (com upload de fotos) depois
       // que este `createProject` retornar. Disparar o ai-site-builder aqui

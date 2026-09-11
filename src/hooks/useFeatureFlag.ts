@@ -10,7 +10,7 @@ export interface UseFeatureFlagResult {
  * Verifica se o usuário autenticado tem uma feature flag ativa.
  *
  * Uso:
- *   const { enabled, loading } = useFeatureFlag('ai_site_builder');
+ *   const { enabled, loading } = useFeatureFlag('minha_flag');
  *   if (loading) return null;
  *   if (!enabled) return null;
  *   return <NewExperimentalUI />;
@@ -63,9 +63,8 @@ export const useFeatureFlag = (flagName: string): UseFeatureFlagResult => {
 };
 
 /**
- * Versão imperativa (fora de componentes React).
- * Usado, por exemplo, em `useProjects.createProject` para gate do disparo
- * da edge function `ai-site-builder`.
+ * Versão imperativa (fora de componentes React), pra usar em handlers e
+ * outros pontos fora do corpo de um componente.
  */
 export const checkFeatureFlag = async (
   userId: string,
