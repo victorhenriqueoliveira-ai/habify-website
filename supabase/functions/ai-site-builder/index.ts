@@ -440,8 +440,11 @@ serve(async (req) => {
     // ---- 6. Concluído ----
     // Também fecha o status legado (fila manual "Aprovar → Finalizar") —
     // sem isso o projeto fica preso em "Pendente" nas estatísticas e nos
-    // filtros do painel mesmo com o site já gerado e no ar. Só não mexe se
-    // alguém já rejeitou o projeto manualmente por outro motivo.
+    // filtros do painel mesmo com o site já gerado e no ar. Vai pra
+    // "in_review" (não direto pra "completed"): o pipeline confirmou que o
+    // repositório e o deploy existem, mas um humano ainda precisa validar o
+    // resultado antes de considerar o projeto realmente concluído. Só não
+    // mexe se alguém já rejeitou o projeto manualmente por outro motivo.
     await supabaseService
       .from('projects')
       .update({
@@ -452,7 +455,7 @@ serve(async (req) => {
         vercel_project_id: vercelProjectId,
         vercel_deployment_url: vercelDeploymentUrl,
         vercel_custom_domain: vercelCustomDomainToSave,
-        ...(project.status !== 'rejected' ? { status: 'completed' } : {}),
+        ...(project.status !== 'rejected' ? { status: 'in_review' } : {}),
       })
       .eq('id', projectId);
 

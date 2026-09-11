@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-type SectionTone = 'warning' | 'info' | 'success';
+type SectionTone = 'warning' | 'info' | 'review' | 'success';
 
 const toneClasses: Record<SectionTone, { border: string; icon: string; badge: string }> = {
   warning: {
@@ -19,6 +19,11 @@ const toneClasses: Record<SectionTone, { border: string; icon: string; badge: st
     border: 'border-info/30',
     icon: 'text-info',
     badge: 'bg-info/10 text-info',
+  },
+  review: {
+    border: 'border-primary/30',
+    icon: 'text-primary',
+    badge: 'bg-primary/10 text-primary',
   },
   success: {
     border: 'border-success/30',

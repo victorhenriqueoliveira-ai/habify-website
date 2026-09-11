@@ -6,6 +6,7 @@ import { ProjectStatusSection } from '@/components/admin/ProjectStatusSection';
 import {
   Clock,
   Hammer,
+  Search,
   CheckCircle2,
   Plus,
   ShoppingCart,
@@ -49,6 +50,7 @@ export const MyProjectsPage = () => {
 
   const pendingProjects = userProjects.filter(p => p.status === 'pending');
   const inProgressProjects = userProjects.filter(p => p.status === 'in_progress');
+  const inReviewProjects = userProjects.filter(p => p.status === 'in_review');
   const completedProjects = userProjects.filter(p => p.status === 'completed' || p.status === 'approved');
 
   const getUserName = (userId: string) => {
@@ -149,7 +151,7 @@ export const MyProjectsPage = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -174,6 +176,15 @@ export const MyProjectsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-info">{inProgressProjects.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
+            <Search className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{inReviewProjects.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -207,6 +218,18 @@ export const MyProjectsPage = () => {
           title="Projetos Em Andamento"
           description="Projetos sendo desenvolvidos pela nossa equipe"
           projects={inProgressProjects}
+          showClientName={hasRole(['admin', 'dev'])}
+          getUserName={getUserName}
+          onViewDetails={(id) => navigate(`/admin/projects/${id}`)}
+          onOpenChat={(id) => navigate(`/admin/projects/${id}?tab=chat`)}
+        />
+
+        <ProjectStatusSection
+          icon={Search}
+          tone="review"
+          title="Projetos Em Revisão"
+          description="Site gerado automaticamente — aguardando conferência antes de finalizar"
+          projects={inReviewProjects}
           showClientName={hasRole(['admin', 'dev'])}
           getUserName={getUserName}
           onViewDetails={(id) => navigate(`/admin/projects/${id}`)}

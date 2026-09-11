@@ -21,6 +21,7 @@ import { Project, ProjectStatus } from '@/types/admin';
 const statusLabels = {
   pending: 'Pendente',
   in_progress: 'Em Andamento',
+  in_review: 'Em Revisão',
   completed: 'Concluído',
   approved: 'Aprovado',
   rejected: 'Rejeitado',
@@ -29,6 +30,7 @@ const statusLabels = {
 const statusColors = {
   pending: 'secondary',
   in_progress: 'default',
+  in_review: 'outline',
   completed: 'default',
   approved: 'default',
   rejected: 'destructive',
@@ -226,6 +228,7 @@ const NewProjectPage = () => {
                     <SelectContent>
                       <SelectItem value="pending">Pendente</SelectItem>
                       <SelectItem value="in_progress">Em Andamento</SelectItem>
+                      <SelectItem value="in_review">Em Revisão</SelectItem>
                       <SelectItem value="completed">Concluído</SelectItem>
                       <SelectItem value="approved">Aprovado</SelectItem>
                       <SelectItem value="rejected">Rejeitado</SelectItem>
@@ -253,7 +256,7 @@ const NewProjectPage = () => {
       {/* Projects Display */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -279,6 +282,16 @@ const NewProjectPage = () => {
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">
                   {userProjects.filter(p => p.status === 'in_progress').length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">🔎 Em Revisão</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  {userProjects.filter(p => p.status === 'in_review').length}
                 </div>
               </CardContent>
             </Card>
@@ -391,6 +404,53 @@ const NewProjectPage = () => {
                                 Chat
                               </Button>
                             </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* In Review Projects */}
+            {userProjects.filter(p => p.status === 'in_review').length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    🔎 Projetos Em Revisão ({userProjects.filter(p => p.status === 'in_review').length})
+                  </CardTitle>
+                  <CardDescription>
+                    Site gerado automaticamente — aguardando conferência antes de finalizar
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {userProjects.filter(p => p.status === 'in_review').map((project) => (
+                      <Card key={project.id} className="border-primary/30">
+                        <CardContent className="pt-4">
+                          <div className="space-y-2">
+                            <h3 className="font-medium">{project.title}</h3>
+                            {isDevOrAdmin && (
+                              <p className="text-sm text-muted-foreground">
+                                Cliente: {getUserName(project.userId)}
+                              </p>
+                            )}
+                            <p className="text-sm text-muted-foreground">{project.location || 'Local não definido'}</p>
+                            <div className="text-sm">
+                              <p className="text-muted-foreground">
+                                {format(new Date(project.createdAt), 'dd/MM/yyyy', { locale: ptBR })}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedProject(project)}
+                              className="w-full"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Ver Detalhes
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>

@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 const statusOptions = [
   { value: 'pending', label: 'Pendente' },
   { value: 'in_progress', label: 'Em Andamento' },
+  { value: 'in_review', label: 'Em Revisão' },
   { value: 'completed', label: 'Concluído' },
   { value: 'approved', label: 'Aprovado' },
   { value: 'rejected', label: 'Rejeitado' },

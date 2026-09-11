@@ -41,6 +41,7 @@ import { ProjectsTableSkeleton } from '@/components/ui/skeleton-loaders';
 const statusColors = {
   pending: 'secondary',
   in_progress: 'default',
+  in_review: 'outline',
   completed: 'default',
   approved: 'default',
   rejected: 'destructive',
@@ -49,6 +50,7 @@ const statusColors = {
 const statusLabels = {
   pending: 'Pendente',
   in_progress: 'Em Andamento',
+  in_review: 'Em Revisão',
   completed: 'Concluído',
   approved: 'Aprovado',
   rejected: 'Rejeitado',
@@ -136,7 +138,7 @@ export const ProjectsPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -162,6 +164,16 @@ export const ProjectsPage = () => {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {userProjects.filter(p => p.status === 'in_progress').length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">
+              {userProjects.filter(p => p.status === 'in_review').length}
             </div>
           </CardContent>
         </Card>
@@ -211,6 +223,9 @@ export const ProjectsPage = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedStatus('in_progress')}>
                   Em Andamento
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedStatus('in_review')}>
+                  Em Revisão
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedStatus('completed')}>
                   Concluídos
@@ -343,12 +358,29 @@ export const ProjectsPage = () => {
                                   </>
                                 )}
                                 {project.status === 'in_progress' && (
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleStatusChange(project.id, 'completed')}
                                   >
                                     <CheckCircle className="mr-2 h-4 w-4" />
                                     Finalizar
                                   </DropdownMenuItem>
+                                )}
+                                {project.status === 'in_review' && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(project.id, 'completed')}
+                                    >
+                                      <CheckCircle className="mr-2 h-4 w-4" />
+                                      Aprovar revisão
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(project.id, 'rejected')}
+                                      className="text-red-600"
+                                    >
+                                      <XCircle className="mr-2 h-4 w-4" />
+                                      Rejeitar
+                                    </DropdownMenuItem>
+                                  </>
                                 )}
                               </>
                             )}

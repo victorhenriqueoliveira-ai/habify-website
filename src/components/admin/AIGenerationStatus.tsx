@@ -4,8 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Github, Loader2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Github, Loader2, CheckCircle2, AlertCircle, Sparkles, RefreshCw, ExternalLink, Route } from 'lucide-react';
 import { toast } from 'sonner';
+import { PipelineTimeline } from './PipelineTimeline';
 
 export type AIGenerationStatusValue =
   | 'idle'
@@ -66,6 +73,7 @@ const isInProgress = (s: AIGenerationStatusValue): boolean =>
 export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGenerationStatusProps) => {
   const [row, setRow] = useState<ProjectAIRow | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -186,23 +194,46 @@ export const AIGenerationStatus = ({ projectId, canRegenerate = false }: AIGener
           </div>
         )}
 
-        {canRegenerate && (status === 'failed' || status === 'done') && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRegenerate}
-            disabled={regenerating}
-            className="gap-2"
-          >
-            {regenerating ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5" />
-            )}
-            Regenerar
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {status !== 'idle' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTimeline(true)}
+              className="gap-2"
+            >
+              <Route className="h-3.5 w-3.5" />
+              Ver trajeto completo
+            </Button>
+          )}
+
+          {canRegenerate && (status === 'failed' || status === 'done') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="gap-2"
+            >
+              {regenerating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              Regenerar
+            </Button>
+          )}
+        </div>
       </CardContent>
+
+      <Dialog open={showTimeline} onOpenChange={setShowTimeline}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Trajeto de geração</DialogTitle>
+          </DialogHeader>
+          <PipelineTimeline projectId={projectId} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
