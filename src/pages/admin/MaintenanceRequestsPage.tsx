@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Clock, Wrench, CheckCircle2, XCircle, Eye, Upload, Loader2 } from 'lucide-react';
+import { Clock, Wrench, CheckCircle2, XCircle, Eye, Upload, Loader2, Zap, RotateCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +30,7 @@ export default function MaintenanceRequestsPage() {
   const [beforeUrls, setBeforeUrls] = useState<string[]>([]);
   const [afterUrls, setAfterUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, any> = {
@@ -88,6 +89,30 @@ export default function MaintenanceRequestsPage() {
     setBeforeUrls(request.before_urls || []);
     setAfterUrls(request.after_urls || []);
     setDialogOpen(true);
+  };
+
+  const handleRetryAutoApply = async () => {
+    if (!selectedRequest) return;
+    setRetrying(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.functions.invoke('apply-maintenance-request', {
+        body: { request_id: selectedRequest.id, requesting_user_id: user?.id },
+      });
+      if (error || !data?.success) {
+        toast.error(data?.error || 'Falha ao aplicar automaticamente. Veja as notas do admin.');
+      } else {
+        toast.success('Alteração aplicada automaticamente!');
+        setDialogOpen(false);
+        setSelectedRequest(null);
+      }
+      await refetch();
+    } catch (err) {
+      console.error('Error retrying auto-apply:', err);
+      toast.error('Falha ao tentar aplicar automaticamente');
+    } finally {
+      setRetrying(false);
+    }
   };
 
   const handleUpdateStatus = async (newStatus: 'in_progress' | 'completed' | 'rejected') => {
@@ -181,10 +206,18 @@ export default function MaintenanceRequestsPage() {
                     <TableCell>{request.project?.title}</TableCell>
                     <TableCell className="font-medium">{request.title}</TableCell>
                     <TableCell>
-                      <Badge variant={config.variant} className="gap-1">
-                        <Icon className="h-3 w-3" />
-                        {config.label}
-                      </Badge>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge variant={config.variant} className="gap-1">
+                          <Icon className="h-3 w-3" />
+                          {config.label}
+                        </Badge>
+                        {request.applied_automatically && (
+                          <Badge variant="outline" className="gap-1">
+                            <Zap className="h-3 w-3" />
+                            Automático
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {format(new Date(request.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -239,6 +272,14 @@ export default function MaintenanceRequestsPage() {
               <div>
                 <Label className="text-muted-foreground">Título</Label>
                 <p className="font-medium">{selectedRequest.title}</p>
+                {selectedRequest.change_type && selectedRequest.change_type !== 'other' && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="gap-1">
+                      {selectedRequest.applied_automatically ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                      {selectedRequest.applied_automatically ? 'Aplicado automaticamente via API' : 'Estruturado — ainda não aplicado'}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -356,6 +397,16 @@ export default function MaintenanceRequestsPage() {
               <DialogFooter className="gap-2">
                 {selectedRequest.status === 'pending' && (
                   <>
+                    {selectedRequest.change_type && selectedRequest.change_type !== 'other' && !selectedRequest.applied_automatically && (
+                      <Button
+                        variant="secondary"
+                        onClick={handleRetryAutoApply}
+                        disabled={retrying}
+                      >
+                        {retrying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCw className="h-4 w-4 mr-2" />}
+                        Tentar aplicar automaticamente
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       onClick={() => handleUpdateStatus('rejected')}

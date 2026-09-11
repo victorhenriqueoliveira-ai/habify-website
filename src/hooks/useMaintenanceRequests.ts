@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export type MaintenanceChangeType = 'property_field' | 'property_photos' | 'contact_info' | 'other';
+
 export interface MaintenanceRequest {
   id: string;
   user_id: string;
@@ -17,6 +19,9 @@ export interface MaintenanceRequest {
   completed_at?: string;
   created_at: string;
   updated_at: string;
+  change_type: MaintenanceChangeType;
+  changes: Record<string, unknown> | null;
+  applied_automatically: boolean;
   project?: {
     title: string;
     landing_page_url?: string;
@@ -105,7 +110,9 @@ export const useMaintenanceRequests = (userId?: string, projectId?: string) => {
     projectId: string,
     title: string,
     description: string,
-    attachments?: string[]
+    attachments?: string[],
+    changeType: MaintenanceChangeType = 'other',
+    changes?: Record<string, unknown>,
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -141,23 +148,45 @@ export const useMaintenanceRequests = (userId?: string, projectId?: string) => {
           title,
           description,
           attachments_urls: attachments || [],
-          status: 'pending'
+          status: 'pending',
+          change_type: changeType,
+          changes: changes ?? null,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Enviar notificação por email
-      try {
-        await supabase.functions.invoke('send-maintenance-request-notification', {
-          body: { requestId: data.id, action: 'created' }
-        });
-      } catch (emailError) {
-        console.error('Error sending notification email:', emailError);
+      // Solicitações estruturadas tentam se aplicar sozinhas na hora —
+      // se falhar (ex: site ainda não foi gerado), fica pendente pra
+      // atendimento manual, sem quebrar o fluxo de criação.
+      if (changeType !== 'other') {
+        try {
+          const { data: applyResult, error: applyError } = await supabase.functions.invoke('apply-maintenance-request', {
+            body: { request_id: data.id, requesting_user_id: user.id },
+          });
+          if (applyError || !applyResult?.success) {
+            toast.info('Solicitação recebida — como não deu pra aplicar automaticamente agora, nossa equipe vai cuidar dela.');
+          } else {
+            toast.success('Alteração aplicada automaticamente! Seu site já está atualizado.');
+          }
+        } catch (applyException) {
+          console.error('Error applying maintenance request automatically:', applyException);
+          toast.info('Solicitação recebida — nossa equipe vai aplicar a alteração.');
+        }
+      } else {
+        // Enviar notificação por email (fluxo manual — o auto-apply acima
+        // já dispara sua própria notificação quando bem-sucedido)
+        try {
+          await supabase.functions.invoke('send-maintenance-request-notification', {
+            body: { requestId: data.id, action: 'created' }
+          });
+        } catch (emailError) {
+          console.error('Error sending notification email:', emailError);
+        }
+        toast.success('Solicitação criada com sucesso!');
       }
 
-      toast.success('Solicitação criada com sucesso!');
       await fetchRequests();
       return data;
     } catch (error: any) {

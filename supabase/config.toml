@@ -72,3 +72,6 @@ verify_jwt = false
 
 [functions.send-site-ready]
 verify_jwt = false
+
+[functions.apply-maintenance-request]
+verify_jwt = false
