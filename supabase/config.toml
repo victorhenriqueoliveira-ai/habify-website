@@ -75,3 +75,9 @@ verify_jwt = false
 
 [functions.apply-maintenance-request]
 verify_jwt = false
+
+[functions.send-domain-connected]
+verify_jwt = false
+
+[functions.recheck-pending-domains]
+verify_jwt = false
