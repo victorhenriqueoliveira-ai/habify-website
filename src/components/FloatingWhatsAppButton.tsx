@@ -4,7 +4,7 @@ import { trackWhatsAppClick } from "@/utils/analytics";
 
 const FloatingWhatsAppButton = () => {
   const whatsappMessage = encodeURIComponent("Olá! Gostaria de criar meu site profissional com a HabiFy");
-  const whatsappLink = `https://wa.me/5511961769504?text=${whatsappMessage}`;
+  const whatsappLink = `https://wa.me/5511911103963?text=${whatsappMessage}`;
 
   const handleClick = () => {
     trackWhatsAppClick('floating-button');

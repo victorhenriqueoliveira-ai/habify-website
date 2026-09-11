@@ -38,11 +38,12 @@ serve(async (req) => {
     // Try to find by:
     // 1. orderId (our internal UUID)
     // 2. abacatepay_id (gateway ID for PIX)
-    // 3. hubla_transaction_id (gateway ID for CARD)
+    // 3. asaas_id (gateway ID for CARD)
+    // 4. hubla_transaction_id (legacy gateway ID)
     const { data: orders, error: orderError } = await supabaseService
       .from('orders')
       .select('*')
-      .or(`id.eq.${id},abacatepay_id.eq.${id},hubla_transaction_id.eq.${id}`)
+      .or(`id.eq.${id},abacatepay_id.eq.${id},asaas_id.eq.${id},hubla_transaction_id.eq.${id}`)
       .order('created_at', { ascending: false })
       .limit(1);
       

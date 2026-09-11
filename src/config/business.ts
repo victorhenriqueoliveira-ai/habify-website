@@ -1,9 +1,9 @@
 // Constantes de negócio centralizadas
 export const BUSINESS = {
   whatsapp: {
-    number: '5511961769504',
-    display: '+55 (11) 96176-9504',
-    url: (msg: string) => `https://wa.me/5511961769504?text=${encodeURIComponent(msg)}`,
+    number: '5511911103963',
+    display: '+55 (11) 91110-3963',
+    url: (msg: string) => `https://wa.me/5511911103963?text=${encodeURIComponent(msg)}`,
   },
   email: {
     contact: 'contato@habify.com.br',

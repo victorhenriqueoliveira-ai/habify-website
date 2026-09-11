@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { findOrCreateAsaasCustomer, createAsaasCreditCardPayment } from "../_shared/asaas-client.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,15 +42,15 @@ serve(async (req) => {
 
     const { planId, customerData }: PaymentRequest = await req.json();
 
-    // Always use AbacatePay for both PIX and CARD
+    const paymentMethod = customerData.paymentMethod || 'PIX';
+    // PIX continua 100% na AbacatePay; cartão de crédito vai pra Asaas.
+    const gateway: 'ABACATEPAY' | 'ASAAS' = paymentMethod === 'CARD' ? 'ASAAS' : 'ABACATEPAY';
+
     const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
-    if (!abacatePayApiKey) {
+    if (gateway === 'ABACATEPAY' && !abacatePayApiKey) {
       console.error('ABACATEPAY_API_KEY is not configured');
       throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
     }
-
-    const paymentMethod = customerData.paymentMethod || 'PIX';
-    const gateway = 'ABACATEPAY';
 
     // Get plan details
     let planData;
@@ -200,140 +201,186 @@ serve(async (req) => {
       profileId = null;
     }
 
-    // ✅ Process payment via AbacatePay (both PIX and CARD)
-    // Create customer in AbacatePay
-    const customerPayload = {
-      name: customerData.name,
-      cellphone: customerData.phone,
-      email: customerData.email,
-      taxId: customerData.cpf,
-    };
+    let paymentUrl: string | undefined;
+    let paymentId: string | undefined;
+    const successUrl = origin.includes('localhost') || origin.includes('lovable.dev')
+      ? `${origin}/payment-success`
+      : 'https://habify.com.br/payment-success';
 
-    const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${abacatePayApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(customerPayload),
-    });
+    if (gateway === 'ABACATEPAY') {
+      // ✅ Process PIX payment via AbacatePay
+      const customerPayload = {
+        name: customerData.name,
+        cellphone: customerData.phone,
+        email: customerData.email,
+        taxId: customerData.cpf,
+      };
 
-    if (!customerResponse.ok) {
-      const customerErrorText = await customerResponse.text();
-      console.error('Customer creation error:', customerErrorText);
-
-      await supabaseService.from('payment_logs').insert({
-        gateway: 'ABACATEPAY',
-        status_code: customerResponse.status,
-        error_message: `Customer creation failed: ${customerErrorText}`,
-        request_body: { step: 'customer/create', payload: customerPayload },
-        response_body: { error: customerErrorText },
+      const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(customerPayload),
       });
 
-      throw new Error('Falha ao criar cliente no sistema de pagamento.');
-    }
+      if (!customerResponse.ok) {
+        const customerErrorText = await customerResponse.text();
+        console.error('Customer creation error:', customerErrorText);
 
-    const customerResponseData = await customerResponse.json();
-    const customerId = customerResponseData.data?.id;
-    if (!customerId) {
-      console.error('No customer ID received:', customerResponseData);
-      throw new Error('ID do cliente não foi gerado.');
-    }
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          status_code: customerResponse.status,
+          error_message: `Customer creation failed: ${customerErrorText}`,
+          request_body: { step: 'customer/create', payload: customerPayload },
+          response_body: { error: customerErrorText },
+        });
 
-    // Create billing with AbacatePay - use correct method based on payment selection
-    const webhookUrl = `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`;
-    
-    const billingPayload: any = {
-      frequency: 'ONE_TIME',
-      methods: [paymentMethod], // 'PIX' or 'CARD'
-      products: [{
-        // Inclui o preço no externalId do produto: a AbacatePay parece cachear
-        // nome/preço exibidos por externalId, então reusar o mesmo id do plano
-        // para sempre mantinha o rótulo antigo visível mesmo após mudar o preço.
-        externalId: `${planId}-${Math.round(planPrice * 100)}`,
-        name: planData.name,
-        description: planData.description || planData.name,
-        quantity: 1,
-        price: Math.round(planPrice * 100),
-      }],
-      customerId: customerId,
-      returnUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-        ? `${origin}/payment-success` 
-        : 'https://habify.com.br/payment-success',
-      completionUrl: origin.includes('localhost') || origin.includes('lovable.dev') 
-        ? `${origin}/payment-success` 
-        : 'https://habify.com.br/payment-success',
-      webhookUrl: webhookUrl,
-      externalId: `habify-${planId}-${Date.now()}`,
-      allowCoupons: true,
-    };
-    
-    console.log('AbacatePay billing payload:', JSON.stringify({ ...billingPayload, methods: billingPayload.methods }, null, 2));
+        throw new Error('Falha ao criar cliente no sistema de pagamento.');
+      }
 
-    const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${abacatePayApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(billingPayload),
-    });
+      const customerResponseData = await customerResponse.json();
+      const customerId = customerResponseData.data?.id;
+      if (!customerId) {
+        console.error('No customer ID received:', customerResponseData);
+        throw new Error('ID do cliente não foi gerado.');
+      }
 
-    if (!abacatePayResponse.ok) {
-      const errorText = await abacatePayResponse.text();
-      console.error('AbacatePay error response:', errorText);
-      
+      // Create billing with AbacatePay
+      const webhookUrl = `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`;
+
+      const billingPayload: any = {
+        frequency: 'ONE_TIME',
+        methods: [paymentMethod], // 'PIX'
+        products: [{
+          // Inclui o preço no externalId do produto: a AbacatePay parece cachear
+          // nome/preço exibidos por externalId, então reusar o mesmo id do plano
+          // para sempre mantinha o rótulo antigo visível mesmo após mudar o preço.
+          externalId: `${planId}-${Math.round(planPrice * 100)}`,
+          name: planData.name,
+          description: planData.description || planData.name,
+          quantity: 1,
+          price: Math.round(planPrice * 100),
+        }],
+        customerId: customerId,
+        returnUrl: successUrl,
+        completionUrl: successUrl,
+        webhookUrl: webhookUrl,
+        externalId: `habify-${planId}-${Date.now()}`,
+        allowCoupons: true,
+      };
+
+      console.log('AbacatePay billing payload:', JSON.stringify({ ...billingPayload, methods: billingPayload.methods }, null, 2));
+
+      const abacatePayResponse = await fetch('https://api.abacatepay.com/v1/billing/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${abacatePayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(billingPayload),
+      });
+
+      if (!abacatePayResponse.ok) {
+        const errorText = await abacatePayResponse.text();
+        console.error('AbacatePay error response:', errorText);
+
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          status_code: abacatePayResponse.status,
+          error_message: errorText,
+          request_body: billingPayload,
+          response_body: { error: errorText }
+        });
+
+        throw new Error(`Falha ao processar pagamento ${paymentMethod}. Verifique os dados e tente novamente.`);
+      }
+
+      const abacatePayData = await abacatePayResponse.json();
+      const responseData = abacatePayData.data || abacatePayData;
+
+      if (!responseData || !responseData.id) {
+        console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
+        throw new Error('Resposta inválida do sistema de pagamento.');
+      }
+
+      paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
+      paymentId = responseData.id;
+
+      if (!paymentUrl) {
+        console.error('No payment URL in response:', abacatePayData);
+
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ABACATEPAY',
+          error_message: 'No payment URL in response',
+          response_body: abacatePayData
+        });
+
+        throw new Error('URL de pagamento não foi gerada.');
+      }
+
       await supabaseService.from('payment_logs').insert({
         gateway: 'ABACATEPAY',
-        status_code: abacatePayResponse.status,
-        error_message: errorText,
+        status_code: 200,
         request_body: billingPayload,
-        response_body: { error: errorText }
-      });
-      
-      throw new Error(`Falha ao processar pagamento ${paymentMethod}. Verifique os dados e tente novamente.`);
-    }
-
-    const abacatePayData = await abacatePayResponse.json();
-    const responseData = abacatePayData.data || abacatePayData;
-    
-    if (!responseData || !responseData.id) {
-      console.error('Invalid AbacatePay response - missing ID:', abacatePayData);
-      throw new Error('Resposta inválida do sistema de pagamento.');
-    }
-
-    const paymentUrl = responseData.checkout_url || responseData.url || responseData.paymentUrl;
-    const paymentId = responseData.id;
-
-    if (!paymentUrl) {
-      console.error('No payment URL in response:', abacatePayData);
-      
-      await supabaseService.from('payment_logs').insert({
-        gateway: 'ABACATEPAY',
-        error_message: 'No payment URL in response',
         response_body: abacatePayData
       });
-      
-      throw new Error('URL de pagamento não foi gerada.');
+    } else {
+      // ✅ Process credit card payment via Asaas — checkout hospedado
+      // (invoiceUrl), a gente nunca recebe/guarda dado de cartão.
+      try {
+        const asaasCustomer = await findOrCreateAsaasCustomer({
+          name: customerData.name,
+          email: customerData.email,
+          cpfCnpj: customerData.cpf || '',
+          phone: customerData.phone,
+        });
+
+        const asaasPayment = await createAsaasCreditCardPayment({
+          customerId: asaasCustomer.id,
+          value: planPrice,
+          description: planData.description || planData.name,
+          externalReference: `habify-${planId}-${Date.now()}`,
+          successUrl,
+        });
+
+        paymentUrl = asaasPayment.invoiceUrl;
+        paymentId = asaasPayment.id;
+
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ASAAS',
+          status_code: 200,
+          request_body: { customer: asaasCustomer.id, value: planPrice },
+          response_body: asaasPayment,
+        });
+      } catch (asaasError) {
+        const message = asaasError instanceof Error ? asaasError.message : String(asaasError);
+        console.error('Asaas error:', message);
+
+        await supabaseService.from('payment_logs').insert({
+          gateway: 'ASAAS',
+          error_message: message,
+        });
+
+        throw new Error('Falha ao processar pagamento no cartão. Verifique os dados e tente novamente.');
+      }
     }
 
-    // Log success
-    await supabaseService.from('payment_logs').insert({
-      gateway: 'ABACATEPAY',
-      status_code: 200,
-      request_body: billingPayload,
-      response_body: abacatePayData
-    });
+    if (!paymentUrl || !paymentId) {
+      throw new Error('URL de pagamento não foi gerada.');
+    }
 
     // Create order record
     const orderInsertData: any = {
       user_id: profileId,
       plan_id: isMaintenance ? null : planId,
-      abacatepay_id: paymentId,
+      abacatepay_id: gateway === 'ABACATEPAY' ? paymentId : null,
+      asaas_id: gateway === 'ASAAS' ? paymentId : null,
       amount: planPrice,
       status: 'pending',
       payment_method: paymentMethod,
-      gateway: 'ABACATEPAY',
+      gateway,
       payment_data: {
         customerData: {
           name: customerData.name,
@@ -369,7 +416,7 @@ serve(async (req) => {
         paymentUrl: paymentUrl,
         orderId: order.id,
         paymentId: paymentId,
-        gateway: 'ABACATEPAY',
+        gateway,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

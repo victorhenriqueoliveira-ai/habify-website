@@ -58,7 +58,7 @@ serve(async (req) => {
       query = query.eq('id', orderId);
     } else {
       // Try to find by gateway payment ID
-      query = query.or(`abacatepay_id.eq.${paymentId},hubla_transaction_id.eq.${paymentId}`);
+      query = query.or(`abacatepay_id.eq.${paymentId},asaas_id.eq.${paymentId},hubla_transaction_id.eq.${paymentId}`);
     }
 
     const { data: order, error: orderError } = await query.maybeSingle();

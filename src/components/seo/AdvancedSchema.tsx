@@ -14,7 +14,7 @@ const AdvancedSchema: React.FC = () => {
     "foundingDate": "2023",
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+55-11-96176-9504",
+      "telephone": "+55-11-91110-3963",
       "contactType": "Sales",
       "areaServed": "BR",
       "availableLanguage": ["Portuguese"]

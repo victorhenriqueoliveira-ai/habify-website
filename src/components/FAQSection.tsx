@@ -139,7 +139,7 @@ const FAQSection = () => {
               Nossa equipe está pronta para te ajudar! Fale com um especialista e tire todas as suas dúvidas pelo WhatsApp.
             </p>
             <a
-              href="https://wa.me/5511961769504?text=Olá!%20Tenho%20algumas%20dúvidas%20sobre%20a%20criação%20do%20site"
+              href="https://wa.me/5511911103963?text=Olá!%20Tenho%20algumas%20dúvidas%20sobre%20a%20criação%20do%20site"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl"

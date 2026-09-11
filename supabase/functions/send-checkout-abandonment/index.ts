@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div class="support-box">
                   <h4 style="margin-top: 0; color: #16a34a;">💬 Tem alguma dúvida?</h4>
                   <p>Nossa equipe está pronta para ajudar! Entre em contato pelo WhatsApp:</p>
-                  <p style="font-size: 20px; font-weight: bold; margin: 10px 0; color: #16a34a;">+55 11 96176-9504</p>
+                  <p style="font-size: 20px; font-weight: bold; margin: 10px 0; color: #16a34a;">+55 11 91110-3963</p>
                   <p style="margin-bottom: 0; font-size: 14px;">Estamos aqui para tirar todas as suas dúvidas e ajudar você a criar landing pages incríveis! 😊</p>
                 </div>
 

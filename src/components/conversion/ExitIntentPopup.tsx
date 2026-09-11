@@ -144,7 +144,7 @@ const ExitIntentPopup: React.FC = () => {
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-4">
                   <a
-                    href="https://wa.me/5511961769504?text=Olá!%20Vi%20a%20oferta%20especial%20e%20quero%20agendar%20minha%20consulta%20gratuita"
+                    href="https://wa.me/5511911103963?text=Olá!%20Vi%20a%20oferta%20especial%20e%20quero%20agendar%20minha%20consulta%20gratuita"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#25D366] to-[#20BA5A] text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-[#25D366]/50 transition-all duration-300 hover:scale-105"
