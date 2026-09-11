@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Mail, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 
 export const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -69,29 +69,18 @@ export const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader className="text-center space-y-4 pb-6">
-          <div className="flex justify-center">
-            <img 
-              src="/logotipo_habify.png" 
-              alt="Habify" 
-              className="h-16 w-auto"
-            />
-          </div>
-          <div>
-            <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
-              Recuperar Senha
-            </CardTitle>
-            <CardDescription className="text-base mt-2">
-              {sent 
-                ? 'Email enviado com sucesso!'
-                : 'Digite seu email para receber o link de recuperação'
-              }
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <AuthLayout>
+      <div className="space-y-2 text-center lg:text-left">
+        <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground">
+          Recuperar senha
+        </h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          {sent
+            ? 'Email enviado com sucesso!'
+            : 'Digite seu email para receber o link de recuperação'}
+        </p>
+      </div>
+      <div className="mt-8 space-y-6">
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -164,8 +153,7 @@ export const ForgotPasswordPage = () => {
               Voltar para o login
             </Link>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </div>
+    </AuthLayout>
   );
 };
