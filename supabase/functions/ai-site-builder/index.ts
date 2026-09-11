@@ -1,19 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { encode as encodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+import { GITHUB_OWNER, CONFIG_PATH, slugify, buildSiteConfig, commitSiteConfig } from "../_shared/site-config.ts";
+
+// Repositório-template criado manualmente no GitHub (ver
+// habify-site-template/README.md). O pipeline gera um repo novo na
+// organização GITHUB_OWNER (compartilhada com _shared/site-config.ts)
+// para cada projeto pago.
+const GITHUB_TEMPLATE_REPO = 'habify-site-template';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-
-// Organização e repositório-template criados manualmente no GitHub
-// (ver habify-site-template/README.md). O pipeline gera um repo novo
-// nessa mesma organização para cada projeto pago.
-const GITHUB_OWNER = 'habifybr-art';
-const GITHUB_TEMPLATE_REPO = 'habify-site-template';
-const CONFIG_PATH = 'content/site.config.json';
 
 type GenerationStatus =
   | 'queued'
@@ -24,20 +23,6 @@ type GenerationStatus =
   | 'deploying'
   | 'done'
   | 'failed';
-
-function slugify(input: string): string {
-  return input
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'site';
-}
-
-function onlyDigits(v?: string | null): string {
-  return (v || '').replace(/\D/g, '');
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -139,78 +124,16 @@ serve(async (req) => {
     // ---- 2. Montar o site.config.json (mesmo schema do template) ----
     await setStatus('generating_content');
 
-    const seenSlugs = new Set<string>();
-    const siteProperties = (properties || []).map((p: Record<string, any>) => {
-      let slug = slugify(p.title || 'imovel');
-      if (seenSlugs.has(slug)) slug = `${slug}-${String(p.id).slice(0, 8)}`;
-      seenSlugs.add(slug);
-
-      return {
-        slug,
-        title: p.title,
-        location: p.location,
-        price: Number(p.price) || 0,
-        propertyType: p.property_type,
-        purpose: p.purpose,
-        bedrooms: p.bedrooms ?? undefined,
-        bathrooms: p.bathrooms ?? undefined,
-        area: Number(p.area) || 0,
-        parkingSpaces: p.parking_spaces ?? undefined,
-        constructionYear: p.construction_year ?? undefined,
-        floorNumber: p.floor_number ?? undefined,
-        condominiumFee: p.condominium_fee ?? undefined,
-        iptu: p.iptu ?? undefined,
-        description: p.description ?? undefined,
-        amenities: Array.isArray(p.amenities) ? p.amenities : [],
-        photos: Array.isArray(p.photos) ? p.photos : [],
-      };
-    });
-
     const companyName = wizardData.companyName || project.title || 'Meu Site';
-    // vercel_custom_domain (DomainConnect) já vem com TLD e tem prioridade —
-    // é o que o cliente conectou manualmente depois do site no ar. Sem isso,
-    // cai pro domínio comprado via wizard/registro.br: desired_domain guarda
-    // só o slug (sempre .com.br), nunca o domínio completo.
+    const siteConfig = buildSiteConfig(project, properties || []);
+    // Valor "cru" (sem o fallback *.habify.com.br que buildSiteConfig aplica
+    // em siteConfig.domain) — só tenta anexar domínio na Vercel se o cliente
+    // realmente definiu um.
     const domain = (
       project.vercel_custom_domain ||
       (project.desired_domain ? `${project.desired_domain}.com.br` : '') ||
       (wizardData.desiredDomain ? `${wizardData.desiredDomain}.com.br` : '')
     ).replace(/^https?:\/\//, '');
-    // 'single_property' = 1 empreendimento, site inteiro é a vitrine dele.
-    // 'realtor_multiple' (ou qualquer outro valor futuro) = portfólio.
-    const projectMode = project.project_type === 'single_property' ? 'single' : 'multiple';
-
-    const siteConfig = {
-      projectMode,
-      layoutChoice: project.layout_choice || wizardData.layoutChoice || 'modern',
-      colorPalette: project.color_palette || wizardData.colorPalette || 'blue',
-      logoUrl: project.logo_url || '',
-      domain: domain || `${slugify(companyName)}.habify.com.br`,
-      siteName: companyName,
-      profileType: wizardData.profileType || 'corretor',
-      ownerName: wizardData.ownerName || companyName,
-      companyName,
-      creciNumber: wizardData.creciNumber || '',
-      // wizardData.creciType vem como "individual" | "juridico" do
-      // <Select> real do wizard (ProjectDataForm.tsx) — não confundir com o
-      // nome do tipo CreciType em src/types/wizard.ts, que está desatualizado.
-      creciType: wizardData.creciType || 'individual',
-      address: {
-        cep: wizardData.addressCep || '',
-        street: wizardData.addressStreet || '',
-        number: wizardData.addressNumber || '',
-        complement: wizardData.addressComplement || undefined,
-        neighborhood: wizardData.addressNeighborhood || '',
-        city: wizardData.addressCity || '',
-        state: wizardData.addressState || '',
-      },
-      contact: {
-        phone: onlyDigits(wizardData.contactPhone) || undefined,
-        mobile: `55${onlyDigits(wizardData.contactMobile)}`,
-        email: wizardData.contactEmail || '',
-      },
-      properties: siteProperties,
-    };
 
     // ---- 3. Gerar o repositório a partir do template ----
     await setStatus('rendering');
@@ -273,8 +196,9 @@ serve(async (req) => {
     }
 
     // GitHub popula o conteúdo do template de forma assíncrona — espera
-    // até o arquivo que vamos sobrescrever existir de verdade.
-    let fileSha: string | undefined;
+    // até o arquivo que vamos sobrescrever existir de verdade antes de
+    // tentar o commit (commitSiteConfig busca o sha sozinho).
+    let fileExists = false;
     for (let attempt = 0; attempt < 8; attempt++) {
       const fileResponse = await fetch(
         `https://api.github.com/repos/${repoFullName}/contents/${CONFIG_PATH}`,
@@ -287,43 +211,22 @@ serve(async (req) => {
         },
       );
       if (fileResponse.ok) {
-        const fileData = await fileResponse.json();
-        fileSha = fileData.sha;
+        fileExists = true;
         break;
       }
       await new Promise((resolve) => setTimeout(resolve, 1500));
     }
 
-    if (!fileSha) {
+    if (!fileExists) {
       throw new Error('Repositório criado, mas content/site.config.json nunca ficou disponível pra atualizar.');
     }
 
     // ---- 4. Commitar os dados reais do cliente por cima do exemplo ----
     await setStatus('pushing_github');
 
-    const contentBase64 = encodeBase64(JSON.stringify(siteConfig, null, 2));
-
-    const putResponse = await fetch(
-      `https://api.github.com/repos/${repoFullName}/contents/${CONFIG_PATH}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `Configura site de ${companyName}`,
-          content: contentBase64,
-          sha: fileSha,
-        }),
-      },
-    );
-
-    if (!putResponse.ok) {
-      const errText = await putResponse.text();
-      throw new Error(`Falha ao commitar site.config.json (${putResponse.status}): ${errText}`);
+    const commitResult = await commitSiteConfig(githubToken, repoFullName, siteConfig, `Configura site de ${companyName}`);
+    if (!commitResult.ok) {
+      throw new Error(commitResult.error);
     }
 
     // ---- 5. Cria (ou reaproveita) o Project na Vercel, ligado ao repo ----
