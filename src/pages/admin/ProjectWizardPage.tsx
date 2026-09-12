@@ -78,6 +78,7 @@ const ProjectWizardPage = () => {
     description: '',
     amenities: [],
     photos: [],
+    floorPlans: [],
   }]);
 
   const updateWizardData = (field: keyof WizardData, value: any) => {
