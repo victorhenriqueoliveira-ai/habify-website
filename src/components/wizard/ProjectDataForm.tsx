@@ -319,6 +319,26 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <Label className="text-base font-semibold">Avançado (opcional)</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="googleAnalyticsId">ID do Google Analytics (GA4)</Label>
+            <Input
+              id="googleAnalyticsId"
+              value={data.googleAnalyticsId || ''}
+              onChange={(e) => onChange('googleAnalyticsId', e.target.value.trim())}
+              placeholder="G-XXXXXXXXXX"
+            />
+            <p className="text-xs text-muted-foreground">
+              Se você já tem uma conta do Google Analytics, cole o ID aqui pra acompanhar visitas e
+              cliques no WhatsApp do seu site. Deixe em branco se não usar.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
