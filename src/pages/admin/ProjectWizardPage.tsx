@@ -298,6 +298,7 @@ const ProjectWizardPage = () => {
           palette: paletteData,
           hasLogo: wizardData.hasLogo,
           desiredDomain: wizardData.desiredDomain,
+          googleAnalyticsId: wizardData.googleAnalyticsId,
         },
       });
 
