@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, FileText, Shield, AlertCircle, Scale, Mail } from "lucide-react";
@@ -70,7 +71,13 @@ export default function TermosDeUso(): JSX.Element {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-muted/40">
+    <>
+      <Helmet>
+        <title>Termos de Uso | HabiFy</title>
+        <meta name="description" content="Termos de Uso da HabiFy - Condições de uso da plataforma de criação de sites para corretores e imobiliárias." />
+      </Helmet>
+
+      <main className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-muted/40">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b border-border/50">
         <div className="section-container py-12">
@@ -229,6 +236,7 @@ export default function TermosDeUso(): JSX.Element {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

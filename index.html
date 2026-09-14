@@ -5,9 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     
-    <!-- Primary Meta Tags (will be overridden by react-helmet-async) -->
+    <!-- Título estático de fallback pra quem carregar sem JS — cada rota
+    sobrescreve via react-helmet-async (AdvancedSEO / Helmet por página). A
+    meta description fica só a cargo do Helmet: como ele nunca remove uma
+    tag que não foi ele quem criou, uma <meta description> estática aqui
+    ficaria duplicada ao lado da de cada página. -->
     <title>Site para Corretor de Imóveis | Pronto na Hora - HabiFy</title>
-    <meta name="description" content="Crie seu site de corretor de imóveis na hora. Landing page profissional com captação de leads no WhatsApp, SEO otimizado e pagamento único." />
     <meta name="author" content="HabiFy" />
     <meta name="theme-color" content="#FE5C02" />
     
