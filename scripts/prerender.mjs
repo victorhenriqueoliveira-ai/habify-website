@@ -9,7 +9,6 @@
 // passada. O bundle JS continua incluído no HTML gerado, então o React
 // re-hidrata normalmente por cima assim que carrega no navegador.
 
-import puppeteer from 'puppeteer';
 import { mkdir, writeFile } from 'fs/promises';
 import { createReadStream, existsSync, statSync } from 'fs';
 import http from 'http';
@@ -62,11 +61,31 @@ const ROUTES = [
   { path: '/politica-privacidade', outFile: 'politica-privacidade/index.html' },
 ];
 
+// A imagem de build do Vercel não tem as bibliotecas de sistema que o
+// Chromium do pacote `puppeteer` normal precisa (ex: libnspr4.so) — só
+// funciona localmente. No Vercel usamos puppeteer-core + @sparticuz/chromium,
+// um Chromium compilado estaticamente pra esse tipo de ambiente restrito.
+async function launchBrowser() {
+  if (process.env.VERCEL) {
+    const [{ default: chromium }, { default: puppeteerCore }] = await Promise.all([
+      import('@sparticuz/chromium'),
+      import('puppeteer-core'),
+    ]);
+    return puppeteerCore.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+  }
+  const { default: puppeteer } = await import('puppeteer');
+  return puppeteer.launch({ headless: 'new' });
+}
+
 async function main() {
   const server = createStaticServer(distDir);
   await new Promise((resolve) => server.listen(PORT, resolve));
 
-  const browser = await puppeteer.launch({ headless: 'new' });
+  const browser = await launchBrowser();
 
   try {
     for (const route of ROUTES) {
