@@ -40,6 +40,7 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [instructions, setInstructions] = useState<DomainInstructions | null>(null);
 
   useEffect(() => {
@@ -144,7 +145,14 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
 
   const handleRemove = async (): Promise<void> => {
     if (!row?.vercel_custom_domain) return;
-    if (!window.confirm(`Desconectar o domínio ${row.vercel_custom_domain} deste site?`)) return;
+
+    // Clique duplo em vez de window.confirm — um dialog nativo bloqueia a
+    // aba inteira (inclusive automação de navegador) até alguém fechá-lo.
+    if (!confirmingRemove) {
+      setConfirmingRemove(true);
+      return;
+    }
+    setConfirmingRemove(false);
 
     try {
       setRemoving(true);
@@ -231,19 +239,39 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
                   <RefreshCw className="h-3.5 w-3.5" />
                 )}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemove}
-                disabled={checking || removing}
-                className="text-destructive hover:text-destructive"
-              >
-                {removing ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
+              {confirmingRemove ? (
+                <>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemove}
+                    disabled={removing}
+                    className="h-8"
+                  >
+                    {removing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Confirmar'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setConfirmingRemove(false)}
+                    disabled={removing}
+                    className="h-8"
+                  >
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemove}
+                  disabled={checking || removing}
+                  className="text-destructive hover:text-destructive"
+                  title="Desconectar domínio"
+                >
                   <Unlink className="h-3.5 w-3.5" />
-                )}
-              </Button>
+                </Button>
+              )}
             </div>
           </div>
         )}
