@@ -33,6 +33,10 @@ export interface WizardData {
   contactMobile: string;
   contactEmail: string;
   contactEmailConfirm: string;
+
+  // Avançado (opcional)
+  /** Measurement ID do GA4 (ex: "G-XXXXXXX") — analytics só carrega no site gerado se preenchido. */
+  googleAnalyticsId?: string;
 }
 
 export interface LayoutOption {

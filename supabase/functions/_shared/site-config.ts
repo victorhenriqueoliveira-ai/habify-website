@@ -87,6 +87,7 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
       email: wizardData.contactEmail || '',
     },
     properties: siteProperties,
+    googleAnalyticsId: wizardData.googleAnalyticsId || undefined,
   };
 }
 
