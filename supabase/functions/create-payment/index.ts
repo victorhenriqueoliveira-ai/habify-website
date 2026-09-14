@@ -137,23 +137,39 @@ serve(async (req) => {
 
       profileId = existingProfile.id;
       
-      // Validar se já não tem order pendente
+      // Validar se já não tem order pendente — pedidos abandonados (o cliente
+      // nunca pagou nem voltou) não podem travar a conta pra sempre, então só
+      // bloqueia se o pendente ainda for recente; passado esse prazo, ele é
+      // tratado como abandonado e cancelado automaticamente.
+      const PENDING_ORDER_STALE_MINUTES = 30;
       const { data: pendingOrders, error: pendingError } = await supabaseService
         .from('orders')
         .select('id, created_at')
         .eq('user_id', profileId)
         .eq('status', 'pending')
+        .order('created_at', { ascending: false })
         .limit(1);
-        
+
       if (!pendingError && pendingOrders && pendingOrders.length > 0) {
-        console.error('User has pending order:', profileId, pendingOrders[0].id);
-        await supabaseService.from('payment_logs').insert({
-          gateway: gateway,
-          error_message: 'Tentativa de criar pedido duplicado',
-          request_body: { profileId, existingOrderId: pendingOrders[0].id },
-          user_id: profileId
-        });
-        throw new Error('Você já tem um pedido pendente. Complete o pagamento anterior ou aguarde alguns minutos e tente novamente.');
+        const pendingOrder = pendingOrders[0];
+        const ageMinutes = (Date.now() - new Date(pendingOrder.created_at).getTime()) / 60000;
+
+        if (ageMinutes < PENDING_ORDER_STALE_MINUTES) {
+          console.error('User has pending order:', profileId, pendingOrder.id);
+          await supabaseService.from('payment_logs').insert({
+            gateway: gateway,
+            error_message: 'Tentativa de criar pedido duplicado',
+            request_body: { profileId, existingOrderId: pendingOrder.id },
+            user_id: profileId
+          });
+          throw new Error('Você já tem um pedido pendente. Complete o pagamento anterior ou aguarde alguns minutos e tente novamente.');
+        }
+
+        console.log('Auto-cancelling stale pending order:', pendingOrder.id, `(${Math.round(ageMinutes)}min old)`);
+        await supabaseService
+          .from('orders')
+          .update({ status: 'cancelled' })
+          .eq('id', pendingOrder.id);
       }
     } else {
       // Novo usuário - validar duplicatas

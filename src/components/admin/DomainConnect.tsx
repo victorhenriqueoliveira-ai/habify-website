@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Globe, ExternalLink, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Globe, ExternalLink, Loader2, CheckCircle2, RefreshCw, Unlink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DomainConnectProps {
@@ -26,11 +26,20 @@ interface DomainInstructions {
   value: string;
 }
 
+interface ManageDomainResult {
+  success: boolean;
+  verified?: boolean;
+  instructions?: DomainInstructions;
+  removed?: boolean;
+  domain?: string;
+}
+
 export const DomainConnect = ({ projectId }: DomainConnectProps) => {
   const [row, setRow] = useState<ProjectDomainRow | null>(null);
   const [domainInput, setDomainInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [instructions, setInstructions] = useState<DomainInstructions | null>(null);
 
   useEffect(() => {
@@ -68,33 +77,31 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
     };
   }, [projectId]);
 
-  const callManageDomain = async (action: 'attach' | 'status'): Promise<void> => {
+  const callManageDomain = async (
+    action: 'attach' | 'status' | 'remove',
+    domainOverride?: string,
+  ): Promise<ManageDomainResult | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error('Não autenticado');
-      return;
+      return null;
     }
 
     const { data, error } = await supabase.functions.invoke('manage-project-domain', {
       body: {
         project_id: projectId,
         requesting_user_id: user.id,
-        domain: domainInput.trim() || undefined,
+        domain: domainOverride ?? (domainInput.trim() || undefined),
         action,
       },
     });
 
     if (error || !data?.success) {
       toast.error(data?.error || error?.message || 'Erro ao conectar domínio');
-      return;
+      return null;
     }
 
-    setInstructions(data.verified ? null : data.instructions);
-    if (data.verified) {
-      toast.success('Domínio verificado e conectado!');
-    } else {
-      toast.info('Domínio anexado — falta o DNS apontar corretamente (veja as instruções abaixo).');
-    }
+    return data;
   };
 
   const handleConnect = async (): Promise<void> => {
@@ -104,7 +111,15 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
     }
     try {
       setSaving(true);
-      await callManageDomain('attach');
+      const data = await callManageDomain('attach');
+      if (!data) return;
+
+      setInstructions(data.verified ? null : data.instructions);
+      if (data.verified) {
+        toast.success('Domínio verificado e conectado!');
+      } else {
+        toast.info('Domínio anexado — falta o DNS apontar corretamente (veja as instruções abaixo).');
+      }
     } finally {
       setSaving(false);
     }
@@ -113,9 +128,35 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
   const handleCheck = async (): Promise<void> => {
     try {
       setChecking(true);
-      await callManageDomain('status');
+      const data = await callManageDomain('status');
+      if (!data) return;
+
+      setInstructions(data.verified ? null : data.instructions);
+      if (data.verified) {
+        toast.success('Domínio verificado e conectado!');
+      } else {
+        toast.info('Domínio anexado — falta o DNS apontar corretamente (veja as instruções abaixo).');
+      }
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleRemove = async (): Promise<void> => {
+    if (!row?.vercel_custom_domain) return;
+    if (!window.confirm(`Desconectar o domínio ${row.vercel_custom_domain} deste site?`)) return;
+
+    try {
+      setRemoving(true);
+      const data = await callManageDomain('remove', row.vercel_custom_domain);
+      if (!data) return;
+
+      setInstructions(null);
+      setDomainInput('');
+      setRow((prev) => (prev ? { ...prev, vercel_custom_domain: null, vercel_domain_verified: false } : prev));
+      toast.success('Domínio desconectado.');
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -183,11 +224,24 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
                   'Aguardando DNS'
                 )}
               </Badge>
-              <Button variant="ghost" size="sm" onClick={handleCheck} disabled={checking}>
+              <Button variant="ghost" size="sm" onClick={handleCheck} disabled={checking || removing}>
                 {checking ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <RefreshCw className="h-3.5 w-3.5" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRemove}
+                disabled={checking || removing}
+                className="text-destructive hover:text-destructive"
+              >
+                {removing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Unlink className="h-3.5 w-3.5" />
                 )}
               </Button>
             </div>
