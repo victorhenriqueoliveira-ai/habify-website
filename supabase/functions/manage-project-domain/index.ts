@@ -72,6 +72,33 @@ serve(async (req) => {
       throw new Error('Informe um domínio (ex: meusite.com.br).');
     }
 
+    // ---- remove: desanexa o domínio do Project na Vercel ----
+    if (action === 'remove') {
+      const removeResponse = await fetch(
+        `https://api.vercel.com/v9/projects/${project.vercel_project_id}/domains/${targetDomain}${vercelQuery}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${vercelToken}` },
+        },
+      );
+
+      // 404 = já não estava anexado — não é erro, só segue e limpa o registro local.
+      if (!removeResponse.ok && removeResponse.status !== 404) {
+        const errText = await removeResponse.text();
+        throw new Error(`Falha ao remover domínio na Vercel: ${errText}`);
+      }
+
+      await supabaseService
+        .from('projects')
+        .update({ vercel_custom_domain: null, vercel_domain_verified: false })
+        .eq('id', project_id);
+
+      return new Response(
+        JSON.stringify({ success: true, removed: true, domain: targetDomain }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+      );
+    }
+
     // ---- attach: garante que o domínio está anexado ao Project ----
     if (action !== 'status') {
       const attachResponse = await fetch(

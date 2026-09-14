@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePayment } from '@/hooks/usePayment';
 import { useProjects } from '@/hooks/useProjects';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ArrowLeft, QrCode, CheckCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, QrCode, CheckCircle, CreditCard } from 'lucide-react';
 
 export default function MaintenanceCheckoutPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -19,7 +19,7 @@ export default function MaintenanceCheckoutPage() {
   const { createPayment, loading: paymentLoading } = usePayment();
   const { projects } = useProjects();
   
-  const [paymentMethod] = useState<'PIX'>('PIX'); // Apenas PIX para manutenções
+  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   
   const project = projects.find(p => p.id === projectId);
 
@@ -190,27 +190,40 @@ export default function MaintenanceCheckoutPage() {
             <CardHeader>
               <CardTitle>Pagamento</CardTitle>
               <CardDescription>
-                Confirme seus dados para pagamento via PIX
+                Confirme seus dados para pagamento
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
-                {/* Payment Method - PIX only */}
+                {/* Payment Method */}
                 <div className="space-y-4">
                   <h3 className="font-semibold flex items-center space-x-2">
-                    <QrCode className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4" />
                     <span>Método de Pagamento</span>
                   </h3>
 
-                  <RadioGroup value={paymentMethod} disabled>
-                    <div className="flex items-center space-x-2 border rounded-lg p-4 bg-muted/50">
-                      <RadioGroupItem value="PIX" id="pix" checked />
-                      <Label htmlFor="pix" className="flex items-center flex-1">
+                  <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as 'PIX' | 'CARD')}>
+                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="PIX" id="pix" />
+                      <Label htmlFor="pix" className="flex items-center cursor-pointer flex-1">
                         <QrCode className="h-5 w-5 mr-3" />
                         <div>
                           <div className="font-medium">PIX</div>
                           <div className="text-sm text-muted-foreground">
                             Pagamento instantâneo - R$ 54,90
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="CARD" id="card" />
+                      <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                        <CreditCard className="h-5 w-5 mr-3" />
+                        <div>
+                          <div className="font-medium">Cartão de Crédito</div>
+                          <div className="text-sm text-muted-foreground">
+                            R$ 54,90 - você escolhe as parcelas na página de pagamento
                           </div>
                         </div>
                       </Label>
@@ -233,7 +246,10 @@ export default function MaintenanceCheckoutPage() {
                 <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                   <div className="text-sm text-amber-700 dark:text-amber-300">
                     <p className="font-medium mb-1">⏱️ Atenção</p>
-                    <p>A manutenção será ativada imediatamente após a confirmação do pagamento PIX.</p>
+                    <p>
+                      A manutenção será ativada imediatamente após a confirmação do pagamento
+                      {paymentMethod === 'PIX' ? ' PIX.' : ' no cartão.'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -248,10 +264,15 @@ export default function MaintenanceCheckoutPage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processando...
                     </>
-                  ) : (
+                  ) : paymentMethod === 'PIX' ? (
                     <>
                       <QrCode className="mr-2 h-4 w-4" />
                       Prosseguir para Pagamento PIX
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Prosseguir para Pagamento no Cartão
                     </>
                   )}
                 </Button>
