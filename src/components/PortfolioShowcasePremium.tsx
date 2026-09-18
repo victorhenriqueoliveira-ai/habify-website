@@ -31,7 +31,7 @@ const projects: Project[] = [
   {
     id: '1',
     name: 'Ralph Santos Imóveis',
-    url: 'https://ralphsantos.com.br',
+    url: 'https://silva-high-homes-portal.vercel.app/',
     image: '/fotos/site_ralphsantos1.webp',
     type: 'Portfólio Completo de Empreendimentos',
     description: 'Site completo com portfólio de imóveis, integração WhatsApp e SEO otimizado. Solução premium para corretor de alto padrão.',

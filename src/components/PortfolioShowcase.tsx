@@ -18,7 +18,7 @@ const projects: Project[] = [
   {
     id: "1",
     name: "Ralph Santos Imóveis",
-    url: "https://ralphsantos.com.br",
+    url: "https://silva-high-homes-portal.vercel.app/",
     image: "/fotos/site_ralphsantos1.png",
     type: "Portfólio Completo de Empreendimentos",
     results: "Leads qualificados diariamente",
