@@ -15,8 +15,10 @@
     <meta name="author" content="HabiFy" />
     <meta name="theme-color" content="#FE5C02" />
     
-    <!-- Open Graph (will be overridden by react-helmet-async) -->
-    <meta property="og:image" content="/fotos/site_habify.png" />
+    <!-- og:image fica só a cargo do Helmet (AdvancedSEO), que usa URL
+    absoluta — a tag estática que existia aqui usava caminho relativo
+    (/fotos/...), que o Facebook/WhatsApp rejeita como "URL inválido" e
+    nunca era removida pelo Helmet, então convivia com a absoluta certa. -->
     <meta property="og:type" content="website" />
     
     <!-- Favicon -->
