@@ -46,9 +46,12 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
       condominiumFee: p.condominium_fee ?? undefined,
       iptu: p.iptu ?? undefined,
       description: p.description ?? undefined,
+      badge: p.badge ?? undefined,
+      differentials: Array.isArray(p.differentials) ? p.differentials : [],
       amenities: Array.isArray(p.amenities) ? p.amenities : [],
       photos: Array.isArray(p.photos) ? p.photos : [],
       floorPlans: Array.isArray(p.floor_plans) ? p.floor_plans : [],
+      nearbyPlaces: Array.isArray(p.nearby_places) ? p.nearby_places : [],
     };
   });
 
@@ -65,6 +68,16 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
     layoutChoice: project.layout_choice || wizardData.layoutChoice || 'modern',
     colorPalette: project.color_palette || wizardData.colorPalette || 'blue',
     logoUrl: project.logo_url || '',
+    heroMediaType: wizardData.heroVideoUrl ? (wizardData.heroMediaType || 'video') : undefined,
+    heroMediaUrl: wizardData.heroVideoUrl || undefined,
+    stats:
+      wizardData.statsPropertiesSold || wizardData.statsYearsExperience || wizardData.statsHappyClients
+        ? {
+            propertiesSold: wizardData.statsPropertiesSold ? Number(wizardData.statsPropertiesSold) : undefined,
+            yearsExperience: wizardData.statsYearsExperience ? Number(wizardData.statsYearsExperience) : undefined,
+            happyClients: wizardData.statsHappyClients ? Number(wizardData.statsHappyClients) : undefined,
+          }
+        : undefined,
     domain: domain || `${slugify(companyName)}.habify.com.br`,
     siteName: companyName,
     profileType: wizardData.profileType || 'corretor',

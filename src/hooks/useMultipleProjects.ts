@@ -3,6 +3,24 @@ import { useState } from 'react';
 export interface FloorPlanData {
   name: string;
   file: File;
+  /** Preço específico dessa planta (opcional — texto formatado, igual ao campo `price` do imóvel). */
+  price?: string;
+  /** Selo curto sobre a planta (ex: "Mais procurado", "Exclusivo"). */
+  badge?: string;
+  /** Destaca visualmente o card dessa planta em relação às demais. */
+  highlighted?: boolean;
+}
+
+/** Diferencial em destaque do imóvel — aparece com ícone na home/página do imóvel. */
+export interface DifferentialData {
+  title: string;
+  description: string;
+}
+
+/** Ponto de interesse próximo, com tempo estimado até lá (ex: "Metrô — 6 min"). */
+export interface NearbyPlaceData {
+  name: string;
+  time: string;
 }
 
 export interface PropertyData {
@@ -21,7 +39,13 @@ export interface PropertyData {
   condominiumFee: string;
   iptu: string;
   description: string;
+  /** Selo curto sobre o imóvel (ex: "Lançamento", "Últimas unidades"). */
+  badge: string;
   amenities: string[];
+  /** Diferenciais em destaque (specs vendáveis, ex: "Segurança", "Valorização") — separado de `amenities` (lazer do condomínio). */
+  differentials: DifferentialData[];
+  /** Pontos de interesse próximos, com tempo estimado. */
+  nearbyPlaces: NearbyPlaceData[];
   photos: File[];
   floorPlans: FloorPlanData[];
   id?: string;
@@ -43,7 +67,10 @@ export const useMultipleProjects = () => {
     condominiumFee: '',
     iptu: '',
     description: '',
+    badge: '',
     amenities: [],
+    differentials: [],
+    nearbyPlaces: [],
     photos: [],
     floorPlans: [],
   }]);
@@ -65,7 +92,10 @@ export const useMultipleProjects = () => {
         condominiumFee: '',
         iptu: '',
         description: '',
+        badge: '',
         amenities: [],
+        differentials: [],
+        nearbyPlaces: [],
         photos: [],
         floorPlans: [],
       }]);
@@ -100,7 +130,10 @@ export const useMultipleProjects = () => {
       condominiumFee: '',
       iptu: '',
       description: '',
+      badge: '',
       amenities: [],
+      differentials: [],
+      nearbyPlaces: [],
       photos: [],
       floorPlans: [],
     }]);

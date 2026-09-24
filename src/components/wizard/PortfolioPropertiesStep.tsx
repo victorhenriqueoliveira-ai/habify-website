@@ -5,8 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Upload, X, MapPin, Loader2, LayoutPanelLeft } from 'lucide-react';
-import { useMultipleProjects, PropertyData, FloorPlanData } from '@/hooks/useMultipleProjects';
+import { Plus, Trash2, Upload, X, MapPin, Loader2, LayoutPanelLeft, Star } from 'lucide-react';
+import { useMultipleProjects, PropertyData, FloorPlanData, DifferentialData, NearbyPlaceData } from '@/hooks/useMultipleProjects';
 import { formatCurrency } from '@/lib/validations';
 import { usePropertyCepSearch } from '@/hooks/usePropertyCepSearch';
 import { toast } from 'sonner';
@@ -73,7 +73,10 @@ export const PortfolioPropertiesStep = ({
           condominiumFee: '',
           iptu: '',
           description: '',
+          badge: '',
           amenities: [],
+          differentials: [],
+          nearbyPlaces: [],
           photos: [],
           floorPlans: [],
         },
@@ -138,6 +141,58 @@ export const PortfolioPropertiesStep = ({
       'floorPlans',
       currentPlans.map((plan, i) => (i === planIndex ? { ...plan, name } : plan)),
     );
+  };
+
+  const updateFloorPlanField = (
+    propertyIndex: number,
+    planIndex: number,
+    field: 'price' | 'badge' | 'highlighted',
+    value: string | boolean,
+  ) => {
+    const currentPlans = properties[propertyIndex].floorPlans;
+    updateProperty(
+      propertyIndex,
+      'floorPlans',
+      currentPlans.map((plan, i) => (i === planIndex ? { ...plan, [field]: value } : plan)),
+    );
+  };
+
+  const addDifferential = (propertyIndex: number) => {
+    const current = properties[propertyIndex].differentials;
+    updateProperty(propertyIndex, 'differentials', [...current, { title: '', description: '' }]);
+  };
+
+  const updateDifferential = (propertyIndex: number, diffIndex: number, field: keyof DifferentialData, value: string) => {
+    const current = properties[propertyIndex].differentials;
+    updateProperty(
+      propertyIndex,
+      'differentials',
+      current.map((d, i) => (i === diffIndex ? { ...d, [field]: value } : d)),
+    );
+  };
+
+  const removeDifferential = (propertyIndex: number, diffIndex: number) => {
+    const current = properties[propertyIndex].differentials;
+    updateProperty(propertyIndex, 'differentials', current.filter((_, i) => i !== diffIndex));
+  };
+
+  const addNearbyPlace = (propertyIndex: number) => {
+    const current = properties[propertyIndex].nearbyPlaces;
+    updateProperty(propertyIndex, 'nearbyPlaces', [...current, { name: '', time: '' }]);
+  };
+
+  const updateNearbyPlace = (propertyIndex: number, placeIndex: number, field: keyof NearbyPlaceData, value: string) => {
+    const current = properties[propertyIndex].nearbyPlaces;
+    updateProperty(
+      propertyIndex,
+      'nearbyPlaces',
+      current.map((p, i) => (i === placeIndex ? { ...p, [field]: value } : p)),
+    );
+  };
+
+  const removeNearbyPlace = (propertyIndex: number, placeIndex: number) => {
+    const current = properties[propertyIndex].nearbyPlaces;
+    updateProperty(propertyIndex, 'nearbyPlaces', current.filter((_, i) => i !== placeIndex));
   };
 
   const toggleAmenity = (propertyIndex: number, amenity: string) => {
@@ -213,6 +268,19 @@ export const PortfolioPropertiesStep = ({
                     value={property.title}
                     onChange={(e) => updateProperty(index, 'title', e.target.value)}
                     placeholder="Ex: Apartamento 3 quartos no centro"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor={`badge-${index}`}>
+                    Selo do Imóvel
+                    <span className="text-muted-foreground text-xs ml-2">(opcional — aparece em destaque no site)</span>
+                  </Label>
+                  <Input
+                    id={`badge-${index}`}
+                    value={property.badge}
+                    onChange={(e) => updateProperty(index, 'badge', e.target.value)}
+                    placeholder="Ex: Lançamento, Últimas unidades, Pronto para morar"
                   />
                 </div>
 
@@ -444,9 +512,45 @@ export const PortfolioPropertiesStep = ({
                 />
               </div>
 
-              {/* Amenities */}
+              {/* Differentials — specs vendáveis em destaque, aparecem com ícone no site */}
               <div>
-                <Label className="mb-3 block">Diferenciais e Amenidades</Label>
+                <Label className="mb-1 block">
+                  Diferenciais em Destaque
+                  <span className="text-muted-foreground text-xs ml-2 font-normal">
+                    (opcional — aparecem em cards com ícone, ex: "Segurança", "Valorização")
+                  </span>
+                </Label>
+                <div className="mt-3 space-y-3">
+                  {property.differentials.map((differential, diffIndex) => (
+                    <div key={diffIndex} className="flex gap-3 items-start rounded-lg border p-3">
+                      <Star className="h-4 w-4 text-muted-foreground mt-2.5 shrink-0" />
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Input
+                          value={differential.title}
+                          onChange={(e) => updateDifferential(index, diffIndex, 'title', e.target.value)}
+                          placeholder="Ex: Segurança"
+                        />
+                        <Input
+                          value={differential.description}
+                          onChange={(e) => updateDifferential(index, diffIndex, 'description', e.target.value)}
+                          placeholder="Ex: Condomínio fechado com portaria 24h"
+                        />
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeDifferential(index, diffIndex)}>
+                        <X className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => addDifferential(index)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar diferencial
+                  </Button>
+                </div>
+              </div>
+
+              {/* Amenities — lazer e infraestrutura do condomínio */}
+              <div>
+                <Label className="mb-3 block">Lazer e Infraestrutura do Condomínio</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {amenitiesOptions.map((amenity) => (
                     <div key={amenity} className="flex items-center space-x-2">
@@ -463,6 +567,41 @@ export const PortfolioPropertiesStep = ({
                       </label>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Nearby places — pontos de interesse com tempo estimado */}
+              <div>
+                <Label className="mb-1 block">
+                  Pontos de Interesse Próximos
+                  <span className="text-muted-foreground text-xs ml-2 font-normal">
+                    (opcional — ex: "Metrô Faria Lima" · "6 min")
+                  </span>
+                </Label>
+                <div className="mt-3 space-y-3">
+                  {property.nearbyPlaces.map((place, placeIndex) => (
+                    <div key={placeIndex} className="flex gap-3 items-center">
+                      <Input
+                        value={place.name}
+                        onChange={(e) => updateNearbyPlace(index, placeIndex, 'name', e.target.value)}
+                        placeholder="Ex: Metrô Faria Lima"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={place.time}
+                        onChange={(e) => updateNearbyPlace(index, placeIndex, 'time', e.target.value)}
+                        placeholder="Ex: 6 min"
+                        className="w-28"
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeNearbyPlace(index, placeIndex)}>
+                        <X className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => addNearbyPlace(index)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar ponto de interesse
+                  </Button>
                 </div>
               </div>
 
@@ -532,22 +671,56 @@ export const PortfolioPropertiesStep = ({
                   {property.floorPlans.length > 0 && (
                     <div className="space-y-3">
                       {property.floorPlans.map((plan, planIndex) => (
-                        <div key={planIndex} className="flex items-center gap-3 rounded-lg border p-3">
+                        <div key={planIndex} className="flex items-start gap-3 rounded-lg border p-3">
                           <img
                             src={URL.createObjectURL(plan.file)}
                             alt={plan.name || `Planta ${planIndex + 1}`}
                             className="w-20 h-20 object-cover rounded border shrink-0"
                           />
-                          <div className="flex-1">
-                            <Label htmlFor={`floorplan-name-${index}-${planIndex}`} className="text-xs text-muted-foreground">
-                              Nome da planta
-                            </Label>
-                            <Input
-                              id={`floorplan-name-${index}-${planIndex}`}
-                              value={plan.name}
-                              onChange={(e) => renameFloorPlan(index, planIndex, e.target.value)}
-                              placeholder="Ex: Planta 2 quartos, Cobertura duplex..."
-                            />
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="sm:col-span-2">
+                              <Label htmlFor={`floorplan-name-${index}-${planIndex}`} className="text-xs text-muted-foreground">
+                                Nome da planta
+                              </Label>
+                              <Input
+                                id={`floorplan-name-${index}-${planIndex}`}
+                                value={plan.name}
+                                onChange={(e) => renameFloorPlan(index, planIndex, e.target.value)}
+                                placeholder="Ex: Planta 2 quartos, Cobertura duplex..."
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`floorplan-price-${index}-${planIndex}`} className="text-xs text-muted-foreground">
+                                Preço (opcional)
+                              </Label>
+                              <Input
+                                id={`floorplan-price-${index}-${planIndex}`}
+                                value={plan.price || ''}
+                                onChange={(e) => updateFloorPlanField(index, planIndex, 'price', e.target.value)}
+                                placeholder="R$ 0,00"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`floorplan-badge-${index}-${planIndex}`} className="text-xs text-muted-foreground">
+                                Selo (opcional)
+                              </Label>
+                              <Input
+                                id={`floorplan-badge-${index}-${planIndex}`}
+                                value={plan.badge || ''}
+                                onChange={(e) => updateFloorPlanField(index, planIndex, 'badge', e.target.value)}
+                                placeholder="Ex: Mais procurado"
+                              />
+                            </div>
+                            <div className="sm:col-span-2 flex items-center space-x-2">
+                              <Checkbox
+                                id={`floorplan-highlighted-${index}-${planIndex}`}
+                                checked={!!plan.highlighted}
+                                onCheckedChange={(checked) => updateFloorPlanField(index, planIndex, 'highlighted', !!checked)}
+                              />
+                              <label htmlFor={`floorplan-highlighted-${index}-${planIndex}`} className="text-sm cursor-pointer">
+                                Destacar esta planta no site
+                              </label>
+                            </div>
                           </div>
                           <Button
                             type="button"

@@ -12,7 +12,12 @@ export interface WizardData {
   // Step 2: Logo
   hasLogo: boolean;
   logoUrl?: string;
-  
+
+  // Vídeo/imagem de capa do hero (opcional) — upload direto pro Storage,
+  // igual ao logo. Sem heroVideoUrl, o site cai no gradiente de tema padrão.
+  heroMediaType?: 'image' | 'video';
+  heroVideoUrl?: string;
+
   // Step 5: Domain
   desiredDomain?: string;
   
@@ -37,6 +42,13 @@ export interface WizardData {
   // Avançado (opcional)
   /** Measurement ID do GA4 (ex: "G-XXXXXXX") — analytics só carrega no site gerado se preenchido. */
   googleAnalyticsId?: string;
+
+  // Estatísticas de credibilidade (opcionais) — mostradas na home do modo
+  // "multiple" (barra de números do corretor/imobiliária). String pra seguir
+  // o mesmo padrão dos outros campos numéricos do wizard (parse no submit).
+  statsPropertiesSold?: string;
+  statsYearsExperience?: string;
+  statsHappyClients?: string;
 }
 
 export interface LayoutOption {

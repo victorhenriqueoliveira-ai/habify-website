@@ -76,7 +76,10 @@ const ProjectWizardPage = () => {
     condominiumFee: '',
     iptu: '',
     description: '',
+    badge: '',
     amenities: [],
+    differentials: [],
+    nearbyPlaces: [],
     photos: [],
     floorPlans: [],
   }]);
@@ -299,6 +302,11 @@ const ProjectWizardPage = () => {
           hasLogo: wizardData.hasLogo,
           desiredDomain: wizardData.desiredDomain,
           googleAnalyticsId: wizardData.googleAnalyticsId,
+          heroMediaType: wizardData.heroVideoUrl ? wizardData.heroMediaType || 'video' : undefined,
+          heroVideoUrl: wizardData.heroVideoUrl,
+          statsPropertiesSold: wizardData.statsPropertiesSold,
+          statsYearsExperience: wizardData.statsYearsExperience,
+          statsHappyClients: wizardData.statsHappyClients,
         },
       });
 
@@ -342,11 +350,17 @@ const ProjectWizardPage = () => {
               // console.log(`Uploaded ${photoUrls.length} photos for property: ${prop.title}`);
 
               // Upload das plantas — separadas das fotos gerais, cada uma com o nome digitado no wizard.
-              const floorPlans: { name: string; imageUrl: string }[] = [];
+              const floorPlans: { name: string; imageUrl: string; price?: number; badge?: string; highlighted?: boolean }[] = [];
               for (const plan of prop.floorPlans || []) {
                 const fileUrls = await uploadMultipleFiles([plan.file], 'project-photos', `properties/${projectId}/floor-plans`);
                 if (fileUrls.length > 0) {
-                  floorPlans.push({ name: plan.name?.trim() || 'Planta', imageUrl: fileUrls[0] });
+                  floorPlans.push({
+                    name: plan.name?.trim() || 'Planta',
+                    imageUrl: fileUrls[0],
+                    price: plan.price ? parseFloat(plan.price.replace(/\D/g, '')) / 100 : undefined,
+                    badge: plan.badge?.trim() || undefined,
+                    highlighted: plan.highlighted || undefined,
+                  });
                 }
               }
 
@@ -366,7 +380,10 @@ const ProjectWizardPage = () => {
                 condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee.replace(/\D/g, '')) / 100 : null,
                 iptu: prop.iptu ? parseFloat(prop.iptu.replace(/\D/g, '')) / 100 : null,
                 description: prop.description || null,
+                badge: prop.badge?.trim() || null,
                 amenities: prop.amenities || [],
+                differentials: prop.differentials || [],
+                nearby_places: prop.nearbyPlaces || [],
                 photos: photoUrls,
                 floor_plans: floorPlans,
               };
