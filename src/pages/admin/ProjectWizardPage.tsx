@@ -357,7 +357,10 @@ const ProjectWizardPage = () => {
                   floorPlans.push({
                     name: plan.name?.trim() || 'Planta',
                     imageUrl: fileUrls[0],
-                    price: plan.price ? parseFloat(plan.price.replace(/\D/g, '')) / 100 : undefined,
+                    // plan.price vem de um <Input type="number"> simples (sem máscara de
+                    // moeda) — diferente do campo "Valor" do imóvel, não precisa (nem pode)
+                    // dividir por 100 aqui.
+                    price: plan.price ? parseFloat(plan.price) || undefined : undefined,
                     badge: plan.badge?.trim() || undefined,
                     highlighted: plan.highlighted || undefined,
                   });
@@ -377,8 +380,10 @@ const ProjectWizardPage = () => {
                 parking_spaces: prop.parkingSpaces ? parseInt(prop.parkingSpaces) : null,
                 construction_year: prop.constructionYear ? parseInt(prop.constructionYear) : null,
                 floor_number: prop.floorNumber ? parseInt(prop.floorNumber) : null,
-                condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee.replace(/\D/g, '')) / 100 : null,
-                iptu: prop.iptu ? parseFloat(prop.iptu.replace(/\D/g, '')) / 100 : null,
+                // condominiumFee/iptu vêm de <Input type="number"> simples (sem máscara de
+                // moeda como o campo "Valor") — o valor digitado já é o valor em reais.
+                condominium_fee: prop.condominiumFee ? parseFloat(prop.condominiumFee) || null : null,
+                iptu: prop.iptu ? parseFloat(prop.iptu) || null : null,
                 description: prop.description || null,
                 badge: prop.badge?.trim() || null,
                 amenities: prop.amenities || [],
