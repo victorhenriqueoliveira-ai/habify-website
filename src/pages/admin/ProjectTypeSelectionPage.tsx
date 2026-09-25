@@ -8,13 +8,15 @@ import { useProjectLimits } from '@/hooks/useProjectLimits';
 const ProjectTypeSelectionPage = () => {
   const navigate = useNavigate();
   const { hasRole } = useAuth();
-  const { canCreateProject } = useProjectLimits();
-  
+  const { canCreateProject, loading: plansLoading } = useProjectLimits();
+
   // For devs/admins, always allow project creation
   const isDevOrAdmin = hasRole(['admin', 'dev']);
-  
-  // Redirect if regular user can't create projects
-  if (!isDevOrAdmin && !canCreateProject) {
+
+  // Redirect if regular user can't create projects — só depois que os planos
+  // terminarem de carregar, senão redireciona errado antes de saber se o
+  // usuário tem plano disponível.
+  if (!isDevOrAdmin && !plansLoading && !canCreateProject) {
     navigate('/admin/new-project-purchase');
     return null;
   }

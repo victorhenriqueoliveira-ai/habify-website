@@ -41,7 +41,7 @@ const NewProjectPage = () => {
   const { projects, createProject, loading: projectsLoading } = useProjects();
   const { user, hasRole } = useAuth();
   const { users } = useUsers();
-  const { canCreateProject } = useProjectLimits();
+  const { canCreateProject, loading: plansLoading } = useProjectLimits();
   const [loading, setLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   
@@ -58,8 +58,10 @@ const NewProjectPage = () => {
   // Enable realtime updates
   useRealtimeProjects();
   
-  // Redirect if regular user can't create projects
-  if (!isDevOrAdmin && !canCreateProject) {
+  // Redirect if regular user can't create projects — só depois que os planos
+  // terminarem de carregar, senão redireciona errado antes de saber se o
+  // usuário tem plano disponível.
+  if (!isDevOrAdmin && !plansLoading && !canCreateProject) {
     navigate('/admin/new-project-purchase');
     return null;
   }

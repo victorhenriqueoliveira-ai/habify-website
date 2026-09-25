@@ -1,38 +1,22 @@
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProjects } from '@/hooks/useProjects';
+import { useUserPlans } from '@/hooks/useUserPlans';
 
+/**
+ * Se o usuário pode criar um projeto novo agora. Antes limitava a 1 projeto
+ * ativo por vez (mesmo com planos pagos sobrando) — um usuário com 2 planos
+ * não conseguia começar o segundo site até o primeiro ser concluído. Agora
+ * a única regra real é ter plano disponível pra usar (mesma checagem que já
+ * existia em MyProjectsPage pro botão "Criar Novo Projeto"); admin/dev
+ * continuam sem limite.
+ */
 export const useProjectLimits = () => {
-  const { user, hasRole } = useAuth();
-  const { projects } = useProjects();
-  const [canCreateProject, setCanCreateProject] = useState(true);
-  const [activeProjectsCount, setActiveProjectsCount] = useState(0);
+  const { hasRole } = useAuth();
+  const { availablePlans, loading } = useUserPlans();
 
-  useEffect(() => {
-    if (!user?.id && !user?.userId) return;
-
-    const userId = user.userId || user.id;
-    const userProjects = projects.filter(p => p.userId === userId);
-    
-    // Projetos ativos são aqueles que não estão "completed" ou "rejected"
-    const activeProjects = userProjects.filter(p => 
-      p.status !== 'completed' && p.status !== 'rejected'
-    );
-    
-    setActiveProjectsCount(activeProjects.length);
-    
-    // Limitar a 1 projeto ativo por usuário regular
-    // Admins e devs podem ter projetos ilimitados (usando user_roles table)
-    if (hasRole(['admin', 'dev'])) {
-      setCanCreateProject(true);
-    } else {
-      setCanCreateProject(activeProjects.length === 0);
-    }
-  }, [projects, user, hasRole]);
+  const canCreateProject = hasRole(['admin', 'dev']) || availablePlans.length > 0;
 
   return {
     canCreateProject,
-    activeProjectsCount,
-    maxProjects: 1,
+    loading,
   };
 };

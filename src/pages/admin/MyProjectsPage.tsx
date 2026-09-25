@@ -19,7 +19,6 @@ import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useProjectLimits } from '@/hooks/useProjectLimits';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 import { useUserPlans } from '@/hooks/useUserPlans';
 
@@ -29,7 +28,6 @@ export const MyProjectsPage = () => {
   const isRegularUser = hasRole(['user']);
   const { projects } = useProjects();
   const { users } = useUsers();
-  useProjectLimits();
   useCanViewPlans();
   const { availablePlans, loading } = useUserPlans();
 
