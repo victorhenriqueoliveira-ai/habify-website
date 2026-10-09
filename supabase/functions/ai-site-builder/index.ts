@@ -338,27 +338,55 @@ serve(async (req) => {
       // Criar o Project com gitRepository NÃO dispara build sozinho quando o
       // repo já tinha commits antes do link (não existe "push novo" pra
       // acionar o webhook) — sem isso o Project fica sem nenhum deployment.
+      //
+      // A integração GitHub<->Vercel do Project recém-criado (ou recém
+      // vinculado a este repo) leva alguns segundos pra sincronizar depois
+      // que o `generate` do template + o commit do site.config.json acabaram
+      // de acontecer — disparar o deploy antes disso falha com "Git
+      // information retrieval failed for this deployment" mesmo com repo e
+      // commit já existindo de verdade no GitHub. Retry com backoff, no
+      // mesmo padrão do polling de `fileExists` acima.
       let deploymentId: string | null = null;
       if (vercelProjectId) {
-        const deployResponse = await fetch(`https://api.vercel.com/v13/deployments${vercelQuery}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${vercelToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: repoName,
-            project: vercelProjectId,
-            target: 'production',
-            gitSource: { type: 'github', repoId, ref: defaultBranch },
-          }),
-        });
-        if (!deployResponse.ok) {
-          const errText = await deployResponse.text();
-          console.error('[ai-site-builder] Falha ao disparar deploy inicial na Vercel:', errText);
-        } else {
-          const deployData = await deployResponse.json();
-          deploymentId = (deployData.id as string) ?? null;
+        const DEPLOY_RETRY_DELAYS_MS = [3000, 5000, 8000, 8000];
+        let lastDeployError: string | null = null;
+        for (let attempt = 0; attempt <= DEPLOY_RETRY_DELAYS_MS.length; attempt++) {
+          const deployResponse = await fetch(`https://api.vercel.com/v13/deployments${vercelQuery}`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${vercelToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: repoName,
+              project: vercelProjectId,
+              target: 'production',
+              gitSource: { type: 'github', repoId, ref: defaultBranch },
+            }),
+          });
+          if (deployResponse.ok) {
+            const deployData = await deployResponse.json();
+            deploymentId = (deployData.id as string) ?? null;
+            lastDeployError = null;
+            break;
+          }
+          lastDeployError = await deployResponse.text();
+          const delay = DEPLOY_RETRY_DELAYS_MS[attempt];
+          if (delay === undefined) break;
+          console.warn(
+            `[ai-site-builder] Falha ao disparar deploy inicial na Vercel (tentativa ${attempt + 1}/${DEPLOY_RETRY_DELAYS_MS.length + 1}), tentando de novo em ${delay}ms:`,
+            lastDeployError,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+        if (lastDeployError) {
+          console.error('[ai-site-builder] Falha ao disparar deploy inicial na Vercel após retries:', lastDeployError);
+          await supabaseService.from('ai_generation_logs').insert({
+            project_id: projectId,
+            step: 'deploying',
+            status: 'ok',
+            payload: { warning: `Deploy inicial falhou após retries: ${lastDeployError}` },
+          });
         }
       }
 
