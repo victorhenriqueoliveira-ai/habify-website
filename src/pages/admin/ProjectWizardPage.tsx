@@ -141,7 +141,8 @@ const ProjectWizardPage = () => {
           toast.error(`Imóvel ${i + 1}: Localização é obrigatória`);
           return false;
         }
-        if (!prop.price || parseFloat(prop.price) <= 0) {
+        // Preço é opcional (vira "Sob consulta" no site) — só valida se foi preenchido.
+        if (prop.price && parseFloat(prop.price.replace(/\D/g, '')) <= 0) {
           toast.error(`Imóvel ${i + 1}: Preço inválido`);
           return false;
         }
@@ -371,7 +372,8 @@ const ProjectWizardPage = () => {
                 project_id: projectId,
                 title: prop.title,
                 location: prop.location,
-                price: parseFloat(prop.price.replace(/\D/g, '')) / 100, // Remove formatação e divide por 100
+                // Sem preço preenchido = "Sob consulta" no site (0 no banco).
+                price: prop.price ? parseFloat(prop.price.replace(/\D/g, '')) / 100 : 0,
                 property_type: prop.propertyType,
                 purpose: prop.purpose,
                 bedrooms: prop.bedrooms ? parseInt(prop.bedrooms) : null,

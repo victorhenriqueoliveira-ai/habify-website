@@ -375,7 +375,12 @@ export const PortfolioPropertiesStep = ({
                 </div>
 
                <div>
-                  <Label htmlFor={`price-${index}`}>Valor *</Label>
+                  <Label htmlFor={`price-${index}`}>
+                    Valor
+                    <span className="text-muted-foreground text-xs ml-2 font-normal">
+                      (opcional — deixe em branco para exibir &quot;Sob consulta&quot;)
+                    </span>
+                  </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       R$
@@ -405,7 +410,6 @@ export const PortfolioPropertiesStep = ({
                       }}
                       placeholder="0,00"
                       className="pl-10"
-                      required
                     />
                   </div>
                 </div>
