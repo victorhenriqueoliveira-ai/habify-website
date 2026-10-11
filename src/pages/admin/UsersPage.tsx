@@ -93,10 +93,16 @@ export const UsersPage = () => {
             Gerencie todos os usuários do sistema
           </p>
         </div>
-        <Button onClick={() => navigate('/admin/users/new')}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Novo Usuário
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/users/create-admin')}>
+            <Shield className="mr-2 h-4 w-4" />
+            Criar Admin/Dev
+          </Button>
+          <Button onClick={() => navigate('/admin/users/new')}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Novo Usuário
+          </Button>
+        </div>
       </div>
       
 

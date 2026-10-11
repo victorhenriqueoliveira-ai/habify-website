@@ -1,5 +1,7 @@
-import { Bell, LogOut, Menu, Home, ChevronRight, Plus } from 'lucide-react';
+import { Bell, LogOut, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,31 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import Logo from '/logotipo_habify.png';
+import { findNavLabel } from './navConfig';
 
-interface AdminTopbarProps {
-  onMenuClick: () => void;
-}
-
-const routeLabels: Record<string, string> = {
-  '/admin': 'Usuários',
-  '/admin/my-projects': 'Meus Projetos',
-  '/admin/subscriptions': 'Assinaturas',
-  '/admin/my-maintenances': 'Manutenções',
-  '/admin/projects': 'Projetos',
-  '/admin/payments': 'Pagamentos',
-  '/admin/maintenances': 'Manutenções Admin',
-  '/admin/maintenances-dashboard': 'Dashboard Manutenções',
-  '/admin/reports': 'Relatórios',
-  '/admin/logs': 'Logs',
-  '/admin/settings': 'Configurações',
-  '/admin/payment-settings': 'Gateway de Pagamento',
-  '/admin/profile': 'Meu Perfil',
-  '/admin/users/create-admin': 'Criar Admin/Dev',
-  '/admin/notifications': 'Notificações',
-};
-
-export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
+export const AdminTopbar = () => {
   const { user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,13 +38,11 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
   const getBreadcrumbs = () => {
     const path = location.pathname;
     const parts = path.split('/').filter(Boolean);
-    
-    const breadcrumbs = [
-      { label: 'Painel', path: '/admin' }
-    ];
+
+    const breadcrumbs = [{ label: 'Painel', path: '/admin' }];
 
     if (path !== '/admin' && path !== '/admin/') {
-      const label = routeLabels[path] || parts[parts.length - 1]?.replace(/-/g, ' ');
+      const label = findNavLabel(path) || parts[parts.length - 1]?.replace(/-/g, ' ');
       breadcrumbs.push({ label, path });
     }
 
@@ -74,38 +52,31 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-background shadow-sm">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
-        {/* Left side - Menu, Logo & Breadcrumbs */}
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden h-10 w-10 flex-shrink-0"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <div className="hidden sm:flex lg:hidden items-center gap-3 flex-shrink-0">
-            <img src={Logo} alt="HabiFy" className="h-8 w-8 object-contain" />
-            <span className="font-bold text-lg hidden md:inline">HabiFy</span>
-          </div>
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background">
+      <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        {/* Left side - Menu toggle, Breadcrumbs & Search */}
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <SidebarTrigger className="h-10 w-10 shrink-0 md:hidden" />
 
           {/* Breadcrumbs */}
-          <nav className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+          <nav className="hidden min-w-0 items-center gap-2 text-sm text-muted-foreground md:flex">
             {breadcrumbs.map((crumb, index) => (
               <span key={crumb.path} className="contents">
-                {index > 0 && <ChevronRight className="w-4 h-4 flex-shrink-0" />}
+                {index > 0 && <ChevronRight className="h-4 w-4 shrink-0" />}
                 <Link
                   to={crumb.path}
-                  className="hover:text-foreground transition-colors truncate capitalize"
+                  className="truncate capitalize transition-colors hover:text-foreground"
                 >
                   {crumb.label}
                 </Link>
               </span>
             ))}
           </nav>
+
+          <div className="relative ml-2 hidden max-w-xs flex-1 lg:block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Buscar..." className="h-9 bg-muted/50 pl-9" />
+          </div>
         </div>
 
         {/* Right side - Actions */}
@@ -131,7 +102,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 max-h-[400px] overflow-y-auto">
+            <DropdownMenuContent align="end" className="max-h-[400px] w-80 overflow-y-auto shadow-admin-popover">
               <div className="p-3 border-b sticky top-0 bg-background">
                 <h3 className="font-semibold">Notificações</h3>
               </div>
@@ -185,7 +156,7 @@ export const AdminTopbar = ({ onMenuClick }: AdminTopbarProps) => {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuContent align="end" className="w-72 shadow-admin-popover">
               <div className="flex items-center gap-3 p-3 border-b">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={user.avatar} alt={user.name} />
