@@ -18,6 +18,8 @@ export default {
 			}
 		},
 		extend: {
+			// Tokens compartilhados (admin + marketing) — todos vêm de custom
+			// properties em src/index.css, seguros de usar em qualquer tela.
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -74,7 +76,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors for Pulse Robot
+				// Marketing site only — não usar em /admin (cores literais da home pública).
 				pulse: {
 					"50": "#fff7ed",
 					"100": "#ffedd5",
@@ -101,6 +103,8 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
+				// accordion-down/up: compartilhado (usado pelo componente shadcn Accordion).
+				// Os demais keyframes abaixo são só do marketing site.
 				'accordion-down': {
 					from: {
 						height: '0'
@@ -171,11 +175,18 @@ export default {
 				'sans': ['Inter', 'sans-serif'],
 				'display': ['Brockmann', 'SF Pro Display', 'Inter', 'sans-serif'],
 				'brockmann': ['Brockmann', 'serif'],
+				// Usado em MadeByHumans.tsx (marketing) — mesmo sem @font-face
+				// próprio, cai no serif padrão do navegador, efeito intencional ali.
 				'playfair': ['"Playfair Display"', 'serif'],
 			},
 			boxShadow: {
+				// Marketing site only.
 				'elegant': '0 4px 20px rgba(0, 0, 0, 0.08)',
 				'elegant-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+				// Admin dashboard — cards elevados estilo Linear/Vercel.
+				'admin-card': '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)',
+				'admin-card-hover': '0 2px 8px 0 rgb(0 0 0 / 0.08), 0 1px 2px 0 rgb(0 0 0 / 0.04)',
+				'admin-popover': '0 4px 16px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08)',
 			}
 		}
 	},

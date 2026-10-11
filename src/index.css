@@ -118,7 +118,7 @@
   }
 
   body {
-    @apply bg-white text-black font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 
   /* Smooth scrolling */
@@ -417,4 +417,9 @@ html {
 
 .animate-ping-slow {
   animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Admin dashboard utilities — usar só em /admin, não nas páginas de marketing acima */
+.admin-card-elevated {
+  @apply bg-card border border-border rounded-lg shadow-admin-card transition-shadow hover:shadow-admin-card-hover;
 }
