@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useSystemLogs } from '@/hooks/useSystemLogs';
 import { useAuditLogger } from '@/hooks/useAuditLogger';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 type LogLevel = 'info' | 'warning' | 'error' | 'success';
 
@@ -107,16 +107,9 @@ export const LogsPage = () => {
       // Log the export action
       await logSystemAction('EXPORT_DATA', { type: 'system_logs', count: logs.length });
       
-      toast({
-        title: "Logs exportados",
-        description: `${logs.length} logs exportados com sucesso.`,
-      });
+      toast.success("Logs exportados", { description: `${logs.length} logs exportados com sucesso.` });
     } catch (error) {
-      toast({
-        title: "Erro ao exportar",
-        description: "Falha ao exportar os logs do sistema.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao exportar", { description: "Falha ao exportar os logs do sistema." });
     }
   };
 
@@ -124,16 +117,9 @@ export const LogsPage = () => {
     try {
       await fetchLogs();
       await logSystemAction('VIEW_LOGS', { action: 'refresh' });
-      toast({
-        title: "Logs atualizados",
-        description: "Os logs foram atualizados com sucesso.",
-      });
+      toast.success("Logs atualizados", { description: "Os logs foram atualizados com sucesso." });
     } catch (error) {
-      toast({
-        title: "Erro ao atualizar",
-        description: "Falha ao atualizar os logs do sistema.",
-        variant: "destructive",
-      });
+      toast.error("Erro ao atualizar", { description: "Falha ao atualizar os logs do sistema." });
     }
   };
 

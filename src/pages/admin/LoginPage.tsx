@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Loader2, Lock, Mail, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 
 export const LoginPage = () => {
@@ -27,21 +27,14 @@ export const LoginPage = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Preencha todos os campos' });
       return;
     }
 
     const success = await login(email, password);
 
     if (success) {
-      toast({
-        title: 'Sucesso!',
-        description: 'Login realizado com sucesso',
-      });
+      toast.success('Sucesso!', { description: 'Login realizado com sucesso' });
       // Redirect based on user role
       if (hasRole(['admin', 'dev'])) {
         navigate('/admin/users');
@@ -49,11 +42,7 @@ export const LoginPage = () => {
         navigate('/admin/my-projects');
       }
     } else {
-      toast({
-        title: 'Erro',
-        description: 'Email ou senha incorretos.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Email ou senha incorretos.' });
     }
   };
 

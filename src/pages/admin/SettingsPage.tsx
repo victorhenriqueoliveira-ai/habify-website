@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { useAuditLogger } from '@/hooks/useAuditLogger';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
@@ -66,17 +66,10 @@ export const SettingsPage = () => {
         timestamp: new Date().toISOString()
       });
 
-      toast({
-        title: 'Configurações salvas',
-        description: 'As configurações foram atualizadas com sucesso.',
-      });
+      toast.success('Configurações salvas', { description: 'As configurações foram atualizadas com sucesso.' });
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Ocorreu um erro ao salvar as configurações.',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao salvar', { description: 'Ocorreu um erro ao salvar as configurações.' });
     } finally {
       setLoading(false);
     }
@@ -134,11 +127,7 @@ export const SettingsPage = () => {
       }
     } catch (error) {
       console.error('Error updating setting:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao atualizar configuração.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Falha ao atualizar configuração.' });
     }
   };
 

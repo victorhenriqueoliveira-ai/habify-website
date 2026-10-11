@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Mail, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 
 export const ForgotPasswordPage = () => {
@@ -22,20 +22,12 @@ export const ForgotPasswordPage = () => {
     e.preventDefault();
     
     if (!email) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha o campo de email',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Preencha o campo de email' });
       return;
     }
 
     if (!validateEmail(email)) {
-      toast({
-        title: 'Erro',
-        description: 'Por favor, insira um email válido',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Por favor, insira um email válido' });
       return;
     }
 
@@ -52,16 +44,10 @@ export const ForgotPasswordPage = () => {
       if (error) throw error;
 
       setSent(true);
-      toast({
-        title: 'Email enviado!',
-        description: 'Verifique sua caixa de entrada para redefinir sua senha',
-      });
+      toast.success('Email enviado!', { description: 'Verifique sua caixa de entrada para redefinir sua senha' });
     } catch (error: any) {
       // Error silenced for security - details not exposed to client
-      toast({
-        title: 'Email enviado',
-        description: 'Se o email existir em nossa base, você receberá as instruções',
-      });
+      toast.success('Email enviado', { description: 'Se o email existir em nossa base, você receberá as instruções' });
       setSent(true);
     } finally {
       setLoading(false);

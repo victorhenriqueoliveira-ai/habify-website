@@ -13,7 +13,7 @@ import {
 import { ArrowLeft, Save } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
 import { usePlans } from '@/hooks/usePlans';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export const NewUserPage = () => {
@@ -34,20 +34,12 @@ export const NewUserPage = () => {
     e.preventDefault();
     
     if (!formData.full_name || !formData.email || !formData.password || !formData.plan_id || !formData.creation_type) {
-      toast({
-        title: 'Erro de validação',
-        description: 'Preencha todos os campos obrigatórios.',
-        variant: 'destructive',
-      });
+      toast.error('Erro de validação', { description: 'Preencha todos os campos obrigatórios.' });
       return;
     }
 
     if (formData.creation_type === 'pago' && !formData.gateway) {
-      toast({
-        title: 'Erro de validação',
-        description: 'Selecione o método de pagamento para usuários pagos.',
-        variant: 'destructive',
-      });
+      toast.error('Erro de validação', { description: 'Selecione o método de pagamento para usuários pagos.' });
       return;
     }
 
@@ -79,19 +71,12 @@ export const NewUserPage = () => {
         // Don't fail user creation if email fails
       }
 
-      toast({
-        title: 'Usuário criado com sucesso',
-        description: `${formData.full_name} foi criado com o plano ${selectedPlan?.name} e ${result.data?.credits || 0} crédito(s).`,
-      });
+      toast.success('Usuário criado com sucesso', { description: `${formData.full_name} foi criado com o plano ${selectedPlan?.name} e ${result.data?.credits || 0} crédito(s).` });
 
       navigate('/admin/users');
     } catch (error: any) {
       console.error('User creation error:', error);
-      toast({
-        title: 'Erro ao criar usuário',
-        description: error?.message || 'Ocorreu um erro ao criar o usuário. Tente novamente.',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao criar usuário', { description: error?.message || 'Ocorreu um erro ao criar o usuário. Tente novamente.' });
     } finally {
       setLoading(false);
     }

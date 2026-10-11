@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
 import { UserRole } from '@/types/admin';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const roleOptions = [
   { value: 'user', label: 'Corretor' },
@@ -59,18 +59,11 @@ export const UserEditPage = () => {
         isActive: formData.isActive,
       });
 
-      toast({
-        title: 'Usuário atualizado',
-        description: 'As alterações foram salvas com sucesso.',
-      });
-      
+      toast.success('Usuário atualizado', { description: 'As alterações foram salvas com sucesso.' });
+
       navigate('/admin/users');
     } catch (error) {
-      toast({
-        title: 'Erro ao atualizar',
-        description: 'Ocorreu um erro ao salvar as alterações.',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao atualizar', { description: 'Ocorreu um erro ao salvar as alterações.' });
     } finally {
       setLoading(false);
     }

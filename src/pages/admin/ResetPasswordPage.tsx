@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 
@@ -30,29 +30,17 @@ export const ResetPasswordPage = () => {
     e.preventDefault();
     
     if (!password || !confirmPassword) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Preencha todos os campos' });
       return;
     }
 
     if (!isPasswordValid) {
-      toast({
-        title: 'Erro',
-        description: 'A senha não atende aos requisitos de segurança',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'A senha não atende aos requisitos de segurança' });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: 'Erro',
-        description: 'As senhas não coincidem',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'As senhas não coincidem' });
       return;
     }
 
@@ -65,21 +53,14 @@ export const ResetPasswordPage = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Sucesso!',
-        description: 'Senha redefinida com sucesso. Redirecionando...',
-      });
+      toast.success('Sucesso!', { description: 'Senha redefinida com sucesso. Redirecionando...' });
 
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (error: any) {
       // Error silenced for security - details not exposed to client
-      toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao redefinir senha. Tente solicitar um novo link.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: error.message || 'Erro ao redefinir senha. Tente solicitar um novo link.' });
     } finally {
       setLoading(false);
     }

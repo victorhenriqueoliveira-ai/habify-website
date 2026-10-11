@@ -23,7 +23,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserStats } from '@/hooks/useUserStats';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,
@@ -72,17 +72,10 @@ export const ProfilePage = () => {
         company: formData.company,
       });
       
-      toast({
-        title: 'Perfil atualizado',
-        description: 'Suas informações foram salvas com sucesso.',
-      });
+      toast.success('Perfil atualizado', { description: 'Suas informações foram salvas com sucesso.' });
       setIsEditing(false);
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar as alterações.',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Não foi possível salvar as alterações.' });
     }
   };
 
@@ -300,16 +293,9 @@ export const ProfilePage = () => {
                           }
                         }
                       }
-                      toast({
-                        title: 'Solicitação enviada',
-                        description: 'Sua solicitação de exclusão foi registrada. Um administrador entrará em contato.',
-                      });
+                      toast.success('Solicitação enviada', { description: 'Sua solicitação de exclusão foi registrada. Um administrador entrará em contato.' });
                     } catch {
-                      toast({
-                        title: 'Erro',
-                        description: 'Não foi possível enviar a solicitação. Tente novamente.',
-                        variant: 'destructive',
-                      });
+                      toast.error('Erro', { description: 'Não foi possível enviar a solicitação. Tente novamente.' });
                     }
                   }}
                 >

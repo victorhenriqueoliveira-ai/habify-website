@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Loader2, UserPlus, LogIn } from 'lucide-react';
 import { useAuth as useSupabaseAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const AuthPage = () => {
   const [loginEmail, setLoginEmail] = useState('');
@@ -29,37 +29,22 @@ export const AuthPage = () => {
     e.preventDefault();
     
     if (!loginEmail || !loginPassword) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Preencha todos os campos' });
       return;
     }
 
     setLoading(true);
     try {
       const { error } = await signIn(loginEmail, loginPassword);
-      
+
       if (error) {
-        toast({
-          title: 'Erro no Login',
-          description: error.message || 'Credenciais inválidas',
-          variant: 'destructive',
-        });
+        toast.error('Erro no Login', { description: error.message || 'Credenciais inválidas' });
       } else {
-        toast({
-          title: 'Sucesso!',
-          description: 'Login realizado com sucesso',
-        });
+        toast.success('Sucesso!', { description: 'Login realizado com sucesso' });
         navigate('/admin');
       }
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro inesperado no login',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Erro inesperado no login' });
     } finally {
       setLoading(false);
     }
@@ -67,59 +52,36 @@ export const AuthPage = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!signupEmail || !signupPassword || !signupName) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha todos os campos',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Preencha todos os campos' });
       return;
     }
 
     if (signupPassword.length < 6) {
-      toast({
-        title: 'Erro',
-        description: 'A senha deve ter pelo menos 6 caracteres',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'A senha deve ter pelo menos 6 caracteres' });
       return;
     }
 
     setLoading(true);
     try {
       const { error } = await signUp(signupEmail, signupPassword, signupName);
-      
+
       if (error) {
         if (error.message.includes('already registered')) {
-          toast({
-            title: 'Usuário já existe',
-            description: 'Use a aba de Login ou tente com outro email',
-            variant: 'destructive',
-          });
+          toast.error('Usuário já existe', { description: 'Use a aba de Login ou tente com outro email' });
         } else {
-          toast({
-            title: 'Erro no Cadastro',
-            description: error.message || 'Erro ao criar conta',
-            variant: 'destructive',
-          });
+          toast.error('Erro no Cadastro', { description: error.message || 'Erro ao criar conta' });
         }
       } else {
-        toast({
-          title: 'Conta criada!',
-          description: 'Sua conta foi criada com sucesso. Faça login para continuar.',
-        });
+        toast.success('Conta criada!', { description: 'Sua conta foi criada com sucesso. Faça login para continuar.' });
         // Switch to login tab
         const loginTab = document.querySelector('[data-value="login"]') as HTMLElement;
         loginTab?.click();
         setLoginEmail(signupEmail);
       }
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro inesperado no cadastro',
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: 'Erro inesperado no cadastro' });
     } finally {
       setLoading(false);
     }

@@ -35,7 +35,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { useRealtimeProjects } from '@/hooks/useRealtimeProjects';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ProjectsTableSkeleton } from '@/components/ui/skeleton-loaders';
 
 const statusColors = {
@@ -92,22 +92,15 @@ export const ProjectsPage = () => {
     if (!project) return;
     
     await updateProject(projectId, { status: newStatus });
-    toast({
-      title: 'Status atualizado',
-      description: `${project.title} - Status alterado para: ${statusLabels[newStatus]}`,
-    });
+    toast.success('Status atualizado', { description: `${project.title} - Status alterado para: ${statusLabels[newStatus]}` });
   };
 
   const handleDeleteProject = async (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
-    
+
     await deleteProject(projectId);
-    toast({
-      title: 'Projeto removido',
-      description: `${project.title} foi removido do sistema`,
-      variant: 'destructive',
-    });
+    toast.error('Projeto removido', { description: `${project.title} foi removido do sistema` });
   };
 
   const getUserName = (userId: string) => {

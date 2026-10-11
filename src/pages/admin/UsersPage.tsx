@@ -32,7 +32,7 @@ import {
 import { User, UserRole } from '@/types/admin';
 import { useUsers } from '@/hooks/useUsers';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { UsersTableSkeleton } from '@/components/ui/skeleton-loaders';
 
 const roleColors = {
@@ -72,22 +72,15 @@ export const UsersPage = () => {
     if (!user) return;
     
     await updateUser(userId, { isActive: !user.isActive });
-    toast({
-      title: 'Status atualizado',
-      description: `${user.name} foi ${user.isActive ? 'desativado' : 'ativado'}`,
-    });
+    toast.success('Status atualizado', { description: `${user.name} foi ${user.isActive ? 'desativado' : 'ativado'}` });
   };
 
   const handleDeleteUser = async (userId: string) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
-    
+
     await deleteUser(userId);
-    toast({
-      title: 'Usuário removido',
-      description: `${user.name} foi removido do sistema`,
-      variant: 'destructive',
-    });
+    toast.error('Usuário removido', { description: `${user.name} foi removido do sistema` });
   };
 
   return (
