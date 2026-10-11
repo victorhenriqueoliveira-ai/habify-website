@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProjectStatusSection } from '@/components/admin/ProjectStatusSection';
+import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/admin/ui';
 import {
   Clock,
   Hammer,
@@ -11,6 +12,7 @@ import {
   Plus,
   ShoppingCart,
   AlertTriangle,
+  FolderKanban,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
@@ -57,48 +59,39 @@ export const MyProjectsPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando seus projetos...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Carregando seus projetos..." fullScreen />;
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between md:flex-row flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'} 
-          </h1>
-          <p className="text-muted-foreground">
-            {hasRole(['admin', 'dev']) 
-              ? 'Gerencie todos os projetos do sistema'
-              : 'Acompanhe o status e gerencie seus projetos'}
-          </p>
-        </div>
-      <div className="flex flex-col md:flex-row gap-3">
-          {canCreateMoreProjects && (
-            <Button onClick={handleNewProject}>
-              <Plus className="mr-2 h-4 w-4" />
-              Criar Novo Projeto
-            </Button>
-          )}
-          {isRegularUser && (
-            <Button 
-              onClick={() => navigate('/admin/new-project-purchase')}
-              variant={canCreateMoreProjects ? "outline" : "default"}
-            >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Adquirir Mais Planos
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        icon={FolderKanban}
+        title={hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'}
+        description={
+          hasRole(['admin', 'dev'])
+            ? 'Gerencie todos os projetos do sistema'
+            : 'Acompanhe o status e gerencie seus projetos'
+        }
+        actions={
+          <>
+            {canCreateMoreProjects && (
+              <Button onClick={handleNewProject}>
+                <Plus className="mr-2 h-4 w-4" />
+                Criar Novo Projeto
+              </Button>
+            )}
+            {isRegularUser && (
+              <Button
+                onClick={() => navigate('/admin/new-project-purchase')}
+                variant={canCreateMoreProjects ? 'outline' : 'default'}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Adquirir Mais Planos
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Alert: Sem planos disponíveis */}
       {isRegularUser && !canCreateMoreProjects && (
@@ -149,51 +142,12 @@ export const MyProjectsPage = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userProjects.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
-            <Clock className="h-4 w-4 text-warning" />
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{pendingProjects.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
-            <Hammer className="h-4 w-4 text-info" />
-            <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-info">{inProgressProjects.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
-            <Search className="h-4 w-4 text-primary" />
-            <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{inReviewProjects.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center gap-2 space-y-0">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">{completedProjects.length}</div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+        <StatCard label="Total" value={userProjects.length} />
+        <StatCard label="Pendentes" value={pendingProjects.length} icon={Clock} tone="warning" />
+        <StatCard label="Em Andamento" value={inProgressProjects.length} icon={Hammer} tone="info" />
+        <StatCard label="Em Revisão" value={inReviewProjects.length} icon={Search} tone="primary" />
+        <StatCard label="Concluídos" value={completedProjects.length} icon={CheckCircle2} tone="success" />
       </div>
 
       {/* Projects by Status Sections */}
@@ -252,20 +206,17 @@ export const MyProjectsPage = () => {
         {/* Empty State */}
         {userProjects.length === 0 && (
           <Card>
-            <CardContent className="text-center py-12">
-              <div className="max-w-md mx-auto">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Nenhum projeto ainda</h3>
-                <p className="text-muted-foreground mb-6">
-                  Comece criando seu primeiro projeto para ter sua landing page personalizada.
-                </p>
-                <Button onClick={() => navigate('/admin/new-project')}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Criar Primeiro Projeto
-                </Button>
-              </div>
+            <CardContent>
+              <EmptyState
+                icon={FolderKanban}
+                title="Nenhum projeto ainda"
+                description="Comece criando seu primeiro projeto para ter sua landing page personalizada."
+                action={{
+                  label: 'Criar Primeiro Projeto',
+                  icon: Plus,
+                  onClick: () => navigate('/admin/new-project'),
+                }}
+              />
             </CardContent>
           </Card>
         )}
