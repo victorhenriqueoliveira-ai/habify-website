@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { DashboardFilters } from '@/components/admin/DashboardFilters';
+import { StatCard, StatCardGrid } from '@/components/admin/ui';
 import { useAnalyticsDashboard } from '@/hooks/useAnalyticsDashboard';
 import {
   BarChart,
@@ -26,49 +27,14 @@ import {
   ShoppingCart,
   TrendingUp,
   CreditCard,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-const MetricCard = ({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon,
-  prefix = '',
-  suffix = '',
-}: {
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ElementType;
-  prefix?: string;
-  suffix?: string;
-}) => {
-  const isPositive = change && change > 0;
-  
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">
-          {prefix}{typeof value === 'number' ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : value}{suffix}
-        </div>
-        {change !== undefined && (
-          <div className={`flex items-center text-xs mt-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {isPositive ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-            {Math.abs(change).toFixed(1)}% vs período anterior
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+function formatMetricValue(value: string | number, prefix = '', suffix = ''): string {
+  const formatted = typeof value === 'number' ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : value;
+  return `${prefix}${formatted}${suffix}`;
+}
 
 export const SalesDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30days');
@@ -137,31 +103,24 @@ export const SalesDashboard = () => {
       />
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Receita Total"
-          value={salesMetrics?.totalRevenue || 0}
+      <StatCardGrid>
+        <StatCard
+          label="Receita Total"
+          value={formatMetricValue(salesMetrics?.totalRevenue || 0, 'R$ ')}
           icon={DollarSign}
-          prefix="R$ "
         />
-        <MetricCard
-          title="Total de Pedidos"
-          value={salesMetrics?.totalOrders || 0}
-          icon={ShoppingCart}
-        />
-        <MetricCard
-          title="Ticket Médio"
-          value={salesMetrics?.averageOrderValue || 0}
+        <StatCard label="Total de Pedidos" value={salesMetrics?.totalOrders || 0} icon={ShoppingCart} />
+        <StatCard
+          label="Ticket Médio"
+          value={formatMetricValue(salesMetrics?.averageOrderValue || 0, 'R$ ')}
           icon={CreditCard}
-          prefix="R$ "
         />
-        <MetricCard
-          title="Taxa de Conversão"
-          value={(salesMetrics?.conversionRate || 0).toFixed(1)}
+        <StatCard
+          label="Taxa de Conversão"
+          value={formatMetricValue((salesMetrics?.conversionRate || 0).toFixed(1), '', '%')}
           icon={TrendingUp}
-          suffix="%"
         />
-      </div>
+      </StatCardGrid>
 
       {/* Charts */}
       <Tabs defaultValue="revenue" className="space-y-4">

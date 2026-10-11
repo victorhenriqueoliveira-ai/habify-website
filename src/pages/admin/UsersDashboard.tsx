@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { DashboardFilters } from '@/components/admin/DashboardFilters';
+import { StatCard, StatCardGrid } from '@/components/admin/ui';
 import { useAnalyticsDashboard } from '@/hooks/useAnalyticsDashboard';
 import {
   LineChart,
@@ -26,45 +27,10 @@ import {
   UserPlus,
   UserCheck,
   UserX,
-  TrendingUp,
   Activity,
 } from 'lucide-react';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-
-const MetricCard = ({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon,
-  trend = 'neutral',
-}: {
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ElementType;
-  trend?: 'up' | 'down' | 'neutral';
-}) => {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {change !== undefined && (
-          <div className={`flex items-center text-xs mt-1 ${
-            trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-muted-foreground'
-          }`}>
-            <TrendingUp className="h-3 w-3 mr-1" />
-            {change.toFixed(1)}% de retenção
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
 
 export const UsersDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30days');
@@ -107,30 +73,20 @@ export const UsersDashboard = () => {
       />
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total de Usuários"
-          value={userMetrics?.totalUsers || 0}
-          icon={Users}
-        />
-        <MetricCard
-          title="Novos Usuários"
-          value={userMetrics?.newUsers || 0}
-          icon={UserPlus}
-        />
-        <MetricCard
-          title="Usuários Ativos"
+      <StatCardGrid>
+        <StatCard label="Total de Usuários" value={userMetrics?.totalUsers || 0} icon={Users} />
+        <StatCard label="Novos Usuários" value={userMetrics?.newUsers || 0} icon={UserPlus} />
+        <StatCard
+          label="Usuários Ativos"
           value={userMetrics?.activeUsers || 0}
-          change={userMetrics?.retentionRate}
           icon={UserCheck}
-          trend="up"
+          tone="success"
+          description={
+            userMetrics?.retentionRate !== undefined ? `${userMetrics.retentionRate.toFixed(1)}% de retenção` : undefined
+          }
         />
-        <MetricCard
-          title="Usuários Inativos"
-          value={userMetrics?.inactiveUsers || 0}
-          icon={UserX}
-        />
-      </div>
+        <StatCard label="Usuários Inativos" value={userMetrics?.inactiveUsers || 0} icon={UserX} />
+      </StatCardGrid>
 
       {/* Charts */}
       <Tabs defaultValue="growth" className="space-y-4">

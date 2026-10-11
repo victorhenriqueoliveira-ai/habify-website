@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { DashboardFilters } from '@/components/admin/DashboardFilters';
+import { StatCard, StatCardGrid } from '@/components/admin/ui';
 import { useAnalyticsDashboard } from '@/hooks/useAnalyticsDashboard';
 import {
   LineChart,
@@ -32,33 +33,6 @@ import {
 } from 'lucide-react';
 
 const COLORS = ['hsl(var(--success))', 'hsl(var(--info))', 'hsl(var(--warning))', 'hsl(var(--destructive))'];
-
-const MetricCard = ({ 
-  title, 
-  value, 
-  subtitle, 
-  icon: Icon,
-  color = 'text-primary',
-}: {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ElementType;
-  color?: string;
-}) => {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${color}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-      </CardContent>
-    </Card>
-  );
-};
 
 export const ProjectsDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30days');
@@ -104,35 +78,35 @@ export const ProjectsDashboard = () => {
       />
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total de Projetos"
+      <StatCardGrid>
+        <StatCard
+          label="Total de Projetos"
           value={projectMetrics?.totalProjects || 0}
-          subtitle="criados no período"
+          description="criados no período"
           icon={FolderKanban}
         />
-        <MetricCard
-          title="Projetos Concluídos"
+        <StatCard
+          label="Projetos Concluídos"
           value={projectMetrics?.completedProjects || 0}
-          subtitle={`${(projectMetrics?.successRate || 0).toFixed(1)}% de taxa de sucesso`}
+          description={`${(projectMetrics?.successRate || 0).toFixed(1)}% de taxa de sucesso`}
           icon={CheckCircle2}
-          color="text-success"
+          tone="success"
         />
-        <MetricCard
-          title="Em Andamento"
+        <StatCard
+          label="Em Andamento"
           value={projectMetrics?.inProgressProjects || 0}
-          subtitle="atualmente em desenvolvimento"
+          description="atualmente em desenvolvimento"
           icon={Clock}
-          color="text-info"
+          tone="info"
         />
-        <MetricCard
-          title="Tempo Médio"
+        <StatCard
+          label="Tempo Médio"
           value={`${Math.round(projectMetrics?.averageCompletionTime || 0)} dias`}
-          subtitle="para conclusão"
+          description="para conclusão"
           icon={Zap}
-          color="text-warning"
+          tone="warning"
         />
-      </div>
+      </StatCardGrid>
 
       {/* Charts */}
       <Tabs defaultValue="timeline" className="space-y-4">
