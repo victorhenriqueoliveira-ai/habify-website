@@ -40,6 +40,7 @@ import { GrantMaintenanceCard } from '@/components/admin/GrantMaintenanceCard';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { PageHeader, LoadingState } from '@/components/admin/ui';
 
 const statusColors = {
   pending: 'secondary',
@@ -105,56 +106,45 @@ export const ProjectDetailPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingState label="Carregando projeto..." size="lg" fullScreen />;
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-muted-foreground">Projeto não encontrado</p>
-            <Button onClick={() => navigate(-1)} className="mt-4">
-              Voltar
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="admin-card-elevated p-6 text-center">
+          <p className="text-muted-foreground">Projeto não encontrado</p>
+          <Button onClick={() => navigate(-1)} className="mt-4">
+            Voltar
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
-            <p className="text-muted-foreground">{project.location}</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant={statusColors[project.status]}>
-            {statusLabels[project.status]}
-          </Badge>
-          {hasRole(['admin', 'dev']) && (
-            <Button onClick={() => navigate(`/admin/projects/${id}/edit`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </Button>
-          )}
-        </div>
+      <div className="flex items-start gap-2">
+        <Button variant="ghost" size="icon" className="mt-0.5 shrink-0" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <PageHeader
+          icon={Building}
+          title={project.title}
+          description={project.location}
+          className="flex-1"
+          actions={
+            <>
+              <Badge variant={statusColors[project.status]}>{statusLabels[project.status]}</Badge>
+              {hasRole(['admin', 'dev']) && (
+                <Button onClick={() => navigate(`/admin/projects/${id}/edit`)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+              )}
+            </>
+          }
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

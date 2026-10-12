@@ -1,11 +1,13 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
   actions?: ReactNode;
+  className?: string;
 }
 
 /**
@@ -13,9 +15,9 @@ interface PageHeaderProps {
  * lugar do emoji solto no <h1> que várias páginas usavam) + slot de ações
  * à direita (botões, badges).
  */
-export function PageHeader({ title, description, icon: Icon, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, icon: Icon, actions, className }: PageHeaderProps) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className={cn('flex flex-wrap items-start justify-between gap-4', className)}>
       <div className="flex items-start gap-3">
         {Icon && (
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
