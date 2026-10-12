@@ -43,8 +43,12 @@ serve(async (req) => {
     const { planId, customerData }: PaymentRequest = await req.json();
 
     const paymentMethod = customerData.paymentMethod || 'PIX';
-    // PIX continua 100% na AbacatePay; cartão de crédito vai pra Asaas.
-    const gateway: 'ABACATEPAY' | 'ASAAS' = paymentMethod === 'CARD' ? 'ASAAS' : 'ABACATEPAY';
+    // PIX e cartão de crédito processam via AbacatePay. Cartão voltou a rodar
+    // por aqui após liminar que reverteu a recusa do método "CARD" pela
+    // AbacatePay pra esta conta (antes disso, cartão era desviado pra Asaas —
+    // ver branch `else` abaixo, mantida no código só como fallback rápido
+    // caso a AbacatePay volte a recusar, mas não é mais usada por padrão).
+    const gateway: 'ABACATEPAY' | 'ASAAS' = 'ABACATEPAY';
 
     const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
     if (gateway === 'ABACATEPAY' && !abacatePayApiKey) {
@@ -224,7 +228,7 @@ serve(async (req) => {
       : 'https://habify.com.br/payment-success';
 
     if (gateway === 'ABACATEPAY') {
-      // ✅ Process PIX payment via AbacatePay
+      // ✅ Process PIX or CARD payment via AbacatePay
       const customerPayload = {
         name: customerData.name,
         cellphone: customerData.phone,
@@ -268,7 +272,7 @@ serve(async (req) => {
 
       const billingPayload: any = {
         frequency: 'ONE_TIME',
-        methods: [paymentMethod], // 'PIX'
+        methods: [paymentMethod], // 'PIX' ou 'CARD'
         products: [{
           // Inclui o preço no externalId do produto: a AbacatePay parece cachear
           // nome/preço exibidos por externalId, então reusar o mesmo id do plano
