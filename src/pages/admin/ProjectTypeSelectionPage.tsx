@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Building2, Users, Check } from 'lucide-react';
+import { ArrowLeft, Building2, Users, Check, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
+import { PageHeader } from '@/components/admin/ui';
+import { cn } from '@/lib/utils';
 
 const ProjectTypeSelectionPage = () => {
   const navigate = useNavigate();
@@ -31,125 +32,90 @@ const ProjectTypeSelectionPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Novo Projeto</h1>
-          <p className="text-muted-foreground">
-            Escolha o tipo de site que você deseja criar
-          </p>
-        </div>
-      </div>
+      <PageHeader icon={Sparkles} title="Novo Projeto" description="Escolha o tipo de site que você deseja criar" />
 
       {/* Project Type Cards */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {/* Site para Empreendimento */}
-        <Card className="relative overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50">
-          <CardHeader className="pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Site para Empreendimento</CardTitle>
-                <CardDescription>
-                  Ideal para construtoras e incorporadoras
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Site completo do empreendimento</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Galeria de fotos e plantas</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Localização e mapas</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Design responsivo</span>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleEmpreendimentoChoice}
-              className="w-full mt-6"
-              size="lg"
-            >
-              Criar Site para Empreendimento
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+        <TypeCard
+          icon={Building2}
+          title="Site para Empreendimento"
+          description="Ideal para construtoras e incorporadoras"
+          features={[
+            'Site completo do empreendimento',
+            'Galeria de fotos e plantas',
+            'Localização e mapas',
+            'Design responsivo',
+          ]}
+          action={{ label: 'Criar Site para Empreendimento', onClick: handleEmpreendimentoChoice }}
+        />
 
-        {/* Site para Corretor */}
-        <Card className="relative overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary/50">
-          <CardHeader className="pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-secondary/10 rounded-lg">
-                <Users className="h-6 w-6 text-secondary" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Site para Corretor</CardTitle>
-                <CardDescription>
-                  Perfeito para corretores independentes
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Até 5 empreendimentos</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Perfil profissional completo</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Portfólio de imóveis</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Contato direto com clientes</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm">Design responsivo</span>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleCorretorChoice}
-              variant="secondary"
-              className="w-full mt-6"
-              size="lg"
-            >
-              Criar Site para Corretor
-            </Button>
-          </CardContent>
-        </Card>
+        <TypeCard
+          icon={Users}
+          title="Site para Corretor"
+          description="Perfeito para corretores independentes"
+          features={[
+            'Até 5 empreendimentos',
+            'Perfil profissional completo',
+            'Portfólio de imóveis',
+            'Contato direto com clientes',
+            'Design responsivo',
+          ]}
+          action={{ label: 'Criar Site para Corretor', onClick: handleCorretorChoice }}
+          variant="secondary"
+        />
       </div>
-      <div className="flex justify-center mt-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/admin/my-projects')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para Meus Projetos
-          </Button>
+
+      <div className="mt-4 flex justify-center">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/admin/my-projects')}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar para Meus Projetos
+        </Button>
       </div>
     </div>
   );
 };
+
+interface TypeCardProps {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  features: string[];
+  action: { label: string; onClick: () => void };
+  variant?: 'primary' | 'secondary';
+}
+
+function TypeCard({ icon: Icon, title, description, features, action, variant = 'primary' }: TypeCardProps) {
+  return (
+    <div className="admin-card-elevated flex flex-col p-6">
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            'flex h-11 w-11 items-center justify-center rounded-lg',
+            variant === 'primary' ? 'bg-primary/10 text-primary' : 'bg-secondary text-secondary-foreground',
+          )}
+        >
+          <Icon className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 flex-1 space-y-2.5">
+        {features.map((feature) => (
+          <div key={feature} className="flex items-center gap-2 text-sm">
+            <Check className="h-4 w-4 shrink-0 text-success" />
+            <span>{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      <Button onClick={action.onClick} className="mt-6 w-full" size="lg" variant={variant === 'secondary' ? 'secondary' : 'default'}>
+        {action.label}
+      </Button>
+    </div>
+  );
+}
 
 export default ProjectTypeSelectionPage;

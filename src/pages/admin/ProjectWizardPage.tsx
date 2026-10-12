@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ArrowRight, Check, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle, Loader2, Wand2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader, LoadingState } from '@/components/admin/ui';
 import { LogoStep } from '@/components/wizard/LogoStep';
 import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
@@ -500,123 +500,103 @@ const ProjectWizardPage = () => {
   const progress = (currentStep / 5) * 100;
 
   if (plansLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando planos...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Carregando planos..." size="lg" fullScreen />;
   }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Criar Novo Projeto</h1>
-            <p className="text-muted-foreground mt-1">
-              Siga os passos para configurar seu site
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/admin/my-projects')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Cancelar
-          </Button>
-        </div>
+        <PageHeader
+          icon={Wand2}
+          title="Criar Novo Projeto"
+          description="Siga os passos para configurar seu site"
+          actions={
+            <Button variant="ghost" onClick={() => navigate('/admin/my-projects')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Cancelar
+            </Button>
+          }
+        />
 
         {/* Progress */}
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm font-medium">
-                <span>Passo {currentStep + 1} de 5</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-              <div className="flex justify-between gap-1 sm:gap-2">
-                {steps.map((step) => (
-                  <div
-                    key={step.id}
-                    className={`flex-1 text-center ${
-                      step.id === currentStep ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <div
-                        className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs sm:text-sm ${
-                          step.id < currentStep
-                            ? 'bg-primary text-primary-foreground'
-                            : step.id === currentStep
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}
-                      >
-                        {step.id < currentStep ? (
-                          <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                        ) : (
-                          step.id
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-[10px] sm:text-xs font-medium leading-tight">{step.title}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden lg:block mt-1">
-                      {step.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
+        <div className="admin-card-elevated p-4 sm:p-6">
+          <div className="space-y-5">
+            <div className="flex justify-between text-sm font-medium text-muted-foreground">
+              <span>
+                Passo {currentStep + 1} de 5 — <span className="text-foreground">{steps[currentStep]?.title}</span>
+              </span>
+              <span>{Math.round(progress)}%</span>
             </div>
-          </CardContent>
-        </Card>
+            <Progress value={progress} className="h-1.5" />
+            <div className="flex justify-between gap-1 sm:gap-2">
+              {steps.map((step) => (
+                <div
+                  key={step.id}
+                  className={`flex-1 text-center ${
+                    step.id === currentStep ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  <div className="mb-1 flex items-center justify-center sm:mb-2">
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors sm:h-8 sm:w-8 sm:text-sm ${
+                        step.id < currentStep
+                          ? 'bg-primary text-primary-foreground'
+                          : step.id === currentStep
+                          ? 'bg-primary text-primary-foreground shadow-admin-card'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      {step.id < currentStep ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : step.id}
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-medium leading-tight sm:text-xs">{step.title}</p>
+                  <p className="mt-1 hidden text-[10px] text-muted-foreground lg:block sm:text-xs">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Step Content */}
         <div>
           {currentStep === 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Selecione um Plano</h2>
-                    <p className="text-muted-foreground">
-                      Escolha qual plano você deseja usar para criar este projeto
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {availablePlans.map((plan) => (
-                      <div
-                        key={plan.plan_id}
-                        onClick={() => setSelectedPlanId(plan.plan_id)}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedPlanId === plan.plan_id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-lg">{plan.plan_name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{plan.plan_description}</p>
-                            <Badge variant="secondary" className="mt-2">
-                              {plan.count} {plan.count === 1 ? 'disponível' : 'disponíveis'}
-                            </Badge>
-                          </div>
-                          {selectedPlanId === plan.plan_id && (
-                            <CheckCircle className="h-8 w-8 text-primary" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            <div className="admin-card-elevated p-6">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Selecione um Plano</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Escolha qual plano você deseja usar para criar este projeto
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="space-y-3">
+                  {availablePlans.map((plan) => (
+                    <div
+                      key={plan.plan_id}
+                      onClick={() => setSelectedPlanId(plan.plan_id)}
+                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                        selectedPlanId === plan.plan_id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">{plan.plan_name}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{plan.plan_description}</p>
+                          <Badge variant="secondary" className="mt-2">
+                            {plan.count} {plan.count === 1 ? 'disponível' : 'disponíveis'}
+                          </Badge>
+                        </div>
+                        {selectedPlanId === plan.plan_id && <CheckCircle className="h-8 w-8 text-primary" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {currentStep === 1 && (
@@ -654,45 +634,43 @@ const ProjectWizardPage = () => {
         </div>
 
         {/* Navigation */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (currentStep === 0) {
-                    navigate('/admin/new-project');
-                  } else {
-                    setCurrentStep(currentStep - 1);
-                  }
-                }}
-                disabled={loading}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
-              </Button>
+        <div className="admin-card-elevated p-6">
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (currentStep === 0) {
+                  navigate('/admin/new-project');
+                } else {
+                  setCurrentStep(currentStep - 1);
+                }
+              }}
+              disabled={loading}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
 
-              <Button onClick={handleNext} disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Criando...
-                  </>
-                ) : currentStep === 4 ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Finalizar
-                  </>
-                ) : (
-                  <>
-                    Próximo
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            <Button onClick={handleNext} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando...
+                </>
+              ) : currentStep === 4 ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Finalizar
+                </>
+              ) : (
+                <>
+                  Próximo
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
