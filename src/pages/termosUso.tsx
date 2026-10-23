@@ -2,7 +2,7 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FileText, Shield, AlertCircle, Scale, Mail } from "lucide-react";
+import { ArrowLeft, FileText, Shield, AlertCircle, Scale, Mail, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function TermosDeUso(): JSX.Element {
@@ -27,7 +27,7 @@ export default function TermosDeUso(): JSX.Element {
     {
       icon: Scale,
       title: "4. Planos e Pagamentos",
-      content: "Os planos de serviço estão descritos na plataforma com seus respectivos preços e funcionalidades. Pagamentos são processados por gateways de pagamento integrados (AbacatePay para PIX e Hubla para Cartão de Crédito). Os créditos e funcionalidades ficam vinculados ao plano contratado. Políticas de cancelamento e reembolso seguem as regras descritas no momento da compra. Para contestar cobranças, entre em contato com nosso suporte."
+      content: "Os planos de serviço estão descritos na plataforma com seus respectivos preços e funcionalidades. Pagamentos são processados por gateways de pagamento integrados (AbacatePay e Asaas, para PIX e Cartão de Crédito). Todas as cobranças são pagamentos únicos (avulsos), inclusive as de manutenção mensal — não há assinatura recorrente com cobrança automática. Os créditos e funcionalidades ficam vinculados ao plano contratado. Para contestar cobranças, entre em contato com nosso suporte."
     },
   ];
 
@@ -130,6 +130,46 @@ export default function TermosDeUso(): JSX.Element {
               </CardContent>
             </Card>
           ))}
+
+          {/* Cancellation, Refund & Right of Withdrawal */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <RotateCcw className="h-5 w-5 text-primary" />
+                </div>
+                4.1 Cancelamento, Reembolso e Direito de Arrependimento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <span className="text-muted-foreground leading-relaxed">
+                    <strong className="text-foreground">Direito de arrependimento (art. 49 do Código de Defesa do Consumidor):</strong> para compras realizadas fora de estabelecimento comercial físico (como é o caso da contratação feita pela internet), você tem até 7 (sete) dias corridos a partir da data da contratação para desistir da compra, sem necessidade de justificativa, com direito à devolução integral de qualquer valor já pago.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <span className="text-muted-foreground leading-relaxed">
+                    Para exercer o direito de arrependimento, basta entrar em contato pelo e-mail <a href="mailto:contato@habify.com.br" className="text-primary hover:underline">contato@habify.com.br</a> dentro do prazo de 7 dias informando o desejo de cancelamento. O reembolso é processado pelo mesmo meio de pagamento utilizado na compra.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <span className="text-muted-foreground leading-relaxed">
+                    Após o prazo de 7 dias, cancelamentos podem ser solicitados a qualquer momento e produzem efeito a partir da solicitação; valores já pagos referentes a período ou serviço já disponibilizado não são reembolsados, exceto em caso de falha comprovada na prestação do serviço.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <span className="text-muted-foreground leading-relaxed">
+                    Todas as cobranças realizadas na plataforma são pagamentos únicos (avulsos) — não existe assinatura recorrente com cobrança automática periódica. Planos de manutenção mensal são cobrados como uma nova cobrança avulsa a cada ciclo, sem renovação automática no cartão ou PIX.
+                  </span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
 
           {/* Additional Sections with Lists */}
           {additionalSections.map((section, index) => (
