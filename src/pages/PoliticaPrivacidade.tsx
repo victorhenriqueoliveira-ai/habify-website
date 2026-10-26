@@ -32,6 +32,10 @@ const PoliticaPrivacidade = () => {
               seus dados pessoais, em conformidade com a <strong>Lei Geral de Proteção de Dados
               (LGPD — Lei nº 13.709/2018)</strong>.
             </p>
+            <p className="text-sm text-muted-foreground">
+              Razão Social: Victor Henrique Soares de Oliveira Desenvolvimento de Software LTDA —
+              CNPJ: 53.247.964/0001-03
+            </p>
 
             <h2>1. Dados Pessoais Coletados</h2>
             <p>Podemos coletar os seguintes dados pessoais:</p>
@@ -134,6 +138,7 @@ const PoliticaPrivacidade = () => {
             <ul>
               <li><strong>E-mail:</strong> contato@habify.com.br</li>
               <li><strong>WhatsApp:</strong> +55 (11) 91110-3963</li>
+              <li><strong>CNPJ:</strong> 53.247.964/0001-03</li>
             </ul>
 
             <h2>11. Alterações nesta Política</h2>

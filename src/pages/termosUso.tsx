@@ -104,6 +104,9 @@ export default function TermosDeUso(): JSX.Element {
             <p className="text-lg text-muted-foreground mt-4">
               Ao utilizar a plataforma Habify, você concorda com estes termos e condições.
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Victor Henrique Soares de Oliveira Desenvolvimento de Software LTDA — CNPJ 53.247.964/0001-03
+            </p>
           </div>
         </div>
       </div>
@@ -245,7 +248,7 @@ export default function TermosDeUso(): JSX.Element {
                 Em caso de dúvidas sobre estes Termos ou sobre seus dados pessoais:
               </p>
               <div className="space-y-2">
-                <a 
+                <a
                   href="mailto:contato@habify.com.br"
                   className="flex items-center gap-2 text-primary hover:underline font-medium"
                 >
@@ -253,6 +256,10 @@ export default function TermosDeUso(): JSX.Element {
                   contato@habify.com.br
                 </a>
               </div>
+              <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/50">
+                Razão Social: Victor Henrique Soares de Oliveira Desenvolvimento de Software LTDA<br />
+                CNPJ: 53.247.964/0001-03
+              </p>
             </CardContent>
           </Card>
 

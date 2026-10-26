@@ -169,6 +169,10 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-muted-foreground text-center md:text-left">
               © {new Date().getFullYear()} HabiFy. Todos os direitos reservados.
+              <br className="md:hidden" />
+              <span className="md:ml-1">
+                Victor Henrique Soares de Oliveira Desenvolvimento de Software LTDA — CNPJ 53.247.964/0001-03
+              </span>
             </p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">Powered by</span>
