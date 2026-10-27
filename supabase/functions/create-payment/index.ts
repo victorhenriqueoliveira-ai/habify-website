@@ -43,17 +43,13 @@ serve(async (req) => {
     const { planId, customerData }: PaymentRequest = await req.json();
 
     const paymentMethod = customerData.paymentMethod || 'PIX';
-    // PIX continua 100% na AbacatePay; cartão de crédito vai pra Asaas.
-    //
-    // Há uma liminar obrigando a AbacatePay a liberar o método CARD pra esta
-    // conta, mas testei direto na API em 12/10/2026 e eles AINDA retornam
-    // "CARD is not available for this store" (400) — a liminar ainda não
-    // virou liberação técnica na plataforma deles. Cheguei a trocar esse
-    // roteamento pra ABACATEPAY e fazer deploy, só que isso quebrou o
-    // checkout de cartão pra clientes reais (mesmo erro), e revertido na
-    // sequência. NÃO troque pra ABACATEPAY de novo sem antes repetir esse
-    // teste de API e confirmar que a resposta deixou de ser esse erro.
-    const gateway: 'ABACATEPAY' | 'ASAAS' = paymentMethod === 'CARD' ? 'ASAAS' : 'ABACATEPAY';
+    // PIX e cartão de crédito processam via AbacatePay. A AbacatePay liberou
+    // oficialmente o método CARD (com parcelamento) pra esta conta em
+    // 26/10/2026, após a análise de compliance (CNPJ visível, termos de
+    // cancelamento/reembolso e direito de arrependimento). Antes disso, CARD
+    // rodava na Asaas como workaround (ver branch `else` abaixo, mantida só
+    // como fallback caso a AbacatePay volte a recusar).
+    const gateway: 'ABACATEPAY' | 'ASAAS' = 'ABACATEPAY';
 
     const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
     if (gateway === 'ABACATEPAY' && !abacatePayApiKey) {
@@ -233,7 +229,7 @@ serve(async (req) => {
       : 'https://habify.com.br/payment-success';
 
     if (gateway === 'ABACATEPAY') {
-      // ✅ Process PIX payment via AbacatePay
+      // ✅ Process PIX or CARD payment via AbacatePay
       const customerPayload = {
         name: customerData.name,
         cellphone: customerData.phone,
@@ -277,7 +273,7 @@ serve(async (req) => {
 
       const billingPayload: any = {
         frequency: 'ONE_TIME',
-        methods: [paymentMethod], // 'PIX'
+        methods: [paymentMethod], // 'PIX' ou 'CARD'
         products: [{
           // Inclui o preço no externalId do produto: a AbacatePay parece cachear
           // nome/preço exibidos por externalId, então reusar o mesmo id do plano
