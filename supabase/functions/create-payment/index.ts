@@ -57,6 +57,15 @@ serve(async (req) => {
       throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
     }
 
+    // Chave separada pra API v2 da AbacatePay (customers/products/checkouts
+    // create) — a chave v1 acima dá "API key version mismatch" nesses
+    // endpoints. Usada só no fluxo de CARD (parcelamento).
+    const abacatePayApiKeyV2 = Deno.env.get('ABACATEPAY_API_KEY_V2');
+    if (gateway === 'ABACATEPAY' && (customerData.paymentMethod === 'CARD') && !abacatePayApiKeyV2) {
+      console.error('ABACATEPAY_API_KEY_V2 is not configured');
+      throw new Error('Configuração de pagamento não encontrada. Entre em contato com o suporte.');
+    }
+
     // Get plan details
     let planData;
     let isMaintenance = false;
@@ -230,60 +239,59 @@ serve(async (req) => {
 
     if (gateway === 'ABACATEPAY') {
       // ✅ Process PIX or CARD payment via AbacatePay
-      const customerPayload = {
-        name: customerData.name,
-        cellphone: customerData.phone,
-        email: customerData.email,
-        taxId: customerData.cpf,
-      };
-
-      const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${abacatePayApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(customerPayload),
-      });
-
-      if (!customerResponse.ok) {
-        const customerErrorText = await customerResponse.text();
-        console.error('Customer creation error:', customerErrorText);
-
-        await supabaseService.from('payment_logs').insert({
-          gateway: 'ABACATEPAY',
-          status_code: customerResponse.status,
-          error_message: `Customer creation failed: ${customerErrorText}`,
-          request_body: { step: 'customer/create', payload: customerPayload },
-          response_body: { error: customerErrorText },
-        });
-
-        throw new Error('Falha ao criar cliente no sistema de pagamento.');
-      }
-
-      const customerResponseData = await customerResponse.json();
-      const customerId = customerResponseData.data?.id;
-      if (!customerId) {
-        console.error('No customer ID received:', customerResponseData);
-        throw new Error('ID do cliente não foi gerado.');
-      }
-
-      // Webhook do billing/create (usado só pelo PIX) — o checkouts/create
-      // (cartão) não aceita webhookUrl por request, o evento vem pro mesmo
-      // endpoint via webhook configurado no dashboard da AbacatePay.
-      const webhookUrl = `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`;
+      //
+      // PIX continua inteiramente na API v1 (customer/create + billing/create)
+      // — já funciona bem e não precisa de parcelamento. Cartão de crédito
+      // precisa da API v2 (customers/create + products/create +
+      // checkouts/create), que é a única com suporte a parcelamento
+      // (card.maxInstallments) e repasse de taxa pro cliente
+      // (card.passFeesToCustomer). v1 e v2 têm IDs de cliente/produto em
+      // namespaces diferentes — não dá pra misturar customerId de um com
+      // endpoint do outro, por isso os dois fluxos criam cliente
+      // separadamente em vez de compartilhar.
 
       let abacatePayData: any;
       let requestPayload: any;
 
       if (paymentMethod === 'CARD') {
-        // Cartão de crédito usa o endpoint novo (checkouts/create) — é o
-        // único que suporta parcelamento (card.maxInstallments) e repassar a
-        // taxa da maquininha pro cliente (card.passFeesToCustomer: true, pra
-        // não ficarmos absorvendo o custo do parcelamento). O billing/create
-        // usado pro PIX não tem esses campos, por isso os dois fluxos
-        // divergem aqui. Exige um produto pré-criado (não aceita produto
-        // inline como o billing/create).
+        const customerPayloadV2 = {
+          name: customerData.name,
+          cellphone: customerData.phone,
+          email: customerData.email,
+          taxId: customerData.cpf,
+        };
+
+        const customerResponseV2 = await fetch('https://api.abacatepay.com/v2/customers/create', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${abacatePayApiKeyV2}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(customerPayloadV2),
+        });
+
+        if (!customerResponseV2.ok) {
+          const customerErrorText = await customerResponseV2.text();
+          console.error('Customer creation error (v2):', customerErrorText);
+
+          await supabaseService.from('payment_logs').insert({
+            gateway: 'ABACATEPAY',
+            status_code: customerResponseV2.status,
+            error_message: `Customer creation failed: ${customerErrorText}`,
+            request_body: { step: 'v2/customers/create', payload: customerPayloadV2 },
+            response_body: { error: customerErrorText },
+          });
+
+          throw new Error('Falha ao criar cliente no sistema de pagamento.');
+        }
+
+        const customerResponseDataV2 = await customerResponseV2.json();
+        const customerIdV2 = customerResponseDataV2.data?.id;
+        if (!customerIdV2) {
+          console.error('No customer ID received (v2):', customerResponseDataV2);
+          throw new Error('ID do cliente não foi gerado.');
+        }
+
         const productPayload = {
           // Mesmo truque de cache do billing: reusa o id se preço/plano não
           // mudou, evita criar produto duplicado a cada compra.
@@ -294,56 +302,101 @@ serve(async (req) => {
           currency: 'BRL',
         };
 
-        const productResponse = await fetch('https://api.abacatepay.com/v1/products/create', {
+        // products/create (v2) não é idempotente por externalId (diferente do
+        // customer/create) — tenta criar e, se já existir, busca o produto
+        // existente via products/get em vez de falhar a compra.
+        let productId: string | undefined;
+
+        const productResponse = await fetch('https://api.abacatepay.com/v2/products/create', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${abacatePayApiKey}`,
+            'Authorization': `Bearer ${abacatePayApiKeyV2}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(productPayload),
         });
 
-        if (!productResponse.ok) {
+        if (productResponse.ok) {
+          const productResponseData = await productResponse.json();
+          productId = productResponseData.data?.id;
+        } else {
           const productErrorText = await productResponse.text();
-          console.error('Product creation error:', productErrorText);
+          const alreadyExists = productErrorText.includes('already exists');
 
-          await supabaseService.from('payment_logs').insert({
-            gateway: 'ABACATEPAY',
-            status_code: productResponse.status,
-            error_message: `Product creation failed: ${productErrorText}`,
-            request_body: { step: 'products/create', payload: productPayload },
-            response_body: { error: productErrorText },
-          });
+          if (!alreadyExists) {
+            console.error('Product creation error:', productErrorText);
 
-          throw new Error('Falha ao processar pagamento CARD. Verifique os dados e tente novamente.');
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              status_code: productResponse.status,
+              error_message: `Product creation failed: ${productErrorText}`,
+              request_body: { step: 'v2/products/create', payload: productPayload },
+              response_body: { error: productErrorText },
+            });
+
+            throw new Error('Falha ao processar pagamento CARD. Verifique os dados e tente novamente.');
+          }
+
+          const productGetResponse = await fetch(
+            `https://api.abacatepay.com/v2/products/get?${new URLSearchParams({ externalId: productPayload.externalId })}`,
+            {
+              headers: { 'Authorization': `Bearer ${abacatePayApiKeyV2}` },
+            },
+          );
+
+          if (productGetResponse.ok) {
+            const productGetData = await productGetResponse.json();
+            productId = productGetData.data?.id;
+          }
+
+          if (!productId) {
+            const productGetErrorText = await productGetResponse.text();
+            console.error('Product get-after-conflict error:', productGetErrorText);
+
+            await supabaseService.from('payment_logs').insert({
+              gateway: 'ABACATEPAY',
+              status_code: productGetResponse.status,
+              error_message: `Product get failed after "already exists": ${productGetErrorText}`,
+              request_body: { step: 'v2/products/get', externalId: productPayload.externalId },
+              response_body: { error: productGetErrorText },
+            });
+
+            throw new Error('Falha ao processar pagamento CARD. Verifique os dados e tente novamente.');
+          }
         }
 
-        const productResponseData = await productResponse.json();
-        const productId = productResponseData.data?.id;
         if (!productId) {
-          console.error('No product ID received:', productResponseData);
+          console.error('No product ID received for externalId:', productPayload.externalId);
           throw new Error('ID do produto não foi gerado.');
         }
+
+        // AbacatePay exige mínimo de R$10,00 por parcela — com planos de
+        // ticket baixo (ex: R$74,90), 12x ficaria abaixo disso e a API
+        // rejeita o checkout inteiro. Calcula o máximo de parcelas que
+        // respeita esse piso, com no mínimo 1 (à vista).
+        const priceInCents = Math.round(planPrice * 100);
+        const maxInstallmentsByMinValue = Math.max(1, Math.floor(priceInCents / 1000));
+        const maxInstallments = Math.min(12, maxInstallmentsByMinValue);
 
         requestPayload = {
           items: [{ id: productId, quantity: 1 }],
           methods: ['CARD'],
-          customerId: customerId,
+          customerId: customerIdV2,
           returnUrl: successUrl,
           completionUrl: successUrl,
           externalId: `habify-${planId}-${Date.now()}`,
           card: {
-            maxInstallments: 12,
+            maxInstallments,
             passFeesToCustomer: true,
           },
         };
 
         console.log('AbacatePay checkout payload:', JSON.stringify(requestPayload, null, 2));
 
-        const checkoutResponse = await fetch('https://api.abacatepay.com/v1/checkouts/create', {
+        const checkoutResponse = await fetch('https://api.abacatepay.com/v2/checkouts/create', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${abacatePayApiKey}`,
+            'Authorization': `Bearer ${abacatePayApiKeyV2}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestPayload),
@@ -366,8 +419,48 @@ serve(async (req) => {
 
         abacatePayData = await checkoutResponse.json();
       } else {
-        // PIX continua no billing/create — já funciona bem e não precisa de
-        // parcelamento nem repasse de taxa.
+        // PIX continua no billing/create (API v1) — já funciona bem e não
+        // precisa de parcelamento nem repasse de taxa.
+        const customerPayload = {
+          name: customerData.name,
+          cellphone: customerData.phone,
+          email: customerData.email,
+          taxId: customerData.cpf,
+        };
+
+        const customerResponse = await fetch('https://api.abacatepay.com/v1/customer/create', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${abacatePayApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(customerPayload),
+        });
+
+        if (!customerResponse.ok) {
+          const customerErrorText = await customerResponse.text();
+          console.error('Customer creation error:', customerErrorText);
+
+          await supabaseService.from('payment_logs').insert({
+            gateway: 'ABACATEPAY',
+            status_code: customerResponse.status,
+            error_message: `Customer creation failed: ${customerErrorText}`,
+            request_body: { step: 'customer/create', payload: customerPayload },
+            response_body: { error: customerErrorText },
+          });
+
+          throw new Error('Falha ao criar cliente no sistema de pagamento.');
+        }
+
+        const customerResponseData = await customerResponse.json();
+        const customerId = customerResponseData.data?.id;
+        if (!customerId) {
+          console.error('No customer ID received:', customerResponseData);
+          throw new Error('ID do cliente não foi gerado.');
+        }
+
+        const webhookUrl = `https://jsttoajuszshrivmgnmc.supabase.co/functions/v1/abacatepay-webhook`;
+
         requestPayload = {
           frequency: 'ONE_TIME',
           methods: [paymentMethod], // 'PIX'
