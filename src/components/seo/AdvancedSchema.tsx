@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { BUSINESS } from '@/config/business';
 
 const AdvancedSchema: React.FC = () => {
   // Organization Schema
@@ -199,8 +200,8 @@ const AdvancedSchema: React.FC = () => {
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "BRL",
-      "lowPrice": "74.90",
-      "highPrice": "74.90",
+      "lowPrice": BUSINESS.pricing.sitePrice.toFixed(2),
+      "highPrice": BUSINESS.pricing.sitePrice.toFixed(2),
       "offerCount": "1"
     }
   };

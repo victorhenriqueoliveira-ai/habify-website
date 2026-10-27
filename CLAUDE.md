@@ -51,7 +51,7 @@ AbacatePay is the only active payment gateway (`create-payment`, `abacatepay-web
 
 ### Design system
 
-Never use direct color utilities (`text-white`, `bg-orange-500`, `text-[#FE5C02]`, etc.). Always use the semantic tokens defined in `src/index.css` (HSL custom properties, e.g. `--primary: 18 99% 50%`) and wired through `tailwind.config.ts`. Brand orange is `#FE5C02`/`#F97316`. Fonts: Brockmann (display), Inter (body), Playfair Display (accent serif). UI targets a premium dark aesthetic with framer-motion microinteractions.
+Never use direct color utilities (`text-white`, `bg-orange-500`, `text-[#FE5C02]`, etc.). Always use the semantic tokens defined in `src/index.css` (HSL custom properties, e.g. `--primary: 21 99% 50%`) and wired through `tailwind.config.ts`. Brand orange is `#FE5C02`/`#F97316`. Fonts: Brockmann (display), Inter (body), Playfair Display (accent serif). UI targets a premium dark aesthetic with framer-motion microinteractions.
 
 ### TypeScript conventions
 

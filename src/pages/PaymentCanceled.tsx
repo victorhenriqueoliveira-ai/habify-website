@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { XCircle, ArrowLeft, CreditCard } from 'lucide-react';
+import { BUSINESS } from '@/config/business';
 
 const PaymentCanceled = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const PaymentCanceled = () => {
           <div className="text-center">
             <Button
               variant="link"
-              onClick={() => window.open('https://wa.me/5511911103963', '_blank')}
+              onClick={() => window.open(BUSINESS.whatsapp.url("Olá! Tive um problema no pagamento."), "_blank")}
               className="text-sm"
             >
               Falar no WhatsApp

@@ -9,7 +9,6 @@ import { setupScrollTracking } from "@/utils/analytics";
 
 // Lazy load non-critical components
 const StickyCTABar = lazy(() => import("@/components/mobile/StickyCTABar"));
-const StickyDesktopCTA = lazy(() => import("@/components/conversion/StickyDesktopCTA"));
 const ProblemsSection = lazy(() => import("@/components/HumanoidSection"));
 const PortfolioShowcasePremium = lazy(() => import("@/components/PortfolioShowcasePremium"));
 const WhyHabify = lazy(() => import("@/components/WhyHabify"));
@@ -85,7 +84,6 @@ const Index = () => {
       <Navbar />
       <Suspense fallback={<div className="h-0" />}>
         <StickyCTABar showAfterScroll={300} />
-        <StickyDesktopCTA showAfterScroll={800} />
       </Suspense>
       <main className="space-y-0">
         <Hero />

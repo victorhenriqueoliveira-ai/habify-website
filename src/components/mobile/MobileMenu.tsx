@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Menu, Home, Briefcase, DollarSign, HelpCircle, MessageCircle, LogIn } from 'lucide-react';
 import { trackCTAClick, trackWhatsAppClick } from '@/utils/analytics';
+import { BUSINESS } from '@/config/business';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -13,8 +14,7 @@ const menuItems = [
   { icon: Briefcase, label: 'Portfólio', href: '#portfolio' },
   { icon: DollarSign, label: 'Planos', href: '#plans' },
   { icon: HelpCircle, label: 'FAQ', href: '#faq' },
-  { icon: MessageCircle, label: 'Depoimentos', href: '#testimonials' },
-  { icon: LogIn, label: 'Login', href: '/admin/login' },
+  { icon: LogIn, label: 'Entrar', href: '/login' },
 ];
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
@@ -157,7 +157,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                 Criar Meu Site
               </button>
               <a
-                href="https://wa.me/5511911103963?text=Olá!%20Gostaria%20de%20criar%20meu%20site%20profissional%20com%20a%20HabiFy"
+                href={BUSINESS.whatsapp.url("Olá! Gostaria de criar meu site profissional com a Habify")}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handleWhatsAppClick}

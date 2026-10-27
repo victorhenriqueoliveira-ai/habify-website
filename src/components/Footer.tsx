@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, Instagram, FileText, Lock } from "lucide-react";
+import { BUSINESS } from '@/config/business';
 
 const Footer = () => {
   return (
@@ -79,11 +80,11 @@ const Footer = () => {
               </li>
               <li>
                 <a 
-                  href="#testimonials" 
+                  href="#faq" 
                   className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                 >
                   <span className="w-1 h-1 rounded-full bg-muted-foreground group-hover:bg-primary transition-colors" />
-                  Depoimentos
+                  Dúvidas
                 </a>
               </li>
             </ul>
@@ -136,7 +137,7 @@ const Footer = () => {
               </a>
               
               <a 
-                href="https://wa.me/5511911103963"
+                href={BUSINESS.whatsapp.url("Olá! Gostaria de saber mais sobre a Habify.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"

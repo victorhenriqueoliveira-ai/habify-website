@@ -90,10 +90,77 @@ async function main() {
   try {
     for (const route of ROUTES) {
       const page = await browser.newPage();
+      // Viewport de desktop: no padrão (800x600) o Puppeteer captura o
+      // layout mobile e congela medidas erradas no HTML publicado.
+      await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
+
       const url = `http://localhost:${PORT}${route.path}`;
       await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+      // Rola a página inteira antes de capturar. Sem isso, tudo que depende
+      // de IntersectionObserver pra aparecer (reveal on scroll) é gravado
+      // ainda invisível — era assim que 42 elementos, incluindo o <h1>,
+      // iam pro HTML indexado com opacity:0.
+      const stillHidden = await page.evaluate(async () => {
+        const step = window.innerHeight;
+        for (let y = 0; y < document.body.scrollHeight; y += step) {
+          window.scrollTo(0, y);
+          await new Promise((r) => requestAnimationFrame(() => r()));
+          await new Promise((r) => setTimeout(r, 120));
+        }
+        window.scrollTo(0, 0);
+        await new Promise((r) => setTimeout(r, 600));
+
+        // Rede de segurança: o que ainda tiver opacity:0 inline E contiver
+        // texto é conteúdo que o Google leria como invisível. Componentes
+        // que não usam viewport={{once:true}} voltam a se esconder quando a
+        // página rola de volta ao topo, então revelamos na marra antes de
+        // capturar. Elementos sem texto (sombras do Swiper, por exemplo)
+        // são decorativos e ficam como estão.
+        const revealed = [];
+        document.querySelectorAll('[style*="opacity"]').forEach((el) => {
+          const inline = el.getAttribute('style') || '';
+          if (!/opacity:\s*0\s*[;"]?/.test(inline)) return;
+          if (!el.textContent.trim()) return;
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+          revealed.push(el.tagName.toLowerCase());
+        });
+
+        // Mesma ideia para quem esconde por classe utilitária em vez de
+        // style inline (o <h1> do hero usa `opacity-0 animate-fade-in`).
+        document.querySelectorAll('.opacity-0').forEach((el) => {
+          if (!el.textContent.trim()) return;
+          el.classList.remove('opacity-0');
+          revealed.push(el.tagName.toLowerCase() + ' (classe)');
+        });
+
+        return revealed;
+      });
+
+      if (stillHidden.length) {
+        console.log(`[prerender] ${route.path}: ${stillHidden.length} elemento(s) de texto revelados na captura`);
+      }
+
       const html = await page.content();
       await page.close();
+
+      // Trava de segurança: nunca publicar um estado de erro. Se o fetch dos
+      // planos falhar durante o build, a página renderiza "Erro ao carregar
+      // planos" e esse HTML é o que o Google indexaria.
+      if (html.includes('Erro ao carregar planos')) {
+        throw new Error(
+          `${route.path} renderizou o estado de erro dos planos — build abortado ` +
+          `pra não publicar isso. Verifique a conexão com o Supabase.`
+        );
+      }
+
+      // Conta só o que tem texto dentro — sombras decorativas do Swiper e
+      // afins nascem com opacity:0 de propósito e não são conteúdo.
+      const hiddenWithText = (html.match(/style="[^"]*opacity:\s*0[^"]*"[^>]*>[^<]*[A-Za-zÀ-ÿ]/g) || []).length;
+      if (hiddenWithText > 0) {
+        console.warn(`[prerender] ${route.path}: ${hiddenWithText} bloco(s) de texto ainda invisíveis no HTML`);
+      }
 
       const outPath = path.join(distDir, route.outFile);
       await mkdir(path.dirname(outPath), { recursive: true });

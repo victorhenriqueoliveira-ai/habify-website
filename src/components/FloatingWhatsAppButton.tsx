@@ -1,10 +1,10 @@
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { trackWhatsAppClick } from "@/utils/analytics";
+import { BUSINESS } from '@/config/business';
 
 const FloatingWhatsAppButton = () => {
-  const whatsappMessage = encodeURIComponent("Olá! Gostaria de criar meu site profissional com a HabiFy");
-  const whatsappLink = `https://wa.me/5511911103963?text=${whatsappMessage}`;
+  const whatsappLink = BUSINESS.whatsapp.url("Olá! Gostaria de criar meu site profissional com a Habify");
 
   const handleClick = () => {
     trackWhatsAppClick('floating-button');
@@ -16,7 +16,7 @@ const FloatingWhatsAppButton = () => {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-16 h-16 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+      className="fixed bottom-24 right-6 md:bottom-6 z-40 flex items-center justify-center w-16 h-16 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}

@@ -85,12 +85,15 @@ const Navbar = () => {
           >
             FAQ
           </button>
-          <a 
-            href="/login" 
+          <a
+            href="/login"
             className="px-6 py-2.5 bg-primary from-primary text-primary-foreground rounded-lg font-semibold hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
           >
             Login
           </a>
+          {/* Sem isto o mobile fica sem navegação nenhuma: todos os links
+              acima são hidden md:inline-block. */}
+          <MobileMenuTrigger />
         </nav>
       </div>
     </header>
