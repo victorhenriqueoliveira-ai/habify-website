@@ -28,19 +28,26 @@ serve(async (req) => {
     const webhookSecretFromQuery = url.searchParams.get('webhookSecret');
     const webhookSecretFromHeader = req.headers.get('x-webhook-secret') || req.headers.get('webhook-secret');
     const webhookSecret = webhookSecretFromQuery || webhookSecretFromHeader;
-    const expectedSecret = Deno.env.get('ABACATEPAY_WEBHOOK_SECRET');
-    
-    if (!expectedSecret) {
-      console.error('ABACATEPAY_WEBHOOK_SECRET not configured');
+    // Temos dois webhooks cadastrados na AbacatePay apontando pra essa mesma
+    // function, cada um com seu próprio secret: o "Lovable" (v1, legado, só
+    // evento de cobrança paga do PIX/billing) e o "HabiFy - Checkout Cartão
+    // (v2)" (criado quando habilitamos parcelamento no cartão, eventos
+    // checkout.*). Aceita qualquer um dos dois pra não quebrar o fluxo
+    // existente do PIX ao adicionar o do cartão.
+    const expectedSecretV1 = Deno.env.get('ABACATEPAY_WEBHOOK_SECRET');
+    const expectedSecretV2 = Deno.env.get('ABACATEPAY_WEBHOOK_SECRET_V2');
+
+    if (!expectedSecretV1 && !expectedSecretV2) {
+      console.error('No ABACATEPAY_WEBHOOK_SECRET configured');
       return new Response(
         JSON.stringify({ error: 'Configuration error' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
-    
-    // console.log('Webhook secret received:', webhookSecret ? 'Present' : 'Missing', 'From:', webhookSecretFromQuery ? 'query' : webhookSecretFromHeader ? 'header' : 'none');
-    
-    if (!webhookSecret || webhookSecret !== expectedSecret) {
+
+    const isValidSecret = !!webhookSecret && (webhookSecret === expectedSecretV1 || webhookSecret === expectedSecretV2);
+
+    if (!isValidSecret) {
       console.error('Invalid webhook secret');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -51,10 +58,18 @@ serve(async (req) => {
     // console.log('Webhook secret validated successfully');
     
     const webhookData = await req.json();
-    
+
     // Extract bill ID and status from webhook - try multiple formats
     let billId = webhookData.data?.billing?.id || webhookData.data?.id || webhookData.id || webhookData.bill?.id;
     const paymentStatus = webhookData.data?.billing?.status || webhookData.data?.status || webhookData.status || webhookData.bill?.status;
+
+    // Checkout de cartão (checkouts/create, usado desde que parcelamento foi
+    // habilitado) manda o payload novo da AbacatePay (envelope v2), que
+    // identifica o resultado pelo nome do evento em vez de um campo status
+    // separado. Trata isso além do formato antigo do billing/PIX.
+    const webhookEvent: string | undefined = webhookData.event;
+    const isCardCheckoutPaidEvent = webhookEvent === 'checkout.completed';
+    const isCardCheckoutFailedEvent = webhookEvent === 'checkout.refunded' || webhookEvent === 'checkout.disputed';
     
     // console.log('📦 Processing webhook:', {
     //   billId,
@@ -86,8 +101,9 @@ serve(async (req) => {
     );
 
     // Map AbacatePay status to our database status
-    const isPaid = paymentStatus === 'PAID' || paymentStatus === 'APPROVED' || paymentStatus === 'paid' || paymentStatus === 'approved';
-    const status = isPaid ? 'completed' : paymentStatus === 'FAILED' || paymentStatus === 'failed' ? 'failed' : 'pending';
+    const isPaid = paymentStatus === 'PAID' || paymentStatus === 'APPROVED' || paymentStatus === 'paid' || paymentStatus === 'approved' || isCardCheckoutPaidEvent;
+    const isFailed = paymentStatus === 'FAILED' || paymentStatus === 'failed' || isCardCheckoutFailedEvent;
+    const status = isPaid ? 'completed' : isFailed ? 'failed' : 'pending';
     
     // console.log('Updating transaction status:', { billId, isPaid, status });
 
