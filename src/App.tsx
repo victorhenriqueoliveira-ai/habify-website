@@ -8,6 +8,7 @@ import { Suspense, lazy, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorTracking } from "@/hooks/useErrorTracking";
 import { useRouteTracking } from "@/hooks/useAnalytics";
+import { landingPathForRole } from "@/lib/landingPath";
 
 // ✅ FASE 3 - Item 12: Lazy Loading para páginas pesadas
 const Index = lazy(() => import("./pages/Index"));
@@ -96,19 +97,46 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Role-based Route Component
-const RoleBasedRoute = ({ 
-  children, 
-  allowedRoles 
-}: { 
+const RoleBasedRoute = ({
+  children,
+  allowedRoles
+}: {
   children: React.ReactNode;
   allowedRoles: string[];
 }) => {
-  const { hasRole } = useAuth();
-  
-  if (!hasRole(allowedRoles)) {
-    return <Navigate to="/admin/my-projects" replace />;
+  const { hasRole, user, isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // O profile chega depois da sessão (o fetch roda num setTimeout após o
+  // onAuthStateChange), e `hasRole` responde false enquanto ele for null.
+  // Decidir papel nesse intervalo reprova qualquer admin.
+  if (isAuthenticated && !user) {
+    return <PageLoader />;
   }
-  
+
+  if (!hasRole(allowedRoles)) {
+    const fallback = landingPathForRole(user?.role);
+
+    // Nunca redirecionar pra própria rota: era exatamente isso que deixava
+    // o admin numa tela branca em /admin/my-projects — reprovado no
+    // ['user'], mandado de volta pra rota onde já estava.
+    if (fallback === location.pathname) {
+      return (
+        <div className="flex min-h-[55vh] flex-col items-center justify-center px-6 text-center">
+          <h1 className="font-display text-[20px] font-bold tracking-[-0.025em]">
+            Você não tem acesso a esta página
+          </h1>
+          <p className="mt-1.5 max-w-[38ch] text-[13.5px] leading-relaxed text-muted-foreground">
+            Seu perfil é <strong>{user?.role ?? 'desconhecido'}</strong>, e esta área é de outro
+            perfil. Use o menu lateral para voltar ao que é seu.
+          </p>
+        </div>
+      );
+    }
+
+    return <Navigate to={fallback} replace />;
+  }
+
   return (
     <Suspense fallback={<PageLoader />}>
       {children}

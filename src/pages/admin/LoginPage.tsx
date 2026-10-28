@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } 
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { cn } from '@/lib/utils';
+import { landingPathForRole } from '@/lib/landingPath';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,8 +15,7 @@ export const LoginPage = () => {
    *  de passar num toast que some antes de a pessoa terminar de ler. */
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { login, loading, isAuthenticated, hasRole } = useAuth();
-  const navigate = useNavigate();
+  const { login, loading, isAuthenticated, user } = useAuth();
 
   /** Mesma ideia do Entrar na landing: a tela de recuperação é lazy,
    *  então sem pré-carregar o clique espera o download e parece que a
@@ -39,7 +39,21 @@ export const LoginPage = () => {
   const isValid = !errors.email && !errors.password;
 
   if (isAuthenticated) {
-    return <Navigate to={hasRole(['admin', 'dev']) ? '/admin/users' : '/admin/my-projects'} replace />;
+    // O profile chega depois da sessão. Resolver o destino antes dele
+    // mandava o admin pra /admin/my-projects (rota de corretor), que o
+    // reprovava e devolvia pra si mesma — a tela branca após o login.
+    if (!user) {
+      return (
+        <AuthLayout>
+          <div className="flex min-h-[20rem] items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+            <span className="sr-only">Entrando...</span>
+          </div>
+        </AuthLayout>
+      );
+    }
+
+    return <Navigate to={landingPathForRole(user.role)} replace />;
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -52,8 +66,10 @@ export const LoginPage = () => {
     const success = await login(email, password);
 
     if (success) {
-      // Sem toast de sucesso: a própria troca de tela já é o retorno.
-      navigate(hasRole(['admin', 'dev']) ? '/admin/users' : '/admin/my-projects');
+      // Sem navigate aqui de propósito: `hasRole`/`user` ainda estão
+      // vazios neste instante. Quem redireciona é o ramo `isAuthenticated`
+      // acima, que roda de novo quando o profile chega — aí com o papel
+      // certo em mãos.
       return;
     }
 
