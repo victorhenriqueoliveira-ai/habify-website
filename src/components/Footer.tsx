@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Mail, Phone, Instagram, FileText, Lock } from "lucide-react";
 import { BUSINESS } from '@/config/business';
 
@@ -151,20 +150,23 @@ const Footer = () => {
                 </div>
               </a>
 
-              <div className="pt-2">
-                <Button 
-                  onClick={() => window.open('https://www.instagram.com/habify.br/', '_blank')}
-                  size="icon"
-                  variant="outline"
-                  className="rounded-lg"
-                >
-                  <Instagram className="h-4 w-4" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Instagram</p>
-                    <p className="font-medium">@habify.br</p>
-                  </div>
-                </Button>
-              </div>
+              {/* Mesmo formato do e-mail e do WhatsApp: ícone + rótulo +
+                  @ do perfil. Antes era só um botão de ícone solto, que
+                  não dizia para onde levava nem qual é o perfil. */}
+              <a
+                href="https://www.instagram.com/habify.br/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted transition-colors group-hover:bg-primary/10">
+                  <Instagram className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Instagram</p>
+                  <p className="font-medium">@habify.br</p>
+                </div>
+              </a>
             </div>
           </div>
         </div>

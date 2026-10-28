@@ -26,6 +26,31 @@ const Footer = lazy(() => import('@/components/Footer'));
 const Index = () => {
   useEffect(() => setupScrollTracking(), []);
 
+  /**
+   * Rola até a âncora quando a página é aberta com hash (ex.: /#preco).
+   *
+   * O Link do react-router navega para "/" mas não trata o hash sozinho —
+   * então vir de outra rota com /#preco caía no topo do site. Espera o
+   * elemento existir, porque as seções abaixo da dobra são lazy.
+   */
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+
+    let attempts = 0;
+    const tryScroll = () => {
+      const target = document.getElementById(id);
+      if (target) {
+        const top = target.getBoundingClientRect().top + window.scrollY - 68;
+        target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        window.scrollTo({ top, behavior: 'auto' });
+        return;
+      }
+      if (attempts++ < 40) window.setTimeout(tryScroll, 50);
+    };
+    tryScroll();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <AdvancedSEO />
