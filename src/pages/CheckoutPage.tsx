@@ -372,7 +372,7 @@ export default function CheckoutPage() {
                     type={key === 'email' ? 'email' : 'text'}
                     inputMode={key === 'email' ? 'email' : 'text'}
                     autoComplete={key === 'email' ? 'email' : 'name'}
-                    placeholder={key === 'name' ? 'Maria Márcia de Souza' : 'voce@email.com.br'}
+                    placeholder={key === 'name' ? 'João Ferreira' : 'voce@email.com.br'}
                     disabled={!!user}
                   />
                 </div>
