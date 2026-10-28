@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,30 +16,46 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle, CheckCircle, Search, RefreshCw } from 'lucide-react';
+import { RefreshCw, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  EmptyState,
+  FilterBar,
+  LoadingState,
+  PageHeader,
+  SectionHeader,
+  StatusPill,
+} from '@/components/admin/ui';
 
 interface PaymentLog {
   id: string;
   gateway: string;
   status_code: number | null;
   error_message: string | null;
-  request_body: any;
-  response_body: any;
+  request_body: unknown;
+  response_body: unknown;
   created_at: string;
   order_id: string | null;
 }
 
+const headCell = 'font-mono text-[10px] uppercase tracking-[0.09em]';
+
+const statusOf = (log: PaymentLog) => {
+  if (log.error_message) return <StatusPill label="Erro" tone="destructive" />;
+  if (log.status_code && log.status_code >= 200 && log.status_code < 300) {
+    return <StatusPill label="Sucesso" tone="success" />;
+  }
+  return <StatusPill label="Pendente" tone="warning" />;
+};
+
 export const PaymentLogsPage = () => {
   const [logs, setLogs] = useState<PaymentLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({
-    gateway: 'all',
-    status: 'all',
-    search: '',
-  });
+  const [gateway, setGateway] = useState('all');
+  const [status, setStatus] = useState('all');
+  const [search, setSearch] = useState('');
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -51,178 +64,145 @@ export const PaymentLogsPage = () => {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (filter.gateway !== 'all') {
-        query = query.eq('gateway', filter.gateway);
+      if (gateway !== 'all') {
+        query = query.eq('gateway', gateway);
       }
 
-      if (filter.status === 'error') {
+      if (status === 'error') {
         query = query.not('error_message', 'is', null);
-      } else if (filter.status === 'success') {
+      } else if (status === 'success') {
         query = query.is('error_message', null);
       }
 
-      if (filter.search) {
-        query = query.or(`error_message.ilike.%${filter.search}%,order_id.ilike.%${filter.search}%`);
+      if (search) {
+        query = query.or(`error_message.ilike.%${search}%,order_id.ilike.%${search}%`);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
-      setLogs(data || []);
+      setLogs((data as PaymentLog[]) || []);
     } catch (error) {
       console.error('Error fetching payment logs:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [gateway, status, search]);
 
   useEffect(() => {
     fetchLogs();
-  }, [filter]);
-
-  const getStatusBadge = (log: PaymentLog) => {
-    if (log.error_message) {
-      return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Erro</Badge>;
-    }
-    if (log.status_code && log.status_code >= 200 && log.status_code < 300) {
-      return <Badge variant="default" className="gap-1 bg-green-500"><CheckCircle className="h-3 w-3" />Sucesso</Badge>;
-    }
-    return <Badge variant="secondary">Pendente</Badge>;
-  };
-
-  const getGatewayBadge = (gateway: string) => {
-    const colors: Record<string, string> = {
-      'ABACATEPAY': 'bg-purple-500',
-      'HUBLA': 'bg-blue-500',
-      'UNKNOWN': 'bg-gray-500',
-    };
-    return <Badge className={colors[gateway] || 'bg-gray-500'}>{gateway}</Badge>;
-  };
+  }, [fetchLogs]);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Logs de Pagamento</h1>
-        <p className="text-muted-foreground">
-          Monitore todas as transações e erros do sistema de pagamento
-        </p>
-      </div>
+      <PageHeader
+        icon={Receipt}
+        eyebrow="Financeiro"
+        title="Logs de pagamento"
+        description="Monitore todas as transações e erros do sistema de pagamento"
+        actions={
+          <Button onClick={fetchLogs} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+            Atualizar
+          </Button>
+        }
+      />
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre os logs por gateway, status ou pesquise por termo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <Select value={filter.gateway} onValueChange={(value) => setFilter(prev => ({ ...prev, gateway: value }))}>
-              <SelectTrigger>
+      <div className="admin-card-elevated">
+        <div className="space-y-4 border-b border-border p-4 sm:p-5">
+          <SectionHeader
+            title="Registros"
+            count={logs.length}
+            description="Os 100 eventos mais recentes, do mais novo para o mais antigo."
+          />
+          <FilterBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar por mensagem de erro ou order ID..."
+          >
+            <Select value={gateway} onValueChange={setGateway}>
+              <SelectTrigger className="h-9 min-w-[9.5rem] flex-1 sm:max-w-[11rem]" aria-label="Gateway">
                 <SelectValue placeholder="Gateway" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Gateways</SelectItem>
+              <SelectContent className="shadow-admin-popover">
+                <SelectItem value="all">Todos os gateways</SelectItem>
                 <SelectItem value="ABACATEPAY">AbacatePay</SelectItem>
                 <SelectItem value="HUBLA">Hubla</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={filter.status} onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}>
-              <SelectTrigger>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="h-9 min-w-[9.5rem] flex-1 sm:max-w-[11rem]" aria-label="Status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectContent className="shadow-admin-popover">
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="success">Sucesso</SelectItem>
                 <SelectItem value="error">Erro</SelectItem>
               </SelectContent>
             </Select>
+          </FilterBar>
+        </div>
 
-            <div className="relative col-span-2">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar por mensagem ou ID..."
-                value={filter.search}
-                onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
-                className="pl-9"
-              />
-            </div>
+        {loading ? (
+          <div className="p-8">
+            <LoadingState label="Carregando logs..." />
           </div>
-
-          <div className="mt-4 flex justify-end">
-            <Button onClick={fetchLogs} variant="outline" size="sm" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Atualizar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Logs Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Registros ({logs.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center p-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground">
-              Nenhum log encontrado
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Gateway</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Mensagem</TableHead>
-                    <TableHead>Order ID</TableHead>
+        ) : logs.length === 0 ? (
+          <EmptyState
+            icon={Receipt}
+            title="Nenhum log encontrado"
+            description="Nenhum evento corresponde aos filtros aplicados."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[900px]">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className={headCell}>Data / hora</TableHead>
+                  <TableHead className={headCell}>Gateway</TableHead>
+                  <TableHead className={headCell}>Status</TableHead>
+                  <TableHead className={headCell}>Código</TableHead>
+                  <TableHead className={headCell}>Mensagem</TableHead>
+                  <TableHead className={headCell}>Order ID</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="whitespace-nowrap font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                      {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss')}
+                    </TableCell>
+                    <TableCell>
+                      <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground">
+                        {log.gateway}
+                      </span>
+                    </TableCell>
+                    <TableCell>{statusOf(log)}</TableCell>
+                    <TableCell className="font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                      {log.status_code ?? '—'}
+                    </TableCell>
+                    <TableCell className="max-w-[360px]">
+                      {log.error_message ? (
+                        <span className="block break-words font-mono text-[11.5px] text-destructive">
+                          {log.error_message}
+                        </span>
+                      ) : (
+                        <span className="text-[12.5px] text-muted-foreground">
+                          Processado com sucesso
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-[11px] text-muted-foreground">
+                      {log.order_id ? log.order_id.slice(0, 8) : '—'}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss')}
-                      </TableCell>
-                      <TableCell>
-                        {getGatewayBadge(log.gateway)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(log)}
-                      </TableCell>
-                      <TableCell>
-                        {log.status_code || '-'}
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        {log.error_message ? (
-                          <span className="text-destructive text-sm font-mono">
-                            {log.error_message}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            Processado com sucesso
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {log.order_id ? log.order_id.slice(0, 8) + '...' : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
