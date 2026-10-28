@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Calendar, Filter, Download, RefreshCw } from 'lucide-react';
+import { Calendar, Download, RefreshCw } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 
 interface DashboardFiltersProps {
   selectedPeriod: string;
@@ -21,6 +20,13 @@ interface DashboardFiltersProps {
   activeFiltersCount?: number;
 }
 
+/**
+ * Faixa de filtros dos dashboards.
+ *
+ * Os selects têm largura mínima mas podem encolher (`flex-1 basis-*`), e
+ * os botões quebram pra linha de baixo — no celular a faixa vira duas
+ * linhas em vez de empurrar a tela pro lado.
+ */
 export const DashboardFilters = ({
   selectedPeriod,
   onPeriodChange,
@@ -33,15 +39,14 @@ export const DashboardFilters = ({
   activeFiltersCount = 0,
 }: DashboardFiltersProps) => {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {/* Period Filter */}
-      <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
+    <div className="admin-card-elevated flex flex-wrap items-center gap-2 p-3">
+      <div className="flex min-w-[9.5rem] flex-1 items-center gap-2 sm:max-w-[13rem]">
+        <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Select value={selectedPeriod} onValueChange={onPeriodChange}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="h-9" aria-label="Período">
             <SelectValue placeholder="Período" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="shadow-admin-popover">
             <SelectItem value="today">Hoje</SelectItem>
             <SelectItem value="yesterday">Ontem</SelectItem>
             <SelectItem value="7days">Últimos 7 dias</SelectItem>
@@ -53,28 +58,26 @@ export const DashboardFilters = ({
         </Select>
       </div>
 
-      {/* Gateway Filter */}
       {onGatewayChange && (
         <Select value={selectedGateway} onValueChange={onGatewayChange}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="h-9 min-w-[9.5rem] flex-1 sm:max-w-[11rem]" aria-label="Gateway">
             <SelectValue placeholder="Gateway" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Gateways</SelectItem>
+          <SelectContent className="shadow-admin-popover">
+            <SelectItem value="all">Todos os gateways</SelectItem>
             <SelectItem value="ABACATEPAY">AbacatePay</SelectItem>
             <SelectItem value="HUBLA">Hubla</SelectItem>
           </SelectContent>
         </Select>
       )}
 
-      {/* Status Filter */}
       {onStatusChange && (
         <Select value={selectedStatus} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="h-9 min-w-[9.5rem] flex-1 sm:max-w-[11rem]" aria-label="Status">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Status</SelectItem>
+          <SelectContent className="shadow-admin-popover">
+            <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="paid">Pago</SelectItem>
             <SelectItem value="pending">Pendente</SelectItem>
             <SelectItem value="failed">Falha</SelectItem>
@@ -83,27 +86,22 @@ export const DashboardFilters = ({
         </Select>
       )}
 
-      {/* Active Filters Badge */}
       {activeFiltersCount > 0 && (
-        <Badge variant="secondary" className="gap-1">
-          <Filter className="h-3 w-3" />
+        <span className="rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[10.5px] font-medium tabular-nums text-primary">
           {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''}
-        </Badge>
+        </span>
       )}
 
-      <div className="flex-1" />
-
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {onRefresh && (
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" className="h-9" onClick={onRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
             Atualizar
           </Button>
         )}
         {onExport && (
-          <Button variant="outline" size="sm" onClick={onExport}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" className="h-9" onClick={onExport}>
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" />
             Exportar
           </Button>
         )}

@@ -1,12 +1,21 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { DashboardFilters } from '@/components/admin/DashboardFilters';
-import { StatCard, StatCardGrid } from '@/components/admin/ui';
+import {
+  ChartCard,
+  DistributionList,
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  StatCard,
+  StatCardGrid,
+  axisProps,
+  chartColors,
+  chartPalette,
+  tooltipProps,
+} from '@/components/admin/ui';
 import { useAnalyticsDashboard } from '@/hooks/useAnalyticsDashboard';
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
@@ -22,303 +31,265 @@ import {
   ComposedChart,
   Area,
 } from 'recharts';
-import {
-  FolderKanban,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  TrendingUp,
-  Zap,
-  BarChart3,
-} from 'lucide-react';
-
-const COLORS = ['hsl(var(--success))', 'hsl(var(--info))', 'hsl(var(--warning))', 'hsl(var(--destructive))'];
+import { FolderKanban, CheckCircle2, Clock, Zap, BarChart3 } from 'lucide-react';
 
 export const ProjectsDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30days');
 
-  const { 
-    projectMetrics, 
-    loading, 
-    updateDateRange,
-    refetch 
-  } = useAnalyticsDashboard();
+  const { projectMetrics, loading, updateDateRange, refetch } = useAnalyticsDashboard();
+
+  // Lidos do DOM, então não vale recalcular a cada render.
+  const colors = useMemo(() => chartColors(), []);
+  const palette = useMemo(() => chartPalette(), []);
+  const axis = useMemo(() => axisProps(colors), [colors]);
+  const tooltip = useMemo(() => tooltipProps(colors), [colors]);
 
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period);
     updateDateRange(period);
   };
 
+  const statusBreakdown = useMemo(
+    () => [
+      { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: colors.success },
+      { status: 'Em andamento', count: projectMetrics?.inProgressProjects || 0, fill: colors.info },
+      { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: colors.warning },
+    ],
+    [projectMetrics, colors],
+  );
+
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingState label="Carregando projetos..." size="lg" fullScreen />;
   }
+
+  const timeline = projectMetrics?.projectTimeline || [];
+  const projectsByType = projectMetrics?.projectsByType || [];
+  const avgDays = Math.round(projectMetrics?.averageCompletionTime || 0);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight mb-2">
-          <BarChart3 className="h-7 w-7 text-primary" />
-          Dashboard de Projetos
-        </h1>
-        <p className="text-muted-foreground">
-          Análise de performance, conclusão e tipos de projetos
-        </p>
-      </div>
+      <PageHeader
+        icon={BarChart3}
+        eyebrow="Analytics"
+        title="Dashboard de projetos"
+        description="Análise de performance, conclusão e tipos de projetos"
+      />
 
-      {/* Filters */}
       <DashboardFilters
         selectedPeriod={selectedPeriod}
         onPeriodChange={handlePeriodChange}
         onRefresh={refetch}
       />
 
-      {/* Key Metrics */}
       <StatCardGrid>
         <StatCard
-          label="Total de Projetos"
+          label="Total de projetos"
           value={projectMetrics?.totalProjects || 0}
           description="criados no período"
           icon={FolderKanban}
         />
         <StatCard
-          label="Projetos Concluídos"
+          label="Projetos concluídos"
           value={projectMetrics?.completedProjects || 0}
           description={`${(projectMetrics?.successRate || 0).toFixed(1)}% de taxa de sucesso`}
           icon={CheckCircle2}
           tone="success"
         />
         <StatCard
-          label="Em Andamento"
+          label="Em andamento"
           value={projectMetrics?.inProgressProjects || 0}
           description="atualmente em desenvolvimento"
           icon={Clock}
           tone="info"
         />
         <StatCard
-          label="Tempo Médio"
-          value={`${Math.round(projectMetrics?.averageCompletionTime || 0)} dias`}
+          label="Tempo médio"
+          value={`${avgDays} dias`}
           description="para conclusão"
           icon={Zap}
           tone="warning"
         />
       </StatCardGrid>
 
-      {/* Charts */}
       <Tabs defaultValue="timeline" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
-          <TabsTrigger value="types">Por Tipo</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-        </TabsList>
+        {/* A lista de abas rola sozinha no celular, pra não empurrar a página. */}
+        <div className="-mx-1 overflow-x-auto px-1">
+          <TabsList className="w-max">
+            <TabsTrigger value="timeline">Linha do tempo</TabsTrigger>
+            <TabsTrigger value="types">Por tipo</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+          </TabsList>
+        </div>
 
-        {/* Timeline Chart */}
-        <TabsContent value="timeline" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Evolução de Projetos</CardTitle>
-              <CardDescription>Projetos criados e concluídos ao longo do tempo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <ComposedChart data={projectMetrics?.projectTimeline || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="created" 
-                    fill="hsl(var(--info))" 
-                    stroke="hsl(var(--info))"
-                    fillOpacity={0.3}
+        <TabsContent value="timeline">
+          <ChartCard
+            title="Evolução de projetos"
+            description="Projetos criados e concluídos ao longo do tempo"
+          >
+            {timeline.length === 0 ? (
+              <EmptyState
+                title="Sem projetos no período"
+                description="Escolha outro intervalo no filtro acima."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height={340}>
+                <ComposedChart data={timeline} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                  <XAxis dataKey="date" {...axis} />
+                  <YAxis {...axis} />
+                  <Tooltip {...tooltip} cursor={{ fill: colors.grid, fillOpacity: 0.4 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area
+                    type="monotone"
+                    dataKey="created"
+                    fill={colors.info}
+                    stroke={colors.info}
+                    strokeWidth={2}
+                    fillOpacity={0.18}
                     name="Criados"
                   />
-                  <Bar dataKey="completed" fill="hsl(var(--success))" name="Concluídos" />
-                  <Line 
-                    type="monotone" 
-                    dataKey="completed" 
-                    stroke="hsl(var(--success))" 
+                  <Bar dataKey="completed" fill={colors.success} name="Concluídos" radius={[4, 4, 0, 0]} />
+                  <Line
+                    type="monotone"
+                    dataKey="completed"
+                    stroke={colors.success}
                     strokeWidth={2}
+                    dot={false}
                     name="Tendência"
                   />
                 </ComposedChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            )}
+          </ChartCard>
         </TabsContent>
 
-        {/* Types Chart */}
-        <TabsContent value="types" className="space-y-4">
+        <TabsContent value="types">
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição por Tipo</CardTitle>
-                <CardDescription>Projetos organizados por categoria</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <ChartCard title="Distribuição por tipo" description="Projetos organizados por categoria">
+              {projectsByType.length === 0 ? (
+                <EmptyState title="Sem projetos" description="Nenhum projeto no período filtrado." />
+              ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={projectMetrics?.projectsByType || []}
+                      data={projectsByType}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       label={({ type, count }) => `${type}: ${count}`}
-                      outerRadius={80}
-                      fill="hsl(var(--muted))"
+                      outerRadius={88}
                       dataKey="count"
+                      stroke={colors.surface}
+                      strokeWidth={2}
                     >
-                      {(projectMetrics?.projectsByType || []).map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {projectsByType.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip {...tooltip} />
                   </PieChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              )}
+            </ChartCard>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Tipos - Detalhamento</CardTitle>
-                <CardDescription>Porcentagem de cada tipo de projeto</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {(projectMetrics?.projectsByType || []).map((item, index) => (
-                    <div key={item.type} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="w-4 h-4 rounded" 
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="text-sm font-medium">{item.type}</span>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <Badge variant="secondary">{item.count} projetos</Badge>
-                        <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full"
-                            style={{ 
-                              width: `${item.percentage}%`,
-                              backgroundColor: COLORS[index % COLORS.length]
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-12 text-right">
-                          {item.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <ChartCard title="Tipos em detalhe" description="Porcentagem de cada tipo de projeto">
+              {projectsByType.length === 0 ? (
+                <EmptyState title="Sem projetos" description="Nenhum projeto no período filtrado." />
+              ) : (
+                <DistributionList
+                  className="p-1"
+                  unit="projetos"
+                  items={projectsByType.map((item) => ({
+                    label: item.type,
+                    count: item.count,
+                    percentage: item.percentage,
+                  }))}
+                />
+              )}
+            </ChartCard>
           </div>
         </TabsContent>
 
-        {/* Performance Chart */}
         <TabsContent value="performance" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Taxa de Conclusão</CardTitle>
-                <CardDescription>Percentual de projetos finalizados</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <div className="text-6xl font-bold text-success mb-2">
-                      {(projectMetrics?.successRate || 0).toFixed(1)}%
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Taxa de Sucesso
-                    </p>
-                    <div className="mt-6 grid grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-success">
-                          {projectMetrics?.completedProjects || 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Concluídos</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-info">
-                          {projectMetrics?.inProgressProjects || 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Em Progresso</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-warning">
-                          {projectMetrics?.pendingProjects || 0}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Pendentes</p>
-                      </div>
-                    </div>
+            <ChartCard title="Taxa de conclusão" description="Percentual de projetos finalizados">
+              <div className="flex flex-col items-center justify-center gap-6 py-10 text-center">
+                <div>
+                  <div className="font-display text-[56px] font-bold leading-none tracking-[-0.04em] tabular-nums text-success">
+                    {(projectMetrics?.successRate || 0).toFixed(1)}%
                   </div>
+                  <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                    Taxa de sucesso
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Velocidade de Entrega</CardTitle>
-                <CardDescription>Tempo médio para concluir projetos</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <Zap className="h-16 w-16 text-warning mx-auto mb-4" />
-                    <div className="text-5xl font-bold text-warning mb-2">
-                      {Math.round(projectMetrics?.averageCompletionTime || 0)}
+                <div className="flex items-stretch divide-x divide-border rounded-lg border border-border">
+                  <div className="px-5 py-3">
+                    <div className="font-display text-[22px] font-bold tabular-nums text-success">
+                      {projectMetrics?.completedProjects || 0}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      dias em média
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                      Concluídos
                     </p>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-medium">
-                      <TrendingUp className="h-3 w-3" />
-                      Performance excelente
+                  </div>
+                  <div className="px-5 py-3">
+                    <div className="font-display text-[22px] font-bold tabular-nums text-info">
+                      {projectMetrics?.inProgressProjects || 0}
                     </div>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                      Em progresso
+                    </p>
+                  </div>
+                  <div className="px-5 py-3">
+                    <div className="font-display text-[22px] font-bold tabular-nums text-warning">
+                      {projectMetrics?.pendingProjects || 0}
+                    </div>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                      Pendentes
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </ChartCard>
+
+            <ChartCard title="Velocidade de entrega" description="Tempo médio para concluir projetos">
+              <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+                <span className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-muted text-muted-foreground">
+                  <Zap className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="font-display text-[44px] font-bold leading-none tracking-[-0.04em] tabular-nums text-foreground">
+                  {avgDays}
+                </div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                  dias em média
+                </p>
+                {/* Antes isto dizia "Performance excelente" fixo, qualquer que
+                 *  fosse o número — um selo que nunca mudava não informa nada.
+                 *  A promessa de venda é "no ar hoje", então a régua é 1 dia. */}
+                <p className="max-w-[34ch] text-[12.5px] leading-relaxed text-muted-foreground">
+                  {avgDays <= 1
+                    ? 'Dentro da promessa de entrega no mesmo dia.'
+                    : `Acima da promessa de entrega no mesmo dia — ${avgDays} dias em média até a conclusão.`}
+                </p>
+              </div>
+            </ChartCard>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Detalhado</CardTitle>
-              <CardDescription>Distribuição de status dos projetos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={[
-                  { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: 'hsl(var(--success))' },
-                  { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: 'hsl(var(--info))' },
-                  { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: 'hsl(var(--warning))' },
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="status" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="hsl(var(--muted))">
-                    {[
-                      { status: 'Concluídos', count: projectMetrics?.completedProjects || 0, fill: 'hsl(var(--success))' },
-                      { status: 'Em Andamento', count: projectMetrics?.inProgressProjects || 0, fill: 'hsl(var(--info))' },
-                      { status: 'Pendentes', count: projectMetrics?.pendingProjects || 0, fill: 'hsl(var(--warning))' },
-                    ].map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <ChartCard title="Status detalhado" description="Distribuição de status dos projetos">
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={statusBreakdown} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                <XAxis dataKey="status" {...axis} />
+                <YAxis {...axis} />
+                <Tooltip {...tooltip} cursor={{ fill: colors.grid, fillOpacity: 0.4 }} />
+                <Bar dataKey="count" name="Projetos" radius={[4, 4, 0, 0]}>
+                  {statusBreakdown.map((entry) => (
+                    <Cell key={entry.status} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </TabsContent>
       </Tabs>
     </div>
