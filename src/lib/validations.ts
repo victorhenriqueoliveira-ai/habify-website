@@ -9,7 +9,7 @@ import { z } from 'zod';
 const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
 const cpfDigitsRegex = /^\d{11}$/;
 
-function isValidCPF(cpf: string): boolean {
+export function isValidCPF(cpf: string): boolean {
   // Remove caracteres especiais
   const digits = cpf.replace(/\D/g, '');
   

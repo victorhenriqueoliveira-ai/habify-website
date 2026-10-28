@@ -25,6 +25,24 @@ export const BUSINESS = {
   },
 } as const;
 
+/**
+ * Acréscimo efetivo do cartão parcelado, repassado ao cliente
+ * (`card.passFeesToCustomer` no checkout da AbacatePay).
+ *
+ * Valor observado no checkout real deles em 27/10/2026: R$ 74,90 em 7x
+ * saiu R$ 86,18, ou seja +15,06%. Serve **apenas** para a estimativa que
+ * mostramos antes do redirect, pra ninguém ser surpreendido com um valor
+ * maior na etapa seguinte — quem calcula e cobra é a AbacatePay, e o
+ * total confirmado é sempre o da página deles. Se a taxa mudar, só este
+ * número precisa ser atualizado.
+ */
+export const CARD_SURCHARGE_RATE = 0.1506;
+
+/** Estimativa do total no cartão parcelado, com a taxa já repassada. */
+export function estimateCardTotal(price: number): number {
+  return Math.round(price * (1 + CARD_SURCHARGE_RATE) * 100) / 100;
+}
+
 /** Formata em real brasileiro: 74.9 -> "74,90" (sem o prefixo "R$"). */
 export function formatBRL(value: number): string {
   return value.toFixed(2).replace('.', ',');
