@@ -217,16 +217,20 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* Deixa claro que existe uma etapa seguinte, em outro site. */}
+      {/* Deixa claro que existe uma etapa seguinte, em outro site.
+          No mobile os três rótulos não cabem — em vez de virar scroll
+          horizontal, só o passo atual mostra texto; os outros ficam como
+          numeral, que já comunica o progresso. */}
       <div className="border-b border-border bg-background">
-        <ol className="mx-auto flex max-w-5xl gap-0 overflow-x-auto px-4 sm:px-6">
+        <ol className="mx-auto flex max-w-5xl items-center gap-2 px-4 sm:gap-0 sm:px-6">
           {STEPS.map((label, i) => (
             <li
               key={label}
               className={cn(
-                'flex min-w-max flex-1 items-center gap-2.5 py-3.5 text-[13.5px]',
-                i > 0 && 'pl-4',
-                i === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground',
+                'flex items-center gap-2.5 py-3.5 text-[13.5px]',
+                i === 0 ? 'min-w-0 flex-1 font-semibold text-foreground' : 'flex-none text-muted-foreground',
+                'sm:min-w-0 sm:flex-1',
+                i > 0 && 'sm:pl-4',
               )}
             >
               <span
@@ -237,8 +241,10 @@ export default function CheckoutPage() {
               >
                 {i + 1}
               </span>
-              {label}
-              {i < STEPS.length - 1 && <ArrowRight className="ml-auto h-3.5 w-3.5 text-input" aria-hidden="true" />}
+              <span className={cn('truncate', i === 0 ? '' : 'hidden sm:inline')}>{label}</span>
+              {i < STEPS.length - 1 && (
+                <ArrowRight className="h-3.5 w-3.5 flex-none text-input sm:ml-auto" aria-hidden="true" />
+              )}
             </li>
           ))}
         </ol>
