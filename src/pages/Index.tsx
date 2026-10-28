@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import AdvancedSEO from '@/components/seo/AdvancedSEO';
 import AdvancedSchema from '@/components/seo/AdvancedSchema';
 import { LandingNav } from '@/components/landing/LandingNav';
+import { ScrollProgress } from '@/components/landing/ScrollProgress';
 import { Hero } from '@/components/landing/Hero';
 import { setupScrollTracking } from '@/utils/analytics';
 
@@ -58,6 +59,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <AdvancedSEO />
       <AdvancedSchema />
+      <ScrollProgress />
       <LandingNav />
 
       <main>
