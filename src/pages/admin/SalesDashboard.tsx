@@ -29,7 +29,7 @@ import {
   Legend,
   ResponsiveContainer,
   Area,
-  AreaChart,
+  ComposedChart,
 } from 'recharts';
 import { DollarSign, ShoppingCart, TrendingUp, CreditCard, BarChart3 } from 'lucide-react';
 
@@ -142,7 +142,11 @@ export const SalesDashboard = () => {
               <EmptyState title="Sem vendas no período" description="Escolha outro intervalo no filtro acima." />
             ) : (
               <ResponsiveContainer width="100%" height={340}>
-                <AreaChart data={revenueByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                {/* ComposedChart, não AreaChart: o recharts só renderiza
+                  *  filhos <Area> dentro de um <AreaChart>, então a série
+                  *  "Pedidos" (<Line>) era silenciosamente descartada — a
+                  *  legenda saía só com "Receita". */}
+                <ComposedChart data={revenueByDay} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={colors.areaFrom} />
@@ -180,7 +184,7 @@ export const SalesDashboard = () => {
                     strokeWidth={2}
                     dot={false}
                   />
-                </AreaChart>
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </ChartCard>
