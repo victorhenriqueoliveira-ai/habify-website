@@ -23,6 +23,8 @@ const dotClass: Record<StatusTone, string> = {
 interface StatusPillProps {
   label: string;
   tone?: StatusTone;
+  /** Pulsa o ponto — pra estado em curso (gerando, publicando, na fila). */
+  pulse?: boolean;
   className?: string;
 }
 
@@ -35,7 +37,7 @@ interface StatusPillProps {
  * `text-yellow-600`/`text-green-600` fora do design system. Aqui o estado
  * é lido pela cor **e** pelo ponto, não só pelo texto.
  */
-export function StatusPill({ label, tone = 'neutral', className }: StatusPillProps) {
+export function StatusPill({ label, tone = 'neutral', pulse, className }: StatusPillProps) {
   return (
     <span
       className={cn(
@@ -44,7 +46,14 @@ export function StatusPill({ label, tone = 'neutral', className }: StatusPillPro
         className,
       )}
     >
-      <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', dotClass[tone])} aria-hidden="true" />
+      <span
+        className={cn(
+          'h-1.5 w-1.5 shrink-0 rounded-full',
+          dotClass[tone],
+          pulse && 'motion-safe:animate-pulse',
+        )}
+        aria-hidden="true"
+      />
       {label}
     </span>
   );
