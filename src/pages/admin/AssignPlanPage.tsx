@@ -9,6 +9,7 @@ import { usePlans } from '@/hooks/usePlans';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import { errorMessage } from '@/lib/errorMessages';
 
 export default function AssignPlanPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -110,9 +111,9 @@ export default function AssignPlanPage() {
 
       toast.success(`Plano atribuído com sucesso para ${userName}`);
       navigate('/admin/users');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error assigning plan:', error);
-      toast.error(error.message || 'Erro ao atribuir plano');
+      toast.error(errorMessage(error, 'Erro ao atribuir plano'));
     } finally {
       setSubmitting(false);
     }

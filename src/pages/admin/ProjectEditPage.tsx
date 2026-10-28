@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, FolderKanban } from 'lucide-react';
+import { LoadingState, PageHeader } from '@/components/admin/ui';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
 import { usePortfolioProperties } from '@/hooks/usePortfolioProperties';
@@ -170,9 +171,7 @@ export const ProjectEditPage = () => {
 
   if (projectsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <LoadingState label="Carregando projeto..." size="lg" fullScreen />
     );
   }
 
@@ -193,20 +192,17 @@ export const ProjectEditPage = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Editar Projeto</h1>
-          <p className="text-muted-foreground">{project.title}</p>
-        </div>
-      </div>
+      <Button variant="ghost" onClick={() => navigate(-1)} className="-ml-2">
+        <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+        Voltar
+      </Button>
+
+      <PageHeader
+        icon={FolderKanban}
+        eyebrow="Projetos"
+        title="Editar projeto"
+        description={project.title}
+      />
 
       {/* Form */}
       <Card>

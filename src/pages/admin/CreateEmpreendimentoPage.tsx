@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Building2, Upload, X } from 'lucide-react';
+import { PageHeader } from '@/components/admin/ui';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -167,19 +168,13 @@ const CreateEmpreendimentoPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Building2 className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Criar Site para Empreendimento</h1>
-            <p className="text-muted-foreground">
-              Preencha as informações do seu empreendimento
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          icon={Building2}
+          eyebrow="Projetos"
+          title="Criar site para empreendimento"
+          description="Preencha as informações do seu empreendimento"
+        />
         <Button 
           variant="ghost" 
           size="sm" 

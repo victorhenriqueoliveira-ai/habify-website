@@ -10,7 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePayment } from '@/hooks/usePayment';
 import { useProjects } from '@/hooks/useProjects';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ArrowLeft, QrCode, CheckCircle, CreditCard } from 'lucide-react';
+import { Loader2, ArrowLeft, QrCode, CheckCircle, CreditCard, User, Clock } from 'lucide-react';
+import { AdminNotice, LoadingState } from '@/components/admin/ui';
+import { BUSINESS } from '@/config/business';
 
 export default function MaintenanceCheckoutPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,6 +24,8 @@ export default function MaintenanceCheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CARD'>('PIX');
   
   const project = projects.find(p => p.id === projectId);
+  const userDisplayName = user?.name || user?.email || 'Sem nome';
+  const monthly = BUSINESS.pricing.maintenanceMonthly.toFixed(2).replace('.', ',');
 
   useEffect(() => {
     if (!user) {
@@ -47,7 +51,7 @@ export default function MaintenanceCheckoutPage() {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('cpf, phone, name')
-        .eq('user_id', (user as any).userId)
+        .eq('user_id', user.userId)
         .single();
 
       if (profileError) {
@@ -85,9 +89,12 @@ export default function MaintenanceCheckoutPage() {
         password: '',
         paymentMethod,
         isLoggedInPurchase: true,
-        userId: (user as any).userId,
+        userId: user.userId,
         projectId: project.id,
-      } as any);
+        // O payload de manutenção carrega projectId e isLoggedInPurchase,
+        // que não estão no tipo público do hook — cast pro tipo do próprio
+        // parâmetro em vez de `any`, sem mudar o que é enviado.
+      } as Parameters<typeof createPayment>[1]);
 
       if (response.success && response.paymentUrl) {
         // Salvar apenas IDs técnicos antes de redirecionar
@@ -103,25 +110,19 @@ export default function MaintenanceCheckoutPage() {
       } else {
         toast.error(response.error || 'Erro ao processar pagamento');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao processar pagamento');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao processar pagamento');
     }
   };
 
   if (!project) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando projeto...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState label="Carregando projeto..." size="lg" fullScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    /* Sem container próprio: o AdminLayout já centraliza e dá o padding. */
+    <div>
+      <div className="mx-auto max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => navigate('/admin/my-maintenances')}
@@ -150,19 +151,19 @@ export default function MaintenanceCheckoutPage() {
                 <h4 className="font-medium mb-2">Serviços inclusos:</h4>
                 <ul className="space-y-1">
                   <li className="text-sm flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-success" />
                     <span>Atualizações de conteúdo</span>
                   </li>
                   <li className="text-sm flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-success" />
                     <span>Correções de bugs</span>
                   </li>
                   <li className="text-sm flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-success" />
                     <span>Suporte técnico</span>
                   </li>
                   <li className="text-sm flex items-start">
-                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                    <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-success" />
                     <span>Backup regular</span>
                   </li>
                 </ul>
@@ -177,8 +178,8 @@ export default function MaintenanceCheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-lg">Total:</span>
-                    <span className="text-2xl font-bold text-primary">
-                    R$ 54,90
+                    <span className="font-display text-[26px] font-bold tabular-nums tracking-[-0.03em]">
+                    R$ {monthly}
                   </span>
                 </div>
               </div>
@@ -233,25 +234,27 @@ export default function MaintenanceCheckoutPage() {
 
                 <Separator />
 
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <p className="font-medium mb-1">Dados do usuário</p>
-                    <div className="space-y-1">
-                      <p><span className="font-medium">Nome:</span> {(user as any).raw_user_meta_data?.name || user?.email}</p>
-                      <p><span className="font-medium">Email:</span> {user?.email}</p>
-                    </div>
-                  </div>
-                </div>
+                <AdminNotice
+                  tone="info"
+                  icon={User}
+                  title="Dados do usuário"
+                  description={
+                    <>
+                      {userDisplayName}
+                      <br />
+                      <span className="font-mono text-[11px]">{user?.email}</span>
+                    </>
+                  }
+                />
 
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <div className="text-sm text-amber-700 dark:text-amber-300">
-                    <p className="font-medium mb-1">⏱️ Atenção</p>
-                    <p>
-                      A manutenção será ativada imediatamente após a confirmação do pagamento
-                      {paymentMethod === 'PIX' ? ' PIX.' : ' no cartão.'}
-                    </p>
-                  </div>
-                </div>
+                <AdminNotice
+                  tone="warning"
+                  icon={Clock}
+                  title="Ativação"
+                  description={`A manutenção é ativada assim que o pagamento${
+                    paymentMethod === 'PIX' ? ' PIX' : ' no cartão'
+                  } for confirmado.`}
+                />
               </CardContent>
               <CardFooter>
                 <Button

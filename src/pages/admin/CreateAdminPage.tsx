@@ -9,7 +9,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, Shield, UserCog } from 'lucide-react';
+import { PageHeader } from '@/components/admin/ui';
 import { formatCPF, formatPhone } from '@/lib/validations';
+import { errorMessage } from '@/lib/errorMessages';
 
 type AdminRole = 'admin' | 'dev';
 
@@ -92,20 +94,22 @@ export default function CreateAdminPage() {
       toast.success(`${role === 'admin' ? 'Admin' : 'Dev'} criado com sucesso!`);
       navigate('/admin/users');
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error:', error);
-      toast.error(error.message || 'Erro ao criar usuário');
+      toast.error(errorMessage(error, 'Erro ao criar usuário'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold">Criar Novo Administrador</h1>
-        <p className="text-muted-foreground">Cadastre um novo usuário Admin ou Dev</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        icon={Shield}
+        eyebrow="Pessoas"
+        title="Criar administrador"
+        description="Cadastre um novo usuário Admin ou Dev"
+      />
 
       <Card>
         <CardHeader>
@@ -123,7 +127,7 @@ export default function CreateAdminPage() {
                 <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
                   <RadioGroupItem value="admin" id="admin" />
                   <Label htmlFor="admin" className="flex items-center cursor-pointer flex-1">
-                    <Shield className="h-5 w-5 mr-3 text-blue-600" />
+                    <Shield className="h-5 w-5 mr-3 text-info" />
                     <div>
                       <div className="font-medium">Administrador</div>
                       <div className="text-sm text-muted-foreground">

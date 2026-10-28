@@ -125,3 +125,13 @@ export const getSupabaseErrorMessage = (error: any): string => {
   
   return error.message || ErrorMessages.UNKNOWN_ERROR;
 };
+
+/**
+ * Mensagem de um `catch` sem recorrer a `any`.
+ *
+ * Existia como `catch (error: any)` + `error.message || 'fallback'` em
+ * cinco telas do admin; o tipo proibido estava ali só pra alcançar
+ * `.message` num valor que o TypeScript entrega como `unknown`.
+ */
+export const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error && error.message ? error.message : fallback;

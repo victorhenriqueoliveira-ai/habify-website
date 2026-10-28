@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Check, Star } from 'lucide-react';
+import { LoadingState } from '@/components/admin/ui';
 import { usePlans } from '@/hooks/usePlans';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 
@@ -25,9 +26,7 @@ const NewProjectPurchasePage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <LoadingState label="Carregando planos..." size="lg" fullScreen />
     );
   }
 
@@ -80,7 +79,7 @@ const NewProjectPurchasePage = () => {
               <div className="space-y-2">
                 {plan.features.map((feature, idx) => (
                   <div key={idx} className="flex items-center space-x-2">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <Check className="w-4 h-4 text-success flex-shrink-0" />
                     <span className="text-sm">{feature}</span>
                   </div>
                 ))}

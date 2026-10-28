@@ -10,11 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, UserPlus, Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/admin/ui';
 import { useUsers } from '@/hooks/useUsers';
 import { usePlans } from '@/hooks/usePlans';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { errorMessage } from '@/lib/errorMessages';
 
 export const NewUserPage = () => {
   const navigate = useNavigate();
@@ -74,9 +76,11 @@ export const NewUserPage = () => {
       toast.success('Usuário criado com sucesso', { description: `${formData.full_name} foi criado com o plano ${selectedPlan?.name} e ${result.data?.credits || 0} crédito(s).` });
 
       navigate('/admin/users');
-    } catch (error: any) {
+    } catch (error) {
       console.error('User creation error:', error);
-      toast.error('Erro ao criar usuário', { description: error?.message || 'Ocorreu um erro ao criar o usuário. Tente novamente.' });
+      toast.error('Erro ao criar usuário', {
+        description: errorMessage(error, 'Ocorreu um erro ao criar o usuário. Tente novamente.'),
+      });
     } finally {
       setLoading(false);
     }
@@ -90,16 +94,13 @@ export const NewUserPage = () => {
   };
 
   return (
-    <div className="space-y-6 mx-auto">
-      {/* Header */}
-      <div className="flex items-center space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Novo Usuário</h1>
-          <p className="text-muted-foreground">
-            Adicione um novo usuário ao sistema
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        icon={UserPlus}
+        eyebrow="Pessoas"
+        title="Novo usuário"
+        description="Adicione um novo usuário ao sistema"
+      />
 
       {/* Form */}
       <Card>
@@ -223,7 +224,7 @@ export const NewUserPage = () => {
               <Button type="submit" disabled={loading}>
                 {loading ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                     Criando...
                   </>
                 ) : (

@@ -45,7 +45,7 @@ export const ForgotPasswordPage = () => {
 
       setSent(true);
       toast.success('Email enviado!', { description: 'Verifique sua caixa de entrada para redefinir sua senha' });
-    } catch (error: any) {
+    } catch {
       // Error silenced for security - details not exposed to client
       toast.success('Email enviado', { description: 'Se o email existir em nossa base, você receberá as instruções' });
       setSent(true);

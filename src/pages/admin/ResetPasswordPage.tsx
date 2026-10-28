@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { errorMessage } from '@/lib/errorMessages';
 
 export const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
@@ -58,9 +59,11 @@ export const ResetPasswordPage = () => {
       setTimeout(() => {
         navigate('/login');
       }, 2000);
-    } catch (error: any) {
+    } catch (error) {
       // Error silenced for security - details not exposed to client
-      toast.error('Erro', { description: error.message || 'Erro ao redefinir senha. Tente solicitar um novo link.' });
+      toast.error('Erro', {
+        description: errorMessage(error, 'Erro ao redefinir senha. Tente solicitar um novo link.'),
+      });
     } finally {
       setLoading(false);
     }
@@ -110,48 +113,48 @@ export const ResetPasswordPage = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-xs">
                       {passwordValidation.minLength ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={cn(
-                        passwordValidation.minLength ? "text-green-600" : "text-muted-foreground"
+                        passwordValidation.minLength ? "text-success" : "text-muted-foreground"
                       )}>
                         Mínimo 8 caracteres
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {passwordValidation.hasUppercase ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={cn(
-                        passwordValidation.hasUppercase ? "text-green-600" : "text-muted-foreground"
+                        passwordValidation.hasUppercase ? "text-success" : "text-muted-foreground"
                       )}>
                         Uma letra maiúscula
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {passwordValidation.hasNumber ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={cn(
-                        passwordValidation.hasNumber ? "text-green-600" : "text-muted-foreground"
+                        passwordValidation.hasNumber ? "text-success" : "text-muted-foreground"
                       )}>
                         Um número
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {passwordValidation.hasSpecial ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
                         <XCircle className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={cn(
-                        passwordValidation.hasSpecial ? "text-green-600" : "text-muted-foreground"
+                        passwordValidation.hasSpecial ? "text-success" : "text-muted-foreground"
                       )}>
                         Um caractere especial (!@#$%...)
                       </span>

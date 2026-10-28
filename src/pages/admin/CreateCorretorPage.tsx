@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Users, Plus, Trash2, Upload, X } from 'lucide-react';
+import { PageHeader } from '@/components/admin/ui';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -221,19 +222,13 @@ const CreateCorretorPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-secondary/10 rounded-lg">
-            <Users className="h-6 w-6 text-secondary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Criar Site para Corretor</h1>
-            <p className="text-muted-foreground">
-              Configure seu perfil profissional e adicione até 5 imóveis
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          icon={Users}
+          eyebrow="Projetos"
+          title="Criar site para corretor"
+          description="Configure seu perfil profissional e adicione até 5 imóveis"
+        />
         <Button 
           variant="ghost" 
           size="sm" 

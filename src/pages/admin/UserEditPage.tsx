@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { LoadingState } from '@/components/admin/ui';
 import { useUsers } from '@/hooks/useUsers';
 import { UserRole } from '@/types/admin';
 import { toast } from 'sonner';
@@ -75,9 +76,7 @@ export const UserEditPage = () => {
 
   if (usersLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <LoadingState label="Carregando usuário..." size="lg" fullScreen />
     );
   }
 
