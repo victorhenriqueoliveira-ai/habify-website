@@ -395,6 +395,7 @@ export const PortfolioPropertiesStep = ({
                     </span>
                     <Input
                       id={`price-${index}`}
+                      aria-invalid={!!fieldError(index, 'price')}
                       value={property.price}
                       onChange={(e) => {
                         // Remove tudo que não é número
@@ -652,17 +653,27 @@ export const PortfolioPropertiesStep = ({
 
                   {property.photos.length < maxPhotosPerProperty && (
                     <div>
-                      <Input
+                      {/* <input> puro, não o <Input> do shadcn: a classe base
+                        *  dele traz `w-full`, que o tailwind-merge não resolve
+                        *  contra `sr-only` — o campo virava um elemento
+                        *  absoluto de 1462px e a página ganhava barra
+                        *  horizontal. E `sr-only` em vez de `hidden` porque um
+                        *  input display:none não recebe foco nem pode ser
+                        *  rolado até, então o link do resumo de erros não
+                        *  alcançava este campo. */}
+                      <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         multiple
                         onChange={(e) => handlePhotoUpload(index, e.target.files)}
-                        className="hidden"
+                        className="peer sr-only"
                         id={`photos-${index}`}
                       />
                       <Label
                         htmlFor={`photos-${index}`}
-                        className="flex items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+                        className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors hover:bg-muted/50 peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${
+                          fieldError(index, 'photos') ? 'border-destructive' : ''
+                        }`}
                       >
                         <Upload className="h-5 w-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">

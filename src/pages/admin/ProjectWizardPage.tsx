@@ -50,6 +50,9 @@ const ProjectWizardPage = () => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** Só mostra erro depois da primeira tentativa de avançar — marcar campo
+   *  vazio antes de a pessoa chegar nele é hostil. */
+  const [showErrors, setShowErrors] = useState(false);
   
   // Get project type from navigation state
   const projectType =
@@ -62,6 +65,7 @@ const ProjectWizardPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Sem isto o resumo de erros da etapa anterior continua na tela.
     setErrors({});
+    setShowErrors(false);
   }, [currentStep]);
 
   // Redirect if no plans available
@@ -134,11 +138,30 @@ const ProjectWizardPage = () => {
 
   const validateStep = () => {
     const stepErrors = collectStepErrors();
+    const isValid = Object.keys(stepErrors).length === 0;
+
+    // Só liga a exibição quando há o que exibir. Ligar sempre fazia a
+    // etapa seguinte já abrir marcada de vermelho: o efeito de revalidar
+    // roda no mesmo commit que o de trocar de etapa e ainda enxergava o
+    // showErrors ligado aqui.
+    setShowErrors(!isValid);
     setErrors(stepErrors);
-    // Sem toast aqui de propósito: o resumo no topo da etapa e a marcação
-    // nos campos já dizem o que falta, e ficam na tela até ser resolvido.
-    return Object.keys(stepErrors).length === 0;
+
+    // Sem toast de propósito: o resumo no topo da etapa e a marcação nos
+    // campos já dizem o que falta, e ficam na tela até ser resolvido.
+    return isValid;
   };
+
+  // Depois da primeira tentativa, revalida a cada alteração: o erro some
+  // assim que o campo é corrigido, em vez de só no próximo clique em
+  // "Próximo" — que era quando a pessoa descobria se tinha acertado.
+  useEffect(() => {
+    if (!showErrors) return;
+    setErrors(collectStepErrors());
+    // collectStepErrors é recriada a cada render; as dependências reais
+    // são o estado que ela lê, todas listadas aqui.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showErrors, currentStep, selectedPlanId, wizardData, portfolioProperties]);
 
   const lastStep = steps.length - 1;
 
