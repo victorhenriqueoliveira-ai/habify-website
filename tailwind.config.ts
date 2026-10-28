@@ -137,6 +137,21 @@ export default {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
 				},
+				// Brilho varrendo o CTA principal — chama atenção sem piscar.
+				'cta-sweep': {
+					'0%, 72%': { transform: 'translateX(-120%)' },
+					'86%, 100%': { transform: 'translateX(120%)' }
+				},
+				// Halo pulsando atrás do visual do hero.
+				'breathe': {
+					'0%, 100%': { opacity: '0.5', transform: 'scale(1)' },
+					'50%': { opacity: '0.9', transform: 'scale(1.07)' }
+				},
+				// Painéis do hero entrando em cascata.
+				'pop-in': {
+					from: { opacity: '0', transform: 'translateY(16px) scale(0.97)' },
+					to: { opacity: '1', transform: 'none' }
+				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-10px)' }
@@ -162,6 +177,9 @@ export default {
 				'fade-in-left': 'fade-in-left 0.7s ease-out forwards',
 				'pulse-slow': 'pulse-slow 3s infinite',
 				'float': 'float 6s ease-in-out infinite',
+				'cta-sweep': 'cta-sweep 5.5s ease-in-out infinite',
+				'breathe': 'breathe 8s ease-in-out infinite',
+				'pop-in': 'pop-in 0.72s cubic-bezier(0.2,0.75,0.3,1) backwards',
 				'shimmer': 'shimmer 2s infinite',
 				'gradient-shift': 'gradient-shift 3s ease infinite',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
@@ -173,7 +191,8 @@ export default {
 			},
 			fontFamily: {
 				'sans': ['Inter', 'sans-serif'],
-				'display': ['Brockmann', 'SF Pro Display', 'Inter', 'sans-serif'],
+				'display': ['"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
+        'mono': ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
 				'brockmann': ['Brockmann', 'serif'],
 				// Usado em MadeByHumans.tsx (marketing) — mesmo sem @font-face
 				// próprio, cai no serif padrão do navegador, efeito intencional ali.

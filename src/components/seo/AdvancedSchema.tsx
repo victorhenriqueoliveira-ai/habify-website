@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { BUSINESS } from '@/config/business';
+import { FAQ_ITEMS } from '@/data/faq';
 
 const AdvancedSchema: React.FC = () => {
   // Organization Schema
@@ -68,76 +69,17 @@ const AdvancedSchema: React.FC = () => {
     }
   };
 
-  // FAQ Schema - synced with FAQSection.tsx
+  // FAQ Schema — derivado de src/data/faq.ts, a mesma fonte que a seção
+  // renderiza. Antes era uma cópia à mão, que divergia do texto visível a
+  // cada edição e derrubava o rich result.
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "O site é feito em WordPress?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Não! A HabiFy utiliza plataforma proprietária, muito mais rápida, segura e otimizada do que WordPress. A HabiFy utiliza tecnologias avançadas, como React.js, tailwindcss e typescript. Sites HabiFy carregam até 5x mais rápido que WordPress e têm 3x mais conversão."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Preciso investir em Google Ads para ter leads?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Não é obrigatório! Seu site já vem 100% otimizado para SEO e aparece naturalmente no Google. Anúncios pagos (Google Ads, Facebook Ads) são opcionais para acelerar resultados, mas você já recebe leads organicamente sem custos extras. Muitos clientes têm ótimos resultados apenas com o tráfego orgânico incluído."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Quanto tempo leva para o site ficar pronto?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Seu site fica pronto na hora, assim que você envia suas fotos e informações. Nossa plataforma gera e publica o site automaticamente, sem espera. Você recebe acesso ao painel administrativo e o link para começar a divulgar imediatamente."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Posso editar o site depois de pronto?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sim! Após solicitação, fazemos as edições em até 72 horas úteis. Para ter acesso a edições ilimitadas, você pode contratar um plano de manutenção. Alternativamente, podemos enviar o código-fonte do site para você, já que o site é 100% seu e você tem total propriedade."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Posso colocar vários imóveis no mesmo site?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sim! Oferecemos dois formatos: Site para Projeto Único (ideal para 1 empreendimento/imóvel específico) e Portfólio com Múltiplos Imóveis (até 5 imóveis listados com sistema de filtros). Escolha o formato que melhor atende suas necessidades e tipo de negócio."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Como funciona a captação de leads 24/7?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Seu site possui botões de CTA estrategicamente posicionados que direcionam clientes interessados diretamente para o seu WhatsApp a qualquer hora do dia ou da noite. Os visitantes clicam no botão e iniciam uma conversa direta com você. Simples, direto e eficiente para não perder nenhuma oportunidade!"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "O que está incluído na hospedagem?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A hospedagem profissional em servidor de alta performance e o certificado SSL (cadeado de segurança) estão inclusos. O domínio personalizado (ex: seunome.com.br) fica por conta do cliente, com custo médio de R$ 40/ano. Garantia de uptime 99.9%."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "O site após entregue para o cliente, é de minha propriedade?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sim! Após a entrega, o site é 100% seu. Você terá acesso total ao código-fonte e poderá fazer as alterações que desejar. Nossa equipe também está disponível para ajudar com edições e manutenções, caso você precise."
-        }
-      }
-    ]
+    "mainEntity": FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+    })),
   };
 
   // HowTo Schema

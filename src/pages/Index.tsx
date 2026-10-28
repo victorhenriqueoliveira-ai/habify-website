@@ -1,122 +1,61 @@
+import { lazy, Suspense, useEffect } from 'react';
+import AdvancedSEO from '@/components/seo/AdvancedSEO';
+import AdvancedSchema from '@/components/seo/AdvancedSchema';
+import { LandingNav } from '@/components/landing/LandingNav';
+import { Hero } from '@/components/landing/Hero';
+import { setupScrollTracking } from '@/utils/analytics';
 
-import React, { useEffect, lazy, Suspense } from "react";
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import AdvancedSEO from "@/components/seo/AdvancedSEO";
-import AdvancedSchema from "@/components/seo/AdvancedSchema";
-import { preloadCriticalImages } from "@/utils/preloadImages";
-import { setupScrollTracking } from "@/utils/analytics";
-
-// Lazy load non-critical components
-const StickyCTABar = lazy(() => import("@/components/mobile/StickyCTABar"));
-const ProblemsSection = lazy(() => import("@/components/HumanoidSection"));
-const PortfolioShowcasePremium = lazy(() => import("@/components/PortfolioShowcasePremium"));
-const WhyHabify = lazy(() => import("@/components/WhyHabify"));
-const LeadCaptureFlow = lazy(() => import("@/components/LeadCaptureFlow"));
-const FAQSection = lazy(() => import("@/components/FAQSection"));
-const SEOContent = lazy(() => import("@/components/SEOContent"));
-const PricingSection = lazy(() => import("@/components/PricingSection"));
-const FeaturesAnimated = lazy(() => import("@/components/FeaturesAnimated"));
-const Footer = lazy(() => import("@/components/Footer"));
-const FloatingWhatsAppButton = lazy(() => import("@/components/FloatingWhatsAppButton"));
+// Abaixo da dobra: carrega sob demanda. O Hero e a nav vêm no bundle
+// inicial porque são o LCP.
+const PriceSection = lazy(() =>
+  import('@/components/landing/PriceSection').then((m) => ({ default: m.PriceSection })),
+);
+const PortfolioGrid = lazy(() =>
+  import('@/components/landing/PortfolioGrid').then((m) => ({ default: m.PortfolioGrid })),
+);
+const WhatYouGet = lazy(() =>
+  import('@/components/landing/WhatYouGet').then((m) => ({ default: m.WhatYouGet })),
+);
+const FaqSection = lazy(() =>
+  import('@/components/landing/FaqSection').then((m) => ({ default: m.FaqSection })),
+);
+const FinalCta = lazy(() => import('@/components/landing/FinalCta').then((m) => ({ default: m.FinalCta })));
+const HireBar = lazy(() => import('@/components/landing/HireBar').then((m) => ({ default: m.HireBar })));
+const Footer = lazy(() => import('@/components/Footer'));
 
 const Index = () => {
-  // Preload critical images on mount
-  useEffect(() => {
-    preloadCriticalImages();
-  }, []);
-
-  // Setup scroll depth tracking
-  useEffect(() => {
-    const cleanup = setupScrollTracking();
-    return cleanup;
-  }, []);
-
-  // Initialize intersection observer to detect when elements enter viewport
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate-fade-in");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-    
-    const elements = document.querySelectorAll(".animate-on-scroll");
-    elements.forEach((el) => observer.observe(el));
-    
-    return () => {
-      elements.forEach((el) => observer.unobserve(el));
-    };
-  }, []);
-
-  useEffect(() => {
-    // This helps ensure smooth scrolling for the anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        
-        const targetId = this.getAttribute('href')?.substring(1);
-        if (!targetId) return;
-        
-        const targetElement = document.getElementById(targetId);
-        if (!targetElement) return;
-        
-        // Increased offset to account for mobile nav
-        const offset = window.innerWidth < 768 ? 100 : 80;
-        
-        window.scrollTo({
-          top: targetElement.offsetTop - offset,
-          behavior: 'smooth'
-        });
-      });
-    });
-  }, []);
+  useEffect(() => setupScrollTracking(), []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <AdvancedSEO />
       <AdvancedSchema />
-      <Navbar />
-      <Suspense fallback={<div className="h-0" />}>
-        <StickyCTABar showAfterScroll={300} />
-      </Suspense>
-      <main className="space-y-0">
+      <LandingNav />
+
+      <main>
         <Hero />
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <ProblemsSection />
+        <Suspense fallback={<div className="min-h-[520px]" />}>
+          <PriceSection />
         </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <FeaturesAnimated />
+        <Suspense fallback={<div className="min-h-[520px]" />}>
+          <PortfolioGrid />
         </Suspense>
-        <Suspense fallback={<div className="min-h-[600px] bg-background" />}>
-          <PortfolioShowcasePremium />
+        <Suspense fallback={<div className="min-h-[640px]" />}>
+          <WhatYouGet />
         </Suspense>
-        <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
-          <LeadCaptureFlow />
+        <Suspense fallback={<div className="min-h-[520px]" />}>
+          <FaqSection />
         </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <WhyHabify />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[500px] bg-background" />}>
-          <PricingSection />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <SEOContent />
-        </Suspense>
-        <Suspense fallback={<div className="min-h-[400px] bg-background" />}>
-          <FAQSection />
+        <Suspense fallback={<div className="min-h-[360px]" />}>
+          <FinalCta />
         </Suspense>
       </main>
-      <Suspense fallback={<div className="h-20 bg-background" />}>
+
+      <Suspense fallback={<div className="h-20" />}>
         <Footer />
       </Suspense>
       <Suspense fallback={null}>
-        <FloatingWhatsAppButton />
+        <HireBar />
       </Suspense>
     </div>
   );
