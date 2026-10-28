@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { useMaintenanceRequests } from '@/hooks/useMaintenanceRequests';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useMaintenanceRequests, type MaintenanceRequest } from '@/hooks/useMaintenanceRequests';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -15,32 +12,53 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Clock, Wrench, CheckCircle2, XCircle, Eye, Upload, Loader2, Zap, RotateCw } from 'lucide-react';
+import {
+  Clock,
+  Wrench,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  Upload,
+  Loader2,
+  Zap,
+  RotateCw,
+  ExternalLink,
+  Sparkles,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MaintenanceRequestChat } from '@/components/MaintenanceRequestChat';
+import {
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  SectionHeader,
+  StatCard,
+  StatusPill,
+  type StatusTone,
+} from '@/components/admin/ui';
+
+const statusConfig: Record<string, { tone: StatusTone; label: string }> = {
+  pending: { tone: 'warning', label: 'Pendente' },
+  in_progress: { tone: 'info', label: 'Em andamento' },
+  completed: { tone: 'success', label: 'Concluída' },
+  rejected: { tone: 'destructive', label: 'Recusada' },
+};
+
+const headCell = 'font-mono text-[10px] uppercase tracking-[0.09em]';
+const detailLabel = 'font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground';
 
 export default function MaintenanceRequestsPage() {
   const { requests, loading, updateRequestStatus, refetch } = useMaintenanceRequests();
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
   const [beforeUrls, setBeforeUrls] = useState<string[]>([]);
   const [afterUrls, setAfterUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [retrying, setRetrying] = useState(false);
-
-  const getStatusConfig = (status: string) => {
-    const configs: Record<string, any> = {
-      pending: { variant: 'secondary', icon: Clock, label: 'Pendente' },
-      in_progress: { variant: 'default', icon: Wrench, label: 'Em Andamento' },
-      completed: { variant: 'default', icon: CheckCircle2, label: 'Concluída' },
-      rejected: { variant: 'destructive', icon: XCircle, label: 'Rejeitada' },
-    };
-    return configs[status] || configs.pending;
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after') => {
     const files = e.target.files;
@@ -61,9 +79,9 @@ export default function MaintenanceRequestsPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('project-photos')
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('project-photos').getPublicUrl(filePath);
 
         uploadedUrls.push(publicUrl);
       }
@@ -73,7 +91,7 @@ export default function MaintenanceRequestsPage() {
       } else {
         setAfterUrls([...afterUrls, ...uploadedUrls]);
       }
-      
+
       toast.success('Imagens enviadas com sucesso!');
     } catch (error) {
       console.error('Error uploading files:', error);
@@ -83,7 +101,7 @@ export default function MaintenanceRequestsPage() {
     }
   };
 
-  const openDialog = (request: any) => {
+  const openDialog = (request: MaintenanceRequest) => {
     setSelectedRequest(request);
     setAdminNotes(request.admin_notes || '');
     setBeforeUrls(request.before_urls || []);
@@ -95,7 +113,9 @@ export default function MaintenanceRequestsPage() {
     if (!selectedRequest) return;
     setRetrying(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const { data, error } = await supabase.functions.invoke('apply-maintenance-request', {
         body: { request_id: selectedRequest.id, requesting_user_id: user?.id },
       });
@@ -123,7 +143,7 @@ export default function MaintenanceRequestsPage() {
       newStatus,
       adminNotes,
       beforeUrls,
-      afterUrls
+      afterUrls,
     );
 
     if (success) {
@@ -136,305 +156,283 @@ export default function MaintenanceRequestsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LoadingState label="Carregando solicitações..." size="lg" fullScreen />;
   }
 
-  const pendingRequests = requests.filter(r => r.status === 'pending');
-  const inProgressRequests = requests.filter(r => r.status === 'in_progress');
-  const completedRequests = requests.filter(r => r.status === 'completed');
+  const pendingRequests = requests.filter((r) => r.status === 'pending');
+  const inProgressRequests = requests.filter((r) => r.status === 'in_progress');
+  const completedRequests = requests.filter((r) => r.status === 'completed');
+
+  /** Zona de upload: o input fica sr-only (não `hidden`), senão o campo
+   *  some da ordem de tabulação e a zona vira inalcançável pelo teclado. */
+  const uploadZone = (id: string, type: 'before' | 'after', label: string) => (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className={detailLabel}>
+        {label}
+      </Label>
+      <input
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={(e) => handleFileUpload(e, type)}
+        className="peer sr-only"
+        id={id}
+        disabled={uploading}
+      />
+      <label
+        htmlFor={id}
+        className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-4 transition-colors hover:bg-muted peer-focus-visible:ring-2 peer-focus-visible:ring-ring"
+      >
+        {uploading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+        ) : (
+          <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+        )}
+        <span className="text-center text-[12px] text-muted-foreground">
+          Enviar imagens do estado {type === 'before' ? 'antes' : 'depois'}
+        </span>
+      </label>
+    </div>
+  );
+
+  const thumbnails = (urls: string[], alt: string) =>
+    urls.length > 0 && (
+      <div className="grid grid-cols-2 gap-2">
+        {urls.map((url, index) => (
+          <img
+            key={url}
+            src={url}
+            alt={`${alt} ${index + 1}`}
+            loading="lazy"
+            className="h-20 w-full rounded-lg border border-border object-cover"
+          />
+        ))}
+      </div>
+    );
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Solicitações de Customização</h1>
-        <p className="text-muted-foreground">
-          Gerencie as solicitações de manutenção dos clientes
-        </p>
+      <PageHeader
+        icon={Sparkles}
+        eyebrow="Manutenções"
+        title="Solicitações de customização"
+        description="Gerencie as solicitações de manutenção dos clientes"
+      />
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+        <StatCard label="Pendentes" value={pendingRequests.length} icon={Clock} tone="warning" />
+        <StatCard label="Em andamento" value={inProgressRequests.length} icon={Wrench} tone="info" />
+        <StatCard label="Concluídas" value={completedRequests.length} icon={CheckCircle2} tone="success" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Pendentes</div>
-          <div className="text-2xl font-bold">{pendingRequests.length}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Em Andamento</div>
-          <div className="text-2xl font-bold">{inProgressRequests.length}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Concluídas</div>
-          <div className="text-2xl font-bold">{completedRequests.length}</div>
-        </Card>
+      <div className="admin-card-elevated">
+        <div className="border-b border-border p-4 sm:p-5">
+          <SectionHeader title="Fila de solicitações" count={requests.length} />
+        </div>
+
+        {requests.length === 0 ? (
+          <EmptyState
+            icon={Sparkles}
+            title="Nenhuma solicitação por aqui"
+            description="Quando um cliente pedir uma alteração usando um crédito de manutenção, ela aparece nesta fila."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table className="min-w-[840px]">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className={headCell}>Cliente</TableHead>
+                  <TableHead className={headCell}>Projeto</TableHead>
+                  <TableHead className={headCell}>Título</TableHead>
+                  <TableHead className={headCell}>Status</TableHead>
+                  <TableHead className={headCell}>Data</TableHead>
+                  <TableHead className="w-12" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((request) => {
+                  const config = statusConfig[request.status] ?? statusConfig.pending;
+
+                  return (
+                    <TableRow key={request.id}>
+                      <TableCell className="max-w-[200px]">
+                        <div className="truncate text-[13.5px] font-semibold">{request.profile?.name}</div>
+                        <div className="truncate font-mono text-[11px] text-muted-foreground">
+                          {request.profile?.email}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[13px] text-muted-foreground">
+                        {request.project?.title}
+                      </TableCell>
+                      <TableCell className="text-[13.5px] font-semibold">{request.title}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <StatusPill label={config.label} tone={config.tone} />
+                          {request.applied_automatically && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                              <Zap className="h-3 w-3" aria-hidden="true" />
+                              Auto
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                        {format(new Date(request.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          aria-label={`Abrir solicitação ${request.title}`}
+                          onClick={() => openDialog(request)}
+                        >
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
-
-      <Card className="p-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Projeto</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {requests.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Nenhuma solicitação encontrada
-                </TableCell>
-              </TableRow>
-            ) : (
-              requests.map((request) => {
-                const config = getStatusConfig(request.status);
-                const Icon = config.icon;
-
-                return (
-                  <TableRow key={request.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{request.profile?.name}</div>
-                        <div className="text-xs text-muted-foreground">{request.profile?.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{request.project?.title}</TableCell>
-                    <TableCell className="font-medium">{request.title}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Badge variant={config.variant} className="gap-1">
-                          <Icon className="h-3 w-3" />
-                          {config.label}
-                        </Badge>
-                        {request.applied_automatically && (
-                          <Badge variant="outline" className="gap-1">
-                            <Zap className="h-3 w-3" />
-                            Automático
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(request.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDialog(request)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes da Solicitação</DialogTitle>
+            <DialogTitle className="font-display text-[19px] font-bold tracking-[-0.025em]">
+              Detalhes da solicitação
+            </DialogTitle>
           </DialogHeader>
 
           {selectedRequest && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label className="text-muted-foreground">Cliente</Label>
-                  <p className="font-medium">{selectedRequest.profile?.name}</p>
-                  <p className="text-sm text-muted-foreground">{selectedRequest.profile?.email}</p>
+                  <p className={detailLabel}>Cliente</p>
+                  <p className="mt-0.5 text-[14px] font-semibold">{selectedRequest.profile?.name}</p>
+                  <p className="font-mono text-[11px] text-muted-foreground">
+                    {selectedRequest.profile?.email}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Projeto</Label>
-                  <p className="font-medium">{selectedRequest.project?.title}</p>
+                  <p className={detailLabel}>Projeto</p>
+                  <p className="mt-0.5 text-[14px] font-semibold">{selectedRequest.project?.title}</p>
                   {selectedRequest.project?.landing_page_url && (
                     <a
                       href={selectedRequest.project.landing_page_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline"
+                      className="inline-flex items-center gap-1 text-[12.5px] font-medium text-primary hover:underline"
                     >
-                      Ver projeto online
+                      Ver site
+                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
                     </a>
                   )}
                 </div>
               </div>
 
               <div>
-                <Label className="text-muted-foreground">Título</Label>
-                <p className="font-medium">{selectedRequest.title}</p>
+                <p className={detailLabel}>Título</p>
+                <p className="mt-0.5 text-[14px] font-semibold">{selectedRequest.title}</p>
                 {selectedRequest.change_type && selectedRequest.change_type !== 'other' && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="gap-1">
-                      {selectedRequest.applied_automatically ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                      {selectedRequest.applied_automatically ? 'Aplicado automaticamente via API' : 'Estruturado — ainda não aplicado'}
-                    </Badge>
-                  </div>
+                  <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground">
+                    {selectedRequest.applied_automatically ? (
+                      <Zap className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                    )}
+                    {selectedRequest.applied_automatically
+                      ? 'Aplicado automaticamente via API'
+                      : 'Estruturado — ainda não aplicado'}
+                  </span>
                 )}
               </div>
 
               <div>
-                <Label className="text-muted-foreground">Descrição</Label>
-                <p className="text-sm whitespace-pre-wrap">{selectedRequest.description}</p>
+                <p className={detailLabel}>Descrição</p>
+                <p className="mt-1 whitespace-pre-wrap text-[13.5px] leading-relaxed">
+                  {selectedRequest.description}
+                </p>
               </div>
 
               {selectedRequest.attachments_urls && selectedRequest.attachments_urls.length > 0 && (
                 <div>
-                  <Label className="text-muted-foreground">Anexos do Cliente</Label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
+                  <p className={detailLabel}>Anexos do cliente</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {selectedRequest.attachments_urls.map((url: string, index: number) => (
                       <img
-                        key={index}
+                        key={url}
                         src={url}
                         alt={`Anexo ${index + 1}`}
-                        className="w-full h-32 object-cover rounded border"
+                        loading="lazy"
+                        className="h-32 w-full rounded-lg border border-border object-cover"
                       />
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="admin-notes">Notas do Admin</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="admin-notes" className={detailLabel}>
+                  Notas do admin
+                </Label>
                 <Textarea
                   id="admin-notes"
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Adicione observações sobre o andamento..."
+                  placeholder="O que foi feito, o que ficou pendente, o que o cliente precisa saber..."
                   rows={4}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Antes (Opcional)</Label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'before')}
-                    className="hidden"
-                    id="before-upload"
-                    disabled={uploading}
-                  />
-                  <label htmlFor="before-upload">
-                    <div className="border-2 border-dashed rounded p-4 cursor-pointer hover:bg-accent/50">
-                      <div className="flex flex-col items-center gap-2">
-                        {uploading ? (
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                        ) : (
-                          <Upload className="h-6 w-6 text-muted-foreground" />
-                        )}
-                        <p className="text-xs text-center text-muted-foreground">
-                          Upload de imagens do estado antes
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                  {beforeUrls.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {beforeUrls.map((url, index) => (
-                        <img
-                          key={index}
-                          src={url}
-                          alt={`Antes ${index + 1}`}
-                          className="w-full h-20 object-cover rounded"
-                        />
-                      ))}
-                    </div>
-                  )}
+                  {uploadZone('before-upload', 'before', 'Antes (opcional)')}
+                  {thumbnails(beforeUrls, 'Antes')}
                 </div>
-
                 <div className="space-y-2">
-                  <Label>Depois (Opcional)</Label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'after')}
-                    className="hidden"
-                    id="after-upload"
-                    disabled={uploading}
-                  />
-                  <label htmlFor="after-upload">
-                    <div className="border-2 border-dashed rounded p-4 cursor-pointer hover:bg-accent/50">
-                      <div className="flex flex-col items-center gap-2">
-                        {uploading ? (
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                        ) : (
-                          <Upload className="h-6 w-6 text-muted-foreground" />
-                        )}
-                        <p className="text-xs text-center text-muted-foreground">
-                          Upload de imagens do estado depois
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                  {afterUrls.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {afterUrls.map((url, index) => (
-                        <img
-                          key={index}
-                          src={url}
-                          alt={`Depois ${index + 1}`}
-                          className="w-full h-20 object-cover rounded"
-                        />
-                      ))}
-                    </div>
-                  )}
+                  {uploadZone('after-upload', 'after', 'Depois (opcional)')}
+                  {thumbnails(afterUrls, 'Depois')}
                 </div>
               </div>
 
-              <DialogFooter className="gap-2">
+              <DialogFooter className="flex-wrap gap-2">
                 {selectedRequest.status === 'pending' && (
                   <>
-                    {selectedRequest.change_type && selectedRequest.change_type !== 'other' && !selectedRequest.applied_automatically && (
-                      <Button
-                        variant="secondary"
-                        onClick={handleRetryAutoApply}
-                        disabled={retrying}
-                      >
-                        {retrying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCw className="h-4 w-4 mr-2" />}
-                        Tentar aplicar automaticamente
-                      </Button>
-                    )}
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleUpdateStatus('rejected')}
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Rejeitar
+                    {selectedRequest.change_type &&
+                      selectedRequest.change_type !== 'other' &&
+                      !selectedRequest.applied_automatically && (
+                        <Button variant="secondary" onClick={handleRetryAutoApply} disabled={retrying}>
+                          {retrying ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <RotateCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                          )}
+                          Tentar aplicar automaticamente
+                        </Button>
+                      )}
+                    <Button variant="destructive" onClick={() => handleUpdateStatus('rejected')}>
+                      <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Recusar
                     </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => handleUpdateStatus('in_progress')}
-                    >
-                      <Wrench className="h-4 w-4 mr-2" />
+                    <Button onClick={() => handleUpdateStatus('in_progress')}>
+                      <Wrench className="mr-2 h-4 w-4" aria-hidden="true" />
                       Iniciar
                     </Button>
                   </>
                 )}
                 {selectedRequest.status === 'in_progress' && (
-                  <Button
-                    variant="default"
-                    onClick={() => handleUpdateStatus('completed')}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                  <Button onClick={() => handleUpdateStatus('completed')}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
                     Concluir
                   </Button>
                 )}
               </DialogFooter>
 
-              <div className="mt-6 pt-6 border-t">
+              <div className="border-t border-border pt-5">
                 <MaintenanceRequestChat
                   requestId={selectedRequest.id}
                   currentUserId={selectedRequest.user_id}
