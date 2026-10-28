@@ -1,10 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight, Check, CheckCircle, Loader2, Wand2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader, LoadingState } from '@/components/admin/ui';
+import { cn } from '@/lib/utils';
+import { ErrorSummary } from '@/components/wizard/ErrorSummary';
+import {
+  validateLogoStep,
+  validatePlanStep,
+  validatePropertiesStep,
+  validateProjectDataStep,
+  propertyLabel,
+  type FieldErrors,
+} from '@/lib/wizardValidation';
 import { LogoStep } from '@/components/wizard/LogoStep';
 import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
@@ -42,13 +52,16 @@ const ProjectWizardPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Get project type from navigation state
-  const projectType = (state as any)?.projectType || 'single_property';
+  const projectType =
+    (state as { projectType?: WizardData['projectType'] } | null)?.projectType || 'single_property';
 
   // Sem isso, trocar de etapa com a página rolada pra baixo (ex: depois de
   // preencher um formulário longo) deixa o usuário "perdido" no meio da
   // etapa seguinte em vez de começar vendo o topo dela.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Sem isto o resumo de erros da etapa anterior continua na tela.
+    setErrors({});
   }, [currentStep]);
 
   // Redirect if no plans available
@@ -86,7 +99,7 @@ const ProjectWizardPage = () => {
     floorPlans: [],
   }]);
 
-  const updateWizardData = (field: keyof WizardData, value: any) => {
+  const updateWizardData = <K extends keyof WizardData>(field: K, value: WizardData[K]) => {
     setWizardData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (errors[field]) {
@@ -98,98 +111,44 @@ const ProjectWizardPage = () => {
     }
   };
 
-  const validateStep = () => {
-    const newErrors: Record<string, string> = {};
+  /** Rótulos do resumo de erros: sem isto a lista mostraria "addressCep". */
+  const errorLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    portfolioProperties.forEach((property, index) => {
+      const label = propertyLabel(property, index);
+      ['title', 'full-location', 'price', 'area', 'photos'].forEach((field) => {
+        labels[`${field}-${index}`] = label;
+      });
+    });
+    return labels;
+  }, [portfolioProperties]);
 
-    if (currentStep === 0) {
-      if (!selectedPlanId) {
-        toast.error('Selecione um plano para continuar');
-        return false;
-      }
-    }
-
-    if (currentStep === 1) {
-      if (wizardData.hasLogo && !wizardData.logoUrl) {
-        toast.error('Faça upload do logotipo ou escolha "Não, desejo criar"');
-        return false;
-      }
-    }
-
-    if (currentStep === 2) {
-      // Validate portfolio properties
-      if (portfolioProperties.length === 0) {
-        toast.error('Adicione pelo menos um imóvel');
-        return false;
-      }
-
-      for (let i = 0; i < portfolioProperties.length; i++) {
-        const prop = portfolioProperties[i];
-        if (!prop.title?.trim()) {
-          toast.error(`Imóvel ${i + 1}: Título é obrigatório`);
-          return false;
-        }
-        if (!prop.location?.trim()) {
-          toast.error(`Imóvel ${i + 1}: Localização é obrigatória`);
-          return false;
-        }
-        // Preço é opcional (vira "Sob consulta" no site) — só valida se foi preenchido.
-        if (prop.price && parseFloat(prop.price.replace(/\D/g, '')) <= 0) {
-          toast.error(`Imóvel ${i + 1}: Preço inválido`);
-          return false;
-        }
-        if (!prop.area || parseFloat(prop.area) <= 0) {
-          toast.error(`Imóvel ${i + 1}: Área inválida`);
-          return false;
-        }
-        if (prop.photos.length === 0) {
-          toast.error(`Imóvel ${i + 1}: Adicione pelo menos 1 foto`);
-          return false;
-        }
-      }
-    }
-
-    if (currentStep === 3) {
-      // Required fields validation
-      if (!wizardData.profileType) newErrors.profileType = 'Campo obrigatório';
-      if (!wizardData.ownerName?.trim()) newErrors.ownerName = 'Campo obrigatório';
-      if (!wizardData.companyName?.trim()) newErrors.companyName = 'Campo obrigatório';
-      if (!wizardData.creciNumber?.trim()) newErrors.creciNumber = 'Campo obrigatório';
-      if (!wizardData.creciType) newErrors.creciType = 'Campo obrigatório';
-      if (!wizardData.addressCep?.trim()) newErrors.addressCep = 'Campo obrigatório';
-      if (!wizardData.addressStreet?.trim()) newErrors.addressStreet = 'Campo obrigatório';
-      if (!wizardData.addressNumber?.trim()) newErrors.addressNumber = 'Campo obrigatório';
-      if (!wizardData.addressState?.trim()) newErrors.addressState = 'Campo obrigatório';
-      if (!wizardData.addressCity?.trim()) newErrors.addressCity = 'Campo obrigatório';
-      if (!wizardData.addressNeighborhood?.trim()) newErrors.addressNeighborhood = 'Campo obrigatório';
-      if (!wizardData.contactMobile?.trim()) newErrors.contactMobile = 'Campo obrigatório';
-      if (!wizardData.contactEmail?.trim()) {
-        newErrors.contactEmail = 'Campo obrigatório';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(wizardData.contactEmail)) {
-        newErrors.contactEmail = 'E-mail inválido';
-      }
-      if (!wizardData.contactEmailConfirm?.trim()) {
-        newErrors.contactEmailConfirm = 'Campo obrigatório';
-      } else if (wizardData.contactEmail !== wizardData.contactEmailConfirm) {
-        newErrors.contactEmailConfirm = 'Os e-mails não conferem';
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        toast.error('Preencha todos os campos obrigatórios');
-        return false;
-      }
-    }
-
-    return true;
+  /** Todos os problemas da etapa atual, de uma vez. */
+  const collectStepErrors = (): FieldErrors => {
+    if (currentStep === 0) return validatePlanStep(selectedPlanId);
+    if (currentStep === 1) return validateLogoStep(wizardData);
+    if (currentStep === 2) return validatePropertiesStep(portfolioProperties);
+    if (currentStep === 3) return validateProjectDataStep(wizardData);
+    return {};
   };
 
+  const validateStep = () => {
+    const stepErrors = collectStepErrors();
+    setErrors(stepErrors);
+    // Sem toast aqui de propósito: o resumo no topo da etapa e a marcação
+    // nos campos já dizem o que falta, e ficam na tela até ser resolvido.
+    return Object.keys(stepErrors).length === 0;
+  };
+
+  const lastStep = steps.length - 1;
+
   const handleNext = () => {
-    if (validateStep()) {
-      if (currentStep < 4) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        handleSubmit();
-      }
+    if (!validateStep()) return;
+
+    if (currentStep < lastStep) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
     }
   };
 
@@ -312,7 +271,9 @@ const ProjectWizardPage = () => {
             .update({
               desired_domain: wizardData.desiredDomain,
               domain_status: 'pending',
-            } as any)
+              // O tipo gerado do Supabase ainda não tem as colunas de
+              // domínio; o cast é pro client, não pro dado.
+            } as never)
             .eq('id', projectId);
         }
         
@@ -408,7 +369,7 @@ const ProjectWizardPage = () => {
               const combinedPhotos = Array.from(new Set([...(projectPhotos || []), ...propertyPhotoUrls]));
 
               // Prepare update payload for project - also populate some top-level fields from the first property
-              const updateData: any = {
+              const updateData: Record<string, unknown> = {
                 photos: combinedPhotos,
               };
 
@@ -497,15 +458,18 @@ const ProjectWizardPage = () => {
     }
   };
 
-  const progress = (currentStep / 5) * 100;
+  // currentStep é 0-indexado e vai até steps.length - 1: dividir por 5
+  // fixo deixava a última etapa marcando 80% e a barra nunca fechava.
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   if (plansLoading) {
     return <LoadingState label="Carregando planos..." size="lg" fullScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
+    /* Sem min-h-screen nem container próprio: o AdminLayout já centraliza
+     *  e dá o padding — os dois somados criavam moldura dupla. */
+    <div className="mx-auto max-w-4xl space-y-6">
         <PageHeader
           icon={Wand2}
           title="Criar Novo Projeto"
@@ -519,48 +483,62 @@ const ProjectWizardPage = () => {
         />
 
         {/* Progress */}
-        <div className="admin-card-elevated p-4 sm:p-6">
-          <div className="space-y-5">
-            <div className="flex justify-between text-sm font-medium text-muted-foreground">
-              <span>
-                Passo {currentStep + 1} de 5 — <span className="text-foreground">{steps[currentStep]?.title}</span>
-              </span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-1.5" />
-            <div className="flex justify-between gap-1 sm:gap-2">
-              {steps.map((step) => (
-                <div
-                  key={step.id}
-                  className={`flex-1 text-center ${
-                    step.id === currentStep ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  <div className="mb-1 flex items-center justify-center sm:mb-2">
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors sm:h-8 sm:w-8 sm:text-sm ${
-                        step.id < currentStep
-                          ? 'bg-primary text-primary-foreground'
-                          : step.id === currentStep
-                          ? 'bg-primary text-primary-foreground shadow-admin-card'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      {step.id < currentStep ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : step.id}
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-medium leading-tight sm:text-xs">{step.title}</p>
-                  <p className="mt-1 hidden text-[10px] text-muted-foreground lg:block sm:text-xs">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+        <div className="admin-card-elevated p-4 sm:p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+              Passo {currentStep + 1} de {steps.length}
+            </p>
+            <p className="font-mono text-[10px] tabular-nums text-muted-foreground">
+              {Math.round(progress)}%
+            </p>
           </div>
+
+          <h2 className="mt-1 font-display text-[18px] font-bold tracking-[-0.025em]">
+            {steps[currentStep]?.title}
+          </h2>
+          <p className="text-[13px] text-muted-foreground">{steps[currentStep]?.description}</p>
+
+          <Progress value={progress} className="mt-3.5 h-1.5" />
+
+          {/* No mobile os cinco rótulos não cabem: mostra só os números, e o
+            *  nome da etapa ativa já está no título acima. */}
+          <ol className="mt-4 flex items-center gap-1.5">
+            {steps.map((step, index) => {
+              const done = index < currentStep;
+              const active = index === currentStep;
+
+              return (
+                <li key={step.id} className="flex flex-1 items-center gap-1.5">
+                  <span
+                    aria-current={active ? 'step' : undefined}
+                    className={cn(
+                      'grid h-6 w-6 shrink-0 place-items-center rounded-full font-mono text-[11px] font-medium transition-colors',
+                      done && 'bg-primary text-primary-foreground',
+                      active && 'bg-primary text-primary-foreground ring-4 ring-primary/15',
+                      !done && !active && 'border border-border bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {/* index + 1: antes imprimia step.id cru, 0-indexado, e o
+                      *  primeiro círculo do wizard mostrava "0". */}
+                    {done ? <Check className="h-3 w-3" aria-hidden="true" /> : index + 1}
+                  </span>
+                  <span className="sr-only">{step.title}</span>
+                  {index < steps.length - 1 && (
+                    <span
+                      aria-hidden="true"
+                      className={cn('h-px flex-1 transition-colors', done ? 'bg-primary' : 'bg-border')}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
         </div>
 
         {/* Step Content */}
-        <div>
+        <div className="space-y-4">
+          <ErrorSummary errors={errors} labels={errorLabels} />
+
           {currentStep === 0 && (
             <div className="admin-card-elevated p-6">
               <div className="space-y-6">
@@ -571,29 +549,45 @@ const ProjectWizardPage = () => {
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  {availablePlans.map((plan) => (
-                    <div
-                      key={plan.plan_id}
-                      onClick={() => setSelectedPlanId(plan.plan_id)}
-                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                        selectedPlanId === plan.plan_id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">{plan.plan_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{plan.plan_description}</p>
-                          <Badge variant="secondary" className="mt-2">
+                {/* Antes era <div onClick>: dava pra ver, não pra escolher
+                  *  pelo teclado. Agora é um grupo de rádio de verdade. */}
+                <div className="space-y-2.5" role="radiogroup" aria-label="Planos disponíveis">
+                  {availablePlans.map((plan) => {
+                    const selected = selectedPlanId === plan.plan_id;
+
+                    return (
+                      <button
+                        key={plan.plan_id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setSelectedPlanId(plan.plan_id)}
+                        className={cn(
+                          'flex w-full items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                          selected
+                            ? 'border-primary bg-primary/[0.06]'
+                            : 'border-border hover:bg-muted',
+                        )}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-[15px] font-semibold">{plan.plan_name}</span>
+                          {plan.plan_description && (
+                            <span className="mt-0.5 block text-[13px] text-muted-foreground">
+                              {plan.plan_description}
+                            </span>
+                          )}
+                          <span className="mt-1.5 inline-block rounded-full border border-border px-2 py-0.5 font-mono text-[10.5px] tabular-nums text-muted-foreground">
                             {plan.count} {plan.count === 1 ? 'disponível' : 'disponíveis'}
-                          </Badge>
-                        </div>
-                        {selectedPlanId === plan.plan_id && <CheckCircle className="h-8 w-8 text-primary" />}
-                      </div>
-                    </div>
-                  ))}
+                          </span>
+                        </span>
+
+                        {selected && (
+                          <CheckCircle className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -672,7 +666,6 @@ const ProjectWizardPage = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

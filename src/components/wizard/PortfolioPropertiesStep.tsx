@@ -50,6 +50,8 @@ export const PortfolioPropertiesStep = ({
   onPropertiesChange,
   errors = {},
 }: PortfolioPropertiesStepProps) => {
+  /** Erro de um campo deste imóvel. A chave casa com o id do input. */
+  const fieldError = (index: number, field: string) => errors[`${field}-${index}`];
   const maxProperties = projectType === 'corretor' ? 5 : 1;
   const maxPhotosPerProperty = projectType === 'corretor' ? 5 : 20;
   const { searchCep, formatCep, loading: cepLoading } = usePropertyCepSearch();
@@ -90,7 +92,7 @@ export const PortfolioPropertiesStep = ({
     }
   };
 
-  const updateProperty = (index: number, field: keyof PropertyData, value: any) => {
+  const updateProperty = <K extends keyof PropertyData>(index: number, field: K, value: PropertyData[K]) => {
     const updated = properties.map((prop, i) =>
       i === index ? { ...prop, [field]: value } : prop
     );
@@ -268,7 +270,10 @@ export const PortfolioPropertiesStep = ({
                     value={property.title}
                     onChange={(e) => updateProperty(index, 'title', e.target.value)}
                     placeholder="Ex: Apartamento 3 quartos no centro"
+                    aria-invalid={!!fieldError(index, 'title')}
+                    className={fieldError(index, 'title') ? 'border-destructive' : ''}
                   />
+                  <FieldMessage message={fieldError(index, 'title')} />
                 </div>
 
                 <div className="md:col-span-2">
@@ -368,7 +373,10 @@ export const PortfolioPropertiesStep = ({
                     onChange={(e) => updateProperty(index, 'location', e.target.value)}
                     placeholder="Bairro, Cidade - Estado"
                     readOnly
+                    aria-invalid={!!fieldError(index, 'full-location')}
+                    className={fieldError(index, 'full-location') ? 'border-destructive' : ''}
                   />
+                  <FieldMessage message={fieldError(index, 'full-location')} />
                   <p className="text-xs text-muted-foreground mt-1">
                     Preenchido automaticamente após buscar o CEP
                   </p>
@@ -446,7 +454,10 @@ export const PortfolioPropertiesStep = ({
                     type="number"
                     value={property.area}
                     onChange={(e) => updateProperty(index, 'area', e.target.value)}
+                    aria-invalid={!!fieldError(index, 'area')}
+                    className={fieldError(index, 'area') ? 'border-destructive' : ''}
                   />
+                  <FieldMessage message={fieldError(index, 'area')} />
                 </div>
 
                 <div>
@@ -660,6 +671,8 @@ export const PortfolioPropertiesStep = ({
                       </Label>
                     </div>
                   )}
+
+                  <FieldMessage message={fieldError(index, 'photos')} />
                 </div>
               </div>
 
@@ -767,3 +780,9 @@ export const PortfolioPropertiesStep = ({
     </div>
   );
 };
+
+/** Mensagem de erro sob um campo. Só renderiza quando há erro. */
+function FieldMessage({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-[12.5px] font-medium text-destructive">{message}</p>;
+}
