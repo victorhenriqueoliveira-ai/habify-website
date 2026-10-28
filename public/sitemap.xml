@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  
+
   <!-- Homepage -->
   <url>
     <loc>https://habify.com.br/</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -12,17 +12,20 @@
   <!-- Terms of Use -->
   <url>
     <loc>https://habify.com.br/termos-de-uso</loc>
-    <lastmod>2026-03-03</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
-  <!-- Login -->
+  <!-- Privacy Policy — é pré-renderizada e linkada no rodapé, mas estava
+       faltando aqui. -->
   <url>
-    <loc>https://habify.com.br/login</loc>
-    <lastmod>2026-03-03</lastmod>
+    <loc>https://habify.com.br/politica-privacidade</loc>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.2</priority>
+    <priority>0.3</priority>
   </url>
+
+  <!-- /login saiu: é tela de acesso, não tem por que ser indexada. -->
 
 </urlset>
