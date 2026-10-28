@@ -140,7 +140,7 @@ export default function CreateAdminPage() {
                 <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
                   <RadioGroupItem value="dev" id="dev" />
                   <Label htmlFor="dev" className="flex items-center cursor-pointer flex-1">
-                    <UserCog className="h-5 w-5 mr-3 text-purple-600" />
+                    <UserCog className="h-5 w-5 mr-3 text-primary" />
                     <div>
                       <div className="font-medium">Desenvolvedor</div>
                       <div className="text-sm text-muted-foreground">

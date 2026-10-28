@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
+import { StatusPill } from '@/components/admin/ui';
 
 interface LiveSiteStatusBadgeProps {
   projectId: string;
@@ -60,10 +60,7 @@ export const LiveSiteStatusBadge = ({ projectId }: LiveSiteStatusBadgeProps) => 
       onClick={(e) => e.stopPropagation()}
       className="inline-block"
     >
-      <Badge className="gap-1 bg-green-600 hover:bg-green-700">
-        <ExternalLink className="h-3 w-3" />
-        No ar
-      </Badge>
+      <StatusPill label="No ar" tone="success" className="transition-colors hover:bg-success/15" />
     </a>
   );
 };

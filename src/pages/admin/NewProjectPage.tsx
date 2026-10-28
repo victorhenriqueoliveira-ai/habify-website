@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, MessageSquare, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, MessageSquare, ExternalLink, FolderKanban } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useProjectLimits } from '@/hooks/useProjectLimits';
 import { Project, ProjectStatus } from '@/types/admin';
+import { LoadingState, PageHeader } from '@/components/admin/ui';
 
 const statusLabels = {
   pending: 'Pendente',
@@ -138,14 +139,13 @@ const NewProjectPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gerenciar Projetos</h1>
-          <p className="text-muted-foreground">
-            Crie novos projetos e gerencie projetos existentes
-          </p>
-        </div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          icon={FolderKanban}
+          eyebrow="Projetos"
+          title="Gerenciar projetos"
+          description="Crie novos projetos e gerencie projetos existentes"
+        />
         <Button 
           variant="ghost" 
           size="sm" 

@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Check, Star } from 'lucide-react';
-import { LoadingState } from '@/components/admin/ui';
+import { ArrowLeft, Check, Star, ShoppingCart } from 'lucide-react';
+import { LoadingState, PageHeader } from '@/components/admin/ui';
 import { usePlans } from '@/hooks/usePlans';
 import { useCanViewPlans } from '@/hooks/useCanViewPlans';
 
@@ -43,12 +43,12 @@ const NewProjectPurchasePage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Contratar Novo Projeto</h1>
-            <p className="text-muted-foreground mt-1">
-              Você já possui um projeto ativo. Para criar um novo, contrate um dos planos abaixo.
-            </p>
-          </div>
+          <PageHeader
+            icon={ShoppingCart}
+            eyebrow="Projetos"
+            title="Contratar novo projeto"
+            description="Você já possui um projeto ativo. Para criar outro, contrate um dos planos abaixo."
+          />
         </div>
       </div>
       {/* Plans Grid */}
@@ -69,7 +69,7 @@ const NewProjectPurchasePage = () => {
             
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl">{plan.name}</CardTitle>
-              <div className="text-3xl font-bold text-primary">
+              <div className="font-display text-[28px] font-bold tabular-nums tracking-[-0.03em]">
                 R$ {plan.price.toLocaleString('pt-BR')}
               </div>
               <p className="text-sm text-muted-foreground">{plan.description}</p>

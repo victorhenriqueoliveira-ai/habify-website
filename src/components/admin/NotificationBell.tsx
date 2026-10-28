@@ -189,7 +189,7 @@ export const NotificationBell = () => {
                     key={notification.id}
                     className={cn(
                       "border-0 rounded-none cursor-pointer hover:bg-muted/50 transition-colors",
-                      !notification.read && "bg-blue-50/50"
+                      !notification.read && "bg-primary/[0.04]"
                     )}
                     onClick={() => handleNotificationClick(notification)}
                   >
