@@ -72,12 +72,13 @@ export const DomainStep = ({ desiredDomain, onDomainChange }: DomainStepProps) =
       <CardContent className="p-6">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <Globe className="h-6 w-6 text-primary" />
-              Domínio do Site
+            <h2 className="flex items-center gap-2 font-display text-[17px] font-bold tracking-[-0.025em]">
+              <Globe className="h-[18px] w-[18px] text-muted-foreground" aria-hidden="true" />
+              Domínio do site
             </h2>
-            <p className="text-muted-foreground">
-              Pesquise se o domínio desejado está disponível. Este passo é opcional — você pode pular e escolher depois.
+            <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
+              Pesquise se o domínio que você quer está livre. Esta etapa é opcional — dá pra pular
+              e escolher depois.
             </p>
           </div>
 

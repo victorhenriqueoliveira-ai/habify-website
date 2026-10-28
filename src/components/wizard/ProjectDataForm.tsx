@@ -76,12 +76,10 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label className="text-lg font-semibold">Dados do Projeto</Label>
-        <p className="text-sm text-muted-foreground mt-1">
-          Preencha as informações necessárias. Campos com * são obrigatórios.
-        </p>
-      </div>
+      {/* O stepper já anuncia a etapa; aqui fica só o que ele não diz. */}
+      <p className="text-[13px] text-muted-foreground">
+        Campos marcados com <span className="text-destructive">*</span> são obrigatórios.
+      </p>
 
       <Card>
         <CardContent className="p-6 space-y-4">
@@ -177,7 +175,7 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
       {/* Address */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h3 className="font-semibold">Endereço</h3>
+          <h3 className="font-display text-[15px] font-bold tracking-[-0.02em]">Endereço</h3>
 
           <div className="space-y-2">
             <Label htmlFor="addressCep">CEP *</Label>
@@ -298,7 +296,7 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
       {/* Contact */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h3 className="font-semibold">Contato</h3>
+          <h3 className="font-display text-[15px] font-bold tracking-[-0.02em]">Contato</h3>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">

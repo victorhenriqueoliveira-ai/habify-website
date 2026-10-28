@@ -224,8 +224,10 @@ export const PortfolioPropertiesStep = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Imóveis do Portfólio</h2>
-          <p className="text-muted-foreground mt-1">
+          <h2 className="font-display text-[17px] font-bold tracking-[-0.025em]">
+            {projectType === 'corretor' ? 'Seus imóveis' : 'Seu empreendimento'}
+          </h2>
+          <p className="mt-0.5 text-[13.5px] text-muted-foreground">
             {projectType === 'corretor'
               ? `Cadastre até ${maxProperties} imóveis (${maxPhotosPerProperty} fotos cada)`
               : `Cadastre seu empreendimento (até ${maxPhotosPerProperty} fotos)`}

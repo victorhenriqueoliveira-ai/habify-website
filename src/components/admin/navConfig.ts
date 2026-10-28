@@ -77,10 +77,45 @@ export const bottomItems: NavItem[] = [
 ];
 
 /** Rótulo de breadcrumb pra uma rota — busca em todos os grupos + rodapé. */
+/**
+ * Rótulos das rotas que não aparecem na sidebar — criação, edição e
+ * detalhe. Sem elas o breadcrumb caía no último trecho da URL e mostrava
+ * "Project Wizard" e "New Project", em inglês, pro cliente.
+ */
+const routeLabels: Record<string, string> = {
+  '/admin/new-project': 'Novo projeto',
+  '/admin/project-wizard': 'Criar projeto',
+  '/admin/create-empreendimento': 'Novo empreendimento',
+  '/admin/create-corretor': 'Novo site de corretor',
+  '/admin/manage-projects': 'Gerenciar projetos',
+  '/admin/new-project-purchase': 'Contratar projeto',
+  '/admin/payment-logs': 'Logs de pagamento',
+  '/admin/users/new': 'Novo usuário',
+  '/admin/users/create-admin': 'Novo administrador',
+  '/admin/dashboard': 'Painel',
+};
+
+/** Rotas com parâmetro: casam por prefixo e sufixo. */
+const dynamicRouteLabels: Array<{ test: RegExp; label: string }> = [
+  { test: /^\/admin\/projects\/[^/]+\/edit$/, label: 'Editar projeto' },
+  { test: /^\/admin\/projects\/[^/]+$/, label: 'Detalhes do projeto' },
+  { test: /^\/admin\/users\/[^/]+\/edit$/, label: 'Editar usuário' },
+  { test: /^\/admin\/users\/[^/]+\/assign-plan$/, label: 'Atribuir plano' },
+  { test: /^\/admin\/users\/[^/]+\/subscriptions$/, label: 'Assinaturas do usuário' },
+  { test: /^\/admin\/payments\/[^/]+$/, label: 'Detalhes do pagamento' },
+  { test: /^\/admin\/maintenance-checkout\/[^/]+$/, label: 'Contratar manutenção' },
+];
+
 export function findNavLabel(path: string): string | undefined {
   for (const group of navGroups) {
     const match = group.items.find((item) => item.url === path);
     if (match) return match.title;
   }
-  return bottomItems.find((item) => item.url === path)?.title;
+
+  const bottomMatch = bottomItems.find((item) => item.url === path)?.title;
+  if (bottomMatch) return bottomMatch;
+
+  if (routeLabels[path]) return routeLabels[path];
+
+  return dynamicRouteLabels.find((entry) => entry.test.test(path))?.label;
 }

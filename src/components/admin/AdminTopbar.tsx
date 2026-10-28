@@ -29,8 +29,17 @@ export const AdminTopbar = () => {
   const current = (() => {
     const path = location.pathname;
     if (path === '/admin' || path === '/admin/') return null;
+
+    const label = findNavLabel(path);
+    if (label) return label;
+
+    // Último recurso, pra rota sem rótulo cadastrado. Pula o trecho final
+    // quando ele é um id: "Detalhes" é mais útil que um UUID na tela.
     const parts = path.split('/').filter(Boolean);
-    return findNavLabel(path) || parts[parts.length - 1]?.replace(/-/g, ' ');
+    const last = parts[parts.length - 1] ?? '';
+    const looksLikeId = /^[0-9a-f-]{8,}$/i.test(last);
+    const segment = looksLikeId ? parts[parts.length - 2] ?? last : last;
+    return segment.replace(/-/g, ' ');
   })();
 
   return (

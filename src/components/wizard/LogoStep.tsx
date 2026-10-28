@@ -65,14 +65,9 @@ export const LogoStep = ({
   };
 
   return (
+    /* Sem título próprio: o cabeçalho do wizard já anuncia a etapa, e dois
+        títulos iguais empilhados só empurram o conteúdo pra baixo. */
     <div className="space-y-6">
-      <div>
-        <Label className="text-lg font-semibold">Logotipo</Label>
-        <p className="text-sm text-muted-foreground mt-1">
-          Faça upload do seu logotipo
-        </p>
-      </div>
-
       <Card>
         <CardContent className="p-6">
           <Label className="block mb-3">Upload do Logotipo</Label>

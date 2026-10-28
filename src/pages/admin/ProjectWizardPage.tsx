@@ -465,7 +465,8 @@ const ProjectWizardPage = () => {
     <div className="mx-auto max-w-4xl space-y-6">
         <PageHeader
           icon={Wand2}
-          title="Criar Novo Projeto"
+          eyebrow="Projetos"
+          title="Criar novo projeto"
           description="Siga os passos para configurar seu site"
           actions={
             <Button variant="ghost" onClick={() => navigate('/admin/my-projects')}>
@@ -534,14 +535,7 @@ const ProjectWizardPage = () => {
 
           {currentStep === 0 && (
             <div className="admin-card-elevated p-6">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold">Selecione um Plano</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Escolha qual plano você deseja usar para criar este projeto
-                  </p>
-                </div>
-
+              <div className="space-y-4">
                 {/* Antes era <div onClick>: dava pra ver, não pra escolher
                   *  pelo teclado. Agora é um grupo de rádio de verdade. */}
                 <div className="space-y-2.5" role="radiogroup" aria-label="Planos disponíveis">
