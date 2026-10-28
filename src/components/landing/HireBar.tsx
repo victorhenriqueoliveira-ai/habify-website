@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { BUSINESS, formatBRL } from '@/config/business';
@@ -16,6 +16,10 @@ export function HireBar() {
   const [visible, setVisible] = useState(false);
 
   const plan = plans.find((p) => p.type !== 'domain_registration');
+
+  const prefetchCheckout = useCallback(() => {
+    void import('@/pages/CheckoutPage');
+  }, []);
 
   useEffect(() => {
     let ticking = false;
@@ -64,6 +68,8 @@ export function HireBar() {
         <button
           type="button"
           onClick={() => (plan ? navigate(`/checkout/${plan.id}`) : (window.location.hash = '#preco'))}
+          onMouseEnter={prefetchCheckout}
+          onFocus={prefetchCheckout}
           className="inline-flex flex-none items-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-[filter] hover:brightness-110 sm:px-5 sm:text-[15px]"
         >
           Criar meu site

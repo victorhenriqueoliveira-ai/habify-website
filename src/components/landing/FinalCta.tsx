@@ -36,6 +36,7 @@ export function FinalCta() {
           <CtaButton
             onClick={() => (plan ? navigate(`/checkout/${plan.id}`) : (window.location.hash = '#preco'))}
             className="mt-9"
+            prefetchCheckout
           >
             Criar meu site agora
           </CtaButton>

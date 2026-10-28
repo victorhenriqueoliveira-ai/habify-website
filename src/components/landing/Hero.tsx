@@ -149,7 +149,7 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3.5">
-              <CtaButton href="#preco" size="md">Criar meu site agora</CtaButton>
+              <CtaButton href="#preco" size="md" prefetchCheckout>Criar meu site agora</CtaButton>
               <a
                 href="#portfolio"
                 className="inline-flex items-center rounded-xl border border-input px-6 py-3.5 font-semibold transition-colors hover:bg-muted"

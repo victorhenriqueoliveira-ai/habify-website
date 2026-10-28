@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,9 @@ interface CtaButtonProps {
   disabled?: boolean;
   size?: 'md' | 'lg';
   className?: string;
+  /** Pré-carrega o chunk do checkout no hover/foco — sem isso o clique
+   *  espera o download e parece que a página travou. */
+  prefetchCheckout?: boolean;
 }
 
 /**
@@ -16,7 +19,19 @@ interface CtaButtonProps {
  * puxa o olho para o ponto de conversão — por isso só este botão tem, e
  * nenhum outro elemento da página usa laranja de fundo.
  */
-export function CtaButton({ children, href, onClick, disabled, size = 'lg', className }: CtaButtonProps) {
+export function CtaButton({
+  children,
+  href,
+  onClick,
+  disabled,
+  size = 'lg',
+  className,
+  prefetchCheckout,
+}: CtaButtonProps) {
+  const prefetch = useCallback(() => {
+    if (prefetchCheckout) void import('@/pages/CheckoutPage');
+  }, [prefetchCheckout]);
+
   const classes = cn(
     'group relative isolate inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-xl',
     'bg-primary font-semibold text-primary-foreground shadow-lg shadow-primary/25',
@@ -43,14 +58,21 @@ export function CtaButton({ children, href, onClick, disabled, size = 'lg', clas
 
   if (href) {
     return (
-      <a href={href} className={classes}>
+      <a href={href} onMouseEnter={prefetch} onFocus={prefetch} className={classes}>
         {inner}
       </a>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={classes}>
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={prefetch}
+      onFocus={prefetch}
+      disabled={disabled}
+      className={classes}
+    >
       {inner}
     </button>
   );

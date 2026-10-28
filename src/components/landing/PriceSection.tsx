@@ -83,7 +83,7 @@ export function PriceSection() {
                   renovação.
                 </p>
 
-                <CtaButton onClick={goToCheckout} disabled={loading} className="mt-7">
+                <CtaButton onClick={goToCheckout} disabled={loading} prefetchCheckout className="mt-7">
                   {loading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
