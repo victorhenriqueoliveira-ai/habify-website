@@ -1,19 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProjectStatusSection } from '@/components/admin/ProjectStatusSection';
-import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/admin/ui';
-import {
-  Clock,
-  Hammer,
-  Search,
-  CheckCircle2,
-  Plus,
-  ShoppingCart,
-  AlertTriangle,
-  FolderKanban,
-} from 'lucide-react';
+import { AdminNotice, PageHeader, StatCard, EmptyState, LoadingState } from '@/components/admin/ui';
+import { Clock, Hammer, Search, CheckCircle2, Plus, ShoppingCart, FolderKanban } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjects } from '@/hooks/useProjects';
 import { useUsers } from '@/hooks/useUsers';
@@ -66,7 +56,8 @@ export const MyProjectsPage = () => {
     <div className="space-y-6">
       <PageHeader
         icon={FolderKanban}
-        title={hasRole(['admin', 'dev']) ? 'Todos os Projetos' : 'Meus Projetos'}
+        eyebrow="Projetos"
+        title={hasRole(['admin', 'dev']) ? 'Todos os projetos' : 'Meus projetos'}
         description={
           hasRole(['admin', 'dev'])
             ? 'Gerencie todos os projetos do sistema'
@@ -77,7 +68,7 @@ export const MyProjectsPage = () => {
             {canCreateMoreProjects && (
               <Button onClick={handleNewProject}>
                 <Plus className="mr-2 h-4 w-4" />
-                Criar Novo Projeto
+                Criar novo projeto
               </Button>
             )}
             {isRegularUser && (
@@ -86,7 +77,7 @@ export const MyProjectsPage = () => {
                 variant={canCreateMoreProjects ? 'outline' : 'default'}
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
-                Adquirir Mais Planos
+                Adquirir mais planos
               </Button>
             )}
           </>
@@ -95,54 +86,29 @@ export const MyProjectsPage = () => {
 
       {/* Alert: Sem planos disponíveis */}
       {isRegularUser && !canCreateMoreProjects && (
-        <Card className="border-warning/30 bg-warning/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 rounded-full bg-warning/15 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-foreground">Nenhum Plano Disponível</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Adquira um novo plano para criar projetos.
-                  </p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => navigate('/admin/new-project-purchase')}
-              >
-                Adquirir Plano
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <AdminNotice
+          tone="warning"
+          title="Nenhum plano disponível"
+          description="Adquira um novo plano para criar projetos."
+          action={
+            <Button size="sm" onClick={() => navigate('/admin/new-project-purchase')}>
+              Adquirir plano
+            </Button>
+          }
+        />
       )}
 
       {/* Info: Planos disponíveis */}
       {isRegularUser && canCreateMoreProjects && availablePlans.length > 0 && (
-        <Card className="border-success/30 bg-success/5">
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-              </div>
-              <div>
-                <h3 className="font-medium text-foreground">
-                  Você tem {availablePlans.length} {availablePlans.length === 1 ? 'plano disponível' : 'planos disponíveis'}!
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Clique em "Criar Novo Projeto" para usar um de seus planos ativos e criar uma nova landing page.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AdminNotice
+          tone="success"
+          title={`Você tem ${availablePlans.length} ${availablePlans.length === 1 ? 'plano disponível' : 'planos disponíveis'}`}
+          description='Clique em "Criar novo projeto" para usar um dos seus planos ativos e montar uma nova landing page.'
+        />
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
         <StatCard label="Total" value={userProjects.length} />
         <StatCard label="Pendentes" value={pendingProjects.length} icon={Clock} tone="warning" />
         <StatCard label="Em Andamento" value={inProgressProjects.length} icon={Hammer} tone="info" />
@@ -205,20 +171,17 @@ export const MyProjectsPage = () => {
 
         {/* Empty State */}
         {userProjects.length === 0 && (
-          <Card>
-            <CardContent>
-              <EmptyState
-                icon={FolderKanban}
-                title="Nenhum projeto ainda"
-                description="Comece criando seu primeiro projeto para ter sua landing page personalizada."
-                action={{
-                  label: 'Criar Primeiro Projeto',
-                  icon: Plus,
-                  onClick: () => navigate('/admin/new-project'),
-                }}
-              />
-            </CardContent>
-          </Card>
+          <EmptyState
+            className="admin-card-elevated"
+            icon={FolderKanban}
+            title="Nenhum projeto ainda"
+            description="Comece criando seu primeiro projeto para ter sua landing page personalizada."
+            action={{
+              label: 'Criar primeiro projeto',
+              icon: Plus,
+              onClick: () => navigate('/admin/new-project'),
+            }}
+          />
         )}
       </div>
     </div>
