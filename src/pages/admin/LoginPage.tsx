@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,13 @@ export const LoginPage = () => {
 
   const { login, loading, isAuthenticated, hasRole } = useAuth();
   const navigate = useNavigate();
+
+  /** Mesma ideia do Entrar na landing: a tela de recuperação é lazy,
+   *  então sem pré-carregar o clique espera o download e parece que a
+   *  página travou. */
+  const prefetchForgot = useCallback(() => {
+    void import('@/pages/admin/ForgotPasswordPage');
+  }, []);
 
   const errors = useMemo(
     () => ({
@@ -80,7 +87,12 @@ export const LoginPage = () => {
           <AlertCircle className="mt-0.5 h-4 w-4 flex-none" aria-hidden="true" />
           <span>
             {formError}{' '}
-            <Link to="/forgot-password" className="font-semibold underline underline-offset-2">
+            <Link
+              to="/forgot-password"
+              onMouseEnter={prefetchForgot}
+              onFocus={prefetchForgot}
+              className="font-semibold underline underline-offset-2"
+            >
               Esqueceu a senha?
             </Link>
           </span>
@@ -127,7 +139,12 @@ export const LoginPage = () => {
             <label htmlFor="password" className="text-[13.5px] font-semibold tracking-[-0.01em]">
               Senha
             </label>
-            <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+            <Link
+              to="/forgot-password"
+              onMouseEnter={prefetchForgot}
+              onFocus={prefetchForgot}
+              className="text-xs font-medium text-primary hover:underline"
+            >
               Esqueci minha senha
             </Link>
           </div>

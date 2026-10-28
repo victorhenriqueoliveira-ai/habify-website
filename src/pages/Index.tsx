@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import AdvancedSEO from '@/components/seo/AdvancedSEO';
 import AdvancedSchema from '@/components/seo/AdvancedSchema';
 import { LandingNav } from '@/components/landing/LandingNav';
@@ -33,8 +34,10 @@ const Index = () => {
    * então vir de outra rota com /#preco caía no topo do site. Espera o
    * elemento existir, porque as seções abaixo da dobra são lazy.
    */
+  const { hash } = useLocation();
+
   useEffect(() => {
-    const id = window.location.hash.slice(1);
+    const id = hash.slice(1);
     if (!id) return;
 
     let attempts = 0;
@@ -49,7 +52,7 @@ const Index = () => {
       if (attempts++ < 40) window.setTimeout(tryScroll, 50);
     };
     tryScroll();
-  }, []);
+  }, [hash]);
 
   return (
     <div className="min-h-screen bg-background">
