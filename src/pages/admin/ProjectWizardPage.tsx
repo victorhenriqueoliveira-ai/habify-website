@@ -25,7 +25,7 @@ import { useUserPlans } from '@/hooks/useUserPlans';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadMultipleFiles } from '@/utils/uploadToStorage';
 import { toast } from 'sonner';
-import type { WizardData, ColorPalette, PaletteData } from '@/types/wizard';
+import type { WizardData } from '@/types/wizard';
 import type { PropertyData } from '@/hooks/useMultipleProjects';
 
 // "Layout e Cores" foi removida: o site gerado usa um design fixo por
@@ -176,25 +176,6 @@ const ProjectWizardPage = () => {
     try {
       const userId = user.userId || user.id;
       
-      // Build palette data structure
-      const colorOptions = [
-        { id: 'blue', primary: '#0B82FF', secondary: '#D8EEFF', accent: '#0056D6' },
-        { id: 'orange', primary: '#FF6B35', secondary: '#FFE5DC', accent: '#CC4417' },
-        { id: 'green', primary: '#10B981', secondary: '#D1FAE5', accent: '#047857' },
-        { id: 'purple', primary: '#8B5CF6', secondary: '#EDE9FE', accent: '#6D28D9' },
-        { id: 'neutral', primary: '#4B5563', secondary: '#F3F4F6', accent: '#1F2937' },
-      ];
-      
-      const selectedPalette = colorOptions.find(c => c.id === wizardData.colorPalette);
-      const paletteData: PaletteData | undefined = selectedPalette ? {
-        id: selectedPalette.id as ColorPalette,
-        colors: {
-          primary: selectedPalette.primary,
-          secondary: selectedPalette.secondary,
-          accent: selectedPalette.accent,
-        }
-      } : undefined;
-
       // Build full address
       const fullAddress = [
         wizardData.addressStreet,
@@ -206,16 +187,6 @@ const ProjectWizardPage = () => {
         wizardData.addressCep
       ].filter(Boolean).join(', ');
 
-      // console.log('Creating project with data:', {
-      //   layoutChoice: wizardData.layoutChoice,
-      //   colorPalette: wizardData.colorPalette,
-      //   logoUrl: wizardData.logoUrl,
-      //   hasLogo: wizardData.hasLogo,
-      //   paletteData,
-      //   propertiesCount: portfolioProperties.length,
-      //   fullAddress,
-      // });
-      
       // Build photos array (logo + property photos)
       const projectPhotos: string[] = [];
       if (wizardData.logoUrl) {
@@ -249,7 +220,6 @@ const ProjectWizardPage = () => {
           contactPhone: wizardData.contactPhone,
           contactMobile: wizardData.contactMobile,
           contactEmail: wizardData.contactEmail,
-          palette: paletteData,
           hasLogo: wizardData.hasLogo,
           desiredDomain: wizardData.desiredDomain,
           googleAnalyticsId: wizardData.googleAnalyticsId,
