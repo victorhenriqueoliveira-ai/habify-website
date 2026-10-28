@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HabifyMark } from './HabifyMark';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,15 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  /**
+   * Baixa o chunk da tela de login assim que o cursor encosta no botão.
+   * A página é lazy, então sem isso o clique espera o download — o que dá
+   * aquela sensação de "não aconteceu nada" por uns instantes.
+   */
+  const prefetchLogin = useCallback(() => {
+    void import('@/pages/admin/LoginPage');
+  }, []);
+
   return (
     <header
       className={cn(
@@ -27,10 +37,10 @@ export function LandingNav() {
       )}
     >
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 md:gap-8">
-        <a href="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-tight sm:text-xl">
+        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-tight sm:text-xl">
           <HabifyMark className="h-5 w-auto text-primary" />
           Habify
-        </a>
+        </Link>
 
         <nav className="ml-auto hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           {LINKS.map((link) => (
@@ -40,14 +50,18 @@ export function LandingNav() {
           ))}
         </nav>
 
-        {/* O Entrar fica visível no mobile de propósito: é o acesso de quem
-            já comprou, não pode depender de menu escondido. */}
-        <a
-          href="/login"
+        {/* Link do router, não <a href>: com <a> o navegador recarregava o
+            app inteiro a cada clique em Entrar. O Entrar fica visível no
+            mobile de propósito — é o acesso de quem já comprou. */}
+        <Link
+          to="/login"
+          onMouseEnter={prefetchLogin}
+          onFocus={prefetchLogin}
+          onTouchStart={prefetchLogin}
           className="ml-auto rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary sm:px-4 md:ml-0"
         >
           Entrar
-        </a>
+        </Link>
 
         <a
           href="#preco"

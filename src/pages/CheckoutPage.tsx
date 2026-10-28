@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, CreditCard, Info, Loader2, Lock, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlans } from '@/hooks/usePlans';
@@ -206,10 +206,10 @@ export default function CheckoutPage() {
       {/* Topo enxuto: o checkout não repete a navegação, pra não dar rota de fuga. */}
       <div className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-[-0.035em]">
+          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold tracking-[-0.035em]">
             <HabifyMark className="h-5 w-auto text-primary" />
             Habify
-          </a>
+          </Link>
           <span className="ml-auto inline-flex items-center gap-2 font-mono text-[11.5px] text-muted-foreground">
             <Lock className="h-3.5 w-3.5 text-success" aria-hidden="true" />
             conexão segura

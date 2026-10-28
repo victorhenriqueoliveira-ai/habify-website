@@ -4,6 +4,7 @@ import { BUSINESS, formatBRL, maxInstallmentsFor } from '@/config/business';
 import { usePlans } from '@/hooks/usePlans';
 import { Reveal } from './Reveal';
 import { CtaButton } from './CtaButton';
+import { CountUpValue } from './CountUpValue';
 
 const INCLUDED = [
   { strong: 'Site em React', rest: ' publicado no mesmo dia' },
@@ -71,8 +72,8 @@ export function PriceSection() {
                 </span>
 
                 <div className="mt-4 flex flex-wrap items-baseline gap-2.5">
-                  <strong className="font-display text-[clamp(2.75rem,5.6vw,4.25rem)] font-bold leading-none tracking-[-0.05em]">
-                    R$&nbsp;{formatBRL(price)}
+                  <strong className="font-display text-[clamp(2.75rem,5.6vw,4.25rem)] font-bold leading-none tracking-[-0.05em] tabular-nums">
+                    <CountUpValue value={price} format={(v) => `R$\u00a0${formatBRL(v)}`} />
                   </strong>
                   <span className="text-[15px] font-medium text-muted-foreground">uma vez só</span>
                 </div>

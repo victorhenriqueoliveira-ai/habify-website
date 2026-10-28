@@ -159,6 +159,10 @@ const Footer = () => {
                   className="rounded-lg"
                 >
                   <Instagram className="h-4 w-4" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Instagram</p>
+                    <p className="font-medium">@habify.br</p>
+                  </div>
                 </Button>
               </div>
             </div>
