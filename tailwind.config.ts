@@ -90,12 +90,6 @@ export default {
 					"900": "#7c2d12",
 					"950": "#431407",
 				},
-				dark: {
-					"900": "#121212", // Almost black
-					"800": "#1e1e1e",
-					"700": "#2d2d2d",
-					"600": "#3d3d3d",
-				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -184,19 +178,12 @@ export default {
 				'gradient-shift': 'gradient-shift 3s ease infinite',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
 			},
-			backgroundImage: {
-				'hero-gradient': 'linear-gradient(90deg, hsla(24, 100%, 83%, 1) 0%, hsla(341, 91%, 68%, 1) 100%)',
-				'hero-gradient-2': 'linear-gradient(90deg, hsla(39, 100%, 77%, 1) 0%, hsla(22, 90%, 57%, 1) 100%)',
-				'pulse-gradient': 'linear-gradient(180deg, rgba(249,115,22,0.8) 0%, rgba(249,115,22,0) 100%)',
-			},
 			fontFamily: {
 				'sans': ['Inter', 'sans-serif'],
 				'display': ['"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
         'mono': ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-				'brockmann': ['Brockmann', 'serif'],
 				// Usado em MadeByHumans.tsx (marketing) — mesmo sem @font-face
 				// próprio, cai no serif padrão do navegador, efeito intencional ali.
-				'playfair': ['"Playfair Display"', 'serif'],
 			},
 			boxShadow: {
 				// Marketing site only.
