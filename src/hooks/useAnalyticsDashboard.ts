@@ -15,7 +15,12 @@ export interface AnalyticsFilters {
 }
 
 export interface SalesMetrics {
+  /** Só de pedidos pagos — é o dinheiro que entrou. */
   totalRevenue: number;
+  /** Pedidos criados e ainda não pagos. Não é receita. */
+  pendingRevenue: number;
+  paidOrders: number;
+  pendingOrders: number;
   totalOrders: number;
   averageOrderValue: number;
   conversionRate: number;
@@ -111,9 +116,20 @@ export const useAnalyticsDashboard = (initialFilters?: Partial<AnalyticsFilters>
       if (error) throw error;
 
       // Calculate metrics
-      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.amount || 0), 0) || 0;
       const totalOrders = orders?.length || 0;
       const paidOrders = orders?.filter(o => o.status === 'paid') || [];
+      const pendingOrders = orders?.filter(o => o.status === 'pending') || [];
+
+      const sumAmount = (list: typeof paidOrders) =>
+        list.reduce((sum, order) => sum + Number(order.amount || 0), 0);
+
+      // `totalRevenue` somava TODOS os pedidos, pagos ou não, enquanto o
+      // resto da tela (receita por dia, por gateway, conversão) já contava
+      // só os pagos. O card do topo chegava a mostrar receita num período
+      // sem nenhum pedido pago. Agora o pago e o pendente são dois números
+      // separados, que é como eles se comportam.
+      const totalRevenue = sumAmount(paidOrders);
+      const pendingRevenue = sumAmount(pendingOrders);
       const averageOrderValue = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
       // Revenue by gateway
@@ -176,6 +192,9 @@ export const useAnalyticsDashboard = (initialFilters?: Partial<AnalyticsFilters>
 
       setSalesMetrics({
         totalRevenue,
+        pendingRevenue,
+        paidOrders: paidOrders.length,
+        pendingOrders: pendingOrders.length,
         totalOrders,
         averageOrderValue,
         conversionRate,

@@ -8,7 +8,6 @@ import {
   LoadingState,
   PageHeader,
   StatCard,
-  StatCardGrid,
   axisProps,
   chartColors,
   chartPalette,
@@ -31,7 +30,7 @@ import {
   Area,
   ComposedChart,
 } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, CreditCard, BarChart3 } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, CreditCard, BarChart3, Clock } from 'lucide-react';
 
 function formatMetricValue(value: string | number, prefix = '', suffix = ''): string {
   const formatted =
@@ -103,26 +102,43 @@ export const SalesDashboard = () => {
         activeFiltersCount={activeFiltersCount}
       />
 
-      <StatCardGrid>
+      {/* Pago e pendente são dois números distintos, não um só: antes a
+        *  "Receita total" somava os dois e podia mostrar faturamento num
+        *  período em que nada tinha sido pago. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
         <StatCard
-          label="Receita total"
+          label="Receita paga"
           value={formatMetricValue(salesMetrics?.totalRevenue || 0, 'R$ ')}
           icon={DollarSign}
           tone="success"
+          description={`${salesMetrics?.paidOrders || 0} ${
+            (salesMetrics?.paidOrders || 0) === 1 ? 'pedido pago' : 'pedidos pagos'
+          }`}
+        />
+        <StatCard
+          label="A receber"
+          value={formatMetricValue(salesMetrics?.pendingRevenue || 0, 'R$ ')}
+          icon={Clock}
+          tone="warning"
+          description={`${salesMetrics?.pendingOrders || 0} ${
+            (salesMetrics?.pendingOrders || 0) === 1 ? 'pedido pendente' : 'pedidos pendentes'
+          }`}
         />
         <StatCard label="Total de pedidos" value={salesMetrics?.totalOrders || 0} icon={ShoppingCart} />
         <StatCard
           label="Ticket médio"
           value={formatMetricValue(salesMetrics?.averageOrderValue || 0, 'R$ ')}
           icon={CreditCard}
+          description="por pedido pago"
         />
         <StatCard
           label="Taxa de conversão"
           value={formatMetricValue((salesMetrics?.conversionRate || 0).toFixed(1), '', '%')}
           icon={TrendingUp}
           tone="info"
+          description="pedidos que viraram venda"
         />
-      </StatCardGrid>
+      </div>
 
       <Tabs defaultValue="revenue" className="space-y-4">
         {/* A lista de abas rola sozinha no celular — quatro rótulos não
