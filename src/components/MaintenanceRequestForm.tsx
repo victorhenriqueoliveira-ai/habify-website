@@ -10,6 +10,13 @@ import { Loader2, Upload, X } from 'lucide-react';
 import { useMaintenanceRequests, MaintenanceChangeType } from '@/hooks/useMaintenanceRequests';
 import { usePortfolioProperties } from '@/hooks/usePortfolioProperties';
 import { toast } from 'sonner';
+import {
+  PROPERTY_FIELDS,
+  SITE_FIELDS,
+  optionLabel,
+  validateFieldValue,
+  type EditableField,
+} from '@/config/maintenanceCatalog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface MaintenanceRequestFormProps {
@@ -20,33 +27,30 @@ interface MaintenanceRequestFormProps {
   onCreated?: (request: unknown) => void;
 }
 
-interface PropertyFieldOption {
-  value: string;
-  label: string;
-  currentValue: (p: { title: string; location: string; price: number; description?: string; bedrooms?: number; bathrooms?: number; area: number; parkingSpaces?: number; condominiumFee?: number; iptu?: number }) => string;
-  type: 'text' | 'textarea' | 'number';
+// As listas de campos moravam aqui, numa terceira cópia: uma no
+// formulário, uma na edge function e uma implícita no que o site renderiza.
+// Agora as três leem o mesmo catálogo — é ele que decide o que o cliente
+// pode alterar sozinho, e ele também carrega a regra de cada valor.
+const toCamel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+
+/** Valor atual de um campo, pro formulário mostrar o "de → para". */
+function currentValueOf(source: Record<string, unknown> | undefined, field: EditableField): string {
+  if (!source) return '';
+  const value = source[toCamel(field.key)] ?? source[field.key];
+  if (Array.isArray(value)) return value.join(', ');
+  return value === null || value === undefined ? '' : String(value);
 }
 
-const PROPERTY_FIELDS: PropertyFieldOption[] = [
-  { value: 'title', label: 'Título do imóvel', type: 'text', currentValue: (p) => p.title },
-  { value: 'location', label: 'Localização', type: 'text', currentValue: (p) => p.location },
-  { value: 'price', label: 'Preço', type: 'number', currentValue: (p) => String(p.price) },
-  { value: 'description', label: 'Descrição', type: 'textarea', currentValue: (p) => p.description || '' },
-  { value: 'bedrooms', label: 'Quartos', type: 'number', currentValue: (p) => String(p.bedrooms ?? '') },
-  { value: 'bathrooms', label: 'Banheiros', type: 'number', currentValue: (p) => String(p.bathrooms ?? '') },
-  { value: 'area', label: 'Área (m²)', type: 'number', currentValue: (p) => String(p.area) },
-  { value: 'parking_spaces', label: 'Vagas de garagem', type: 'number', currentValue: (p) => String(p.parkingSpaces ?? '') },
-  { value: 'condominium_fee', label: 'Condomínio', type: 'number', currentValue: (p) => String(p.condominiumFee ?? '') },
-  { value: 'iptu', label: 'IPTU', type: 'number', currentValue: (p) => String(p.iptu ?? '') },
-];
-
-const CONTACT_FIELDS: { value: string; label: string }[] = [
-  { value: 'contactPhone', label: 'Telefone fixo' },
-  { value: 'contactMobile', label: 'WhatsApp / celular' },
-  { value: 'contactEmail', label: 'E-mail de contato' },
-  { value: 'companyName', label: 'Nome da empresa/imobiliária' },
-  { value: 'ownerName', label: 'Nome do corretor/responsável' },
-];
+/** Converte o que foi digitado no formato que o catálogo espera. */
+function parseInputValue(field: EditableField, raw: string): string | number | string[] {
+  if (field.kind === 'stringList') {
+    return raw.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+  if (field.kind === 'number' || field.kind === 'currency') {
+    return Number(raw.replace(',', '.'));
+  }
+  return raw;
+}
 
 export const MaintenanceRequestForm = ({
   projectId,
@@ -138,7 +142,8 @@ export const MaintenanceRequestForm = ({
   }, [contactField, projectId]);
 
   const selectedProperty = properties.find((p) => p.id === propertyId);
-  const selectedFieldOption = PROPERTY_FIELDS.find((f) => f.value === fieldName);
+  const selectedFieldOption = PROPERTY_FIELDS.find((f) => f.key === fieldName);
+  const selectedSiteField = SITE_FIELDS.find((f) => f.key === contactField);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -220,13 +225,29 @@ export const MaintenanceRequestForm = ({
           toast.error('Selecione o imóvel, o campo e informe o novo valor');
           return;
         }
-        const title = `Alterar ${selectedFieldOption?.label.toLowerCase()} — ${selectedProperty?.title}`;
-        const description = `Alterar "${selectedFieldOption?.label}" de "${selectedFieldOption?.currentValue(selectedProperty!)}" para "${newValue}" no imóvel "${selectedProperty?.title}".`;
-        const value = selectedFieldOption?.type === 'number' ? Number(newValue) : newValue;
+        if (!selectedFieldOption) {
+          toast.error('Selecione o campo a alterar');
+          return;
+        }
+
+        const value = parseInputValue(selectedFieldOption, newValue);
+
+        // Valida aqui com a mesma função que a edge function usa: o erro
+        // aparece antes de gastar o crédito de manutenção, em vez de a
+        // solicitação nascer e falhar do outro lado.
+        const checked = validateFieldValue(selectedFieldOption, value);
+        if (!checked.ok) {
+          toast.error(checked.error);
+          return;
+        }
+
+        const before = currentValueOf(selectedProperty as unknown as Record<string, unknown>, selectedFieldOption);
+        const title = `Alterar ${selectedFieldOption.label.toLowerCase()} — ${selectedProperty?.title}`;
+        const description = `Alterar "${selectedFieldOption.label}" de "${before || '(vazio)'}" para "${newValue}" no imóvel "${selectedProperty?.title}".`;
         result = await createRequest(projectId, title, description, [], 'property_field', {
           property_id: propertyId,
           field: fieldName,
-          new_value: value,
+          new_value: checked.value,
         });
       } else if (category === 'property_photos') {
         if (!photosPropertyId) {
@@ -245,12 +266,24 @@ export const MaintenanceRequestForm = ({
           toast.error('Selecione o campo e informe o novo valor');
           return;
         }
-        const fieldLabel = CONTACT_FIELDS.find((f) => f.value === contactField)?.label || contactField;
-        const title = `Alterar ${fieldLabel.toLowerCase()}`;
-        const description = `Alterar "${fieldLabel}" de "${contactCurrentValue || '(vazio)'}" para "${contactNewValue}".`;
+        const siteField = SITE_FIELDS.find((f) => f.key === contactField);
+        if (!siteField) {
+          toast.error('Selecione o campo a alterar');
+          return;
+        }
+
+        const siteValue = parseInputValue(siteField, contactNewValue);
+        const checkedSite = validateFieldValue(siteField, siteValue);
+        if (!checkedSite.ok) {
+          toast.error(checkedSite.error);
+          return;
+        }
+
+        const title = `Alterar ${siteField.label.toLowerCase()}`;
+        const description = `Alterar "${siteField.label}" de "${contactCurrentValue || '(vazio)'}" para "${contactNewValue}".`;
         result = await createRequest(projectId, title, description, [], 'contact_info', {
           field: contactField,
-          new_value: contactNewValue,
+          new_value: checkedSite.value,
         });
       } else {
         if (!freeTitle.trim() || !freeDescription.trim()) {
@@ -327,7 +360,7 @@ export const MaintenanceRequestForm = ({
                       </SelectTrigger>
                       <SelectContent>
                         {PROPERTY_FIELDS.map((f) => (
-                          <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                          <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -335,25 +368,21 @@ export const MaintenanceRequestForm = ({
 
                   {selectedFieldOption && selectedProperty && (
                     <div className="space-y-2">
-                      <Label>Novo valor</Label>
+                      <Label htmlFor="novo-valor">Novo valor</Label>
                       <p className="text-xs text-muted-foreground">
-                        Valor atual: {selectedFieldOption.currentValue(selectedProperty) || '(vazio)'}
+                        Valor atual:{' '}
+                        {currentValueOf(
+                          selectedProperty as unknown as Record<string, unknown>,
+                          selectedFieldOption,
+                        ) || '(vazio)'}
                       </p>
-                      {selectedFieldOption.type === 'textarea' ? (
-                        <Textarea
-                          value={newValue}
-                          onChange={(e) => setNewValue(e.target.value)}
-                          rows={5}
-                          required
-                        />
-                      ) : (
-                        <Input
-                          type={selectedFieldOption.type === 'number' ? 'number' : 'text'}
-                          value={newValue}
-                          onChange={(e) => setNewValue(e.target.value)}
-                          required
-                        />
-                      )}
+
+                      <FieldInput
+                        id="novo-valor"
+                        field={selectedFieldOption}
+                        value={newValue}
+                        onChange={setNewValue}
+                      />
                     </div>
                   )}
                 </>
@@ -437,23 +466,24 @@ export const MaintenanceRequestForm = ({
                     <SelectValue placeholder="Selecione o campo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CONTACT_FIELDS.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    {SITE_FIELDS.map((f) => (
+                      <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {contactField && (
+              {selectedSiteField && (
                 <div className="space-y-2">
-                  <Label>Novo valor</Label>
+                  <Label htmlFor="novo-valor-site">Novo valor</Label>
                   <p className="text-xs text-muted-foreground">
                     {loadingContact ? 'Carregando valor atual...' : `Valor atual: ${contactCurrentValue || '(vazio)'}`}
                   </p>
-                  <Input
+                  <FieldInput
+                    id="novo-valor-site"
+                    field={selectedSiteField}
                     value={contactNewValue}
-                    onChange={(e) => setContactNewValue(e.target.value)}
-                    required
+                    onChange={setContactNewValue}
                   />
                 </div>
               )}
@@ -543,3 +573,71 @@ export const MaintenanceRequestForm = ({
     </Dialog>
   );
 };
+
+/**
+ * Entrada que respeita o tipo declarado no catálogo.
+ *
+ * Antes o formulário só tinha texto, número e textarea — então um campo de
+ * enum (tipo do imóvel, finalidade) viraria caixa de texto livre, e o
+ * cliente digitaria "Apartamento" num campo que só aceita "apartment".
+ */
+function FieldInput({
+  id,
+  field,
+  value,
+  onChange,
+}: {
+  id: string;
+  field: EditableField;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  if (field.kind === 'enum') {
+    return (
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Selecione" />
+        </SelectTrigger>
+        <SelectContent>
+          {(field.options ?? []).map((option) => (
+            <SelectItem key={option} value={option}>
+              {optionLabel(field, option)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  if (field.kind === 'longtext') {
+    return (
+      <Textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} rows={5} required />
+    );
+  }
+
+  if (field.kind === 'stringList') {
+    return (
+      <>
+        <Input
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Piscina, Academia, Portaria 24h"
+          required
+        />
+        <p className="text-xs text-muted-foreground">Separe os itens por vírgula.</p>
+      </>
+    );
+  }
+
+  return (
+    <Input
+      id={id}
+      type={field.kind === 'number' || field.kind === 'currency' ? 'number' : 'text'}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      maxLength={field.kind === 'text' ? field.max : undefined}
+      required
+    />
+  );
+}

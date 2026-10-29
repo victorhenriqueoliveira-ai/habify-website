@@ -2,36 +2,17 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildSiteConfig, commitSiteConfig } from "../_shared/site-config.ts";
 import { ensureProductionDeployment, waitForDeployment } from "../_shared/vercel-deploy.ts";
+import {
+  findPropertyField,
+  findSiteField,
+  validateFieldValue,
+} from "../_shared/maintenance-catalog.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-
-// Campos que uma solicitação de manutenção pode alterar diretamente.
-// Mantido explícito (em vez de aceitar qualquer nome de coluna vindo do
-// cliente) pra nunca dar pra escrever em colunas fora dessa lista.
-const EDITABLE_PROPERTY_FIELDS = new Set([
-  'title',
-  'location',
-  'price',
-  'description',
-  'bedrooms',
-  'bathrooms',
-  'area',
-  'parking_spaces',
-  'condominium_fee',
-  'iptu',
-]);
-
-const EDITABLE_CONTACT_FIELDS = new Set([
-  'contactPhone',
-  'contactMobile',
-  'contactEmail',
-  'companyName',
-  'ownerName',
-]);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -108,14 +89,25 @@ serve(async (req) => {
 
     // ---- 1. Aplica a mudança estruturada no banco ----
     if (maintenanceRequest.change_type === 'property_field') {
-      const field = changes.field as string;
+      const fieldKey = changes.field as string;
       const propertyId = changes.property_id as string;
-      if (!EDITABLE_PROPERTY_FIELDS.has(field)) {
-        return respondError(requestId, `Campo "${field}" não é editável automaticamente.`);
+
+      const field = findPropertyField(fieldKey);
+      if (!field) {
+        return respondError(requestId, `Campo "${fieldKey}" não é editável automaticamente.`);
       }
+
+      // A allowlist diz em qual coluna dá pra escrever; esta validação diz
+      // o que dá pra escrever nela. Sem ela, um preço negativo ou um texto
+      // gigante iam direto pro site.config.json do cliente.
+      const validated = validateFieldValue(field, changes.new_value);
+      if (!validated.ok) {
+        return respondError(requestId, validated.error);
+      }
+
       const { error: updateError } = await supabaseService
         .from('portfolio_properties')
-        .update({ [field]: changes.new_value })
+        .update({ [field.key]: validated.value })
         .eq('id', propertyId)
         .eq('project_id', projectId);
       if (updateError) {
@@ -136,10 +128,18 @@ serve(async (req) => {
         return respondError(requestId, `Falha ao atualizar fotos: ${updateError.message}`);
       }
     } else if (maintenanceRequest.change_type === 'contact_info') {
-      const field = changes.field as string;
-      if (!EDITABLE_CONTACT_FIELDS.has(field)) {
-        return respondError(requestId, `Campo "${field}" não é editável automaticamente.`);
+      const fieldKey = changes.field as string;
+
+      const field = findSiteField(fieldKey);
+      if (!field) {
+        return respondError(requestId, `Campo "${fieldKey}" não é editável automaticamente.`);
       }
+
+      const validated = validateFieldValue(field, changes.new_value);
+      if (!validated.ok) {
+        return respondError(requestId, validated.error);
+      }
+
       const { data: currentProject, error: loadError } = await supabaseService
         .from('projects')
         .select('wizard_data')
@@ -148,7 +148,7 @@ serve(async (req) => {
       if (loadError || !currentProject) {
         return respondError(requestId, `Falha ao carregar projeto: ${loadError?.message ?? projectId}`);
       }
-      const updatedWizardData = { ...(currentProject.wizard_data || {}), [field]: changes.new_value };
+      const updatedWizardData = { ...(currentProject.wizard_data || {}), [field.key]: validated.value };
       const { error: updateError } = await supabaseService
         .from('projects')
         .update({ wizard_data: updatedWizardData })
