@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Upload, X, Plus } from 'lucide-react';
 import { useMaintenanceRequests, MaintenanceChangeType } from '@/hooks/useMaintenanceRequests';
 import { usePortfolioProperties } from '@/hooks/usePortfolioProperties';
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ const toCamel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.to
 function currentValueOf(source: Record<string, unknown> | undefined, field: EditableField): string {
   if (!source) return '';
   const value = source[toCamel(field.key)] ?? source[field.key];
+  if (field.kind === 'pairList') return JSON.stringify(Array.isArray(value) ? value : []);
   if (Array.isArray(value)) return value.join(', ');
   if (value === null || value === undefined) return '';
   // Campo de enum guarda o valor cru ("apartment"); mostrar isso pro
@@ -45,8 +46,40 @@ function currentValueOf(source: Record<string, unknown> | undefined, field: Edit
   return String(value);
 }
 
+/**
+ * Resumo legível do valor atual.
+ *
+ * Separado de currentValueOf porque o editor de pares guarda o estado como
+ * JSON — e "Valor atual: []" na tela do cliente não diz nada.
+ */
+function describeCurrentValue(
+  source: Record<string, unknown> | undefined,
+  field: EditableField,
+): string {
+  if (field.kind !== 'pairList') return currentValueOf(source, field);
+
+  const value = source?.[toCamel(field.key)] ?? source?.[field.key];
+  const items = Array.isArray(value) ? value : [];
+  if (items.length === 0) return 'nenhum item';
+  return `${items.length} ${items.length === 1 ? 'item' : 'itens'}`;
+}
+
 /** Converte o que foi digitado no formato que o catálogo espera. */
-function parseInputValue(field: EditableField, raw: string): string | number | string[] {
+function parseInputValue(
+  field: EditableField,
+  raw: string,
+): string | number | string[] | Array<Record<string, string>> {
+  if (field.kind === 'pairList') {
+    // O editor de pares guarda o estado como JSON na mesma string dos
+    // outros campos, pra não espalhar um segundo formato de estado pelo
+    // formulário inteiro.
+    try {
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
   if (field.kind === 'stringList') {
     return raw.split(',').map((item) => item.trim()).filter(Boolean);
   }
@@ -375,7 +408,7 @@ export const MaintenanceRequestForm = ({
                       <Label htmlFor="novo-valor">Novo valor</Label>
                       <p className="text-xs text-muted-foreground">
                         Valor atual:{' '}
-                        {currentValueOf(
+                        {describeCurrentValue(
                           selectedProperty as unknown as Record<string, unknown>,
                           selectedFieldOption,
                         ) || '(vazio)'}
@@ -619,6 +652,10 @@ function FieldInput({
     );
   }
 
+  if (field.kind === 'pairList' && field.pair) {
+    return <PairListInput field={field} value={value} onChange={onChange} />;
+  }
+
   if (field.kind === 'stringList') {
     return (
       <>
@@ -643,5 +680,86 @@ function FieldInput({
       maxLength={field.kind === 'text' ? field.max : undefined}
       required
     />
+  );
+}
+
+/**
+ * Editor de lista de pares — diferenciais ("título" + "descrição") e
+ * pontos próximos ("lugar" + "tempo").
+ *
+ * O valor trafega como JSON na mesma string dos outros campos; só este
+ * componente sabe disso, e o catálogo valida a forma de novo no servidor.
+ */
+function PairListInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: EditableField;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const pair = field.pair!;
+
+  let items: Array<Record<string, string>> = [];
+  try {
+    const parsed = JSON.parse(value || '[]');
+    if (Array.isArray(parsed)) items = parsed;
+  } catch {
+    items = [];
+  }
+
+  const commit = (next: Array<Record<string, string>>) => onChange(JSON.stringify(next));
+
+  const update = (index: number, key: string, text: string) =>
+    commit(items.map((item, i) => (i === index ? { ...item, [key]: text } : item)));
+
+  return (
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div key={index} className="flex items-start gap-2">
+          <Input
+            value={item[pair.first] ?? ''}
+            onChange={(e) => update(index, pair.first, e.target.value)}
+            placeholder={pair.firstLabel}
+            aria-label={`${pair.firstLabel} ${index + 1}`}
+          />
+          <Input
+            value={item[pair.second] ?? ''}
+            onChange={(e) => update(index, pair.second, e.target.value)}
+            placeholder={pair.secondLabel}
+            aria-label={`${pair.secondLabel} ${index + 1}`}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            aria-label={`Remover item ${index + 1}`}
+            onClick={() => commit(items.filter((_, i) => i !== index))}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      ))}
+
+      {(field.max === undefined || items.length < field.max) && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => commit([...items, { [pair.first]: '', [pair.second]: '' }])}
+        >
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+          Adicionar
+        </Button>
+      )}
+
+      {items.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          Sem itens. A lista fica vazia no site se você enviar assim.
+        </p>
+      )}
+    </div>
   );
 }

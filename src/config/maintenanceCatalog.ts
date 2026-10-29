@@ -19,6 +19,8 @@ export {
   validateFieldValue,
   type EditableField,
   type FieldKind,
+  type FieldTarget,
+  type PairShape,
 } from '../../supabase/functions/_shared/maintenance-catalog';
 
 import { PROPERTY_FIELDS, SITE_FIELDS, type EditableField } from '../../supabase/functions/_shared/maintenance-catalog';
@@ -38,8 +40,12 @@ export const ENUM_LABELS: Record<string, Record<string, string>> = {
     rent: 'Aluguel',
   },
   creciType: {
-    individual: 'Pessoa física',
-    company: 'Pessoa jurídica',
+    individual: 'Individual',
+    juridico: 'Jurídico',
+  },
+  profileType: {
+    corretor: 'Corretor de imóveis',
+    imobiliaria: 'Imobiliária',
   },
 };
 
@@ -50,7 +56,10 @@ export function optionLabel(field: EditableField, value: string): string {
 /** Agrupa os campos do site por assunto, pra lista do formulário não virar um paredão. */
 export const SITE_FIELD_GROUPS: Array<{ label: string; keys: string[] }> = [
   { label: 'Contato', keys: ['contactMobile', 'contactPhone', 'contactEmail'] },
-  { label: 'Identificação', keys: ['companyName', 'ownerName', 'creciNumber', 'creciType'] },
+  {
+    label: 'Identificação',
+    keys: ['profileType', 'companyName', 'ownerName', 'creciNumber', 'creciType'],
+  },
   {
     label: 'Endereço',
     keys: [

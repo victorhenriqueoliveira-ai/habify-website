@@ -140,21 +140,34 @@ serve(async (req) => {
         return respondError(requestId, validated.error);
       }
 
-      const { data: currentProject, error: loadError } = await supabaseService
-        .from('projects')
-        .select('wizard_data')
-        .eq('id', projectId)
-        .single();
-      if (loadError || !currentProject) {
-        return respondError(requestId, `Falha ao carregar projeto: ${loadError?.message ?? projectId}`);
-      }
-      const updatedWizardData = { ...(currentProject.wizard_data || {}), [field.key]: validated.value };
-      const { error: updateError } = await supabaseService
-        .from('projects')
-        .update({ wizard_data: updatedWizardData })
-        .eq('id', projectId);
-      if (updateError) {
-        return respondError(requestId, `Falha ao atualizar dados de contato: ${updateError.message}`);
+      // O catálogo diz onde o valor mora: a maioria dos campos do site
+      // fica dentro de projects.wizard_data, mas alguns (como o logo) são
+      // colunas de projects. Antes a função assumia wizard_data pra tudo.
+      if (field.target === 'project') {
+        const { error: updateError } = await supabaseService
+          .from('projects')
+          .update({ [field.key]: validated.value })
+          .eq('id', projectId);
+        if (updateError) {
+          return respondError(requestId, `Falha ao atualizar o projeto: ${updateError.message}`);
+        }
+      } else {
+        const { data: currentProject, error: loadError } = await supabaseService
+          .from('projects')
+          .select('wizard_data')
+          .eq('id', projectId)
+          .single();
+        if (loadError || !currentProject) {
+          return respondError(requestId, `Falha ao carregar projeto: ${loadError?.message ?? projectId}`);
+        }
+        const updatedWizardData = { ...(currentProject.wizard_data || {}), [field.key]: validated.value };
+        const { error: updateError } = await supabaseService
+          .from('projects')
+          .update({ wizard_data: updatedWizardData })
+          .eq('id', projectId);
+        if (updateError) {
+          return respondError(requestId, `Falha ao atualizar dados do site: ${updateError.message}`);
+        }
       }
     } else {
       return respondError(requestId, `Tipo de alteração desconhecido: ${maintenanceRequest.change_type}`);
