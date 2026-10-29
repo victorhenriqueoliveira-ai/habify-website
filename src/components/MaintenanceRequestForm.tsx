@@ -38,7 +38,11 @@ function currentValueOf(source: Record<string, unknown> | undefined, field: Edit
   if (!source) return '';
   const value = source[toCamel(field.key)] ?? source[field.key];
   if (Array.isArray(value)) return value.join(', ');
-  return value === null || value === undefined ? '' : String(value);
+  if (value === null || value === undefined) return '';
+  // Campo de enum guarda o valor cru ("apartment"); mostrar isso pro
+  // cliente é o mesmo defeito que havia no detalhe do projeto.
+  if (field.kind === 'enum') return optionLabel(field, String(value));
+  return String(value);
 }
 
 /** Converte o que foi digitado no formato que o catálogo espera. */
