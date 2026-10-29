@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Project } from '@/types/admin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -19,8 +20,6 @@ import {
   User,
   MessageSquare,
   Building,
-  Palette,
-  Layout,
   Image,
   Mail,
   Phone,
@@ -40,21 +39,32 @@ import { GrantMaintenanceCard } from '@/components/admin/GrantMaintenanceCard';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { PageHeader, LoadingState } from '@/components/admin/ui';
+import {
+  PageHeader,
+  LoadingState,
+  SectionHeader,
+  StatusPill,
+  DetailField,
+  DetailGrid,
+  type StatusTone,
+} from '@/components/admin/ui';
 
-const statusColors = {
-  pending: 'secondary',
-  in_progress: 'default',
-  in_review: 'outline',
-  completed: 'default',
-  approved: 'default',
+// O Badge do shadcn só tem 4 variantes, então "Pendente", "Em revisão" e
+// "Concluído" saíam com a mesma aparência. StatusPill separa por cor
+// semântica, igual ao resto do painel.
+const statusTones: Record<string, StatusTone> = {
+  pending: 'warning',
+  in_progress: 'info',
+  in_review: 'primary',
+  completed: 'success',
+  approved: 'success',
   rejected: 'destructive',
-} as const;
+};
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   pending: 'Pendente',
-  in_progress: 'Em Andamento',
-  in_review: 'Em Revisão',
+  in_progress: 'Em andamento',
+  in_review: 'Em revisão',
   completed: 'Concluído',
   approved: 'Aprovado',
   rejected: 'Rejeitado',
@@ -130,12 +140,18 @@ export const ProjectDetailPage = () => {
         </Button>
         <PageHeader
           icon={Building}
+          /* O tipo ocupava um card inteiro só pra mostrar um valor; como
+             ele identifica a seção, cabe no eyebrow. */
+          eyebrow={project.projectType ? projectTypeLabels[project.projectType] : 'Projeto'}
           title={project.title}
           description={project.location}
           className="flex-1"
           actions={
             <>
-              <Badge variant={statusColors[project.status]}>{statusLabels[project.status]}</Badge>
+              <StatusPill
+                label={statusLabels[project.status] ?? project.status}
+                tone={statusTones[project.status] ?? 'neutral'}
+              />
               {hasRole(['admin', 'dev']) && (
                 <Button onClick={() => navigate(`/admin/projects/${id}/edit`)}>
                   <Edit className="mr-2 h-4 w-4" />
@@ -157,66 +173,11 @@ export const ProjectDetailPage = () => {
         </TabsList>
 
         <TabsContent value="details" className="flex flex-col gap-6">
-            {/* Debug: mostrar JSON bruto para admins/devs */}
-            {hasRole(['admin', 'dev']) && (
-              <Card>
-                <CardContent className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground mt-6">Ferramenta de debug</div>
-                  <div>
-                    <Button variant="outline" size="sm" onClick={() => setShowRawJson(!showRawJson)} className='mt-6'>
-                      {showRawJson ? 'Ocultar JSON' : 'Mostrar JSON'}
-                    </Button>
-                  </div>
-                </CardContent>
-                {showRawJson && (
-                  <CardContent>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Project object</p>
-                        <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{JSON.stringify(project, null, 2)}</pre>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Portfolio properties</p>
-                        <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64">{JSON.stringify(portfolioProperties, null, 2)}</pre>
-                      </div>
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            )}
-          {/* Project Type Badge */}
-          {project.projectType && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Building className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tipo de Projeto</p>
-                      <p className="text-lg font-semibold">{projectTypeLabels[project.projectType]}</p>
-                    </div>
-                  </div>
-                  {project.projectType === 'realtor_multiple' && (
-                    <Badge variant="secondary">
-                      {portfolioProperties.length} {portfolioProperties.length === 1 ? 'imóvel' : 'imóveis'}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Photos - Main Project Photos */}
           {visiblePhotos && visiblePhotos.length > 0 && (
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
-                    Fotos
-                  </CardTitle>
-                  <Badge variant="outline">{visiblePhotos.length} fotos</Badge>
-                </div>
+              <CardHeader className="pb-3">
+                <SectionHeader icon={Image} title="Fotos" count={visiblePhotos.length} />
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -277,11 +238,8 @@ export const ProjectDetailPage = () => {
           {/* Portfolio Properties */}
           {project.projectType === 'realtor_multiple' && portfolioProperties.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Imóveis do Portfólio
-                </CardTitle>
+              <CardHeader className="pb-3">
+                <SectionHeader icon={Building} title="Imóveis do Portfólio" />
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -417,11 +375,8 @@ export const ProjectDetailPage = () => {
           {/* Wizard Data - Complete Information */}
           {project.wizardData && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Dados Completos do Projeto
-                </CardTitle>
+              <CardHeader className="pb-3">
+                <SectionHeader icon={User} title="Dados Completos do Projeto" />
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Profile Info */}
@@ -525,110 +480,55 @@ export const ProjectDetailPage = () => {
           {/* Project Info */}
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <section className="admin-card-elevated p-4 sm:p-5">
+              <SectionHeader title="Informações básicas" />
+
+              <DetailGrid className="mt-4">
                 {hasRole(['admin', 'dev']) && (
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Cliente</p>
-                      <p className="font-medium">{getUserName(project.userId)}</p>
-                    </div>
-                  </div>
+                  <DetailField icon={User} label="Cliente" value={getUserName(project.userId)} />
                 )}
-                
-                <Separator />
-                
-                <div className="flex items-center space-x-2">
-                  <Home className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tipo</p>
-                    <p className="font-medium">{propertyTypeLabels[project.propertyType]}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Localização</p>
-                    <p className="font-medium">{project.location}</p>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Bed className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Quartos</p>
-                      <p className="font-medium">{project.bedrooms}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Bath className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Banheiros</p>
-                      <p className="font-medium">{project.bathrooms}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Ruler className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Área</p>
-                      <p className="font-medium">{project.area}m²</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                <DetailField
+                  icon={Home}
+                  label="Tipo"
+                  value={propertyTypeLabels[project.propertyType]}
+                />
+                <DetailField icon={MapPin} label="Localização" value={project.location} wide />
+              </DetailGrid>
+
+              <DetailGrid columns={3} className="mt-4 border-t border-border pt-4">
+                <DetailField icon={Bed} label="Quartos" value={project.bedrooms} />
+                <DetailField icon={Bath} label="Banheiros" value={project.bathrooms} />
+                <DetailField icon={Ruler} label="Área" value={`${project.area}m²`} />
+              </DetailGrid>
+            </section>
 
             {/* Financial & Timeline */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Financeiro e Cronograma</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Valor</p>
-                    <p className="text-2xl font-bold">
-                      R$ {project.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Criado em</p>
-                    <p className="font-medium">
-                      {format(new Date(project.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
-                
+            <section className="admin-card-elevated p-4 sm:p-5">
+              <SectionHeader title="Valor e datas" />
+
+              <p className="mt-4 font-display text-[26px] font-bold leading-none tracking-[-0.03em] tabular-nums">
+                R$ {project.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+
+              <DetailGrid className="mt-4 border-t border-border pt-4">
+                <DetailField
+                  icon={Calendar}
+                  label="Criado em"
+                  value={format(new Date(project.createdAt), "dd 'de' MMMM 'de' yyyy", {
+                    locale: ptBR,
+                  })}
+                />
                 {project.completedAt && (
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Concluído em</p>
-                      <p className="font-medium">
-                        {format(new Date(project.completedAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </div>
+                  <DetailField
+                    icon={Calendar}
+                    label="Concluído em"
+                    value={format(new Date(project.completedAt), "dd 'de' MMMM 'de' yyyy", {
+                      locale: ptBR,
+                    })}
+                  />
                 )}
-              </CardContent>
-            </Card>
+              </DetailGrid>
+            </section>
           </div>
 
           {/* Status da geração automática do site (self-hide se o projeto nunca passou pelo pipeline) */}
@@ -646,11 +546,8 @@ export const ProjectDetailPage = () => {
           {/* Domain Section */}
           {(project.wizardData?.desiredDomain || project.desired_domain) && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Domínio
-                </CardTitle>
+              <CardHeader className="pb-3">
+                <SectionHeader icon={Globe} title="Domínio" />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -681,7 +578,9 @@ export const ProjectDetailPage = () => {
                       value={project.domain_status || 'pending'}
                       onValueChange={async (value) => {
                         try {
-                          await updateProject(project.id, { domain_status: value as any });
+                          await updateProject(project.id, {
+                            domain_status: value as Project['domain_status'],
+                          });
                           toast.success(`Status do domínio atualizado para "${value}"`);
                         } catch {
                           toast.error('Erro ao atualizar status do domínio');
@@ -721,67 +620,32 @@ export const ProjectDetailPage = () => {
 
           {/* Wizard & Customization Data */}
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-            {/* Customization */}
-            {(project.layoutChoice || project.colorPalette || project.logoUrl) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="h-5 w-5" />
-                    Personalização Visual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {project.layoutChoice && (
-                    <div className="flex items-start gap-3">
-                      <Layout className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Layout Escolhido</p>
-                        <p className="font-semibold capitalize">{project.layoutChoice}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {project.colorPalette && (
-                    <>
-                      <Separator />
-                      <div className="flex items-start gap-3">
-                        <Palette className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Paleta de Cores</p>
-                          <p className="font-semibold capitalize">{project.colorPalette}</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  
-                  {project.logoUrl && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Logo do Projeto</p>
-                        <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center">
-                          <img 
-                            src={project.logoUrl} 
-                            alt="Logo" 
-                            className="max-h-24 object-contain"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Logo. Antes este card era "Personalização Visual" e mostrava
+              *  também layoutChoice e colorPalette — campos que a etapa
+              *  "Layout e Cores" gravava e que o template do site não lê mais.
+              *  Projetos antigos ainda têm o valor salvo, então o cliente lia
+              *  "Paleta de Cores: blue" descrevendo algo sem efeito no site
+              *  dele. O logo é real e continua. */}
+            {project.logoUrl && (
+              <section className="admin-card-elevated p-4 sm:p-5">
+                <SectionHeader icon={Image} title="Logo do projeto" />
+                <div className="mt-4 flex items-center justify-center rounded-lg border border-border bg-muted/40 p-5">
+                  <img
+                    src={project.logoUrl}
+                    alt={`Logo de ${project.title}`}
+                    loading="lazy"
+                    className="max-h-24 object-contain"
+                  />
+                </div>
+              </section>
             )}
 
             {/* Wizard Data - Complete Address Information */}
               {project.wizardData && (Object.keys(project.wizardData).length > 0 || address.street || address.cep) && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Endereço Completo
-                  </CardTitle>
-                </CardHeader>
+                <CardHeader className="pb-3">
+                <SectionHeader icon={MapPin} title="Endereço Completo" />
+              </CardHeader>
                 <CardContent>
                   <div className="grid gap-3 md:grid-cols-2">
                       {address.cep && (
@@ -846,7 +710,7 @@ export const ProjectDetailPage = () => {
           {project.features && Object.keys(project.features).length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Recursos e Características</CardTitle>
+                <SectionHeader title="Recursos e Características" />
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -895,7 +759,7 @@ export const ProjectDetailPage = () => {
           {/* Description */}
           <Card>
             <CardHeader>
-              <CardTitle>Descrição</CardTitle>
+              <SectionHeader title="Descrição" />
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground whitespace-pre-wrap">
@@ -908,7 +772,7 @@ export const ProjectDetailPage = () => {
           {project.landingPageUrl && (
             <Card>
               <CardHeader>
-                <CardTitle>Landing Page</CardTitle>
+                <SectionHeader title="Landing Page" />
               </CardHeader>
               <CardContent>
                 <Button asChild>
@@ -923,6 +787,42 @@ export const ProjectDetailPage = () => {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Ferramenta de debug — por último de propósito: antes era a
+            *  primeira coisa que um admin via ao abrir o projeto. */}
+          {hasRole(['admin', 'dev']) && (
+            <section className="admin-card-elevated p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                  Ferramenta de debug
+                </p>
+                <Button variant="outline" size="sm" onClick={() => setShowRawJson(!showRawJson)}>
+                  {showRawJson ? 'Ocultar JSON' : 'Mostrar JSON'}
+                </Button>
+              </div>
+
+              {showRawJson && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                      Project object
+                    </p>
+                    <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-muted p-3 font-mono text-[11.5px]">
+                      {JSON.stringify(project, null, 2)}
+                    </pre>
+                  </div>
+                  <div>
+                    <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                      Portfolio properties
+                    </p>
+                    <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-muted p-3 font-mono text-[11.5px]">
+                      {JSON.stringify(portfolioProperties, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </section>
           )}
         </TabsContent>
 

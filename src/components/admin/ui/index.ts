@@ -6,6 +6,7 @@ export { SectionHeader } from './SectionHeader';
 export { StatusPill, type StatusTone } from './StatusPill';
 export { FilterBar } from './FilterBar';
 export { ChartCard } from './ChartCard';
+export { DetailField, DetailGrid } from './DetailField';
 export { DistributionList, type DistributionItem } from './DistributionList';
 export { chartColors, chartPalette, axisProps, tooltipProps } from './chartTheme';
 export { LoadingState, SkeletonRows } from './LoadingState';
