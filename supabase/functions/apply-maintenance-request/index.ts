@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildSiteConfig, commitSiteConfig } from "../_shared/site-config.ts";
+import { ensureProductionDeployment, waitForDeployment } from "../_shared/vercel-deploy.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -190,6 +191,7 @@ serve(async (req) => {
     }
 
     const siteConfig = buildSiteConfig(project, properties || []);
+    const committedAtMs = Date.now();
     const commitResult = await commitSiteConfig(
       githubToken,
       project.github_repo_name,
@@ -201,14 +203,76 @@ serve(async (req) => {
       return respondError(requestId, commitResult.error);
     }
 
-    // ---- 3. Marca concluída ----
+    // ---- 3. Garante que o commit vire site no ar ----
+    //
+    // Antes a função parava no commit e já marcava a solicitação como
+    // concluída, avisando o cliente que "seu site já está atualizado". Se o
+    // projeto na Vercel não estiver com o auto-deploy do Git ativo — algo
+    // que não dá pra ver pelo painel —, o arquivo entra no repositório e o
+    // site continua exatamente igual. O cliente gastava um crédito de
+    // manutenção por uma alteração que nunca aconteceu.
+    const vercelToken = Deno.env.get('VERCEL_API_TOKEN');
+    const vercelTeamId = Deno.env.get('VERCEL_TEAM_ID') ?? undefined;
+
+    if (!vercelToken || !project.vercel_project_id) {
+      return respondError(
+        requestId,
+        'A alteração foi gravada e commitada, mas não há como publicar: ' +
+          (vercelToken
+            ? 'este projeto não tem vercel_project_id salvo.'
+            : 'VERCEL_API_TOKEN não está configurado nos secrets.'),
+      );
+    }
+
+    const deployment = await ensureProductionDeployment({
+      vercelToken,
+      teamId: vercelTeamId,
+      vercelProjectId: project.vercel_project_id,
+      repoFullName: project.github_repo_name,
+      githubToken,
+      committedAtMs,
+    });
+
+    if (!deployment.ok) {
+      return respondError(requestId, deployment.error);
+    }
+
+    // A criação da solicitação espera por esta função, então o cliente fica
+    // olhando um spinner enquanto isso. ~45s cobre a maioria dos builds
+    // deste template; quem passar disso cai no TIMEOUT abaixo, que não é
+    // tratado como falha — a Vercel continua publicando sozinha.
+    const result = await waitForDeployment({
+      vercelToken,
+      teamId: vercelTeamId,
+      deploymentId: deployment.deploymentId,
+      maxAttempts: 11,
+      intervalMs: 4000,
+    });
+
+    if (result.state === 'ERROR' || result.state === 'CANCELED') {
+      return respondError(
+        requestId,
+        `A alteração foi commitada mas o build falhou na Vercel (${result.state}). ` +
+          `Logs em https://vercel.com/deployments/${deployment.deploymentId}`,
+      );
+    }
+
+    // ---- 4. Marca concluída ----
+    //
+    // TIMEOUT não é falha: a Vercel segue buildando depois que a edge
+    // function morre. A solicitação é concluída do mesmo jeito, mas a nota
+    // registra que a publicação não chegou a ser confirmada aqui.
+    const confirmed = result.state === 'READY';
+
     await supabaseService
       .from('maintenance_requests')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         applied_automatically: true,
-        admin_notes: 'Aplicado automaticamente via API.',
+        admin_notes: confirmed
+          ? `Aplicado automaticamente e publicado (deploy ${deployment.deploymentId}, originado por ${deployment.origin === 'git' ? 'push' : 'API'}).`
+          : `Aplicado automaticamente. A publicação foi disparada (deploy ${deployment.deploymentId}) mas ainda não tinha concluído quando terminamos de acompanhar — confira o site em alguns minutos.`,
       })
       .eq('id', requestId);
 
@@ -221,7 +285,12 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({
+        success: true,
+        deploymentId: deployment.deploymentId,
+        deploymentOrigin: deployment.origin,
+        published: confirmed,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     );
   } catch (error) {

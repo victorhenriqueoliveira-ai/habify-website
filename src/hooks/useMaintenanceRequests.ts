@@ -167,8 +167,14 @@ export const useMaintenanceRequests = (userId?: string, projectId?: string) => {
           });
           if (applyError || !applyResult?.success) {
             toast.info('Solicitação recebida — como não deu pra aplicar automaticamente agora, nossa equipe vai cuidar dela.');
+          } else if (applyResult.published) {
+            toast.success('Alteração publicada! Seu site já está atualizado.');
           } else {
-            toast.success('Alteração aplicada automaticamente! Seu site já está atualizado.');
+            // A função confirma a publicação quando dá tempo; quando o build
+            // passa do limite dela, a Vercel termina sozinha. Antes a
+            // mensagem dizia "já está atualizado" nos dois casos — e também
+            // quando nada tinha sido publicado.
+            toast.success('Alteração aplicada! A publicação está em andamento e entra no ar em alguns minutos.');
           }
         } catch (applyException) {
           console.error('Error applying maintenance request automatically:', applyException);
