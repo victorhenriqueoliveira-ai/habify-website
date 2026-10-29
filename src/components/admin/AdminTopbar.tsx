@@ -54,7 +54,12 @@ export const AdminTopbar = () => {
           {current && (
             <>
               <ChevronRight className="hidden h-3.5 w-3.5 shrink-0 sm:block" aria-hidden="true" />
-              <span className="truncate font-semibold capitalize text-foreground">{current}</span>
+              {/* Sem `capitalize`: os rótulos já vêm escritos certo do navConfig, e a
+                classe transformava "Detalhes do projeto" em "Detalhes Do
+                Projeto". Só o fallback cru precisa da inicial maiúscula. */}
+              <span className="truncate font-semibold text-foreground first-letter:uppercase">
+                {current}
+              </span>
             </>
           )}
         </nav>

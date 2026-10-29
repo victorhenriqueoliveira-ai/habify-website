@@ -70,11 +70,15 @@ const statusLabels: Record<string, string> = {
   rejected: 'Rejeitado',
 };
 
-const propertyTypeLabels = {
+// Cobre os seis tipos que o wizard oferece. Faltavam warehouse e
+// penthouse, então "Galpão Industrial" e "Cobertura" cairiam no valor cru.
+const propertyTypeLabels: Record<string, string> = {
   house: 'Casa',
   apartment: 'Apartamento',
   land: 'Terreno',
-  commercial: 'Comercial',
+  commercial: 'Sala comercial',
+  warehouse: 'Galpão industrial',
+  penthouse: 'Cobertura',
 };
 
 const projectTypeLabels = {
@@ -239,7 +243,7 @@ export const ProjectDetailPage = () => {
           {project.projectType === 'realtor_multiple' && portfolioProperties.length > 0 && (
             <Card>
               <CardHeader className="pb-3">
-                <SectionHeader icon={Building} title="Imóveis do Portfólio" />
+                <SectionHeader icon={Building} title="Imóveis do site" />
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -279,71 +283,50 @@ export const ProjectDetailPage = () => {
                       )}
                       
                       {/* Property Details */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pt-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Tipo</p>
-                          <p className="font-medium capitalize">{property.propertyType}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Finalidade</p>
-                          <p className="font-medium capitalize">{property.purpose === 'sale' ? 'Venda' : 'Aluguel'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Área</p>
-                          <p className="font-medium">{property.area}m²</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Valor</p>
-                          <p className="font-medium">
-                            R$ {property.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                        {/* Antes era `{property.propertyType}` com `capitalize`,
+                          *  o que mostrava "Apartment" pro cliente — o valor
+                          *  cru do banco, em inglês. */}
+                        <DetailField
+                          label="Tipo"
+                          value={propertyTypeLabels[property.propertyType] ?? property.propertyType}
+                        />
+                        <DetailField
+                          label="Finalidade"
+                          value={property.purpose === 'sale' ? 'Venda' : 'Aluguel'}
+                        />
+                        <DetailField label="Área" value={`${property.area}m²`} />
+                        <DetailField
+                          label="Valor"
+                          value={`R$ ${property.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                        />
                         
                         {property.bedrooms && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Quartos</p>
-                            <p className="font-medium">{property.bedrooms}</p>
-                          </div>
+                          <DetailField label="Quartos" value={property.bedrooms} />
                         )}
                         {property.bathrooms && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Banheiros</p>
-                            <p className="font-medium">{property.bathrooms}</p>
-                          </div>
+                          <DetailField label="Banheiros" value={property.bathrooms} />
                         )}
                         {property.parkingSpaces && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Vagas</p>
-                            <p className="font-medium">{property.parkingSpaces}</p>
-                          </div>
+                          <DetailField label="Vagas" value={property.parkingSpaces} />
                         )}
                         {property.constructionYear && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Ano de Construção</p>
-                            <p className="font-medium">{property.constructionYear}</p>
-                          </div>
+                          <DetailField label="Ano de Construção" value={property.constructionYear} />
                         )}
                         {property.floorNumber && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Andar</p>
-                            <p className="font-medium">{property.floorNumber}º</p>
-                          </div>
+                          <DetailField label="Andar" value={`${property.floorNumber}º`} />
                         )}
                         {property.condominiumFee && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">Condomínio</p>
-                            <p className="font-medium">
-                              R$ {property.condominiumFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
+                          <DetailField
+                            label="Condomínio"
+                            value={`R$ ${property.condominiumFee.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                          />
                         )}
                         {property.iptu && (
-                          <div>
-                            <p className="text-xs text-muted-foreground">IPTU</p>
-                            <p className="font-medium">
-                              R$ {property.iptu.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
+                            <DetailField
+                              label="IPTU"
+                              value={`R$ ${property.iptu.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                            />
                         )}
                       </div>
                       
@@ -376,69 +359,30 @@ export const ProjectDetailPage = () => {
           {project.wizardData && (
             <Card>
               <CardHeader className="pb-3">
-                <SectionHeader icon={User} title="Dados Completos do Projeto" />
+                <SectionHeader icon={User} title="Dados do responsável" />
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Profile Info */}
                 {project.wizardData.profileType && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Tipo de Perfil</p>
-                      <Badge variant="outline">
-                        {project.wizardData.profileType === 'corretor' ? 'Corretor' : 'Imobiliária'}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Responsável</p>
-                      <p className="font-medium">{project.wizardData.ownerName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Nome da Empresa</p>
-                      <p className="font-medium">{project.wizardData.companyName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">CRECI</p>
-                      <p className="font-medium">
-                        {project.wizardData.creciNumber} ({project.wizardData.creciType})
-                      </p>
-                    </div>
-                  </div>
+                  <DetailGrid>
+                    <DetailField
+                      label="Tipo de perfil"
+                      value={project.wizardData.profileType === 'corretor' ? 'Corretor' : 'Imobiliária'}
+                    />
+                    <DetailField label="Responsável" value={project.wizardData.ownerName} />
+                    <DetailField label="Empresa" value={project.wizardData.companyName} />
+                    <DetailField
+                      label="CRECI"
+                      value={`${project.wizardData.creciNumber} (${project.wizardData.creciType})`}
+                    />
+                  </DetailGrid>
                 )}
 
                 <Separator />
 
-                {/* Address */}
-                {project.wizardData.addressStreet && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">Endereço Completo</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Rua: </span>
-                        <span className="font-medium">{project.wizardData.addressStreet}, {project.wizardData.addressNumber}</span>
-                      </div>
-                      {project.wizardData.addressComplement && (
-                        <div>
-                          <span className="text-muted-foreground">Complemento: </span>
-                          <span className="font-medium">{project.wizardData.addressComplement}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-muted-foreground">Bairro: </span>
-                        <span className="font-medium">{project.wizardData.addressNeighborhood}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Cidade/UF: </span>
-                        <span className="font-medium">{project.wizardData.addressCity}/{project.wizardData.addressState}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">CEP: </span>
-                        <span className="font-medium">{project.wizardData.addressCep}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <Separator />
+                {/* O endereço vive no card "Endereço completo" mais abaixo,
+                  *  que lê do mesmo wizardData — este bloco repetia os mesmos
+                  *  cinco valores na mesma página. */}
 
                 {/* Contact Info */}
                 {project.wizardData.contactEmail && (
@@ -618,8 +562,9 @@ export const ProjectDetailPage = () => {
             </Card>
           )}
 
-          {/* Wizard & Customization Data */}
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+          {/* items-start: sem isso o card do logo, que é baixo, estica até a
+            *  altura do card de endereço ao lado e sobra um vazio enorme. */}
+          <div className="grid items-start gap-4 sm:gap-6 md:grid-cols-2">
             {/* Logo. Antes este card era "Personalização Visual" e mostrava
               *  também layoutChoice e colorPalette — campos que a etapa
               *  "Layout e Cores" gravava e que o template do site não lê mais.
@@ -644,54 +589,24 @@ export const ProjectDetailPage = () => {
               {project.wizardData && (Object.keys(project.wizardData).length > 0 || address.street || address.cep) && (
               <Card>
                 <CardHeader className="pb-3">
-                <SectionHeader icon={MapPin} title="Endereço Completo" />
+                <SectionHeader icon={MapPin} title="Endereço completo" />
               </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3 md:grid-cols-2">
-                      {address.cep && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">CEP</p>
-                          <p className="text-sm font-medium">{address.cep}</p>
-                        </div>
-                      )}
-                      {address.street && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Endereço</p>
-                          <p className="text-sm font-medium">{address.street}</p>
-                        </div>
-                      )}
-                      {address.number && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Número</p>
-                          <p className="text-sm font-medium">{address.number}</p>
-                        </div>
-                      )}
-                      {address.complement && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Complemento</p>
-                          <p className="text-sm font-medium">{address.complement}</p>
-                        </div>
-                      )}
-                      {address.neighborhood && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Bairro</p>
-                          <p className="text-sm font-medium">{address.neighborhood}</p>
-                        </div>
-                      )}
-                      {address.city && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Cidade</p>
-                          <p className="text-sm font-medium">{address.city}</p>
-                        </div>
-                      )}
-                      {address.state && (
-                        <div className="p-3 rounded-lg bg-muted/50 border">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Estado</p>
-                          <p className="text-sm font-medium">{address.state}</p>
-                        </div>
-                      )}
-                  </div>
-                  
+                  {/* Mesmos DetailField do resto da tela. Antes cada campo
+                    *  era uma caixinha com borda e fundo próprios, o que dava
+                    *  a sete valores de leitura o peso visual de sete cards. */}
+                  <DetailGrid>
+                    <DetailField label="CEP" value={address.cep} />
+                    <DetailField label="Endereço" value={address.street} />
+                    <DetailField label="Número" value={address.number} />
+                    {address.complement && (
+                      <DetailField label="Complemento" value={address.complement} />
+                    )}
+                    <DetailField label="Bairro" value={address.neighborhood} />
+                    <DetailField label="Cidade" value={address.city} />
+                    <DetailField label="Estado" value={address.state} />
+                  </DetailGrid>
+
                   {/* Dev Mode: Show all wizard data */}
                   {hasRole(['dev']) && (
                     <div className="mt-4 pt-4 border-t">
@@ -710,7 +625,7 @@ export const ProjectDetailPage = () => {
           {project.features && Object.keys(project.features).length > 0 && (
             <Card>
               <CardHeader>
-                <SectionHeader title="Recursos e Características" />
+                <SectionHeader title="Recursos e características" />
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -772,7 +687,7 @@ export const ProjectDetailPage = () => {
           {project.landingPageUrl && (
             <Card>
               <CardHeader>
-                <SectionHeader title="Landing Page" />
+                <SectionHeader title="Site publicado" />
               </CardHeader>
               <CardContent>
                 <Button asChild>
@@ -781,8 +696,8 @@ export const ProjectDetailPage = () => {
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Visualizar Site
+                    <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Ver site
                   </a>
                 </Button>
               </CardContent>
