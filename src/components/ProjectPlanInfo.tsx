@@ -53,10 +53,18 @@ export const ProjectPlanInfo = ({ projectId }: ProjectPlanInfoProps) => {
         if (error) throw error;
 
         if (data && data.user_plan) {
-          const plan = data.user_plan as any;
+          // O tipo gerado do Supabase não descreve o join aninhado de
+          // `plan`, então a forma é declarada aqui em vez de virar `any`.
+          const plan = data.user_plan as {
+            status: string;
+            created_at: string;
+            used_at?: string | null;
+            expires_at?: string | null;
+            plan?: { name?: string; type?: string } | null;
+          };
           setPlanInfo({
             user_plan_id: data.user_plan_id,
-            plan_name: plan.plan?.name || 'Plano Desconhecido',
+            plan_name: plan.plan?.name || 'Plano desconhecido',
             plan_type: plan.plan?.type || 'website_only',
             status: plan.status,
             created_at: plan.created_at,
@@ -79,7 +87,7 @@ export const ProjectPlanInfo = ({ projectId }: ProjectPlanInfoProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Plano Utilizado
+            Plano utilizado
           </CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center py-4">
@@ -95,7 +103,7 @@ export const ProjectPlanInfo = ({ projectId }: ProjectPlanInfoProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Plano Utilizado
+            Plano utilizado
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,7 +120,7 @@ export const ProjectPlanInfo = ({ projectId }: ProjectPlanInfoProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5" />
-          Plano Utilizado
+          Plano utilizado
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
