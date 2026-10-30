@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Globe, ExternalLink, Loader2, CheckCircle2, RefreshCw, Unlink } from 'lucide-react';
 import { toast } from 'sonner';
+import { BUSINESS } from '@/config/business';
 
 interface DomainConnectProps {
   projectId: string;
@@ -33,6 +34,8 @@ interface ManageDomainResult {
   removed?: boolean;
   domain?: string;
 }
+
+const domainPrice = BUSINESS.pricing.domainYearly.toFixed(2).replace('.', ',');
 
 export const DomainConnect = ({ projectId }: DomainConnectProps) => {
   const [row, setRow] = useState<ProjectDomainRow | null>(null);
@@ -215,6 +218,31 @@ export const DomainConnect = ({ projectId }: DomainConnectProps) => {
             Já tem um domínio (comprado aqui ou em outro lugar)? Digite ele acima pra conectar ao seu site.
           </p>
         </div>
+
+        {/* Compra de domínio.
+          *
+          * O registro.br não tem API pública de registro para terceiros, então
+          * o registro é feito por uma pessoa da equipe. O prazo está escrito
+          * aqui de propósito: prometer "automático" e levar horas é como o
+          * cliente perde a confiança no painel inteiro. */}
+        {!row.vercel_custom_domain && (
+          <div className="rounded-lg border border-border bg-muted/40 p-4">
+            <p className="text-sm font-medium">Ainda não tem domínio?</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              A gente registra o seu <strong>.com.br</strong> por R$ {domainPrice} por ano. Você
+              escolhe o nome, paga, e <strong>em até 6 horas o site está no ar</strong> no endereço
+              novo — a gente cuida do registro e da configuração.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Enquanto isso, seu site continua funcionando no endereço temporário acima.
+            </p>
+            <Button variant="outline" size="sm" className="mt-3" asChild>
+              <a href="https://wa.me/5511911103963?text=Quero%20registrar%20um%20dom%C3%ADnio%20para%20o%20meu%20site" target="_blank" rel="noopener noreferrer">
+                Quero meu domínio
+              </a>
+            </Button>
+          </div>
+        )}
 
         {row.vercel_custom_domain && (
           <div className="flex items-center justify-between rounded-lg border p-3">

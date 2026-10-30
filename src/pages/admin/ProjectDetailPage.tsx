@@ -74,6 +74,32 @@ const statusLabels: Record<string, string> = {
 
 // Cobre os seis tipos que o wizard oferece. Faltavam warehouse e
 // penthouse, então "Galpão Industrial" e "Cobertura" cairiam no valor cru.
+// O registro de .com.br é feito manualmente pela equipe — o registro.br
+// não expõe API pública de registro para terceiros. Por isso cada estado
+// diz o que está acontecendo e quanto falta, em vez de um selo mudo.
+const DOMAIN_STATUS: Record<string, { label: string; tone: StatusTone; hint: string }> = {
+  pending: {
+    label: 'Aguardando pagamento',
+    tone: 'warning',
+    hint: 'Assim que o pagamento for confirmado, registramos o domínio e colocamos seu site no ar nele em até 6 horas.',
+  },
+  paid: {
+    label: 'Pago — registrando',
+    tone: 'info',
+    hint: 'Pagamento confirmado. Estamos registrando o domínio: em até 6 horas seu site está no ar no endereço novo. Enquanto isso ele continua funcionando no endereço temporário.',
+  },
+  registered: {
+    label: 'Registrado — publicando',
+    tone: 'info',
+    hint: 'Domínio registrado no seu nome. Falta só a propagação, que costuma levar alguns minutos.',
+  },
+  active: {
+    label: 'No ar',
+    tone: 'success',
+    hint: 'Seu site está no ar neste domínio.',
+  },
+};
+
 const propertyTypeLabels: Record<string, string> = {
   house: 'Casa',
   apartment: 'Apartamento',
@@ -514,18 +540,19 @@ export const ProjectDetailPage = () => {
                       {(project.desired_domain || project.wizardData?.desiredDomain)}.com.br
                     </p>
                   </div>
-                  <Badge variant={
-                    project.domain_status === 'active' ? 'default' :
-                    project.domain_status === 'registered' ? 'default' :
-                    project.domain_status === 'paid' ? 'secondary' :
-                    'outline'
-                  }>
-                    {project.domain_status === 'active' ? '✅ Ativo' :
-                     project.domain_status === 'registered' ? '📋 Registrado' :
-                     project.domain_status === 'paid' ? '💰 Pago' :
-                     '⏳ Pendente pagamento'}
-                  </Badge>
+                  <StatusPill
+                    label={DOMAIN_STATUS[project.domain_status ?? 'pending'].label}
+                    tone={DOMAIN_STATUS[project.domain_status ?? 'pending'].tone}
+                  />
                 </div>
+
+                {/* O selo sozinho não diz o que esperar. Como o registro é
+                  *  feito por uma pessoa (o registro.br não tem API pública
+                  *  de registro para terceiros), o cliente precisa saber o
+                  *  prazo em vez de ficar recarregando a página. */}
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  {DOMAIN_STATUS[project.domain_status ?? 'pending'].hint}
+                </p>
 
                 {/* Admin domain status control */}
                 {isAdmin && (
