@@ -16,6 +16,8 @@ import {
   type FieldErrors,
 } from '@/lib/wizardValidation';
 import { LogoStep } from '@/components/wizard/LogoStep';
+import { AccentColorStep } from '@/components/wizard/AccentColorStep';
+import { Card, CardContent } from '@/components/ui/card';
 import { PortfolioPropertiesStep } from '@/components/wizard/PortfolioPropertiesStep';
 import { ProjectDataForm } from '@/components/wizard/ProjectDataForm';
 import { DomainStep } from '@/components/wizard/DomainStep';
@@ -33,10 +35,10 @@ import type { PropertyData } from '@/hooks/useMultipleProjects';
 // pra renderização — deixar a etapa no wizard só confundia o cliente,
 // que achava que a cor escolhida ia aparecer no site.
 const steps = [
-  { id: 0, title: 'Selecionar Plano', description: 'Escolha o plano a usar' },
-  { id: 1, title: 'Logotipo', description: 'Upload ou criação de logo' },
-  { id: 2, title: 'Imóveis', description: 'Portfólio de imóveis' },
-  { id: 3, title: 'Dados do Projeto', description: 'Informações completas' },
+  { id: 0, title: 'Selecionar plano', description: 'Escolha o plano a usar' },
+  { id: 1, title: 'Identidade', description: 'Logotipo e cor do site' },
+  { id: 2, title: 'Imóveis', description: 'Os imóveis do seu site' },
+  { id: 3, title: 'Dados do projeto', description: 'Informações completas' },
   { id: 4, title: 'Domínio', description: 'Escolha seu domínio' },
 ];
 
@@ -244,6 +246,7 @@ const ProjectWizardPage = () => {
           contactMobile: wizardData.contactMobile,
           contactEmail: wizardData.contactEmail,
           hasLogo: wizardData.hasLogo,
+          accentColor: wizardData.accentColor || 'dourado',
           desiredDomain: wizardData.desiredDomain,
           googleAnalyticsId: wizardData.googleAnalyticsId,
           heroMediaType: wizardData.heroVideoUrl ? wizardData.heroMediaType || 'video' : undefined,
@@ -581,12 +584,31 @@ const ProjectWizardPage = () => {
           )}
 
           {currentStep === 1 && (
-            <LogoStep
-              hasLogo={wizardData.hasLogo || false}
-              logoUrl={wizardData.logoUrl}
-              onHasLogoChange={(hasLogo) => updateWizardData('hasLogo', hasLogo)}
-              onLogoUrlChange={(url) => updateWizardData('logoUrl', url)}
-            />
+            <div className="space-y-6">
+              <LogoStep
+                hasLogo={wizardData.hasLogo || false}
+                logoUrl={wizardData.logoUrl}
+                onHasLogoChange={(hasLogo) => updateWizardData('hasLogo', hasLogo)}
+                onLogoUrlChange={(url) => updateWizardData('logoUrl', url)}
+              />
+
+              {/* Junto do logo de propósito: as duas são a mesma decisão —
+                *  a cara do site. Uma etapa só pra escolher cor faria o
+                *  wizard ter seis passos pra um clique. */}
+              <Card>
+                <CardContent className="p-5 sm:p-6">
+                  <h3 className="font-display text-[16px] font-bold tracking-[-0.02em]">
+                    Cor de destaque
+                  </h3>
+                  <div className="mt-3">
+                    <AccentColorStep
+                      value={wizardData.accentColor}
+                      onChange={(value) => updateWizardData('accentColor', value)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {currentStep === 2 && (

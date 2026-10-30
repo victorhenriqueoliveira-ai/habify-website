@@ -1,5 +1,12 @@
 export type LayoutType = 'classic' | 'modern' | 'minimalist' | 'vibrant';
 export type ColorPalette = 'blue' | 'orange' | 'green' | 'purple' | 'neutral';
+
+/**
+ * Cor de destaque do site gerado. Variações da mesma identidade visual —
+ * a estrutura não muda, só o acento. Os valores casam com os seletores
+ * html[data-accent] do habify-site-template.
+ */
+export type AccentColor = 'dourado' | 'oliva' | 'terracota' | 'petroleo' | 'grafite';
 export type ProfileType = 'corretor' | 'imobiliaria';
 // Valores reais do <Select> em ProjectDataForm.tsx.
 export type CreciType = 'individual' | 'juridico';
@@ -9,6 +16,9 @@ export interface WizardData {
   layoutChoice?: LayoutType;
   colorPalette?: ColorPalette;
   
+  /** Cor de destaque do site. Ausente = dourado, o padrão do template. */
+  accentColor?: AccentColor;
+
   // Step 2: Logo
   hasLogo: boolean;
   logoUrl?: string;

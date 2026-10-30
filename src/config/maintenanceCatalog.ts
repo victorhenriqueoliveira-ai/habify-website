@@ -47,6 +47,13 @@ export const ENUM_LABELS: Record<string, Record<string, string>> = {
     corretor: 'Corretor de imóveis',
     imobiliaria: 'Imobiliária',
   },
+  accentColor: {
+    dourado: 'Dourado',
+    oliva: 'Oliva',
+    terracota: 'Terracota',
+    petroleo: 'Petróleo',
+    grafite: 'Grafite',
+  },
 };
 
 export function optionLabel(field: EditableField, value: string): string {
@@ -76,6 +83,7 @@ export const SITE_FIELD_GROUPS: Array<{ label: string; keys: string[] }> = [
     label: 'Números do site',
     keys: ['statsPropertiesSold', 'statsYearsExperience', 'statsHappyClients'],
   },
+  { label: 'Aparência', keys: ['accentColor'] },
   { label: 'Avançado', keys: ['googleAnalyticsId'] },
 ];
 

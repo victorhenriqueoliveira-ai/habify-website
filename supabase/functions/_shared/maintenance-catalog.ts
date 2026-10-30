@@ -124,6 +124,14 @@ export const SITE_FIELDS: readonly EditableField[] = [
   { key: 'statsYearsExperience', label: 'Anos de experiência', kind: 'number', target: 'wizard', min: 0, max: 100 },
   { key: 'statsHappyClients', label: 'Clientes atendidos', kind: 'number', target: 'wizard', min: 0, max: 1_000_000 },
   { key: 'googleAnalyticsId', label: 'ID do Google Analytics', kind: 'text', target: 'wizard', max: 40 },
+  {
+    key: 'accentColor',
+    label: 'Cor de destaque do site',
+    kind: 'enum',
+    target: 'wizard',
+    // Casam com os seletores html[data-accent] do habify-site-template.
+    options: ['dourado', 'oliva', 'terracota', 'petroleo', 'grafite'],
+  },
 ] as const;
 
 export function findPropertyField(key: string): EditableField | undefined {

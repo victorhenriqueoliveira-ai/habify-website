@@ -67,6 +67,10 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
     projectMode,
     layoutChoice: project.layout_choice || wizardData.layoutChoice || 'modern',
     colorPalette: project.color_palette || wizardData.colorPalette || 'blue',
+    // Cor de destaque escolhida no wizard. Sem valor, o template cai no
+    // dourado — que é exatamente o que os sites já no ar usam hoje, então
+    // regerar um site antigo não muda a cara dele.
+    accentColor: wizardData.accentColor || 'dourado',
     logoUrl: project.logo_url || '',
     heroMediaType: wizardData.heroVideoUrl ? (wizardData.heroMediaType || 'video') : undefined,
     heroMediaUrl: wizardData.heroVideoUrl || undefined,
