@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { buildSiteConfig, commitSiteConfig } from "../_shared/site-config.ts";
-import { ensureProductionDeployment, waitForDeployment } from "../_shared/vercel-deploy.ts";
+import { publishProjectSite } from "../_shared/publish-site.ts";
 import {
   findPropertyField,
   findSiteField,
@@ -173,110 +172,29 @@ serve(async (req) => {
       return respondError(requestId, `Tipo de alteração desconhecido: ${maintenanceRequest.change_type}`);
     }
 
-    // ---- 2. Recarrega tudo já atualizado e remonta o site.config.json ----
-    const { data: project, error: projectError } = await supabaseService
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .single();
-
-    if (projectError || !project) {
-      return respondError(requestId, `Falha ao recarregar projeto: ${projectError?.message ?? projectId}`);
-    }
-
-    if (!project.github_repo_name) {
-      return respondError(requestId, 'Este projeto ainda não tem um site gerado — não dá pra aplicar via API. Peça pra alguém atender manualmente.');
-    }
-
-    const { data: properties, error: propertiesError } = await supabaseService
-      .from('portfolio_properties')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true });
-
-    if (propertiesError) {
-      return respondError(requestId, `Falha ao recarregar imóveis: ${propertiesError.message}`);
-    }
-
-    const githubToken = Deno.env.get('GITHUB_PAT');
-    if (!githubToken) {
-      return respondError(requestId, 'GITHUB_PAT não configurado nos secrets da função.');
-    }
-
-    const siteConfig = buildSiteConfig(project, properties || []);
-    const committedAtMs = Date.now();
-    const commitResult = await commitSiteConfig(
-      githubToken,
-      project.github_repo_name,
-      siteConfig,
+    // ---- 2 e 3. Remonta o site.config.json, commita e publica ----
+    //
+    // Esta sequência vive em _shared/publish-site.ts porque é a mesma para
+    // qualquer alteração pós-entrega: a manutenção paga e os ajustes
+    // gratuitos (como a tag do Google) usam exatamente o mesmo caminho.
+    const published = await publishProjectSite(
+      supabaseService,
+      projectId,
       `Manutenção: ${maintenanceRequest.title}`,
     );
 
-    if (!commitResult.ok) {
-      return respondError(requestId, commitResult.error);
+    if (!published.ok) {
+      return respondError(requestId, published.error);
     }
 
-    // ---- 3. Garante que o commit vire site no ar ----
-    //
-    // Antes a função parava no commit e já marcava a solicitação como
-    // concluída, avisando o cliente que "seu site já está atualizado". Se o
-    // projeto na Vercel não estiver com o auto-deploy do Git ativo — algo
-    // que não dá pra ver pelo painel —, o arquivo entra no repositório e o
-    // site continua exatamente igual. O cliente gastava um crédito de
-    // manutenção por uma alteração que nunca aconteceu.
-    const vercelToken = Deno.env.get('VERCEL_API_TOKEN');
-    const vercelTeamId = Deno.env.get('VERCEL_TEAM_ID') ?? undefined;
-
-    if (!vercelToken || !project.vercel_project_id) {
-      return respondError(
-        requestId,
-        'A alteração foi gravada e commitada, mas não há como publicar: ' +
-          (vercelToken
-            ? 'este projeto não tem vercel_project_id salvo.'
-            : 'VERCEL_API_TOKEN não está configurado nos secrets.'),
-      );
-    }
-
-    const deployment = await ensureProductionDeployment({
-      vercelToken,
-      teamId: vercelTeamId,
-      vercelProjectId: project.vercel_project_id,
-      repoFullName: project.github_repo_name,
-      githubToken,
-      committedAtMs,
-    });
-
-    if (!deployment.ok) {
-      return respondError(requestId, deployment.error);
-    }
-
-    // A criação da solicitação espera por esta função, então o cliente fica
-    // olhando um spinner enquanto isso. ~45s cobre a maioria dos builds
-    // deste template; quem passar disso cai no TIMEOUT abaixo, que não é
-    // tratado como falha — a Vercel continua publicando sozinha.
-    const result = await waitForDeployment({
-      vercelToken,
-      teamId: vercelTeamId,
-      deploymentId: deployment.deploymentId,
-      maxAttempts: 11,
-      intervalMs: 4000,
-    });
-
-    if (result.state === 'ERROR' || result.state === 'CANCELED') {
-      return respondError(
-        requestId,
-        `A alteração foi commitada mas o build falhou na Vercel (${result.state}). ` +
-          `Logs em https://vercel.com/deployments/${deployment.deploymentId}`,
-      );
-    }
+    const deployment = { deploymentId: published.deploymentId, origin: published.origin };
+    const confirmed = published.confirmed;
 
     // ---- 4. Marca concluída ----
     //
-    // TIMEOUT não é falha: a Vercel segue buildando depois que a edge
-    // function morre. A solicitação é concluída do mesmo jeito, mas a nota
-    // registra que a publicação não chegou a ser confirmada aqui.
-    const confirmed = result.state === 'READY';
-
+    // Build não confirmado não é falha: a Vercel segue publicando depois
+    // que a edge function morre. A solicitação é concluída do mesmo jeito,
+    // e a nota registra que a publicação não foi confirmada aqui.
     await supabaseService
       .from('maintenance_requests')
       .update({

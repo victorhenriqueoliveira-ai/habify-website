@@ -39,6 +39,7 @@ import { GrantMaintenanceCard } from '@/components/admin/GrantMaintenanceCard';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { GoogleAnalyticsCard } from '@/components/admin/GoogleAnalyticsCard';
 import {
   PageHeader,
   LoadingState,
@@ -89,7 +90,7 @@ const projectTypeLabels = {
 export const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects, loading, updateProject } = useProjects();
+  const { projects, loading, updateProject, fetchProjects } = useProjects();
   const { users } = useUsers();
   const { hasRole } = useAuth();
   const { properties: portfolioProperties, loading: loadingProperties } = usePortfolioProperties(id);
@@ -480,6 +481,17 @@ export const ProjectDetailPage = () => {
 
           {/* Conectar domínio próprio (aparece só depois do site publicado) */}
           {id && <DomainConnect projectId={id} />}
+
+          {/* Google Analytics — gratuito, fora do fluxo de manutenção. Só
+            *  aparece quando já existe site publicado: sem repositório não
+            *  há onde gravar a tag. */}
+          {id && project.landingPageUrl && (
+            <GoogleAnalyticsCard
+              projectId={id}
+              currentId={wizard.googleAnalyticsId}
+              onSaved={() => fetchProjects()}
+            />
+          )}
 
           {/* Plan Information */}
           {id && <ProjectPlanInfo projectId={id} />}
