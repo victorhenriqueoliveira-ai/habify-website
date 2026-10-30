@@ -245,6 +245,7 @@ const ProjectWizardPage = () => {
           contactPhone: wizardData.contactPhone,
           contactMobile: wizardData.contactMobile,
           contactEmail: wizardData.contactEmail,
+          siteName: wizardData.siteName,
           hasLogo: wizardData.hasLogo,
           accentColor: wizardData.accentColor || 'dourado',
           desiredDomain: wizardData.desiredDomain,

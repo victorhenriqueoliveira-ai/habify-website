@@ -99,6 +99,7 @@ export const SITE_FIELDS: readonly EditableField[] = [
     options: ['corretor', 'imobiliaria'],
   },
   { key: 'companyName', label: 'Nome da empresa', kind: 'text', target: 'wizard', max: 120 },
+  { key: 'siteName', label: 'Nome que aparece no site', kind: 'text', target: 'wizard', max: 120 },
   { key: 'ownerName', label: 'Nome do responsável', kind: 'text', target: 'wizard', max: 120 },
   { key: 'contactPhone', label: 'Telefone fixo', kind: 'text', target: 'wizard', max: 20 },
   { key: 'contactMobile', label: 'Celular / WhatsApp', kind: 'text', target: 'wizard', max: 20 },

@@ -68,6 +68,16 @@ export const LogoStep = ({
     /* Sem título próprio: o cabeçalho do wizard já anuncia a etapa, e dois
         títulos iguais empilhados só empurram o conteúdo pra baixo. */
     <div className="space-y-6">
+      {/* Sem o logo o site usa as iniciais num círculo — funciona, mas os
+        *  dois últimos projetos saíram assim por a etapa ser fácil de
+        *  passar batido. */}
+      {!logoUrl && (
+        <p className="rounded-lg border border-warning/30 bg-warning/[0.07] px-3.5 py-2.5 text-[13px] leading-relaxed">
+          Sem logo, o site mostra as iniciais do nome num círculo. Se você tem um arquivo,
+          envie aqui — aparece no topo de todas as páginas.
+        </p>
+      )}
+
       <Card>
         <CardContent className="p-6">
           <Label className="block mb-3">Upload do Logotipo</Label>

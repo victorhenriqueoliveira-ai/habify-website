@@ -65,7 +65,7 @@ export const SITE_FIELD_GROUPS: Array<{ label: string; keys: string[] }> = [
   { label: 'Contato', keys: ['contactMobile', 'contactPhone', 'contactEmail'] },
   {
     label: 'Identificação',
-    keys: ['profileType', 'companyName', 'ownerName', 'creciNumber', 'creciType'],
+    keys: ['siteName', 'profileType', 'companyName', 'ownerName', 'creciNumber', 'creciType'],
   },
   {
     label: 'Endereço',

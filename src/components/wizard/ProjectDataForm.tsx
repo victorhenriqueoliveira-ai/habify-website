@@ -133,6 +133,25 @@ export const ProjectDataForm = ({ data, onChange, errors }: ProjectDataFormProps
             )}
           </div>
 
+          {/* Nome do site — explícito, não derivado.
+            *  Antes o template escolhia sozinho: perfil "imobiliária" usava a
+            *  empresa, "corretor" usava o nome do responsável. Uma empresa
+            *  cadastrada com perfil corretor saía com o nome da pessoa no
+            *  título do site, e nada no wizard dizia que essa regra existia. */}
+          <div className="space-y-2">
+            <Label htmlFor="siteName">Nome que aparece no site</Label>
+            <Input
+              id="siteName"
+              value={data.siteName || ''}
+              onChange={(e) => onChange('siteName', e.target.value)}
+              placeholder={data.companyName || 'Ex: CURY, Maria Márcia Corretora'}
+            />
+            <p className="text-xs text-muted-foreground">
+              É o nome que vai no topo do site, no título da aba e no Google. Deixe em branco
+              para usar “{data.companyName || 'o nome acima'}”.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-4">
             {/* CRECI Number */}
             <div className="space-y-2">

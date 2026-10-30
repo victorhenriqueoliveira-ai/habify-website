@@ -35,6 +35,8 @@ export interface WizardData {
   profileType: ProfileType;
   ownerName: string;
   companyName: string;
+  /** Nome exibido no site. Vazio = usa companyName. */
+  siteName?: string;
   creciNumber: string;
   creciType: CreciType;
   addressCep: string;

@@ -56,6 +56,11 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
   });
 
   const companyName = wizardData.companyName || project.title || 'Meu Site';
+  // Nome que aparece no site. Antes era derivado do perfil — imobiliária
+  // usava a empresa, corretor usava o nome do responsável — e essa regra
+  // implícita fazia o site da CURY (cadastrada como empresa, perfil
+  // corretor) sair com o nome do responsável no h1 e no title.
+  const siteName = wizardData.siteName?.trim() || companyName;
   const domain = (
     project.vercel_custom_domain ||
     (project.desired_domain ? `${project.desired_domain}.com.br` : '') ||
@@ -83,7 +88,7 @@ export function buildSiteConfig(project: Record<string, any>, properties: Record
           }
         : undefined,
     domain: domain || `${slugify(companyName)}.habify.com.br`,
-    siteName: companyName,
+    siteName,
     profileType: wizardData.profileType || 'corretor',
     ownerName: wizardData.ownerName || companyName,
     companyName,

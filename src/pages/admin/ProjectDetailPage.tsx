@@ -40,6 +40,7 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { GoogleAnalyticsCard } from '@/components/admin/GoogleAnalyticsCard';
+import { WizardDataProof } from '@/components/admin/WizardDataProof';
 import {
   PageHeader,
   LoadingState,
@@ -714,6 +715,13 @@ export const ProjectDetailPage = () => {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Prova do que o cliente enviou. Visível pra ele também, não só
+            *  pra admin/dev: antes esses dados só existiam no JSON atrás do
+            *  botão de debug, e o cliente não tinha como conferir. */}
+          {project.wizardData && Object.keys(project.wizardData).length > 0 && (
+            <WizardDataProof wizardData={project.wizardData as Record<string, unknown>} />
           )}
 
           {/* Ferramenta de debug — por último de propósito: antes era a
