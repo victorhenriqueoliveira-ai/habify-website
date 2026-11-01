@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@3.5.0";
+import { ADMIN_EMAIL, ADMIN_BCC } from "../_shared/notification-recipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,7 +74,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Habify <contato@habify.com.br>",
-      to: isForAdmin ? ["habifybr@gmail.com"] : [recipientEmail],
+      to: isForAdmin ? [ADMIN_EMAIL] : [recipientEmail],
+      // Só o aviso interno leva cópia; e-mail pro cliente não.
+      ...(isForAdmin ? { bcc: ADMIN_BCC } : {}),
       subject: `💬 Nova mensagem de ${senderName} - ${projectTitle}`,
       html: `
         <!DOCTYPE html>

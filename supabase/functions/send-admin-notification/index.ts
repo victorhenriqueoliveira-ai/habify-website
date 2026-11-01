@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@3.5.0";
+import { ADMIN_EMAIL, ADMIN_BCC } from "../_shared/notification-recipients.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,7 +77,8 @@ serve(async (req) => {
 
     const emailResponse = await resend.emails.send({
       from: "Habify <contato@habify.com.br>",
-      to: ["habifybr@gmail.com"],
+      to: [ADMIN_EMAIL],
+      bcc: ADMIN_BCC,
       subject: subject,
       html: `
         <!DOCTYPE html>

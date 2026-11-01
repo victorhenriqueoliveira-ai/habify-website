@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@3.5.0";
+import { ADMIN_EMAIL, ADMIN_BCC } from "../_shared/notification-recipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,7 +148,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Email para admin
     const adminEmailResponse = await resend.emails.send({
       from: "Habify Sistema <contato@habify.com.br>",
-      to: ["habifybr@gmail.com"],
+      to: [ADMIN_EMAIL],
+      bcc: ADMIN_BCC,
       subject: `🆕 Novo Projeto Criado: ${projectTitle}`,
       html: `
         <!DOCTYPE html>

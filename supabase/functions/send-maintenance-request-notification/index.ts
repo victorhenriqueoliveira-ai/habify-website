@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@3.5.0";
+import { ADMIN_EMAIL, ADMIN_BCC } from "../_shared/notification-recipients.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,11 +68,13 @@ async function handleMessageNotification(data: MessageNotificationData): Promise
   });
 
   const truncatedMessage = message.length > 150 ? message.substring(0, 150) + '...' : message;
-  const targetEmail = isForAdmin ? 'habifybr@gmail.com' : recipientEmail;
+  const targetEmail = isForAdmin ? ADMIN_EMAIL : recipientEmail;
 
   const emailResponse = await resend.emails.send({
     from: "Habify <contato@habify.com.br>",
     to: [targetEmail],
+    // Só o aviso interno leva cópia; o e-mail pro cliente não.
+    ...(isForAdmin ? { bcc: ADMIN_BCC } : {}),
     subject: `💬 Nova mensagem - ${requestTitle}`,
     html: `
       <!DOCTYPE html>
@@ -157,7 +160,7 @@ async function handleStatusNotification(data: StatusNotificationData): Promise<R
     throw new Error('Solicitação não encontrada');
   }
 
-  const adminEmail = Deno.env.get('ADMIN_EMAIL') || 'habifybr@gmail.com';
+  const adminEmail = ADMIN_EMAIL;
   const customerEmail = request.profile?.email;
   const customerName = request.profile?.name;
   const projectTitle = request.project?.title;
@@ -296,6 +299,7 @@ async function handleStatusNotification(data: StatusNotificationData): Promise<R
     await resend.emails.send({
       from: "Habify Notificações <contato@habify.com.br>",
       to: [adminEmail],
+      bcc: ADMIN_BCC,
       subject: `🔔 Nova Solicitação de Customização - ${request.title}`,
       html: `
         <!DOCTYPE html>
