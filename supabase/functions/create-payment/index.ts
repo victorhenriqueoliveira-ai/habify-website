@@ -21,6 +21,7 @@ interface PaymentRequest {
     isLoggedInPurchase?: boolean;
     userId?: string;
     projectId?: string;
+    desiredDomain?: string;
   };
 }
 
@@ -607,6 +608,9 @@ serve(async (req) => {
         isNewUser: !customerData.isLoggedInPurchase,
         isMaintenance: isMaintenance,
         projectId: customerData.projectId,
+        // Domínio escolhido na compra — o webhook precisa dele pra registrar
+        // a pendência com o nome certo, sem ter que perguntar depois.
+        desiredDomain: customerData.desiredDomain,
         // Password stored temporarily for user creation, cleaned up after processing
         password: customerData.isLoggedInPurchase ? undefined : customerData.password
       }

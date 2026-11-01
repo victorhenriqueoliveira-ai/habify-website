@@ -41,6 +41,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { GoogleAnalyticsCard } from '@/components/admin/GoogleAnalyticsCard';
 import { WizardDataProof } from '@/components/admin/WizardDataProof';
+import { DomainPurchase } from '@/components/admin/DomainPurchase';
 import {
   PageHeader,
   LoadingState,
@@ -508,6 +509,12 @@ export const ProjectDetailPage = () => {
 
           {/* Conectar domínio próprio (aparece só depois do site publicado) */}
           {id && <DomainConnect projectId={id} />}
+
+          {/* Compra de domínio: só pra quem ainda não tem um conectado e
+            *  não está no meio de um registro já pago. */}
+          {id && !project.vercel_custom_domain && !project.domain_status && (
+            <DomainPurchase projectId={id} onPurchased={() => fetchProjects()} />
+          )}
 
           {/* Google Analytics — gratuito, fora do fluxo de manutenção. Só
             *  aparece quando já existe site publicado: sem repositório não

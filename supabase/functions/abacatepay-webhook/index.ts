@@ -176,6 +176,65 @@ serve(async (req) => {
       order_id: order.id
     });
 
+    // ---- Domínio pago entra na fila de registro ----
+    //
+    // O registro.br não expõe registro automático para terceiros, então
+    // quem registra é uma pessoa. Sem isto o pagamento era confirmado e o
+    // domínio ficava em 'pending' para sempre: ninguém no time saberia que
+    // havia um cliente esperando, e o prazo de 6 horas prometido no painel
+    // passaria em branco.
+    if (isPaid && order?.plan_id) {
+      const { data: plan } = await supabaseService
+        .from('plans')
+        .select('type')
+        .eq('id', order.plan_id)
+        .single();
+
+      if (plan?.type === 'domain_registration') {
+        // Ficam na raiz de payment_data, não dentro de customerData — é
+        // onde o create-payment os grava.
+        const projectId = paymentData?.projectId;
+        const desiredDomain = paymentData?.desiredDomain;
+
+        if (projectId) {
+          await supabaseService
+            .from('projects')
+            .update({
+              domain_status: 'paid',
+              ...(desiredDomain ? { desired_domain: desiredDomain } : {}),
+            })
+            .eq('id', projectId);
+        }
+
+        // Notifica admin/dev direto na tabela: o send-admin-notification
+        // tem assinatura própria (dados de venda), e o que precisa chegar
+        // aqui é uma tarefa — registrar este domínio dentro do prazo.
+        try {
+          const { data: staff } = await supabaseService
+            .from('profiles')
+            .select('user_id')
+            .in('role', ['admin', 'dev']);
+
+          for (const person of staff ?? []) {
+            if (!person.user_id) continue;
+            await supabaseService.from('notifications').insert({
+              user_id: person.user_id,
+              title: `Registrar domínio: ${desiredDomain ?? 'sem nome'}.com.br`,
+              message:
+                `Pagamento confirmado. Registre ${desiredDomain ?? '(não informado)'}.com.br ` +
+                `e aponte para o projeto ${projectId ?? '(sem projeto)'}. ` +
+                `O cliente viu no painel que o site estará no ar em até 6 horas.`,
+              type: 'warning',
+            });
+          }
+        } catch (notifyError) {
+          // Falhar aqui não pode desfazer o pagamento — o status 'paid' no
+          // projeto já deixa a pendência visível no painel.
+          console.error('[webhook] Falha ao notificar domínio pago:', notifyError);
+        }
+      }
+    }
+
     // console.log('✅ Order updated via webhook:', {
     //   orderId: order.id,
     //   status: order.status,
